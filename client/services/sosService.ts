@@ -141,23 +141,27 @@ export class SOSService {
       return onSnapshot(
         q,
         (snapshot) => {
-          const alerts: SOSAlert[] = snapshot.docs.map((doc) => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              createdAt: data.createdAt.toDate(),
-              location: data.location
-                ? {
-                    ...data.location,
-                    timestamp: data.location.timestamp.toDate(),
-                  }
-                : undefined,
-              resolvedAt: data.resolvedAt
-                ? data.resolvedAt.toDate()
-                : undefined,
-            } as SOSAlert;
-          });
+          const alerts: SOSAlert[] = snapshot.docs
+            .map((doc) => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                ...data,
+                createdAt: data.createdAt.toDate(),
+                location: data.location
+                  ? {
+                      ...data.location,
+                      timestamp: data.location.timestamp.toDate(),
+                    }
+                  : undefined,
+                resolvedAt: data.resolvedAt
+                  ? data.resolvedAt.toDate()
+                  : undefined,
+              } as SOSAlert;
+            })
+            .filter((alert) => alert.status === "active") // Filter for active alerts
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Sort by creation date desc
+
           onAlert(alerts);
         },
         (error) => {
