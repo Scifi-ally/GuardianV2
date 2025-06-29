@@ -487,32 +487,67 @@ export function BackgroundSafetyMonitor({
 
           {/* Voice Recognition Status */}
           {voiceSupported ? (
-            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+            <div
+              className={cn(
+                "p-4 rounded-lg border",
+                lastError
+                  ? "bg-warning/10 border-warning/20"
+                  : "bg-primary/10 border-primary/20",
+              )}
+            >
               <div className="flex items-center gap-3 mb-2">
-                <Volume2 className="h-5 w-5 text-primary" />
+                <Volume2
+                  className={cn(
+                    "h-5 w-5",
+                    lastError ? "text-warning" : "text-primary",
+                  )}
+                />
                 <span className="font-medium">Voice Emergency Detection</span>
                 <Badge
                   className={cn(
                     "text-xs",
-                    isListening && voiceDetection && isActive
+                    isListening && voiceDetection && isActive && !lastError
                       ? "bg-safe text-safe-foreground"
-                      : "bg-muted text-muted-foreground",
+                      : lastError
+                        ? "bg-warning text-warning-foreground"
+                        : "bg-muted text-muted-foreground",
                   )}
                 >
-                  {isListening && voiceDetection && isActive
-                    ? "ACTIVE"
-                    : "INACTIVE"}
+                  {lastError
+                    ? "ERROR"
+                    : isListening && voiceDetection && isActive
+                      ? "ACTIVE"
+                      : "INACTIVE"}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground mb-2">
-                Listening for emergency keywords like "help", "emergency", "call
-                911"
-              </p>
-              {currentTranscript && (
-                <div className="text-xs bg-muted/30 p-2 rounded border">
-                  <span className="font-medium">Last heard: </span>"
-                  {currentTranscript}"
+              {lastError ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-warning font-medium">
+                    {lastError}
+                  </p>
+                  {microphonePermission === "denied" && (
+                    <Button
+                      size="sm"
+                      onClick={requestMicrophonePermission}
+                      className="bg-warning hover:bg-warning/90 text-warning-foreground"
+                    >
+                      Request Microphone Permission
+                    </Button>
+                  )}
                 </div>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Listening for emergency keywords like "help", "emergency",
+                    "call 911"
+                  </p>
+                  {currentTranscript && (
+                    <div className="text-xs bg-muted/30 p-2 rounded border">
+                      <span className="font-medium">Last heard: </span>"
+                      {currentTranscript}"
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ) : (
