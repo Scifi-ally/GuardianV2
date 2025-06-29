@@ -44,6 +44,7 @@ import { EmergencyAlertPopup } from "@/components/EmergencyAlertPopup";
 import { useHapticFeedback, useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { SOSService } from "@/services/sosService";
+import { emergencyContactService } from "@/services/emergencyContactService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
