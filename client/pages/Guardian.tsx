@@ -525,71 +525,43 @@ export default function Guardian() {
             </div>
           </div>
 
-          {/* Active Contacts Being Tracked */}
+          {/* Map Layers & Views */}
           <div>
             <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Tracking Contacts
-              <Badge variant="outline" className="text-xs">
-                {emergencyContacts.length} sharing
-              </Badge>
+              <Layers className="h-4 w-4" />
+              Map Layers
             </h3>
-            {emergencyContacts.length > 0 ? (
-              <div className="space-y-2">
-                {emergencyContacts.slice(0, 3).map((contact) => (
-                  <div
-                    key={contact.id}
-                    className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg border"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-safe rounded-full animate-pulse" />
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">
-                          {contact.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{contact.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Live location • {Math.floor(Math.random() * 30) + 1}m
-                        away
-                      </p>
-                    </div>
-                    <div className="text-xs text-safe">Active</div>
-                  </div>
-                ))}
-                {emergencyContacts.length > 3 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs"
-                    onClick={() => openPanel("contacts")}
-                  >
-                    View all {emergencyContacts.length} contacts
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="p-4 border border-dashed border-muted rounded-lg text-center">
-                <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm font-medium text-muted-foreground">
-                  No contacts sharing location
-                </p>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Add emergency contacts to track their live location
-                </p>
-                <Button
-                  size="sm"
-                  onClick={() => openPanel("contacts")}
-                  className="text-xs"
-                >
-                  Add Contacts
-                </Button>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="h-12 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-200"
+              >
+                <MapPin className="h-4 w-4" />
+                Traffic
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-200"
+              >
+                <Shield className="h-4 w-4" />
+                Safe Zones
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12 flex-col gap-1 text-xs hover:bg-warning/10 hover:border-warning/30 transition-all duration-200"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Risk Areas
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-200"
+              >
+                <Camera className="h-4 w-4" />
+                CCTV
+              </Button>
+            </div>
           </div>
-
           {/* Quick Actions */}
           <div>
             <h3 className="text-sm font-medium mb-3">Quick Actions</h3>
