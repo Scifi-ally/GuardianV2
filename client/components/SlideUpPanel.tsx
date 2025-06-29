@@ -129,7 +129,8 @@ export function SlideUpPanel({
     <div
       ref={panelRef}
       className={cn(
-        "fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border/50 rounded-t-3xl shadow-2xl transition-all duration-200",
+        "fixed left-0 right-0 z-40 bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl transition-all duration-200 overflow-hidden",
+        "border-t border-border/30",
         isDragging ? "transition-none" : "",
         className,
       )}
