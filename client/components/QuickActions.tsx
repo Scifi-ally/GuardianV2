@@ -252,10 +252,14 @@ export function QuickActions() {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-2">
-      {actions.map((action, index) => (
-        <QuickActionButton key={index} {...action} />
-      ))}
+    <div className="w-full">
+      <div className="grid grid-cols-3 gap-3 p-2">
+        {actions.map((action, index) => (
+          <div key={index} className="w-full">
+            <QuickActionButton {...action} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
