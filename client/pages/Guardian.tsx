@@ -42,6 +42,7 @@ import { MapServiceInfo } from "@/components/MapServiceInfo";
 import { SafetyDashboard } from "@/components/SafetyDashboard";
 import { EmergencyAlertPopup } from "@/components/EmergencyAlertPopup";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SafetyAnalytics } from "@/components/SafetyAnalytics";
 import { useHapticFeedback, useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { SOSService } from "@/services/sosService";
