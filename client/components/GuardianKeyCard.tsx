@@ -278,13 +278,15 @@ export function GuardianKeyCard() {
       </Card>
 
       {/* Key Usage Info */}
-      <Card className="border-2 border-protection/30 bg-gradient-to-br from-protection/5 to-protection/10">
+      <Card className="border-2 border-gray-200 bg-white">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-protection mt-0.5" />
+            <Info className="h-5 w-5 text-blue-600 mt-0.5" />
             <div>
-              <h4 className="font-semibold mb-2">About Your Guardian Key</h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
+              <h4 className="font-semibold mb-2 text-black">
+                About Your Guardian Key
+              </h4>
+              <ul className="text-sm text-gray-600 space-y-1 font-mono">
                 <li>• Used to identify you in emergency situations</li>
                 <li>• Share with trusted contacts for quick access</li>
                 <li>• Required for emergency responders to access your info</li>
@@ -296,18 +298,18 @@ export function GuardianKeyCard() {
       </Card>
 
       {/* Security Warning */}
-      <Card className="border-2 border-warning/30 bg-gradient-to-br from-warning/10 to-warning/20">
+      <Card className="border-2 border-orange-200 bg-white">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-orange-500 mt-0.5" />
             <div>
-              <h4 className="font-semibold mb-2 text-warning">
+              <h4 className="font-semibold mb-2 text-orange-600">
                 Security Important
               </h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-600 font-mono">
                 Only share your Guardian Key with trusted individuals. Anyone
                 with this key can access your emergency information and safety
-                status. If compromised, generate a new key immediately.
+                status. If compromised, contact support immediately.
               </p>
             </div>
           </div>
