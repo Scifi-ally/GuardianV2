@@ -66,28 +66,28 @@ export function SimpleBottomNav({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
-      {/* Background with proper spacing */}
-      <div className="bg-background/95 backdrop-blur-lg border-t border-border shadow-2xl">
-        {/* SOS Button Container - positioned above the nav bar */}
+      {/* Minimal Background */}
+      <div className="bg-black/80 backdrop-blur-xl border-t border-white/10">
+        {/* Compact SOS Button */}
         <div className="relative flex justify-center">
-          <div className="absolute -top-12 flex justify-center">
+          <div className="absolute -top-8 flex justify-center">
             {sosPressed ? (
               <Button
                 onClick={handleCancelSOS}
-                className="w-24 h-24 rounded-full bg-warning/90 hover:bg-warning text-warning-foreground shadow-2xl border-4 border-background animate-pulse"
+                className="w-16 h-16 rounded-full bg-warning/90 hover:bg-warning text-warning-foreground shadow-xl border-2 border-white/20 animate-pulse"
               >
                 <div className="flex flex-col items-center">
-                  <div className="text-2xl font-bold">{countdown}</div>
-                  <span className="text-xs font-medium">Cancel</span>
+                  <div className="text-lg font-bold">{countdown}</div>
+                  <span className="text-xs">Cancel</span>
                 </div>
               </Button>
             ) : (
               <Button
                 onClick={handleSOSPress}
-                className="w-24 h-24 rounded-full bg-emergency hover:bg-emergency/90 text-emergency-foreground shadow-2xl border-4 border-background transform hover:scale-105 transition-all duration-200"
+                className="w-16 h-16 rounded-full bg-emergency hover:bg-emergency/90 text-emergency-foreground shadow-xl border-2 border-white/20 transform hover:scale-110 transition-all duration-200"
               >
-                <div className="flex flex-col items-center gap-1">
-                  <AlertTriangle className="h-8 w-8" />
+                <div className="flex flex-col items-center">
+                  <AlertTriangle className="h-5 w-5" />
                   <span className="text-xs font-bold">SOS</span>
                 </div>
               </Button>
@@ -95,9 +95,9 @@ export function SimpleBottomNav({
           </div>
         </div>
 
-        {/* Navigation Bar with proper padding */}
-        <div className="px-6 pt-16 pb-6">
-          <div className="flex items-center justify-around max-w-lg mx-auto">
+        {/* Compact Navigation Bar */}
+        <div className="px-4 pt-12 pb-3">
+          <div className="flex items-center justify-around max-w-sm mx-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -105,7 +105,7 @@ export function SimpleBottomNav({
 
               if (isSpecial) {
                 // Empty space for SOS button
-                return <div key={item.id} className="w-16" />;
+                return <div key={item.id} className="w-8" />;
               }
 
               return (
@@ -114,23 +114,21 @@ export function SimpleBottomNav({
                   onClick={() => onTabChange(item.id)}
                   variant="ghost"
                   className={cn(
-                    "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-300 hover:scale-105",
+                    "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200",
                     isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground",
+                      ? "text-white bg-white/10"
+                      : "text-white/60 hover:text-white hover:bg-white/5",
                   )}
                 >
-                  <div
+                  <Icon
                     className={cn(
-                      "p-2 rounded-xl transition-all duration-300",
-                      isActive && "bg-primary/20 scale-110",
+                      "h-4 w-4 transition-all duration-200",
+                      isActive && "scale-110",
                     )}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </div>
+                  />
                   <span className="text-xs font-medium">{item.label}</span>
                   {isActive && (
-                    <div className="w-1 h-1 bg-primary rounded-full" />
+                    <div className="w-1 h-1 bg-white rounded-full" />
                   )}
                 </Button>
               );
