@@ -126,18 +126,18 @@ export function SlideUpPanel({
   }, [isDragging, startY, startHeight, height, minHeight, maxHeight]);
 
   return (
-    <div
-      ref={panelRef}
-      className={cn(
-        "fixed left-0 right-0 z-40 bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl transition-all duration-200 overflow-hidden",
-        "border-t border-border/30",
-        isDragging ? "transition-none" : "",
-        className,
-      )}
-      style={{
-        bottom: bottomOffset - 2, // Slight overlap to remove gap
-        height: height,
-        transform: isDragging ? "scale(1.01)" : "scale(1)",
+      <div
+        ref={panelRef}
+        className={cn(
+          "fixed left-0 right-0 bg-background border-t border-border shadow-2xl transition-all duration-300 ease-out rounded-t-xl overflow-hidden",
+          className,
+        )}
+        style={{
+          bottom: bottomOffset,
+          height: `${height}px`,
+          zIndex: 90,
+        }}
+      >
       }}
     >
       {/* Drag Handle */}
