@@ -143,9 +143,9 @@ export function SlideUpPanel({
       <div
         ref={handleRef}
         className={cn(
-          "flex justify-center py-4 cursor-grab active:cursor-grabbing transition-all duration-200",
+          "flex flex-col items-center cursor-grab active:cursor-grabbing transition-all duration-200",
           isDragging && "cursor-grabbing",
-          isCollapsed && "py-3",
+          isCollapsed ? "py-2" : "py-3",
         )}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
@@ -158,6 +158,11 @@ export function SlideUpPanel({
             isCollapsed && "bg-primary/60 w-16 h-1.5",
           )}
         />
+        {isCollapsed && (
+          <div className="mt-2 text-xs text-muted-foreground animate-pulse">
+            Tap to expand
+          </div>
+        )}
       </div>
 
       {/* Panel Content */}
