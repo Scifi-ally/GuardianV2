@@ -481,6 +481,9 @@ export default function Guardian() {
                 />
               </ErrorBoundary>
 
+              {/* Real-time Safety Analytics */}
+              <SafetyAnalytics />
+
               {/* Emergency Contacts Manager */}
               <EmergencyContactManager />
             </div>
