@@ -64,6 +64,8 @@ export default function Guardian() {
   const [mapServiceStatus, setMapServiceStatus] = useState<
     "google" | "offline" | "error"
   >("google");
+  const [emergencyAlert, setEmergencyAlert] = useState<any>(null);
+  const [showEmergencyPopup, setShowEmergencyPopup] = useState(false);
 
   const { currentUser, userProfile, logout } = useAuth();
   const { successVibration, warningVibration, emergencyVibration } =
