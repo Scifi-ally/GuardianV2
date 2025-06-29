@@ -21,7 +21,7 @@ export function BackgroundSafetyMonitor({
     null,
   );
   const [safetyServices, setSafetyServices] = useState({
-    voiceActivation: false,
+    voiceActivation: false, // Start disabled to prevent auto-start issues
     locationTracking: false,
     emergencyDetection: true,
     backgroundMonitoring: true,
