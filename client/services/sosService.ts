@@ -48,14 +48,21 @@ export interface SOSResponse {
   timestamp: Date;
 }
 
+interface LocationInput {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  timestamp?: Date;
+}
+
 export class SOSService {
   static async sendSOSAlert(
     senderId: string,
     senderName: string,
     senderKey: string,
     emergencyContacts: EmergencyContact[],
-    location?: GeolocationPosition,
-    type: "manual" | "automatic" | "panic" = "manual",
+    location?: GeolocationPosition | LocationInput,
+    type: "manual" | "automatic" | "panic" | "voice-activation" = "manual",
     message?: string,
   ): Promise<{ success: boolean; alertId?: string; error?: string }> {
     try {
@@ -71,12 +78,19 @@ export class SOSService {
         receiverIds,
         message: message || `Emergency alert from ${senderName}`,
         location: location
-          ? {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              accuracy: location.coords.accuracy,
-              timestamp: new Date(location.timestamp),
-            }
+          ? "coords" in location
+            ? {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                accuracy: location.coords.accuracy,
+                timestamp: new Date(location.timestamp),
+              }
+            : {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                accuracy: location.accuracy || 0,
+                timestamp: location.timestamp || new Date(),
+              }
           : undefined,
         status: "active",
         createdAt: new Date(),
