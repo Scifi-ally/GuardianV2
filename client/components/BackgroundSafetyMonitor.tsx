@@ -198,32 +198,39 @@ export function BackgroundSafetyMonitor({
             // This is normal - just means no speech was detected
             // Don't show error to user, just continue listening
             console.log("No speech detected, continuing to listen...");
+            setLastError(null); // Clear any previous errors
             break;
 
           case "audio-capture":
             console.error(
               "Audio capture failed - microphone may not be available",
             );
+            setLastError("Microphone unavailable");
             setVoiceDetection(false); // Disable voice detection
             break;
 
           case "not-allowed":
             console.error("Microphone permission denied");
+            setLastError("Microphone permission denied");
             setVoiceDetection(false); // Disable voice detection
+            setMicrophonePermission("denied");
             break;
 
           case "network":
             console.error("Network error in speech recognition");
+            setLastError("Network error");
             // Will retry automatically through onend handler
             break;
 
           case "service-not-allowed":
             console.error("Speech recognition service not allowed");
+            setLastError("Speech service unavailable");
             setVoiceDetection(false); // Disable voice detection
             break;
 
           default:
             console.error("Unknown speech recognition error:", errorType);
+            setLastError(`Recognition error: ${errorType}`);
             break;
         }
       };
