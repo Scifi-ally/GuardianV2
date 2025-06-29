@@ -419,7 +419,7 @@ export function BackgroundSafetyMonitor({
   }
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-4 pb-6", className)}>
       {/* Main Monitor Card */}
       <Card
         className={cn(
