@@ -232,10 +232,19 @@ export function SafetyMap({
     )
       return;
 
+    const googleTravelMode =
+      travelMode === "DRIVING"
+        ? google.maps.TravelMode.DRIVING
+        : travelMode === "WALKING"
+          ? google.maps.TravelMode.WALKING
+          : travelMode === "TRANSIT"
+            ? google.maps.TravelMode.TRANSIT
+            : google.maps.TravelMode.DRIVING;
+
     const request: google.maps.DirectionsRequest = {
       origin: fromLocation,
       destination: toLocation,
-      travelMode: travelMode,
+      travelMode: googleTravelMode,
       avoidHighways: false,
       avoidTolls: false,
     };
