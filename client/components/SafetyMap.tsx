@@ -19,6 +19,7 @@ import {
   Car,
   Navigation2,
   Layers,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +56,7 @@ export function SafetyMap({
   destinationLocation,
 }: SafetyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [directionsService, setDirectionsService] =
     useState<google.maps.DirectionsService | null>(null);
@@ -76,8 +78,9 @@ export function SafetyMap({
     duration: string;
     distance: string;
   } | null>(null);
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [zoom, setZoom] = useState(15);
+  const [showTraffic, setShowTraffic] = useState(false);
+  const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const markersRef = useRef<google.maps.Marker[]>([]);
 
   // Load Google Maps
@@ -96,107 +99,28 @@ export function SafetyMap({
       .catch(console.error);
   }, []);
 
-  // Check for dark theme
-  useEffect(() => {
-    const checkTheme = () => {
-      setIsDarkTheme(document.documentElement.classList.contains("dark"));
-    };
-
-    checkTheme();
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Initialize map with custom styling
+  // Initialize map with white background and better styling
   useEffect(() => {
     if (!isLoaded || !mapRef.current || typeof google === "undefined") return;
-
-    const darkMapStyles = [
-      { elementType: "geometry", stylers: [{ color: "#212121" }] },
-      { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-      { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
-      { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
-      {
-        featureType: "administrative",
-        elementType: "geometry",
-        stylers: [{ color: "#757575" }],
-      },
-      {
-        featureType: "road",
-        elementType: "geometry.fill",
-        stylers: [{ color: "#2c2c2c" }],
-      },
-      {
-        featureType: "road",
-        elementType: "labels.text.fill",
-        stylers: [{ color: "#8a8a8a" }],
-      },
-      {
-        featureType: "road.arterial",
-        elementType: "geometry",
-        stylers: [{ color: "#373737" }],
-      },
-      {
-        featureType: "road.highway",
-        elementType: "geometry",
-        stylers: [{ color: "#3c3c3c" }],
-      },
-      {
-        featureType: "road.highway.controlled_access",
-        elementType: "geometry",
-        stylers: [{ color: "#4e4e4e" }],
-      },
-      {
-        featureType: "road.local",
-        elementType: "labels.text.fill",
-        stylers: [{ color: "#616161" }],
-      },
-      {
-        featureType: "water",
-        elementType: "geometry",
-        stylers: [{ color: "#000000" }],
-      },
-      {
-        featureType: "water",
-        elementType: "labels.text.fill",
-        stylers: [{ color: "#3d3d3d" }],
-      },
-    ];
-
-    const lightMapStyles = [
-      {
-        featureType: "all",
-        elementType: "geometry",
-        stylers: [{ color: "#f5f5f5" }],
-      },
-      {
-        featureType: "road",
-        elementType: "geometry",
-        stylers: [{ color: "#ffffff" }],
-      },
-      {
-        featureType: "water",
-        elementType: "geometry",
-        stylers: [{ color: "#c9c9c9" }],
-      },
-    ];
 
     const mapInstance = new google.maps.Map(mapRef.current, {
       center: currentLocation,
       zoom: zoom,
-      styles: isDarkTheme ? darkMapStyles : lightMapStyles,
+      mapTypeId: mapType,
       disableDefaultUI: true,
-      mapTypeControl: false,
-      zoomControl: false,
-      scaleControl: false,
-      streetViewControl: false,
-      rotateControl: false,
-      fullscreenControl: false,
+      backgroundColor: "#ffffff",
+      styles: [
+        {
+          featureType: "all",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#000000" }],
+        },
+        {
+          featureType: "all",
+          elementType: "labels.text.stroke",
+          stylers: [{ color: "#ffffff" }, { weight: 2 }],
+        },
+      ],
       gestureHandling: "greedy",
     });
 
@@ -212,6 +136,10 @@ export function SafetyMap({
 
     dirRenderer.setMap(mapInstance);
 
+    // Initialize traffic layer
+    const trafficLayer = new google.maps.TrafficLayer();
+    trafficLayerRef.current = trafficLayer;
+
     // Custom zoom controls
     mapInstance.addListener("zoom_changed", () => {
       setZoom(mapInstance.getZoom() || 15);
@@ -220,7 +148,28 @@ export function SafetyMap({
     setMap(mapInstance);
     setDirectionsService(dirService);
     setDirectionsRenderer(dirRenderer);
-  }, [isLoaded, currentLocation, emergencyMode, isDarkTheme, zoom]);
+  }, [isLoaded, currentLocation, emergencyMode, zoom, mapType]);
+
+  // Handle traffic layer toggle
+  const toggleTraffic = () => {
+    if (!map || !trafficLayerRef.current) return;
+
+    if (showTraffic) {
+      trafficLayerRef.current.setMap(null);
+    } else {
+      trafficLayerRef.current.setMap(map);
+    }
+    setShowTraffic(!showTraffic);
+  };
+
+  // Handle map type toggle
+  const toggleSatellite = () => {
+    if (!map) return;
+
+    const newType = mapType === "roadmap" ? "satellite" : "roadmap";
+    setMapType(newType);
+    map.setMapTypeId(newType);
+  };
 
   // Handle routing
   const calculateRoute = async () => {
@@ -295,13 +244,13 @@ export function SafetyMap({
     return (
       <div
         className={cn(
-          "relative h-full w-full rounded-lg overflow-hidden border bg-muted flex items-center justify-center",
+          "relative h-full w-full rounded-lg overflow-hidden border bg-white flex items-center justify-center",
           className,
         )}
       >
         <div className="text-center space-y-2">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-muted-foreground">
+          <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-black font-mono">
             Loading Guardian Maps...
           </p>
         </div>
@@ -312,7 +261,7 @@ export function SafetyMap({
   return (
     <div
       className={cn(
-        "relative h-full w-full rounded-lg overflow-hidden",
+        "relative h-full w-full rounded-lg overflow-hidden bg-white",
         className,
       )}
     >
@@ -322,22 +271,22 @@ export function SafetyMap({
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowRouting(true)}
-              className="bg-black/80 hover:bg-black text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium shadow-xl border border-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+              className="bg-white hover:bg-gray-50 text-black px-4 py-2 rounded-lg flex items-center gap-2 font-medium shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
             >
               <Route className="h-4 w-4" />
               Get Directions
             </Button>
             {emergencyMode && (
-              <Badge className="bg-emergency text-emergency-foreground animate-pulse shadow-lg">
+              <Badge className="bg-red-500 text-white animate-pulse shadow-lg">
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 EMERGENCY MODE
               </Badge>
             )}
           </div>
         ) : (
-          <div className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl p-4 space-y-3">
+          <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-xl p-4 space-y-3 shadow-lg">
             <div className="flex items-center justify-between">
-              <h3 className="text-white font-semibold flex items-center gap-2">
+              <h3 className="text-black font-semibold flex items-center gap-2 font-mono">
                 <Navigation2 className="h-4 w-4" />
                 Route Planning
               </h3>
@@ -345,7 +294,7 @@ export function SafetyMap({
                 onClick={() => setShowRouting(false)}
                 variant="ghost"
                 size="sm"
-                className="text-white hover:bg-white/10 p-1"
+                className="text-black hover:bg-gray-100 p-1"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -357,13 +306,13 @@ export function SafetyMap({
                   placeholder="From location..."
                   value={fromLocation}
                   onChange={(e) => setFromLocation(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/60 pr-10"
+                  className="bg-white border-gray-300 text-black placeholder:text-gray-500 pr-10"
                 />
                 <Button
                   onClick={getCurrentLocation}
                   variant="ghost"
                   size="sm"
-                  className="absolute right-1 top-1 text-white hover:bg-white/10 p-1"
+                  className="absolute right-1 top-1 text-black hover:bg-gray-100 p-1"
                 >
                   <Locate className="h-3 w-3" />
                 </Button>
@@ -374,7 +323,7 @@ export function SafetyMap({
                   placeholder="To destination..."
                   value={toLocation}
                   onChange={(e) => setToLocation(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                  className="bg-white border-gray-300 text-black placeholder:text-gray-500"
                 />
               </div>
             </div>
@@ -400,7 +349,7 @@ export function SafetyMap({
               </Button>
               <Button
                 onClick={calculateRoute}
-                className="bg-primary hover:bg-primary/90 text-xs flex-1"
+                className="bg-black hover:bg-gray-800 text-white text-xs flex-1"
                 disabled={!fromLocation || !toLocation}
               >
                 <Navigation className="h-3 w-3 mr-1" />
@@ -409,8 +358,8 @@ export function SafetyMap({
             </div>
 
             {routeInfo && (
-              <div className="bg-white/10 rounded-lg p-3 space-y-1">
-                <div className="flex items-center justify-between text-white text-sm">
+              <div className="bg-gray-100 rounded-lg p-3 space-y-1">
+                <div className="flex items-center justify-between text-black text-sm font-mono">
                   <div className="flex items-center gap-2">
                     <Clock className="h-3 w-3" />
                     <span>{routeInfo.duration}</span>
@@ -426,15 +375,15 @@ export function SafetyMap({
         )}
       </div>
 
-      {/* Custom Map Controls */}
-      <div className="absolute bottom-4 right-4 z-[1000] space-y-2">
+      {/* Left Side Controls */}
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-[1000] space-y-2">
         {/* Zoom Controls */}
-        <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg overflow-hidden">
+        <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-lg overflow-hidden shadow-lg">
           <Button
             onClick={() => adjustZoom(1)}
             variant="ghost"
             size="sm"
-            className="text-white hover:bg-white/10 w-10 h-10 p-0 rounded-none border-b border-white/20"
+            className="text-black hover:bg-gray-100 w-10 h-10 p-0 rounded-none border-b border-gray-200"
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -442,7 +391,7 @@ export function SafetyMap({
             onClick={() => adjustZoom(-1)}
             variant="ghost"
             size="sm"
-            className="text-white hover:bg-white/10 w-10 h-10 p-0 rounded-none"
+            className="text-black hover:bg-gray-100 w-10 h-10 p-0 rounded-none"
           >
             <Minus className="h-4 w-4" />
           </Button>
@@ -451,34 +400,51 @@ export function SafetyMap({
         {/* Location Button */}
         <Button
           onClick={getCurrentLocation}
-          className="bg-black/80 hover:bg-black text-white w-10 h-10 p-0 rounded-lg shadow-xl border border-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+          className="bg-white hover:bg-gray-50 text-black w-10 h-10 p-0 rounded-lg shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
         >
           <Locate className="h-4 w-4" />
         </Button>
+      </div>
 
-        {/* Layers Button */}
+      {/* Right Side Controls */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 z-[1000] space-y-2">
+        {/* Traffic Toggle */}
         <Button
-          onClick={() => {
-            if (map) {
-              const currentType = map.getMapTypeId();
-              map.setMapTypeId(
-                currentType === "roadmap" ? "satellite" : "roadmap",
-              );
-            }
-          }}
-          className="bg-black/80 hover:bg-black text-white w-10 h-10 p-0 rounded-lg shadow-xl border border-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+          onClick={toggleTraffic}
+          className={cn(
+            "w-10 h-10 p-0 rounded-lg shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105",
+            showTraffic
+              ? "bg-orange-500 hover:bg-orange-600 text-white"
+              : "bg-white hover:bg-gray-50 text-black",
+          )}
         >
-          <Layers className="h-4 w-4" />
+          <Navigation className="h-4 w-4" />
+        </Button>
+
+        {/* Satellite Toggle */}
+        <Button
+          onClick={toggleSatellite}
+          className={cn(
+            "w-10 h-10 p-0 rounded-lg shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105",
+            mapType === "satellite"
+              ? "bg-blue-500 hover:bg-blue-600 text-white"
+              : "bg-white hover:bg-gray-50 text-black",
+          )}
+        >
+          <Eye className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Map Container */}
       <div ref={mapRef} className="h-full w-full" />
 
-      {/* Zoom Level Indicator */}
+      {/* Bottom Status */}
       <div className="absolute bottom-4 left-4 z-[1000]">
-        <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg px-3 py-1">
-          <span className="text-white text-xs font-mono">Zoom: {zoom}</span>
+        <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-lg px-3 py-1 shadow-lg">
+          <span className="text-black text-xs font-mono">
+            Zoom: {zoom} | {mapType === "satellite" ? "Satellite" : "Map"} |
+            Traffic: {showTraffic ? "ON" : "OFF"}
+          </span>
         </div>
       </div>
     </div>
