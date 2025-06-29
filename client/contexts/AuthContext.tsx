@@ -18,7 +18,6 @@ import { auth, db } from "@/lib/firebase";
 
 interface GuardianUser extends User {
   guardianKey?: string;
-  displayName?: string;
 }
 
 interface AuthContextType {
@@ -44,6 +43,7 @@ interface EmergencyContact {
   id: string;
   guardianKey: string;
   name: string;
+  phone?: string;
   priority: number;
   addedAt: Date;
   isActive: boolean;

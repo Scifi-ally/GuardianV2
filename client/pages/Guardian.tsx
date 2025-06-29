@@ -87,11 +87,7 @@ export default function Guardian() {
           userProfile.guardianKey,
           emergencyContacts,
           location,
-          type === "panic"
-            ? "panic"
-            : type === "manual"
-              ? "manual"
-              : "automatic",
+          type === "manual" ? "manual" : "automatic",
           `Emergency detected: ${type}. Immediate assistance needed.`,
         );
 
