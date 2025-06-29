@@ -946,7 +946,329 @@ export default function Guardian() {
         </div>
       </SlidingPanel>
 
-      {/* Add all other remaining panels with consistent enhanced styling... */}
+      <SlidingPanel
+        title="Check-in Safety Timer"
+        isOpen={activePanel === "check-in"}
+        onClose={closePanel}
+        direction="right"
+        size="sm"
+      >
+        <div className="space-y-6">
+          <div className="p-6 bg-gradient-to-br from-safe/10 to-safe/20 rounded-xl border-2 border-safe/30">
+            <Clock className="h-10 w-10 text-safe mb-3" />
+            <h3 className="font-bold text-lg mb-3">Safety Check-in Timer</h3>
+            <p className="text-muted-foreground">
+              Set automatic alerts if you don't check in within a specified time
+              period. Perfect for solo journeys.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <p className="font-medium">Check-in Interval</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm">
+                  30 min
+                </Button>
+                <Button variant="outline" size="sm">
+                  1 hour
+                </Button>
+                <Button variant="outline" size="sm">
+                  2 hours
+                </Button>
+                <Button size="sm" className="bg-safe">
+                  Custom
+                </Button>
+              </div>
+            </div>
+
+            <Button className="w-full h-12 bg-safe hover:bg-safe/90 text-safe-foreground shadow-lg">
+              <Clock className="h-4 w-4 mr-2" />
+              Start Check-in Timer
+            </Button>
+          </div>
+        </div>
+      </SlidingPanel>
+
+      <SlidingPanel
+        title="Fake Emergency Call"
+        isOpen={activePanel === "fake-call"}
+        onClose={closePanel}
+        direction="right"
+        size="sm"
+      >
+        <div className="space-y-6">
+          <div className="p-6 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl border-2 border-primary/30">
+            <Phone className="h-10 w-10 text-primary mb-3" />
+            <h3 className="font-bold text-lg mb-3">Fake Emergency Call</h3>
+            <p className="text-muted-foreground">
+              Simulate receiving an urgent call to safely escape uncomfortable
+              or dangerous situations.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <p className="font-medium">Call Scenario</p>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-12 border-2"
+                >
+                  <Users className="h-4 w-4 mr-3" />
+                  Family Emergency
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-12 border-2"
+                >
+                  <Activity className="h-4 w-4 mr-3" />
+                  Work Emergency
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-12 border-2"
+                >
+                  <Heart className="h-4 w-4 mr-3" />
+                  Medical Appointment
+                </Button>
+              </div>
+            </div>
+
+            <Button className="w-full h-12 bg-primary hover:bg-primary/90 shadow-lg">
+              <Phone className="h-4 w-4 mr-2" />
+              Start Fake Call
+            </Button>
+          </div>
+        </div>
+      </SlidingPanel>
+
+      <SlidingPanel
+        title="Safe Routes Planning"
+        isOpen={activePanel === "routes"}
+        onClose={closePanel}
+        direction="bottom"
+      >
+        <div className="space-y-6">
+          <div className="p-6 bg-gradient-to-br from-safe/10 to-safe/20 rounded-xl border-2 border-safe/30">
+            <NavIcon className="h-10 w-10 text-safe mb-3" />
+            <h3 className="font-bold text-lg mb-3">
+              Smart Safe Route Planning
+            </h3>
+            <p className="text-muted-foreground">
+              Get AI-powered directions with safety-optimized routes that avoid
+              high-risk areas and prioritize well-lit, populated paths.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <p className="font-medium">Destination</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter destination address..."
+                  className="flex-1 p-3 text-sm border-2 rounded-lg bg-background focus:border-primary focus:outline-none"
+                />
+                <Button size="sm" className="px-4 h-12 bg-primary">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  Search
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="font-medium">Safety Preferences</p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 border-2 rounded-lg bg-muted/10">
+                  <span className="font-medium">Well-lit paths only</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </div>
+                <div className="flex items-center justify-between p-3 border-2 rounded-lg bg-muted/10">
+                  <span className="font-medium">Avoid isolated areas</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </div>
+                <div className="flex items-center justify-between p-3 border-2 rounded-lg bg-muted/10">
+                  <span className="font-medium">Near public transport</span>
+                  <input type="checkbox" className="w-4 h-4" />
+                </div>
+                <div className="flex items-center justify-between p-3 border-2 rounded-lg bg-muted/10">
+                  <span className="font-medium">CCTV coverage priority</span>
+                  <input type="checkbox" className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
+            <Button className="w-full h-12 bg-safe hover:bg-safe/90 text-safe-foreground shadow-lg">
+              <NavIcon className="h-4 w-4 mr-2" />
+              Plan Safe Route
+            </Button>
+          </div>
+        </div>
+      </SlidingPanel>
+
+      <SlidingPanel
+        title="Safe Places Directory"
+        isOpen={activePanel === "places"}
+        onClose={closePanel}
+        direction="right"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="p-6 bg-gradient-to-br from-protection/10 to-protection/20 rounded-xl border-2 border-protection/30">
+            <MapPin className="h-10 w-10 text-protection mb-3" />
+            <h3 className="font-bold text-lg mb-3">Safe Places Directory</h3>
+            <p className="text-muted-foreground">
+              Find nearby safe locations including police stations, hospitals,
+              well-lit public areas, and 24/7 establishments.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="h-16 flex-col gap-2 border-2"
+              >
+                <Shield className="h-5 w-5 text-safe" />
+                <span className="text-sm font-medium">Police Stations</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-16 flex-col gap-2 border-2"
+              >
+                <Heart className="h-5 w-5 text-emergency" />
+                <span className="text-sm font-medium">Hospitals</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-16 flex-col gap-2 border-2"
+              >
+                <Users className="h-5 w-5 text-primary" />
+                <span className="text-sm font-medium">Public Areas</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-16 flex-col gap-2 border-2"
+              >
+                <Clock className="h-5 w-5 text-protection" />
+                <span className="text-sm font-medium">24/7 Places</span>
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-medium">Nearby Safe Locations</h4>
+              <div className="space-y-2">
+                <div className="p-3 border-2 rounded-lg bg-safe/5 border-safe/20">
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-4 w-4 text-safe" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">
+                        Central Police Station
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        0.3 km away • Open 24/7
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline">
+                      <Navigation className="h-3 w-3 mr-1" />
+                      Go
+                    </Button>
+                  </div>
+                </div>
+                <div className="p-3 border-2 rounded-lg bg-emergency/5 border-emergency/20">
+                  <div className="flex items-center gap-3">
+                    <Heart className="h-4 w-4 text-emergency" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">
+                        City General Hospital
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        0.8 km away • Emergency services
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline">
+                      <Navigation className="h-3 w-3 mr-1" />
+                      Go
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SlidingPanel>
+
+      <SlidingPanel
+        title="Safety Statistics"
+        isOpen={activePanel === "trips"}
+        onClose={closePanel}
+        direction="right"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div className="p-6 bg-gradient-to-br from-primary/10 to-protection/10 rounded-xl border-2 border-primary/30">
+            <Activity className="h-10 w-10 text-primary mb-3" />
+            <h3 className="font-bold text-lg mb-3">Your Safety Statistics</h3>
+            <p className="text-muted-foreground">
+              Track your safety journey and see how Guardian has protected you.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="border-2 border-safe/30">
+              <CardContent className="p-4 text-center">
+                <div className="text-3xl font-bold text-safe mb-1">
+                  {Math.floor(Math.random() * 50) + 20}
+                </div>
+                <div className="text-sm text-muted-foreground">Safe Trips</div>
+                <Badge className="bg-safe/20 text-safe text-xs mt-2">
+                  This Month
+                </Badge>
+              </CardContent>
+            </Card>
+            <Card className="border-2 border-primary/30">
+              <CardContent className="p-4 text-center">
+                <div className="text-3xl font-bold text-primary mb-1">
+                  {Math.floor(Math.random() * 200) + 100}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Hours Protected
+                </div>
+                <Badge className="bg-primary/20 text-primary text-xs mt-2">
+                  Total
+                </Badge>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="p-4 bg-muted/20 rounded-lg border-2">
+            <h4 className="font-bold mb-3">Recent Activity Summary</h4>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Today's Safe Journeys</span>
+                <span className="text-safe font-bold">
+                  +{Math.floor(Math.random() * 5) + 1}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Location Shares</span>
+                <span className="text-primary font-bold">
+                  {Math.floor(Math.random() * 20) + 5}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Emergency Readiness</span>
+                <span className="text-protection font-bold">100%</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Safety Score</span>
+                <span className="text-safe font-bold">Excellent</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SlidingPanel>
     </PanelContainer>
   );
 }
