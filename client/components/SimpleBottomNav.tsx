@@ -1,6 +1,16 @@
-import { useState } from "react";
-import { MapPin, User, AlertTriangle } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import {
+  MapPin,
+  User,
+  AlertTriangle,
+  Phone,
+  Shield,
+  Camera,
+  MessageSquare,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface SimpleBottomNavProps {
@@ -16,6 +26,8 @@ export function SimpleBottomNav({
 }: SimpleBottomNavProps) {
   const [sosPressed, setSosPressed] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [panicMode, setPanicMode] = useState(false);
+  const [panicTimer, setPanicTimer] = useState<NodeJS.Timeout | null>(null);
 
   const handleSOSPress = () => {
     if (sosPressed) return;
@@ -29,6 +41,7 @@ export function SimpleBottomNav({
           clearInterval(countdownInterval);
           setSosPressed(false);
           onSOSPress();
+          activatePanicMode();
           return 0;
         }
         return prev - 1;
@@ -40,6 +53,34 @@ export function SimpleBottomNav({
     setSosPressed(false);
     setCountdown(0);
   };
+
+  const activatePanicMode = useCallback(() => {
+    setPanicMode(true);
+    // Auto-deactivate panic mode after 5 minutes
+    const timer = setTimeout(
+      () => {
+        setPanicMode(false);
+      },
+      5 * 60 * 1000,
+    );
+    setPanicTimer(timer);
+  }, []);
+
+  const deactivatePanicMode = useCallback(() => {
+    setPanicMode(false);
+    if (panicTimer) {
+      clearTimeout(panicTimer);
+      setPanicTimer(null);
+    }
+  }, [panicTimer]);
+
+  useEffect(() => {
+    return () => {
+      if (panicTimer) {
+        clearTimeout(panicTimer);
+      }
+    };
+  }, [panicTimer]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-lg border-t border-border/50">
