@@ -173,36 +173,22 @@ export default function Guardian() {
       <div className="h-full flex flex-col pb-24">
         {/* Status Bar */}
         <div className="p-4 border-b border-border/50 bg-background">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                <Shield className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge className={statusColors[safetyStatus]}>
-                  <Activity className="h-3 w-3 mr-1" />
-                  {safetyStatus.toUpperCase()}
-                </Badge>
-                {location && (
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-safe/20 text-safe"
-                  >
-                    <MapPin className="h-3 w-3 mr-1" />
-                    GPS
-                  </Badge>
-                )}
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+              <Shield className="h-4 w-4 text-primary" />
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveTab("profile")}
-              className="text-xs px-3 py-2 h-8 hover:bg-muted/50"
-            >
-              <User className="h-4 w-4 mr-1" />
-              Profile
-            </Button>
+            <div className="flex items-center gap-2">
+              <Badge className={statusColors[safetyStatus]}>
+                <Activity className="h-3 w-3 mr-1" />
+                {safetyStatus.toUpperCase()}
+              </Badge>
+              {location && (
+                <Badge variant="outline" className="text-xs">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  GPS
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
@@ -236,14 +222,14 @@ export default function Guardian() {
               {/* Profile Header */}
               <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-16 w-16 flex-shrink-0">
                       <AvatarFallback className="bg-primary/20 text-primary text-xl font-bold">
                         {userProfile?.displayName?.charAt(0)?.toUpperCase() ||
                           "G"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <h2 className="font-bold text-lg">
                         {userProfile?.displayName || "Guardian User"}
                       </h2>
@@ -251,10 +237,7 @@ export default function Guardian() {
                         {userProfile?.email || "No email set"}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
-                        <Badge
-                          variant="outline"
-                          className="text-xs border-safe/30 text-safe"
-                        >
+                        <Badge variant="outline" className="text-xs">
                           <Shield className="h-3 w-3 mr-1" />
                           Verified
                         </Badge>
@@ -263,30 +246,29 @@ export default function Guardian() {
                         </Badge>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openPanel("settings")}
-                        className="text-xs px-3 py-1 h-8"
-                      >
-                        <Settings className="h-3 w-3 mr-1" />
-                        Settings
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleLogout}
-                        className="text-xs px-3 py-1 h-8 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      >
-                        <LogOut className="h-3 w-3 mr-1" />
-                        Sign Out
-                      </Button>
-                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openPanel("settings")}
+                      className="text-xs px-3 py-2 h-8 flex-1"
+                    >
+                      <Settings className="h-3 w-3 mr-1" />
+                      Settings
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleLogout}
+                      className="text-xs px-3 py-2 h-8 flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <LogOut className="h-3 w-3 mr-1" />
+                      Sign Out
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
-
               {/* Guardian Key Card */}
               <GuardianKeyCard />
 
