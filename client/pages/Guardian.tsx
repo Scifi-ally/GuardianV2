@@ -544,44 +544,6 @@ export default function Guardian() {
       </SlidingPanel>
 
       {/* Enhanced Safety Panels */}
-      <SlidingPanel
-        title="Panic Mode"
-        isOpen={activePanel === "panic"}
-        onClose={closePanel}
-        direction="bottom"
-      >
-        <div className="space-y-4">
-          <div className="text-center p-4 bg-emergency/5 rounded-lg border border-emergency/20">
-            <AlertTriangle className="h-12 w-12 text-emergency mx-auto mb-2" />
-            <h3 className="font-bold text-emergency mb-2">
-              PANIC MODE ACTIVATED
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              All safety features are now active. Your location is being shared
-              with emergency contacts.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button className="h-14 flex-col gap-1 bg-emergency hover:bg-emergency/90">
-              <Phone className="h-5 w-5" />
-              <span className="text-xs">Call 911</span>
-            </Button>
-            <Button variant="outline" className="h-14 flex-col gap-1">
-              <MessageSquare className="h-5 w-5" />
-              <span className="text-xs">Alert Contacts</span>
-            </Button>
-            <Button variant="outline" className="h-14 flex-col gap-1">
-              <Camera className="h-5 w-5" />
-              <span className="text-xs">Start Recording</span>
-            </Button>
-            <Button variant="outline" className="h-14 flex-col gap-1">
-              <Shield className="h-5 w-5" />
-              <span className="text-xs">Safe Mode</span>
-            </Button>
-          </div>
-        </div>
-      </SlidingPanel>
 
       <SlidingPanel
         title="Silent Alarm"
