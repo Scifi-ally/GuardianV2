@@ -162,12 +162,12 @@ export function SimpleBottomNav({
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80 backdrop-blur-xl border-t border-border/30" />
 
         {/* Navigation Content */}
-        <div className="relative container max-w-md mx-auto px-4 py-3">
+        <div className="relative max-w-sm mx-auto px-6 py-4">
           {/* Tab Indicator */}
-          <div className="absolute top-2 left-4 right-4 h-1 bg-muted/30 rounded-full overflow-hidden">
+          <div className="absolute top-3 left-6 right-6 h-1 bg-muted/20 rounded-full overflow-hidden">
             <div
               className={cn(
-                "h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-500 ease-out",
+                "h-full bg-gradient-to-r from-primary via-primary/90 to-primary/80 rounded-full transition-all duration-700 ease-in-out shadow-sm",
                 activeTab === "map"
                   ? "translate-x-0 w-1/2"
                   : "translate-x-full w-1/2",
@@ -175,32 +175,41 @@ export function SimpleBottomNav({
             />
           </div>
 
-          <div className="flex items-end justify-between pt-2">
+          <div className="flex items-end justify-center gap-16 pt-3">
             {/* Map Button */}
-            <div className="flex flex-col items-center">
+            <div className="relative flex flex-col items-center group">
+              <div
+                className={cn(
+                  "absolute inset-0 rounded-2xl transition-all duration-500 opacity-0 group-hover:opacity-100",
+                  activeTab === "map"
+                    ? "bg-primary/20 blur-xl scale-110"
+                    : "bg-primary/10 blur-lg scale-105",
+                )}
+              />
               <Button
                 onClick={() => onTabChange("map")}
                 variant="ghost"
                 className={cn(
-                  "h-14 w-14 rounded-2xl flex-col gap-1 transition-all duration-300 transform",
+                  "relative h-16 w-16 rounded-2xl transition-all duration-500 transform backdrop-blur-sm",
+                  "hover:shadow-lg hover:-translate-y-1 active:scale-95",
                   activeTab === "map"
-                    ? "bg-primary/15 text-primary scale-110 shadow-lg border border-primary/20"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/20 hover:scale-105",
+                    ? "bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 text-primary scale-110 shadow-xl border-2 border-primary/30 ring-4 ring-primary/10"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10 hover:scale-105 hover:border-primary/20 border-2 border-transparent",
                 )}
               >
                 <MapPin
                   className={cn(
-                    "transition-all duration-200",
-                    activeTab === "map" ? "h-6 w-6" : "h-5 w-5",
+                    "transition-all duration-300",
+                    activeTab === "map" ? "h-7 w-7 animate-pulse" : "h-6 w-6",
                   )}
                 />
               </Button>
               <span
                 className={cn(
-                  "text-xs font-medium mt-1 transition-all duration-200",
+                  "text-xs font-medium mt-2 transition-all duration-300",
                   activeTab === "map"
-                    ? "text-primary"
-                    : "text-muted-foreground",
+                    ? "text-primary scale-110"
+                    : "text-muted-foreground group-hover:text-primary",
                 )}
               >
                 Map
@@ -208,23 +217,28 @@ export function SimpleBottomNav({
             </div>
 
             {/* SOS Button - Center Elevated */}
-            <div className="flex flex-col items-center relative -mt-4">
+            <div className="relative flex flex-col items-center -mt-6">
               {panicMode && (
-                <div className="absolute -top-1 -right-1 h-4 w-4 bg-emergency rounded-full animate-pulse border-2 border-white shadow-lg" />
+                <div className="absolute -top-2 -right-2 h-5 w-5 bg-emergency rounded-full animate-ping border-3 border-white shadow-2xl" />
               )}
+              <div className="absolute inset-0 rounded-full bg-emergency/20 blur-2xl scale-125 animate-pulse opacity-50" />
               {!sosPressed ? (
                 <Button
                   onClick={handleSOSPress}
                   className={cn(
-                    "h-20 w-20 rounded-full transition-all duration-300 transform hover:scale-105",
-                    panicMode
-                      ? "bg-emergency animate-pulse text-emergency-foreground shadow-xl border-4 border-emergency/30 ring-4 ring-emergency/20"
-                      : "bg-gradient-to-br from-emergency to-emergency/80 hover:from-emergency/90 hover:to-emergency/70 text-emergency-foreground shadow-xl border-3 border-white/50",
+                    "relative h-24 w-24 rounded-full transition-all duration-300 transform",
+                    "bg-gradient-to-br from-emergency via-emergency/90 to-emergency/80",
+                    "hover:from-emergency/95 hover:via-emergency/85 hover:to-emergency/75",
+                    "text-emergency-foreground shadow-2xl border-4 border-white/70",
+                    "hover:scale-110 hover:shadow-emergency/25 hover:-translate-y-2",
+                    "active:scale-105 active:translate-y-0",
+                    panicMode &&
+                      "animate-pulse ring-4 ring-emergency/30 border-emergency/50",
                   )}
                 >
                   <div className="flex flex-col items-center justify-center gap-1">
-                    <AlertTriangle className="h-7 w-7 drop-shadow-sm" />
-                    <span className="text-xs font-bold drop-shadow-sm">
+                    <AlertTriangle className="h-8 w-8 drop-shadow-lg" />
+                    <span className="text-sm font-bold drop-shadow-lg">
                       SOS
                     </span>
                   </div>
@@ -233,51 +247,62 @@ export function SimpleBottomNav({
                 <Button
                   onClick={handleCancelSOS}
                   className={cn(
-                    "h-20 w-20 rounded-full transition-all duration-200 transform",
-                    "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground",
-                    "shadow-xl border-3 border-white/50 animate-pulse",
+                    "relative h-24 w-24 rounded-full transition-all duration-200",
+                    "bg-gradient-to-br from-warning via-warning/90 to-warning/80 text-warning-foreground",
+                    "shadow-2xl border-4 border-white/70 animate-pulse ring-4 ring-warning/30",
                   )}
                 >
                   <div className="flex flex-col items-center justify-center gap-1">
-                    <div className="text-xl font-bold drop-shadow-sm">
+                    <div className="text-2xl font-bold drop-shadow-lg">
                       {countdown}
                     </div>
-                    <span className="text-xs font-medium drop-shadow-sm">
+                    <span className="text-sm font-medium drop-shadow-lg">
                       Cancel
                     </span>
                   </div>
                 </Button>
               )}
-              <span className="text-xs font-medium mt-2 text-emergency">
+              <span className="text-xs font-bold mt-3 text-emergency animate-pulse">
                 Emergency
               </span>
             </div>
 
             {/* Profile Button */}
-            <div className="flex flex-col items-center">
+            <div className="relative flex flex-col items-center group">
+              <div
+                className={cn(
+                  "absolute inset-0 rounded-2xl transition-all duration-500 opacity-0 group-hover:opacity-100",
+                  activeTab === "profile"
+                    ? "bg-primary/20 blur-xl scale-110"
+                    : "bg-primary/10 blur-lg scale-105",
+                )}
+              />
               <Button
                 onClick={() => onTabChange("profile")}
                 variant="ghost"
                 className={cn(
-                  "h-14 w-14 rounded-2xl flex-col gap-1 transition-all duration-300 transform",
+                  "relative h-16 w-16 rounded-2xl transition-all duration-500 transform backdrop-blur-sm",
+                  "hover:shadow-lg hover:-translate-y-1 active:scale-95",
                   activeTab === "profile"
-                    ? "bg-primary/15 text-primary scale-110 shadow-lg border border-primary/20"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/20 hover:scale-105",
+                    ? "bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 text-primary scale-110 shadow-xl border-2 border-primary/30 ring-4 ring-primary/10"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10 hover:scale-105 hover:border-primary/20 border-2 border-transparent",
                 )}
               >
                 <User
                   className={cn(
-                    "transition-all duration-200",
-                    activeTab === "profile" ? "h-6 w-6" : "h-5 w-5",
+                    "transition-all duration-300",
+                    activeTab === "profile"
+                      ? "h-7 w-7 animate-pulse"
+                      : "h-6 w-6",
                   )}
                 />
               </Button>
               <span
                 className={cn(
-                  "text-xs font-medium mt-1 transition-all duration-200",
+                  "text-xs font-medium mt-2 transition-all duration-300",
                   activeTab === "profile"
-                    ? "text-primary"
-                    : "text-muted-foreground",
+                    ? "text-primary scale-110"
+                    : "text-muted-foreground group-hover:text-primary",
                 )}
               >
                 Profile
