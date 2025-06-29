@@ -186,8 +186,14 @@ export function SafetyDashboard({
   const grade = getSafetyGrade(metrics.safetyScore);
 
   const formatDuration = (hours: number) => {
-    if (hours < 24) return `${hours}h`;
-    const days = Math.floor(hours / 24);
+    // Ensure hours is a valid number
+    const validHours =
+      typeof hours === "number" && !isNaN(hours) && isFinite(hours)
+        ? Math.max(0, hours)
+        : 0;
+
+    if (validHours < 24) return `${Math.floor(validHours)}h`;
+    const days = Math.floor(validHours / 24);
     if (days < 7) return `${days}d`;
     const weeks = Math.floor(days / 7);
     if (weeks < 4) return `${weeks}w`;
