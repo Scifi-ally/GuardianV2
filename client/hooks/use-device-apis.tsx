@@ -172,15 +172,23 @@ export function useGeolocation() {
   };
 }
 
+// Extend the Window interface to include SpeechRecognition
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 export function useVoiceActivation() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(false);
-  const recognition = useRef<SpeechRecognition | null>(null);
+  const recognition = useRef<any>(null);
 
   useEffect(() => {
     const SpeechRecognition =
-      window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
       setIsSupported(true);
