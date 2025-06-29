@@ -166,6 +166,19 @@ export class SOSService {
         },
         (error) => {
           console.warn("SOS alerts subscription error:", error);
+
+          if (
+            error.code === "failed-precondition" ||
+            error.message?.includes("requires an index")
+          ) {
+            console.log(
+              "Firestore index missing - falling back to simplified query",
+            );
+            // For index errors, return empty array and let user know
+            onAlert([]);
+            return;
+          }
+
           if (error.code === "permission-denied") {
             console.log(
               "Firestore permissions denied, using local fallback for SOS alerts",
