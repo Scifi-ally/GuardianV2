@@ -34,6 +34,7 @@ import { GuardianKeyCard } from "@/components/GuardianKeyCard";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { SOSAlertManager } from "@/components/SOSAlertManager";
 import { BackgroundSafetyMonitor } from "@/components/BackgroundSafetyMonitor";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useHapticFeedback, useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { SOSService } from "@/services/sosService";
@@ -384,10 +385,27 @@ export default function Guardian() {
                 </div>
               </div>
               {/* Background Safety Monitor */}
-              <BackgroundSafetyMonitor
-                onEmergencyDetected={handleEmergencyTriggered}
-                className="mb-4"
-              />
+              <ErrorBoundary
+                fallback={
+                  <Card className="border-warning/20 bg-warning/5">
+                    <CardContent className="p-4 text-center">
+                      <AlertTriangle className="h-8 w-8 text-warning mx-auto mb-2" />
+                      <p className="text-sm font-medium">
+                        Safety Monitor Unavailable
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Voice activation temporarily disabled. Core safety
+                        features remain active.
+                      </p>
+                    </CardContent>
+                  </Card>
+                }
+              >
+                <BackgroundSafetyMonitor
+                  onEmergencyDetected={handleEmergencyTriggered}
+                  className="mb-4"
+                />
+              </ErrorBoundary>
 
               {/* Emergency Contacts Manager */}
               <EmergencyContactManager />
