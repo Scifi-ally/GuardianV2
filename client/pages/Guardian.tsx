@@ -430,90 +430,12 @@ export default function Guardian() {
               {/* Guardian Key Card */}
               <GuardianKeyCard />
 
-              {/* Enhanced Safety Overview */}
-              <div>
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-primary" />
-                  Safety Dashboard
-                </h3>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <Card
-                    className="group border-2 border-safe/20 bg-gradient-to-br from-safe/5 to-safe/10 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-safe/60 hover:bg-safe/20 transform hover:scale-105 hover:-translate-y-1 active:scale-95"
-                    onClick={() => openPanel("contacts")}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="p-3 rounded-full bg-safe/20 transition-all duration-200 group-hover:bg-safe/30 group-hover:scale-110">
-                          <Users className="h-6 w-6 text-safe transition-all duration-200 group-hover:scale-110" />
-                        </div>
-                        <div className="text-2xl font-bold text-safe transition-all duration-200 group-hover:scale-110">
-                          {emergencyContacts.length}
-                        </div>
-                        <div className="text-sm text-muted-foreground transition-all duration-200 group-hover:text-safe/80">
-                          Emergency Contacts
-                        </div>
-                        {emergencyContacts.length === 0 && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs mt-1 border-warning text-warning transition-all duration-200 group-hover:scale-105"
-                          >
-                            Add Contacts
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card
-                    className="group border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-primary/60 hover:bg-primary/20 transform hover:scale-105 hover:-translate-y-1 active:scale-95"
-                    onClick={() => openPanel("alerts")}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="p-3 rounded-full bg-primary/20 transition-all duration-200 group-hover:bg-primary/30 group-hover:scale-110">
-                          <Bell className="h-6 w-6 text-primary transition-all duration-200 group-hover:scale-110" />
-                        </div>
-                        <div className="text-2xl font-bold text-primary transition-all duration-200 group-hover:scale-110">
-                          {safetyStatus === "emergency" ? "1" : "0"}
-                        </div>
-                        <div className="text-sm text-muted-foreground transition-all duration-200 group-hover:text-primary/80">
-                          Active Alerts
-                        </div>
-                        {safetyStatus === "emergency" && (
-                          <Badge className="text-xs mt-1 bg-emergency text-emergency-foreground transition-all duration-200 group-hover:scale-105 animate-pulse">
-                            EMERGENCY
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Safety Score */}
-                <Card className="border-2 border-protection/20 bg-gradient-to-br from-protection/5 to-protection/10">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-protection" />
-                        Safety Score
-                      </h4>
-                      <Badge className="bg-protection/20 text-protection">
-                        Excellent
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Overall Safety</span>
-                        <span className="font-medium">92%</span>
-                      </div>
-                      <Progress value={92} className="h-2" />
-                      <div className="text-xs text-muted-foreground">
-                        Based on contacts, location sharing, and activity
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Functional Safety Dashboard */}
+              <SafetyDashboard
+                onContactsClick={() => openPanel("contacts")}
+                onAlertsClick={() => openPanel("alerts")}
+                onTripsClick={() => openPanel("trips")}
+              />
 
               {/* Enhanced Quick Actions */}
               <div>
