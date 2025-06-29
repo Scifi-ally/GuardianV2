@@ -269,16 +269,7 @@ export default function Guardian() {
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold tracking-wide">Guardian</h1>
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  document.documentElement.classList.toggle("dark");
-                }}
-                className="p-2 rounded-full"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
+              <ThemeToggle />
               <Button
                 variant="ghost"
                 size="sm"
