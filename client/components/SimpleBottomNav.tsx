@@ -157,9 +157,9 @@ export function SimpleBottomNav({
       )}
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="fixed bottom-0 left-0 right-0 z-50 overflow-hidden">
         {/* Background with blur and gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80 backdrop-blur-xl border-t border-border/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/98 to-background/90 backdrop-blur-xl" />
 
         {/* Navigation Content */}
         <div className="relative max-w-sm mx-auto px-6 py-4">
