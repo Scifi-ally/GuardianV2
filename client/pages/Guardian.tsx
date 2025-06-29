@@ -753,7 +753,64 @@ export default function Guardian() {
 
       {/* All Safety Features Panel */}
       <SlidingPanel
-        title="Safety Features"
+        title="Safe Routes"
+        isOpen={activePanel === "routes"}
+        onClose={closePanel}
+        direction="right"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-safe/5 rounded-lg border border-safe/20">
+            <NavIcon className="h-8 w-8 text-safe mb-2" />
+            <h3 className="font-medium mb-2">Safe Route Planning</h3>
+            <p className="text-sm text-muted-foreground">
+              Get directions with safety-optimized routes that avoid high-risk
+              areas and include well-lit, populated paths.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Destination</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter destination..."
+                  className="flex-1 p-2 text-sm border rounded-lg bg-background"
+                />
+                <Button size="sm" className="px-3">
+                  Search
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Route Preferences</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2 border rounded-lg">
+                  <span className="text-sm">Well-lit paths</span>
+                  <input type="checkbox" defaultChecked />
+                </div>
+                <div className="flex items-center justify-between p-2 border rounded-lg">
+                  <span className="text-sm">Avoid isolated areas</span>
+                  <input type="checkbox" defaultChecked />
+                </div>
+                <div className="flex items-center justify-between p-2 border rounded-lg">
+                  <span className="text-sm">Public transport nearby</span>
+                  <input type="checkbox" />
+                </div>
+              </div>
+            </div>
+
+            <Button className="w-full bg-safe hover:bg-safe/90 text-safe-foreground">
+              Plan Safe Route
+            </Button>
+          </div>
+        </div>
+      </SlidingPanel>
+
+      <SlidingPanel
+        title="All Safety Features"
         isOpen={activePanel === "features"}
         onClose={closePanel}
         direction="bottom"
