@@ -59,12 +59,53 @@ export function GuardianKeyCard() {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(guardianKey);
+      // First try the modern Clipboard API
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(guardianKey);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+      }
+
+      // Fallback method using document.execCommand
+      await copyToClipboardFallback(guardianKey);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error("Failed to copy:", error);
+      // Show user-friendly error message
+      alert(`Copy failed. Please manually copy this key: ${guardianKey}`);
     }
+  };
+
+  // Fallback clipboard method
+  const copyToClipboardFallback = async (text: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      // Create a temporary textarea element
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+
+      try {
+        textArea.focus();
+        textArea.select();
+
+        // Try to copy using execCommand
+        const successful = document.execCommand("copy");
+        if (successful) {
+          resolve();
+        } else {
+          reject(new Error("execCommand copy failed"));
+        }
+      } catch (err) {
+        reject(err);
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    });
   };
 
   const shareKey = async () => {
