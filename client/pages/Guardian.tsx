@@ -293,9 +293,11 @@ export default function Guardian() {
       {/* Main Interface */}
       <div className="h-full flex flex-col pb-32">
         {/* Minimal Header */}
-        <div className="p-3 border-b border-border/30 bg-background/95 backdrop-blur-sm">
+        <div className="p-3 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold tracking-wide">Guardian</h1>
+            <h1 className="text-xl font-bold tracking-wide text-black font-mono">
+              Guardian
+            </h1>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <Button
