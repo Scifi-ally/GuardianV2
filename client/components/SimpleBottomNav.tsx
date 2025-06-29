@@ -157,75 +157,132 @@ export function SimpleBottomNav({
       )}
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-lg border-t border-border/50">
-        <div className="container max-w-md mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Map Button */}
-            <Button
-              onClick={() => onTabChange("map")}
-              variant="ghost"
-              className={cn(
-                "h-16 w-16 rounded-xl flex-col gap-1 transition-colors duration-200",
-                activeTab === "map"
-                  ? "bg-primary/10 text-primary border border-primary/20"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
-              )}
-            >
-              <MapPin className="h-5 w-5" />
-              <span className="text-xs font-medium">Map</span>
-            </Button>
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        {/* Background with blur and gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80 backdrop-blur-xl border-t border-border/30" />
 
-            {/* SOS Button - Center */}
-            <div className="flex items-center justify-center relative">
+        {/* Navigation Content */}
+        <div className="relative container max-w-md mx-auto px-4 py-3">
+          {/* Tab Indicator */}
+          <div className="absolute top-2 left-4 right-4 h-1 bg-muted/30 rounded-full overflow-hidden">
+            <div
+              className={cn(
+                "h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-500 ease-out",
+                activeTab === "map"
+                  ? "translate-x-0 w-1/2"
+                  : "translate-x-full w-1/2",
+              )}
+            />
+          </div>
+
+          <div className="flex items-end justify-between pt-2">
+            {/* Map Button */}
+            <div className="flex flex-col items-center">
+              <Button
+                onClick={() => onTabChange("map")}
+                variant="ghost"
+                className={cn(
+                  "h-14 w-14 rounded-2xl flex-col gap-1 transition-all duration-300 transform",
+                  activeTab === "map"
+                    ? "bg-primary/15 text-primary scale-110 shadow-lg border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/20 hover:scale-105",
+                )}
+              >
+                <MapPin
+                  className={cn(
+                    "transition-all duration-200",
+                    activeTab === "map" ? "h-6 w-6" : "h-5 w-5",
+                  )}
+                />
+              </Button>
+              <span
+                className={cn(
+                  "text-xs font-medium mt-1 transition-all duration-200",
+                  activeTab === "map"
+                    ? "text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
+                Map
+              </span>
+            </div>
+
+            {/* SOS Button - Center Elevated */}
+            <div className="flex flex-col items-center relative -mt-4">
               {panicMode && (
-                <div className="absolute -top-2 -right-2 h-4 w-4 bg-emergency rounded-full animate-pulse border-2 border-white" />
+                <div className="absolute -top-1 -right-1 h-4 w-4 bg-emergency rounded-full animate-pulse border-2 border-white shadow-lg" />
               )}
               {!sosPressed ? (
                 <Button
                   onClick={handleSOSPress}
                   className={cn(
-                    "h-20 w-20 rounded-full transition-all duration-200",
+                    "h-20 w-20 rounded-full transition-all duration-300 transform hover:scale-105",
                     panicMode
-                      ? "bg-emergency animate-pulse text-emergency-foreground shadow-lg border-4 border-emergency/50"
-                      : "bg-emergency hover:bg-emergency/90 text-emergency-foreground shadow-lg border-2 border-white",
+                      ? "bg-emergency animate-pulse text-emergency-foreground shadow-xl border-4 border-emergency/30 ring-4 ring-emergency/20"
+                      : "bg-gradient-to-br from-emergency to-emergency/80 hover:from-emergency/90 hover:to-emergency/70 text-emergency-foreground shadow-xl border-3 border-white/50",
                   )}
                 >
                   <div className="flex flex-col items-center justify-center gap-1">
-                    <AlertTriangle className="h-7 w-7" />
-                    <span className="text-xs font-bold">SOS</span>
+                    <AlertTriangle className="h-7 w-7 drop-shadow-sm" />
+                    <span className="text-xs font-bold drop-shadow-sm">
+                      SOS
+                    </span>
                   </div>
                 </Button>
               ) : (
                 <Button
                   onClick={handleCancelSOS}
                   className={cn(
-                    "h-20 w-20 rounded-full transition-colors duration-200",
-                    "bg-warning hover:bg-warning/90 text-warning-foreground",
-                    "shadow-lg border-2 border-white",
+                    "h-20 w-20 rounded-full transition-all duration-200 transform",
+                    "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground",
+                    "shadow-xl border-3 border-white/50 animate-pulse",
                   )}
                 >
                   <div className="flex flex-col items-center justify-center gap-1">
-                    <div className="text-xl font-bold">{countdown}</div>
-                    <span className="text-xs font-medium">Cancel</span>
+                    <div className="text-xl font-bold drop-shadow-sm">
+                      {countdown}
+                    </div>
+                    <span className="text-xs font-medium drop-shadow-sm">
+                      Cancel
+                    </span>
                   </div>
                 </Button>
               )}
+              <span className="text-xs font-medium mt-2 text-emergency">
+                Emergency
+              </span>
             </div>
 
             {/* Profile Button */}
-            <Button
-              onClick={() => onTabChange("profile")}
-              variant="ghost"
-              className={cn(
-                "h-16 w-16 rounded-xl flex-col gap-1 transition-colors duration-200",
-                activeTab === "profile"
-                  ? "bg-primary/10 text-primary border border-primary/20"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
-              )}
-            >
-              <User className="h-5 w-5" />
-              <span className="text-xs font-medium">Profile</span>
-            </Button>
+            <div className="flex flex-col items-center">
+              <Button
+                onClick={() => onTabChange("profile")}
+                variant="ghost"
+                className={cn(
+                  "h-14 w-14 rounded-2xl flex-col gap-1 transition-all duration-300 transform",
+                  activeTab === "profile"
+                    ? "bg-primary/15 text-primary scale-110 shadow-lg border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/20 hover:scale-105",
+                )}
+              >
+                <User
+                  className={cn(
+                    "transition-all duration-200",
+                    activeTab === "profile" ? "h-6 w-6" : "h-5 w-5",
+                  )}
+                />
+              </Button>
+              <span
+                className={cn(
+                  "text-xs font-medium mt-1 transition-all duration-200",
+                  activeTab === "profile"
+                    ? "text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
+                Profile
+              </span>
+            </div>
           </div>
         </div>
       </div>
