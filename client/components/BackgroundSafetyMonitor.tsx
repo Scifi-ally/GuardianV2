@@ -314,12 +314,26 @@ export function BackgroundSafetyMonitor({
     setIsActive(!isActive);
     if (!isActive) {
       console.log("Background safety monitoring enabled");
+      setLastError(null); // Clear any previous errors
     } else {
       console.log("Background safety monitoring disabled");
       if (countdownRef.current) {
         clearInterval(countdownRef.current);
         setEmergencyCountdown(0);
       }
+    }
+  };
+
+  const requestMicrophonePermission = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      setMicrophonePermission("granted");
+      setLastError(null);
+      setVoiceDetection(true);
+    } catch (error) {
+      console.error("Microphone permission request failed:", error);
+      setMicrophonePermission("denied");
+      setLastError("Microphone permission denied");
     }
   };
 
