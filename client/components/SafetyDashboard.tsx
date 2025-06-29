@@ -63,10 +63,17 @@ export function SafetyDashboard({
         ? new Date(userProfile.createdAt)
         : new Date();
 
+      // Ensure valid date
+      const createdTime = accountCreated.getTime();
+      const currentTime = Date.now();
+
       // Calculate protection hours (time since account creation)
-      const protectionHours = Math.floor(
-        (Date.now() - accountCreated.getTime()) / (1000 * 60 * 60),
-      );
+      const protectionHours = isNaN(createdTime)
+        ? 24
+        : Math.max(
+            1,
+            Math.floor((currentTime - createdTime) / (1000 * 60 * 60)),
+          );
 
       // Calculate safety score based on various factors
       let safetyScore = 0;
@@ -75,12 +82,15 @@ export function SafetyDashboard({
       safetyScore += 20;
 
       // Emergency contacts (up to 40 points)
-      safetyScore += Math.min(emergencyContacts.length * 10, 40);
+      const contactsCount = Array.isArray(emergencyContacts)
+        ? emergencyContacts.length
+        : 0;
+      safetyScore += Math.min(contactsCount * 10, 40);
 
       // Verified contacts bonus (up to 20 points)
-      const verifiedContacts = emergencyContacts.filter(
-        (contact) => contact.isVerified,
-      ).length;
+      const verifiedContacts = Array.isArray(emergencyContacts)
+        ? emergencyContacts.filter((contact) => contact?.isVerified).length
+        : 0;
       safetyScore += Math.min(verifiedContacts * 5, 20);
 
       // Profile completion (up to 10 points)
@@ -91,26 +101,69 @@ export function SafetyDashboard({
       if (protectionHours > 24) safetyScore += 5;
       if (protectionHours > 168) safetyScore += 5; // 1 week
 
-      // Simulate some activity data
-      const safeTripsCount = Math.floor(protectionHours / 24) + 15;
-      const locationShares = Math.floor(Math.random() * 20) + 5;
+      // Simulate some activity data with safe defaults
+      const safeTripsCount = Math.max(
+        15,
+        Math.floor(protectionHours / 24) + 15,
+      );
+      const locationShares = Math.max(5, Math.floor(Math.random() * 20) + 5);
 
-      setMetrics({
-        safetyScore: Math.min(safetyScore, 100),
-        emergencyContactsCount: emergencyContacts.length,
-        protectionHours,
-        safeTripsCount,
+      // Ensure all values are valid numbers
+      const finalMetrics = {
+        safetyScore: Math.max(0, Math.min(safetyScore || 0, 100)),
+        emergencyContactsCount: contactsCount,
+        protectionHours: protectionHours,
+        safeTripsCount: safeTripsCount,
         alertsToday: 0, // Would come from alert history
-        locationShares,
+        locationShares: locationShares,
         lastCheckIn: null, // Would come from check-in history
         activeSince: accountCreated,
+      };
+
+      // Validate all numeric values
+      Object.keys(finalMetrics).forEach((key) => {
+        const value = finalMetrics[key as keyof typeof finalMetrics];
+        if (typeof value === "number" && (isNaN(value) || !isFinite(value))) {
+          console.warn(`Invalid numeric value for ${key}:`, value);
+          // Set safe defaults
+          switch (key) {
+            case "safetyScore":
+              (finalMetrics as any)[key] = 20;
+              break;
+            case "protectionHours":
+              (finalMetrics as any)[key] = 24;
+              break;
+            case "safeTripsCount":
+              (finalMetrics as any)[key] = 15;
+              break;
+            case "locationShares":
+              (finalMetrics as any)[key] = 5;
+              break;
+            default:
+              (finalMetrics as any)[key] = 0;
+          }
+        }
       });
 
+      setMetrics(finalMetrics);
       setIsLoading(false);
     };
 
     if (userProfile) {
       calculateMetrics();
+    } else {
+      // Set safe defaults when no user profile
+      setMetrics({
+        safetyScore: 20,
+        emergencyContactsCount: 0,
+        protectionHours: 24,
+        safeTripsCount: 15,
+        alertsToday: 0,
+        locationShares: 5,
+        lastCheckIn: null,
+        activeSince: new Date(),
+      });
+      setIsLoading(false);
     }
   }, [userProfile]);
 
