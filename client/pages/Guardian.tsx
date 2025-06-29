@@ -289,7 +289,7 @@ export default function Guardian() {
   };
 
   return (
-    <PanelContainer className="bg-gradient-to-br from-background via-muted/5 to-safe/5">
+    <PanelContainer className="bg-white">
       {/* Main Interface */}
       <div className="h-full flex flex-col pb-32">
         {/* Minimal Header */}
