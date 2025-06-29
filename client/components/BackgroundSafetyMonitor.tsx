@@ -135,26 +135,34 @@ export function BackgroundSafetyMonitor({
       recognition.onend = () => {
         setIsListening(false);
         // Restart recognition if voice detection is enabled and not manually stopped
-        if (voiceDetection && isActive) {
+        if (voiceDetection && isActive && !lastError) {
+          // Use a shorter timeout for seamless listening
           setTimeout(() => {
             try {
-              if (voiceDetection && isActive) {
+              if (voiceDetection && isActive && !lastError) {
                 recognition.start();
               }
             } catch (error) {
-              console.log("Speech recognition restart failed:", error);
+              // Only log if it's not an "already started" error
+              if (
+                error instanceof Error &&
+                !error.message.includes("already started")
+              ) {
+                console.log("Speech recognition restart failed:", error);
+              }
+
               // Wait longer before next retry if there's an error
               setTimeout(() => {
-                if (voiceDetection && isActive) {
+                if (voiceDetection && isActive && !lastError) {
                   try {
                     recognition.start();
                   } catch (retryError) {
-                    console.log("Speech recognition retry failed:", retryError);
+                    // Silently fail after retry
                   }
                 }
-              }, 5000);
+              }, 3000);
             }
-          }, 1000);
+          }, 500); // Shorter timeout for better continuity
         }
       };
 
