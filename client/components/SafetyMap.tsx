@@ -171,6 +171,21 @@ export function SafetyMap({
     map.setMapTypeId(newType);
   };
 
+  // Expose functions globally for SlideUpPanel controls
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.guardian_toggleTraffic = toggleTraffic;
+      window.guardian_toggleSatellite = toggleSatellite;
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        delete window.guardian_toggleTraffic;
+        delete window.guardian_toggleSatellite;
+      }
+    };
+  }, [map, showTraffic, mapType]);
+
   // Handle routing
   const calculateRoute = async () => {
     if (
