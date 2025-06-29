@@ -121,25 +121,42 @@ export default function Guardian() {
       try {
         const location = await getCurrentLocation().catch(() => undefined);
 
-        const result = await SOSService.sendSOSAlert(
+        const result = await emergencyContactService.sendSOSAlert(
           userProfile.uid,
-          userProfile.displayName,
+          userProfile.displayName || "Guardian User",
           userProfile.guardianKey,
-          emergencyContacts,
           location,
-          type === "manual" ? "manual" : "automatic",
-          `Emergency detected: ${type}. Immediate assistance needed.`,
+          type === "manual"
+            ? "manual"
+            : type === "voice"
+              ? "voice"
+              : "automatic",
+          `🚨 EMERGENCY ALERT from ${userProfile.displayName || "Guardian User"}!\n\n${
+            type === "voice"
+              ? `Voice emergency detected: "${data?.transcript || "Help requested"}"`
+              : type === "test"
+                ? "This is a test emergency alert."
+                : "I need immediate help. Please check on me or call emergency services."
+          }\n\nTime: ${new Date().toLocaleString()}${
+            location
+              ? `\nLocation: https://maps.google.com/?q=${location.latitude},${location.longitude}`
+              : ""
+          }`,
         );
 
         if (result.success) {
           console.log("SOS alert sent successfully:", result.alertId);
+        } else {
+          console.error("Failed to send SOS alert:", result.error);
         }
       } catch (error) {
         console.error("Failed to send SOS alert:", error);
       }
 
-      // Reset after demo
-      setTimeout(() => setSafetyStatus("safe"), 10000);
+      // Reset after demo for non-real emergencies
+      if (type === "test") {
+        setTimeout(() => setSafetyStatus("safe"), 5000);
+      }
     },
     [emergencyContacts, emergencyVibration, userProfile, getCurrentLocation],
   );
