@@ -194,19 +194,24 @@ export default function Guardian() {
           </div>
         </div>
 
-        {/* Content Area with Smooth Transitions */}
+        {/* Content Area with Enhanced Transitions */}
         <div className="flex-1 overflow-hidden relative">
           {/* Map Tab */}
           <div
             className={cn(
-              "absolute inset-0 transition-all duration-500 ease-out",
+              "absolute inset-0 transition-all duration-700 ease-in-out transform",
               activeTab === "map"
-                ? "translate-x-0 opacity-100"
-                : "-translate-x-full opacity-0 pointer-events-none",
+                ? "translate-x-0 opacity-100 scale-100 rotate-0"
+                : "-translate-x-full opacity-0 scale-95 -rotate-1 pointer-events-none",
             )}
           >
-            <div className="relative h-full">
-              {/* Interactive Mock Map Full Screen */}
+            <div
+              className={cn(
+                "relative h-full transition-all duration-700 delay-100",
+                activeTab === "map" ? "blur-0" : "blur-sm",
+              )}
+            >
+              {/* Interactive Google Map Full Screen */}
               <div className="absolute inset-0">
                 <GoogleMap
                   location={location}
@@ -224,19 +229,40 @@ export default function Guardian() {
                   }}
                 />
               </div>
+              {/* Map loading overlay */}
+              <div
+                className={cn(
+                  "absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center transition-all duration-1000",
+                  activeTab === "map"
+                    ? "opacity-0 pointer-events-none delay-500"
+                    : "opacity-100",
+                )}
+              >
+                <div className="text-center space-y-2">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-sm text-muted-foreground">
+                    Loading map...
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Profile Tab */}
           <div
             className={cn(
-              "absolute inset-0 transition-all duration-500 ease-out",
+              "absolute inset-0 transition-all duration-700 ease-in-out transform",
               activeTab === "profile"
-                ? "translate-x-0 opacity-100"
-                : "translate-x-full opacity-0 pointer-events-none",
+                ? "translate-x-0 opacity-100 scale-100 rotate-0"
+                : "translate-x-full opacity-0 scale-95 rotate-1 pointer-events-none",
             )}
           >
-            <div className="h-full p-4 space-y-6 overflow-y-auto custom-scrollbar">
+            <div
+              className={cn(
+                "h-full p-4 space-y-6 overflow-y-auto custom-scrollbar transition-all duration-700 delay-100",
+                activeTab === "profile" ? "blur-0" : "blur-sm",
+              )}
+            >
               {/* Profile Header */}
               <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
                 <CardContent className="p-4">
