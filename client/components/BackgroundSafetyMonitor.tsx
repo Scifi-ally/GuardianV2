@@ -65,6 +65,10 @@ export function BackgroundSafetyMonitor({
   const [currentTranscript, setCurrentTranscript] = useState("");
   const [emergencyCountdown, setEmergencyCountdown] = useState(0);
   const [voiceSupported, setVoiceSupported] = useState(false);
+  const [microphonePermission, setMicrophonePermission] = useState<
+    "granted" | "denied" | "prompt" | "unknown"
+  >("unknown");
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
