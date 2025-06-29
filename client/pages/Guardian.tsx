@@ -497,7 +497,7 @@ export default function Guardian() {
           minHeight={240}
           maxHeight={650}
           initialHeight={380}
-          bottomOffset={78}
+          bottomOffset={85}
         >
           {/* Enhanced Live Tracking Status */}
           <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/10 via-safe/10 to-protection/10 rounded-xl border-2 border-primary/20 shadow-lg">
