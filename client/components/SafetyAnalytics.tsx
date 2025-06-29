@@ -230,7 +230,7 @@ export function SafetyAnalytics() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-6">
       {/* Tracking Control */}
       <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
         <CardContent className="p-4">
