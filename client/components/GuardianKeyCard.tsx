@@ -119,6 +119,8 @@ export function GuardianKeyCard() {
         await navigator.share(shareData);
       } catch (error) {
         console.error("Share failed:", error);
+        // Fallback to copy
+        copyToClipboard();
       }
     } else {
       copyToClipboard();
