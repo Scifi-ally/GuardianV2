@@ -3,11 +3,13 @@ import {
   Navigation,
   Phone,
   MessageCircle,
-  Camera,
-  AlertCircle,
+  Clock,
+  Users,
 } from "lucide-react";
 import { CustomButton } from "@/components/CustomButton";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { emergencyContactService } from "@/services/emergencyContactService";
 
 interface QuickActionProps {
   icon: typeof MapPin;
@@ -51,12 +53,14 @@ function QuickActionButton({
 }
 
 export function QuickActions() {
+  const { userProfile } = useAuth();
+
   const shareLocation = async () => {
     try {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(async (position) => {
           const { latitude, longitude } = position.coords;
-          const message = `Guardian Alert: I'm at https://maps.google.com/?q=${latitude},${longitude}`;
+          const message = `Guardian Location Share: I'm at https://maps.google.com/?q=${latitude},${longitude}\n\nShared via Guardian Safety App at ${new Date().toLocaleString()}`;
 
           if (navigator.share) {
             await navigator.share({
@@ -78,32 +82,84 @@ export function QuickActions() {
     window.location.href = "tel:911";
   };
 
-  const sendQuickText = () => {
-    const message = "Guardian Alert: I need help! Please check on me.";
-    window.location.href = `sms:?body=${encodeURIComponent(message)}`;
-  };
+  const sendQuickText = async () => {
+    if (!userProfile) {
+      alert("Please sign in to use this feature");
+      return;
+    }
 
-  const takeEvidence = () => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then(() =>
-          alert(
-            "Camera access granted. In a real app, this would open the camera.",
-          ),
-        )
-        .catch(() =>
-          alert("Camera access denied. Please enable camera permissions."),
-        );
+    const emergencyContacts = userProfile.emergencyContacts || [];
+    if (emergencyContacts.length === 0) {
+      alert("No emergency contacts found. Please add contacts first.");
+      return;
+    }
+
+    const message = `Guardian Safety Check: This is ${userProfile.displayName || "Guardian User"}. I'm checking in to let you know my status. If this is an emergency, please contact me immediately.`;
+
+    // Send to first emergency contact or all contacts
+    const firstContact = emergencyContacts[0];
+    if (firstContact && firstContact.phone) {
+      window.location.href = `sms:${firstContact.phone}?body=${encodeURIComponent(message)}`;
     } else {
-      alert("Camera not available on this device.");
+      // Fallback to generic SMS
+      window.location.href = `sms:?body=${encodeURIComponent(message)}`;
     }
   };
 
-  const reportIncident = () => {
-    alert(
-      "Incident report feature would open here. This connects to emergency services.",
-    );
+  const startSafeRoute = () => {
+    // Open route planning
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        // Open Google Maps with current location
+        const url = `https://www.google.com/maps/@${latitude},${longitude},15z`;
+        window.open(url, "_blank");
+      });
+    } else {
+      // Fallback to Google Maps
+      window.open("https://www.google.com/maps", "_blank");
+    }
+  };
+
+  const startCheckIn = () => {
+    if (!userProfile) {
+      alert("Please sign in to use this feature");
+      return;
+    }
+
+    const emergencyContacts = userProfile.emergencyContacts || [];
+    if (emergencyContacts.length === 0) {
+      alert("No emergency contacts found. Please add contacts first.");
+      return;
+    }
+
+    // Set up a check-in timer (simplified version)
+    const checkInTime = 30; // 30 minutes
+    const message = `Guardian Check-in: I'm starting a ${checkInTime}-minute safety check-in. If you don't hear from me by ${new Date(Date.now() + checkInTime * 60000).toLocaleTimeString()}, please check on me.`;
+
+    const firstContact = emergencyContacts[0];
+    if (firstContact && firstContact.phone) {
+      window.location.href = `sms:${firstContact.phone}?body=${encodeURIComponent(message)}`;
+    }
+
+    // Set a local reminder
+    setTimeout(() => {
+      if (Notification.permission === "granted") {
+        new Notification("Guardian Check-in Reminder", {
+          body: "Time to check in with your emergency contacts",
+          icon: "/favicon.ico",
+        });
+      } else {
+        alert("Check-in time! Please contact your emergency contacts.");
+      }
+    }, checkInTime * 60000);
+
+    alert(`Check-in timer set for ${checkInTime} minutes`);
+  };
+
+  const manageContacts = () => {
+    // Navigate to contacts page or open contacts panel
+    window.location.hash = "#/contacts";
   };
 
   const actions = [
@@ -117,7 +173,7 @@ export function QuickActions() {
       icon: Navigation,
       label: "Safe Route",
       variant: "default" as const,
-      onClick: () => (window.location.hash = "#/navigation"),
+      onClick: startSafeRoute,
     },
     {
       icon: Phone,
@@ -132,16 +188,16 @@ export function QuickActions() {
       onClick: sendQuickText,
     },
     {
-      icon: Camera,
-      label: "Evidence",
+      icon: Clock,
+      label: "Check-in",
       variant: "warning" as const,
-      onClick: takeEvidence,
+      onClick: startCheckIn,
     },
     {
-      icon: AlertCircle,
-      label: "Report",
-      variant: "warning" as const,
-      onClick: reportIncident,
+      icon: Users,
+      label: "Contacts",
+      variant: "default" as const,
+      onClick: manageContacts,
     },
   ];
 
