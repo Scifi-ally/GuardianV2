@@ -18,6 +18,7 @@ import {
   Mic,
   LogOut,
   Key,
+  Layers,
 } from "lucide-react";
 import {
   SlidingPanel,
