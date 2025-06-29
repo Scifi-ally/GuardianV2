@@ -232,41 +232,55 @@ export default function Guardian() {
           )}
 
           {activeTab === "profile" && (
-            <div className="h-full p-4 space-y-4 overflow-y-auto">
+            <div className="h-full p-4 space-y-6 overflow-y-auto">
               {/* Profile Header */}
-              <Card>
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                        {userProfile?.displayName?.charAt(0) || "U"}
+              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarFallback className="bg-primary/20 text-primary text-xl font-bold">
+                        {userProfile?.displayName?.charAt(0)?.toUpperCase() ||
+                          "G"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-medium text-sm">
-                        {userProfile?.displayName || "Unknown User"}
+                      <h2 className="font-bold text-lg">
+                        {userProfile?.displayName || "Guardian User"}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        {userProfile?.email || "No email set"}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {userProfile?.email || "No email"}
-                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge
+                          variant="outline"
+                          className="text-xs border-safe/30 text-safe"
+                        >
+                          <Shield className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          Active
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex flex-col gap-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => openPanel("settings")}
-                        className="text-xs px-2 py-1 h-7"
+                        className="text-xs px-3 py-1 h-8"
                       >
                         <Settings className="h-3 w-3 mr-1" />
-                        Edit
+                        Settings
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={handleLogout}
-                        className="text-xs px-2 py-1 h-7 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        className="text-xs px-3 py-1 h-8 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                       >
-                        <LogOut className="h-3 w-3" />
+                        <LogOut className="h-3 w-3 mr-1" />
+                        Sign Out
                       </Button>
                     </div>
                   </div>
