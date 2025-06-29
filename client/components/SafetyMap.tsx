@@ -114,7 +114,7 @@ export function SafetyMap({
 
   // Initialize map with custom styling
   useEffect(() => {
-    if (!isLoaded || !mapRef.current) return;
+    if (!isLoaded || !mapRef.current || typeof google === "undefined") return;
 
     const darkMapStyles = [
       { elementType: "geometry", stylers: [{ color: "#212121" }] },
