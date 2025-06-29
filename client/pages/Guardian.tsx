@@ -1274,6 +1274,20 @@ export default function Guardian() {
           </div>
         </div>
       </SlidingPanel>
+
+      {/* Emergency Alert Popup */}
+      {emergencyAlert && (
+        <EmergencyAlertPopup
+          alert={emergencyAlert}
+          onAcknowledge={handleAcknowledgeAlert}
+          onClose={() => {
+            setShowEmergencyPopup(false);
+            setEmergencyAlert(null);
+            setSafetyStatus("safe");
+          }}
+          isVisible={showEmergencyPopup}
+        />
+      )}
     </PanelContainer>
   );
 }
