@@ -24,30 +24,42 @@ function QuickActionButton({
   onClick,
   variant = "default",
 }: QuickActionProps) {
-  const variantStyles = {
-    default: "bg-muted hover:bg-muted/80 text-muted-foreground",
-    emergency: "bg-emergency/10 hover:bg-emergency/20 text-emergency",
-    safe: "bg-safe/10 hover:bg-safe/20 text-safe",
-    warning: "bg-warning/10 hover:bg-warning/20 text-warning",
+  const getButtonVariant = () => {
+    switch (variant) {
+      case "emergency":
+        return "emergency";
+      case "safe":
+        return "primary"; // Changed from "black" to "primary" for better visibility
+      default:
+        return "secondary";
+    }
+  };
+
+  const getIconColor = () => {
+    switch (variant) {
+      case "emergency":
+        return "text-white";
+      case "safe":
+        return "text-green-600";
+      case "warning":
+        return "text-orange-600";
+      default:
+        return "text-gray-700";
+    }
   };
 
   return (
     <CustomButton
       onClick={onClick}
-      variant={
-        variant === "emergency"
-          ? "emergency"
-          : variant === "safe"
-            ? "black"
-            : "secondary"
-      }
+      variant={getButtonVariant()}
       className={cn(
         "h-16 flex-col gap-1 text-xs font-medium rounded-xl",
         "border-2 shadow-lg hover:shadow-xl transform hover:scale-105",
+        "min-h-16 w-full", // Ensure full width and minimum height
       )}
     >
-      <Icon className="h-5 w-5" />
-      <span>{label}</span>
+      <Icon className={cn("h-5 w-5", getIconColor())} />
+      <span className="font-semibold">{label}</span>
     </CustomButton>
   );
 }
