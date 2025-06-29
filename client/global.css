@@ -118,7 +118,7 @@
   }
 }
 
-/* Custom scrollbar styles - hide scrollbars but maintain functionality */
+/* Enhanced scrollbar styles - completely hide scrollbars */
 @layer utilities {
   .custom-scrollbar {
     scrollbar-width: none; /* Firefox */
@@ -127,20 +127,28 @@
 
   .custom-scrollbar::-webkit-scrollbar {
     display: none; /* Safari and Chrome */
+    width: 0;
+    height: 0;
   }
 
-  /* Global scrollbar hiding for specific areas */
+  /* Global scrollbar hiding for all overflow elements */
   .overflow-y-auto,
   .overflow-x-auto,
-  .overflow-auto {
+  .overflow-auto,
+  .overflow-hidden,
+  .overflow-scroll {
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* Internet Explorer 10+ */
   }
 
   .overflow-y-auto::-webkit-scrollbar,
   .overflow-x-auto::-webkit-scrollbar,
-  .overflow-auto::-webkit-scrollbar {
+  .overflow-auto::-webkit-scrollbar,
+  .overflow-hidden::-webkit-scrollbar,
+  .overflow-scroll::-webkit-scrollbar {
     display: none; /* Safari and Chrome */
+    width: 0;
+    height: 0;
   }
 
   /* Maintain scroll functionality with hidden scrollbar for specific components */
@@ -151,6 +159,36 @@
 
   .scroll-area::-webkit-scrollbar {
     display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* Hide all scrollbars globally */
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* Remove any default browser styling that might cause lines */
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Fix any border/outline issues */
+  *:focus {
+    outline: none;
+  }
+
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }
 
