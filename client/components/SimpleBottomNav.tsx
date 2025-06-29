@@ -96,7 +96,7 @@ export function SimpleBottomNav({
         </div>
 
         {/* Compact Navigation Bar */}
-        <div className="px-4 pt-12 pb-3">
+        <div className="px-4 pt-12 pb-4">
           <div className="flex items-center justify-around max-w-sm mx-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
