@@ -379,12 +379,8 @@ export function SafetyMap({
 
             <div className="flex items-center gap-2">
               <Button
-                onClick={() => setTravelMode(google.maps.TravelMode.DRIVING)}
-                variant={
-                  travelMode === google.maps.TravelMode.DRIVING
-                    ? "default"
-                    : "ghost"
-                }
+                onClick={() => setTravelMode("DRIVING")}
+                variant={travelMode === "DRIVING" ? "default" : "ghost"}
                 size="sm"
                 className="text-xs"
               >
@@ -392,12 +388,8 @@ export function SafetyMap({
                 Drive
               </Button>
               <Button
-                onClick={() => setTravelMode(google.maps.TravelMode.WALKING)}
-                variant={
-                  travelMode === google.maps.TravelMode.WALKING
-                    ? "default"
-                    : "ghost"
-                }
+                onClick={() => setTravelMode("WALKING")}
+                variant={travelMode === "WALKING" ? "default" : "ghost"}
                 size="sm"
                 className="text-xs"
               >
