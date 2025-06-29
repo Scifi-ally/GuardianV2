@@ -262,6 +262,54 @@
     width: 0 !important;
     height: 0 !important;
   }
+
+  /* Additional comprehensive scrollbar hiding */
+  div,
+  main,
+  section,
+  article,
+  aside,
+  nav,
+  header,
+  footer {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  div::-webkit-scrollbar,
+  main::-webkit-scrollbar,
+  section::-webkit-scrollbar,
+  article::-webkit-scrollbar,
+  aside::-webkit-scrollbar,
+  nav::-webkit-scrollbar,
+  header::-webkit-scrollbar,
+  footer::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Force hide scrollbars on common UI components */
+  [class*="overflow"],
+  [class*="scroll"],
+  .container,
+  .content,
+  .panel,
+  .modal {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  [class*="overflow"]::-webkit-scrollbar,
+  [class*="scroll"]::-webkit-scrollbar,
+  .container::-webkit-scrollbar,
+  .content::-webkit-scrollbar,
+  .panel::-webkit-scrollbar,
+  .modal::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
 }
 
 /* Smooth transitions for touch interactions */
