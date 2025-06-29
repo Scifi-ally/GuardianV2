@@ -162,14 +162,51 @@ export default function Guardian() {
   );
 
   const handleSOSPress = useCallback(
-    (alertId?: string) => {
+    async (alertId?: string) => {
+      if (!userProfile) return;
+
       setSafetyStatus("emergency");
       emergencyVibration();
-      if (alertId) {
-        console.log("SOS Alert sent:", alertId);
+
+      try {
+        const location = await getCurrentLocation().catch(() => undefined);
+
+        const result = await emergencyContactService.sendSOSAlert(
+          userProfile.uid,
+          userProfile.displayName || "Guardian User",
+          userProfile.guardianKey,
+          location,
+          "manual",
+        );
+
+        if (result.success) {
+          console.log("SOS Alert sent:", result.alertId);
+        } else {
+          console.error("Failed to send SOS alert:", result.error);
+        }
+      } catch (error) {
+        console.error("Failed to send SOS alert:", error);
       }
     },
-    [emergencyVibration],
+    [emergencyVibration, userProfile, getCurrentLocation],
+  );
+
+  const handleAcknowledgeAlert = useCallback(
+    async (alertId: string) => {
+      if (!userProfile) return;
+
+      const result = await emergencyContactService.acknowledgeAlert(
+        alertId,
+        userProfile.uid,
+      );
+
+      if (result.success) {
+        setShowEmergencyPopup(false);
+        setEmergencyAlert(null);
+        setSafetyStatus("safe");
+      }
+    },
+    [userProfile],
   );
 
   const handleLogout = useCallback(async () => {
