@@ -334,24 +334,24 @@ export default function Guardian() {
                 </h3>
                 <div className="grid grid-cols-3 gap-3">
                   <Card
-                    className="border-safe/20 bg-safe/5 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-safe/40"
+                    className="group border-safe/20 bg-safe/5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-safe/60 hover:bg-safe/10 transform hover:scale-105 hover:-translate-y-1 active:scale-95"
                     onClick={() => openPanel("contacts")}
                   >
                     <CardContent className="p-3 text-center">
                       <div className="flex flex-col items-center gap-1">
-                        <div className="p-2 rounded-full bg-safe/20">
-                          <Users className="h-4 w-4 text-safe" />
+                        <div className="p-2 rounded-full bg-safe/20 transition-all duration-200 group-hover:bg-safe/30 group-hover:scale-110">
+                          <Users className="h-4 w-4 text-safe transition-all duration-200 group-hover:scale-110" />
                         </div>
-                        <div className="text-lg font-bold text-safe">
+                        <div className="text-lg font-bold text-safe transition-all duration-200 group-hover:scale-110">
                           {emergencyContacts.length}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground transition-all duration-200 group-hover:text-safe/80">
                           Contacts
                         </div>
                         {emergencyContacts.length === 0 && (
                           <Badge
                             variant="outline"
-                            className="text-xs mt-1 border-warning text-warning"
+                            className="text-xs mt-1 border-warning text-warning transition-all duration-200 group-hover:scale-105"
                           >
                             Add Now
                           </Badge>
@@ -361,22 +361,22 @@ export default function Guardian() {
                   </Card>
 
                   <Card
-                    className="border-primary/20 bg-primary/5 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/40"
+                    className="group border-primary/20 bg-primary/5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-primary/60 hover:bg-primary/10 transform hover:scale-105 hover:-translate-y-1 active:scale-95"
                     onClick={() => openPanel("alerts")}
                   >
                     <CardContent className="p-3 text-center">
                       <div className="flex flex-col items-center gap-1">
-                        <div className="p-2 rounded-full bg-primary/20">
-                          <Bell className="h-4 w-4 text-primary" />
+                        <div className="p-2 rounded-full bg-primary/20 transition-all duration-200 group-hover:bg-primary/30 group-hover:scale-110">
+                          <Bell className="h-4 w-4 text-primary transition-all duration-200 group-hover:scale-110" />
                         </div>
-                        <div className="text-lg font-bold text-primary">
+                        <div className="text-lg font-bold text-primary transition-all duration-200 group-hover:scale-110">
                           {safetyStatus === "emergency" ? "1" : "0"}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground transition-all duration-200 group-hover:text-primary/80">
                           Active Alerts
                         </div>
                         {safetyStatus === "emergency" && (
-                          <Badge className="text-xs mt-1 bg-emergency text-emergency-foreground">
+                          <Badge className="text-xs mt-1 bg-emergency text-emergency-foreground transition-all duration-200 group-hover:scale-105 animate-pulse">
                             ACTIVE
                           </Badge>
                         )}
@@ -385,23 +385,23 @@ export default function Guardian() {
                   </Card>
 
                   <Card
-                    className="border-protection/20 bg-protection/5 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-protection/40"
+                    className="group border-protection/20 bg-protection/5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-protection/60 hover:bg-protection/10 transform hover:scale-105 hover:-translate-y-1 active:scale-95"
                     onClick={() => openPanel("trips")}
                   >
                     <CardContent className="p-3 text-center">
                       <div className="flex flex-col items-center gap-1">
-                        <div className="p-2 rounded-full bg-protection/20">
-                          <NavIcon className="h-4 w-4 text-protection" />
+                        <div className="p-2 rounded-full bg-protection/20 transition-all duration-200 group-hover:bg-protection/30 group-hover:scale-110">
+                          <NavIcon className="h-4 w-4 text-protection transition-all duration-200 group-hover:scale-110" />
                         </div>
-                        <div className="text-lg font-bold text-protection">
+                        <div className="text-lg font-bold text-protection transition-all duration-200 group-hover:scale-110">
                           {Math.floor(Math.random() * 50) + 10}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground transition-all duration-200 group-hover:text-protection/80">
                           Safe Trips
                         </div>
                         <Badge
                           variant="outline"
-                          className="text-xs mt-1 border-protection/30 text-protection"
+                          className="text-xs mt-1 border-protection/30 text-protection transition-all duration-200 group-hover:scale-105 group-hover:border-protection/50"
                         >
                           +{Math.floor(Math.random() * 5) + 1} Today
                         </Badge>
