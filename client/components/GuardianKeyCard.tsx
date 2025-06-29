@@ -144,7 +144,7 @@ export function GuardianKeyCard() {
   return (
     <div className="space-y-4">
       {/* Main Guardian Key Card */}
-      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-primary/10 to-protection/10 shadow-lg overflow-hidden">
+      <Card className="border-2 border-gray-200 bg-white shadow-lg overflow-hidden">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-3">
             <div className="relative">
