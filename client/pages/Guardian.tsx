@@ -245,25 +245,76 @@ export default function Guardian() {
     }
   }, [getCurrentLocation, successVibration]);
 
-  // Safe clipboard copy helper
+  // Safe clipboard copy helper with improved error handling
   const safeClipboardCopy = async (text: string) => {
     try {
+      // Try modern Clipboard API first
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
-      } else {
-        const textArea = document.createElement("textarea");
+        return;
+      }
+    } catch (clipboardError) {
+      console.warn("Clipboard API failed, trying fallback:", clipboardError);
+    }
+
+    try {
+      // Fallback to execCommand method
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+
+      if (!successful) {
+        throw new Error("execCommand copy failed");
+      }
+    } catch (fallbackError) {
+      console.warn("Fallback copy failed:", fallbackError);
+
+      // Final fallback - show the text to user for manual copy
+      const userAgent = navigator.userAgent;
+      const isMobile =
+        /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          userAgent,
+        );
+
+      if (isMobile) {
+        // On mobile, create a text input that user can select from
+        const textArea = document.createElement("input");
         textArea.value = text;
+        textArea.readOnly = true;
         textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
+        textArea.style.top = "50%";
+        textArea.style.left = "50%";
+        textArea.style.transform = "translate(-50%, -50%)";
+        textArea.style.zIndex = "9999";
+        textArea.style.padding = "10px";
+        textArea.style.border = "2px solid #333";
+        textArea.style.background = "white";
+        textArea.style.fontSize = "16px";
+
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
+
+        setTimeout(() => {
+          if (document.body.contains(textArea)) {
+            document.body.removeChild(textArea);
+          }
+        }, 5000);
+
+        alert("Tap and hold the text field to copy your location");
+      } else {
+        // On desktop, use prompt as last resort
+        prompt("Copy this location manually:", text);
       }
-    } catch (error) {
-      console.error("Copy failed:", error);
-      prompt("Please copy this manually:", text);
     }
   };
 
