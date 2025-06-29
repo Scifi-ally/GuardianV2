@@ -39,17 +39,32 @@ export function BackgroundSafetyMonitor({
 
   // Voice activation for emergency keywords with proper state management
   useEffect(() => {
-    if (safetyServices.voiceActivation && voiceSupported) {
-      if (!isListening && !isVoiceListening) {
-        startListening();
-        setIsVoiceListening(true);
+    // Add a small delay to prevent race conditions
+    const timer = setTimeout(() => {
+      if (safetyServices.voiceActivation && voiceSupported) {
+        if (!isListening && !isVoiceListening) {
+          try {
+            startListening();
+            setIsVoiceListening(true);
+          } catch (error) {
+            console.warn("Failed to start voice listening:", error);
+            setIsVoiceListening(false);
+          }
+        }
+      } else if (!safetyServices.voiceActivation) {
+        if (isListening || isVoiceListening) {
+          try {
+            stopListening();
+            setIsVoiceListening(false);
+          } catch (error) {
+            console.warn("Failed to stop voice listening:", error);
+            setIsVoiceListening(false);
+          }
+        }
       }
-    } else if (!safetyServices.voiceActivation) {
-      if (isListening || isVoiceListening) {
-        stopListening();
-        setIsVoiceListening(false);
-      }
-    }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [safetyServices.voiceActivation, voiceSupported]);
 
   // Sync local state with hook state
