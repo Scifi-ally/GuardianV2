@@ -278,6 +278,9 @@ export function MockMap({
 
   return (
     <div className={cn("relative w-full h-full overflow-hidden", className)}>
+      {/* Map Loading Effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-safe/5 animate-pulse opacity-50 pointer-events-none" />
+
       {/* Mock Map Background */}
       <div
         className={cn(
@@ -437,79 +440,123 @@ export function MockMap({
             </div>
           );
         })}
+      </div>
 
-        {/* Zoom Controls */}
-        <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-30">
+      {/* Enhanced Map Controls */}
+      <div className="absolute top-4 right-4 space-y-3 z-30">
+        {/* Map Style Control */}
+        <div className="bg-background/95 backdrop-blur-xl rounded-2xl p-2 shadow-xl border border-border/50">
+          <div className="text-xs text-center font-medium mb-2 text-muted-foreground px-2">
+            {mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)} View
+          </div>
           <Button
             size="sm"
-            variant="outline"
-            className="h-8 w-8 p-0 bg-background/90 backdrop-blur border-white/20 shadow-lg"
+            variant="ghost"
+            className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200"
+            onClick={toggleMapStyle}
+          >
+            <Layers className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Location Control */}
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-12 w-12 p-0 bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all duration-300 hover:scale-105"
+          onClick={getCurrentLocation}
+        >
+          <Locate className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Custom Zoom Controls */}
+      <div className="absolute bottom-24 right-4 flex flex-col gap-1 z-30">
+        <div className="bg-background/95 backdrop-blur-xl rounded-2xl p-1 shadow-xl border border-border/50">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 text-lg font-bold"
             onClick={zoomIn}
           >
             +
           </Button>
+          <div className="h-px bg-border/50 mx-2" />
           <Button
             size="sm"
-            variant="outline"
-            className="h-8 w-8 p-0 bg-background/90 backdrop-blur border-white/20 shadow-lg"
+            variant="ghost"
+            className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 text-lg font-bold"
             onClick={zoomOut}
           >
             −
           </Button>
         </div>
-      </div>
 
-      {/* Map Controls */}
-      <div className="absolute top-6 right-6 space-y-3 z-30">
-        <div className="bg-background/90 backdrop-blur rounded-lg p-1 shadow-lg border border-white/20">
-          <div className="text-xs text-center font-medium mb-1 text-muted-foreground">
-            {mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)}
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 w-8 p-0 border-0"
-            onClick={toggleMapStyle}
-          >
-            <Layers className="h-3 w-3" />
-          </Button>
+        {/* Zoom Level Indicator */}
+        <div className="bg-background/95 backdrop-blur-xl rounded-lg px-2 py-1 shadow-lg border border-border/50 text-center">
+          <span className="text-xs font-medium text-muted-foreground">
+            {zoom}x
+          </span>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-10 w-10 p-0 bg-background/90 backdrop-blur border-white/20 shadow-lg"
-          onClick={getCurrentLocation}
-        >
-          <Locate className="h-4 w-4" />
-        </Button>
       </div>
 
-      {/* Location Accuracy Display */}
+      {/* Enhanced Location Status */}
       {location?.accuracy && (
-        <div className="absolute bottom-6 left-6 z-30">
-          <div className="bg-background/90 backdrop-blur rounded-lg p-3 shadow-lg border border-white/20">
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="font-medium">Live Location</span>
+        <div className="absolute bottom-24 left-4 z-30">
+          <div className="bg-background/95 backdrop-blur-xl rounded-2xl p-4 shadow-xl border border-border/50">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="relative">
+                <div className="w-3 h-3 bg-safe rounded-full animate-pulse" />
+                <div className="absolute inset-0 w-3 h-3 bg-safe/30 rounded-full animate-ping" />
+              </div>
+              <span className="font-semibold text-sm text-safe">
+                Live Tracking
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Accuracy: ±{Math.round(location.accuracy)}m
-            </p>
+            <div className="space-y-1 text-xs">
+              <p className="text-muted-foreground">
+                Accuracy:{" "}
+                <span className="text-foreground font-medium">
+                  ±{Math.round(location.accuracy)}m
+                </span>
+              </p>
+              <p className="text-muted-foreground">
+                Position:{" "}
+                <span className="text-foreground font-medium">
+                  {location.latitude.toFixed(4)},{" "}
+                  {location.longitude.toFixed(4)}
+                </span>
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Map Info */}
-      <div className="absolute bottom-2 left-2 text-xs text-muted-foreground bg-background/90 backdrop-blur px-3 py-2 rounded-lg shadow-lg z-30 space-y-1">
-        <div>Guardian Map © 2024</div>
-        <div>
-          Center: {center.lat.toFixed(4)}, {center.lng.toFixed(4)}
+      {/* Clean Map Attribution */}
+      <div className="absolute bottom-4 left-4 z-30">
+        <div className="bg-background/95 backdrop-blur-xl rounded-xl px-3 py-2 shadow-lg border border-border/50">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+            <span className="text-xs font-medium text-muted-foreground">
+              Guardian Map
+            </span>
+          </div>
         </div>
-        <div>Zoom: {zoom}</div>
-        {isPanning && (
-          <div className="text-primary font-medium">Panning...</div>
-        )}
       </div>
+
+      {/* Interactive Status */}
+      {isPanning && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
+          <div className="bg-background/95 backdrop-blur-xl rounded-2xl px-4 py-2 shadow-xl border border-border/50">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full animate-spin" />
+              <span className="text-sm font-medium text-primary">
+                Moving...
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

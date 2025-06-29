@@ -30,7 +30,7 @@ export interface SOSAlert {
   status: "active" | "resolved" | "cancelled";
   createdAt: Date;
   resolvedAt?: Date;
-  type: "manual" | "automatic" | "panic";
+  type: "manual" | "automatic" | "panic" | "voice-activation";
   priority: "low" | "medium" | "high" | "critical";
 }
 
@@ -48,14 +48,21 @@ export interface SOSResponse {
   timestamp: Date;
 }
 
+interface LocationInput {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  timestamp?: Date;
+}
+
 export class SOSService {
   static async sendSOSAlert(
     senderId: string,
     senderName: string,
     senderKey: string,
     emergencyContacts: EmergencyContact[],
-    location?: GeolocationPosition,
-    type: "manual" | "automatic" | "panic" = "manual",
+    location?: GeolocationPosition | LocationInput,
+    type: "manual" | "automatic" | "panic" | "voice-activation" = "manual",
     message?: string,
   ): Promise<{ success: boolean; alertId?: string; error?: string }> {
     try {
@@ -71,12 +78,19 @@ export class SOSService {
         receiverIds,
         message: message || `Emergency alert from ${senderName}`,
         location: location
-          ? {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              accuracy: location.coords.accuracy,
-              timestamp: new Date(location.timestamp),
-            }
+          ? "coords" in location
+            ? {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                accuracy: location.coords.accuracy,
+                timestamp: new Date(location.timestamp),
+              }
+            : {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                accuracy: location.accuracy || 0,
+                timestamp: location.timestamp || new Date(),
+              }
           : undefined,
         status: "active",
         createdAt: new Date(),
@@ -131,37 +145,54 @@ export class SOSService {
     onAlert: (alerts: SOSAlert[]) => void,
   ): () => void {
     try {
+      // Simplified query to avoid composite index requirement
+      // We'll filter for active status in memory instead
       const q = query(
         collection(db, "sosAlerts"),
         where("receiverIds", "array-contains", userId),
-        where("status", "==", "active"),
-        orderBy("createdAt", "desc"),
       );
 
       return onSnapshot(
         q,
         (snapshot) => {
-          const alerts: SOSAlert[] = snapshot.docs.map((doc) => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              createdAt: data.createdAt.toDate(),
-              location: data.location
-                ? {
-                    ...data.location,
-                    timestamp: data.location.timestamp.toDate(),
-                  }
-                : undefined,
-              resolvedAt: data.resolvedAt
-                ? data.resolvedAt.toDate()
-                : undefined,
-            } as SOSAlert;
-          });
+          const alerts: SOSAlert[] = snapshot.docs
+            .map((doc) => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                ...data,
+                createdAt: data.createdAt.toDate(),
+                location: data.location
+                  ? {
+                      ...data.location,
+                      timestamp: data.location.timestamp.toDate(),
+                    }
+                  : undefined,
+                resolvedAt: data.resolvedAt
+                  ? data.resolvedAt.toDate()
+                  : undefined,
+              } as SOSAlert;
+            })
+            .filter((alert) => alert.status === "active") // Filter for active alerts
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Sort by creation date desc
+
           onAlert(alerts);
         },
         (error) => {
           console.warn("SOS alerts subscription error:", error);
+
+          if (
+            error.code === "failed-precondition" ||
+            error.message?.includes("requires an index")
+          ) {
+            console.log(
+              "Firestore index missing - falling back to simplified query",
+            );
+            // For index errors, return empty array and let user know
+            onAlert([]);
+            return;
+          }
+
           if (error.code === "permission-denied") {
             console.log(
               "Firestore permissions denied, using local fallback for SOS alerts",

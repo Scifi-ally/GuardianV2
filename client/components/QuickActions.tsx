@@ -6,7 +6,7 @@ import {
   Camera,
   AlertCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CustomButton } from "@/components/CustomButton";
 import { cn } from "@/lib/utils";
 
 interface QuickActionProps {
@@ -30,57 +30,118 @@ function QuickActionButton({
   };
 
   return (
-    <Button
-      variant="ghost"
+    <CustomButton
       onClick={onClick}
+      variant={
+        variant === "emergency"
+          ? "emergency"
+          : variant === "safe"
+            ? "black"
+            : "secondary"
+      }
       className={cn(
-        "h-16 flex-col gap-1 text-xs font-medium",
-        variantStyles[variant],
+        "h-16 flex-col gap-1 text-xs font-medium rounded-xl",
+        "border-2 shadow-lg hover:shadow-xl transform hover:scale-105",
       )}
     >
       <Icon className="h-5 w-5" />
       <span>{label}</span>
-    </Button>
+    </CustomButton>
   );
 }
 
 export function QuickActions() {
+  const shareLocation = async () => {
+    try {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const { latitude, longitude } = position.coords;
+          const message = `Guardian Alert: I'm at https://maps.google.com/?q=${latitude},${longitude}`;
+
+          if (navigator.share) {
+            await navigator.share({
+              title: "Guardian Location",
+              text: message,
+            });
+          } else {
+            await navigator.clipboard.writeText(message);
+            alert("Location copied to clipboard!");
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
+    }
+  };
+
+  const callEmergency = () => {
+    window.location.href = "tel:911";
+  };
+
+  const sendQuickText = () => {
+    const message = "Guardian Alert: I need help! Please check on me.";
+    window.location.href = `sms:?body=${encodeURIComponent(message)}`;
+  };
+
+  const takeEvidence = () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then(() =>
+          alert(
+            "Camera access granted. In a real app, this would open the camera.",
+          ),
+        )
+        .catch(() =>
+          alert("Camera access denied. Please enable camera permissions."),
+        );
+    } else {
+      alert("Camera not available on this device.");
+    }
+  };
+
+  const reportIncident = () => {
+    alert(
+      "Incident report feature would open here. This connects to emergency services.",
+    );
+  };
+
   const actions = [
     {
       icon: MapPin,
       label: "Share Location",
       variant: "safe" as const,
-      onClick: () => console.log("Share location"),
+      onClick: shareLocation,
     },
     {
       icon: Navigation,
       label: "Safe Route",
       variant: "default" as const,
-      onClick: () => console.log("Safe route"),
+      onClick: () => (window.location.hash = "#/navigation"),
     },
     {
       icon: Phone,
       label: "Call 911",
       variant: "emergency" as const,
-      onClick: () => console.log("Call emergency"),
+      onClick: callEmergency,
     },
     {
       icon: MessageCircle,
       label: "Quick Text",
       variant: "default" as const,
-      onClick: () => console.log("Quick text"),
+      onClick: sendQuickText,
     },
     {
       icon: Camera,
       label: "Evidence",
       variant: "warning" as const,
-      onClick: () => console.log("Take photo"),
+      onClick: takeEvidence,
     },
     {
       icon: AlertCircle,
       label: "Report",
       variant: "warning" as const,
-      onClick: () => console.log("Report incident"),
+      onClick: reportIncident,
     },
   ];
 

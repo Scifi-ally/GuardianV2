@@ -104,13 +104,13 @@ export function GuardianKeyCard({ className }: GuardianKeyCardProps) {
         </div>
 
         <div className="space-y-2 text-sm text-muted-foreground">
-          <p>
+          <div>
             <Badge variant="outline" className="mr-2">
               Tip
             </Badge>
             Share this key with trusted contacts so they can add you as their
             emergency contact.
-          </p>
+          </div>
           <p className="text-xs">
             Keep this key secure. Anyone with this key can add you as their
             emergency contact.

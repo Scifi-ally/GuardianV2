@@ -69,9 +69,19 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
         },
       );
     } catch (error) {
-      console.warn("Failed to subscribe to SOS alerts:", error);
+      console.error("Unexpected error in SOS alerts subscription:", error);
       // Set empty alerts array to prevent infinite loops
       setActiveAlerts([]);
+
+      // Show user-friendly message for index errors
+      if (
+        error instanceof Error &&
+        error.message.includes("requires an index")
+      ) {
+        console.log(
+          "Database index required - SOS alerts temporarily unavailable",
+        );
+      }
     }
 
     return () => {
@@ -192,7 +202,9 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
                         : "text-warning",
                     )}
                   />
-                  <Badge className={priorityColors[alert.priority]} size="sm">
+                  <Badge
+                    className={cn(priorityColors[alert.priority], "text-xs")}
+                  >
                     {alert.priority.toUpperCase()}
                   </Badge>
                 </div>

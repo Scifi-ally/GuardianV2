@@ -87,11 +87,14 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
-      {/* Background with blur effect */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-lg border-t border-border" />
+      {/* Background with blur effect - extend upward to accommodate SOS button */}
+      <div
+        className="absolute inset-0 bg-background/80 backdrop-blur-lg border-t border-border"
+        style={{ top: "-30px" }}
+      />
 
       {/* Magic floating indicator */}
-      <div className="relative">
+      <div className="relative" style={{ marginTop: "30px" }}>
         <div
           className="absolute top-0 transition-all duration-500 ease-out"
           style={{
@@ -105,8 +108,11 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       </div>
 
       {/* Navigation items */}
-      <div className="relative px-4 py-2">
-        <div className="flex items-center justify-around max-w-md mx-auto">
+      <div
+        className="relative px-6 pt-8 pb-8 overflow-visible"
+        style={{ marginTop: "30px" }}
+      >
+        <div className="flex items-end justify-around max-w-lg mx-auto">
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const isActive = activeIndex === index;
@@ -119,11 +125,11 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   onClick={handleCancelSOS}
                   className={cn(
                     "relative flex flex-col items-center p-3 transition-all duration-300",
-                    "bg-warning/20 rounded-2xl animate-pulse",
+                    "bg-warning/20 rounded-2xl animate-pulse h-[90px] w-[90px] -translate-y-4",
                   )}
                 >
                   <div className="absolute inset-0 rounded-2xl border-2 border-warning animate-ping" />
-                  <div className="relative z-10 flex flex-col items-center">
+                  <div className="relative z-10 flex flex-col items-center justify-center h-full">
                     <div className="text-2xl font-bold text-warning mb-1">
                       {countdown}
                     </div>
@@ -140,8 +146,11 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                 key={item.id}
                 onClick={() => handleNavClick(item, index)}
                 className={cn(
-                  "relative flex flex-col items-center p-3 transition-all duration-300",
+                  "relative flex flex-col items-center transition-all duration-300",
                   "hover:scale-110 active:scale-95",
+                  isSpecial
+                    ? "p-3 h-[90px] w-[90px] -translate-y-4"
+                    : "p-3 h-[70px] w-[70px]",
                   isSpecial && "transform hover:scale-125",
                 )}
               >
@@ -157,7 +166,8 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                 {/* Icon container */}
                 <div
                   className={cn(
-                    "relative z-10 p-2 rounded-xl transition-all duration-300",
+                    "relative z-10 rounded-xl transition-all duration-300",
+                    isSpecial ? "p-3" : "p-2",
                     isSpecial &&
                       "bg-emergency text-emergency-foreground shadow-lg",
                     isActive && !isSpecial && "bg-primary/20",
@@ -166,7 +176,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   <Icon
                     className={cn(
                       "transition-all duration-300",
-                      isSpecial ? "h-7 w-7" : "h-5 w-5",
+                      isSpecial ? "h-8 w-8 translate-y-1" : "h-5 w-5",
                       isActive && !isSpecial
                         ? "text-primary"
                         : "text-foreground",

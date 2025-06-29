@@ -18,7 +18,6 @@ import { auth, db } from "@/lib/firebase";
 
 interface GuardianUser extends User {
   guardianKey?: string;
-  displayName?: string;
 }
 
 interface AuthContextType {
@@ -44,15 +43,20 @@ interface EmergencyContact {
   id: string;
   guardianKey: string;
   name: string;
+  phone?: string;
   priority: number;
   addedAt: Date;
   isActive: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }
 
 function generateGuardianKey(): string {
@@ -232,7 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
-  const value = {
+  const value: AuthContextType = {
     currentUser,
     signup,
     login,
@@ -241,11 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userProfile,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export type { UserProfile, EmergencyContact };

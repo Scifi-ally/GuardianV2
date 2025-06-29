@@ -1,3 +1,101 @@
+/* Leaflet CSS */
+@import "leaflet/dist/leaflet.css";
+
+/* Custom Map Theming */
+.leaflet-container {
+  background: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.leaflet-control-container .leaflet-control {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.5rem !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.leaflet-control-container .leaflet-control a {
+  color: hsl(var(--foreground)) !important;
+  background: hsl(var(--card)) !important;
+}
+
+.leaflet-control-container .leaflet-control a:hover {
+  background: hsl(var(--muted)) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.leaflet-popup-tip {
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+/* Black & White Map Theme */
+.bw-map {
+  background: #000000 !important;
+}
+
+.bw-tiles {
+  filter: grayscale(100%) contrast(1.2) brightness(0.8) invert(1);
+  opacity: 0.9;
+}
+
+.leaflet-container.bw-map {
+  background: #000000 !important;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background: #333333 !important;
+}
+
+.bw-popup .leaflet-popup-content-wrapper {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+}
+
+.bw-popup .leaflet-popup-tip {
+  background: #000000 !important;
+  border: 1px solid #333333 !important;
+}
+
+/* Custom Zoom Controls */
+.leaflet-control-zoom {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.leaflet-control-zoom a {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: none !important;
+  width: 40px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  transition: all 0.2s ease !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #333333 !important;
+  transform: scale(1.05);
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -118,39 +216,197 @@
   }
 }
 
-/* Custom scrollbar styles - hide scrollbars but maintain functionality */
+/* COMPLETE SCROLLBAR VISIBILITY DISABLE */
+@layer base {
+  /* Global scrollbar hiding - highest priority */
+  html {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    overflow-x: hidden;
+  }
+
+  html::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    overflow-x: hidden;
+  }
+
+  body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Universal scrollbar hiding for ALL elements */
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-track {
+    display: none !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    display: none !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-corner {
+    display: none !important;
+    background: transparent !important;
+  }
+}
+
 @layer utilities {
+  /* Custom scrollbar class for specific elements */
   .custom-scrollbar {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
-  /* Global scrollbar hiding for specific areas */
+  /* All overflow variants */
   .overflow-y-auto,
   .overflow-x-auto,
-  .overflow-auto {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  .overflow-auto,
+  .overflow-hidden,
+  .overflow-scroll,
+  .overflow-visible {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   .overflow-y-auto::-webkit-scrollbar,
   .overflow-x-auto::-webkit-scrollbar,
-  .overflow-auto::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
+  .overflow-auto::-webkit-scrollbar,
+  .overflow-hidden::-webkit-scrollbar,
+  .overflow-scroll::-webkit-scrollbar,
+  .overflow-visible::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
-  /* Maintain scroll functionality with hidden scrollbar for specific components */
+  /* Scroll area components */
   .scroll-area {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   .scroll-area::-webkit-scrollbar {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Textarea and input scrollbars */
+  textarea,
+  input[type="text"],
+  input[type="search"],
+  select {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  textarea::-webkit-scrollbar,
+  input[type="text"]::-webkit-scrollbar,
+  input[type="search"]::-webkit-scrollbar,
+  select::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Remove focus outlines that could appear as lines */
+  *:focus {
+    outline: none !important;
+  }
+
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring)) !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Hide any potential scrollbar spaces */
+  .hide-scrollbar {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Additional comprehensive scrollbar hiding */
+  div,
+  main,
+  section,
+  article,
+  aside,
+  nav,
+  header,
+  footer {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  div::-webkit-scrollbar,
+  main::-webkit-scrollbar,
+  section::-webkit-scrollbar,
+  article::-webkit-scrollbar,
+  aside::-webkit-scrollbar,
+  nav::-webkit-scrollbar,
+  header::-webkit-scrollbar,
+  footer::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Force hide scrollbars on common UI components */
+  [class*="overflow"],
+  [class*="scroll"],
+  .container,
+  .content,
+  .panel,
+  .modal {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  [class*="overflow"]::-webkit-scrollbar,
+  [class*="scroll"]::-webkit-scrollbar,
+  .container::-webkit-scrollbar,
+  .content::-webkit-scrollbar,
+  .panel::-webkit-scrollbar,
+  .modal::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 }
 

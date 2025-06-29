@@ -172,21 +172,35 @@ export function useGeolocation() {
   };
 }
 
+// Extend the Window interface to include SpeechRecognition
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 export function useVoiceActivation() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(false);
-  const recognition = useRef<SpeechRecognition | null>(null);
+  const recognition = useRef<any>(null);
+  const isStarting = useRef(false);
 
   useEffect(() => {
     const SpeechRecognition =
-      window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
       setIsSupported(true);
       recognition.current = new SpeechRecognition();
       recognition.current.continuous = true;
       recognition.current.interimResults = true;
+
+      recognition.current.onstart = () => {
+        setIsListening(true);
+        isStarting.current = false;
+      };
 
       recognition.current.onresult = (event) => {
         let finalTranscript = "";
@@ -206,28 +220,54 @@ export function useVoiceActivation() {
         }
       };
 
-      recognition.current.onerror = () => {
+      recognition.current.onerror = (event) => {
+        console.warn("Speech recognition error:", event.error);
         setIsListening(false);
+        isStarting.current = false;
       };
 
       recognition.current.onend = () => {
         setIsListening(false);
+        isStarting.current = false;
       };
     }
+
+    return () => {
+      if (recognition.current) {
+        try {
+          recognition.current.stop();
+        } catch (error) {
+          console.warn("Error stopping speech recognition on cleanup:", error);
+        }
+      }
+    };
   }, []);
 
   const startListening = useCallback(() => {
-    if (recognition.current && !isListening) {
-      setIsListening(true);
-      setTranscript("");
-      recognition.current.start();
+    if (recognition.current && !isListening && !isStarting.current) {
+      try {
+        isStarting.current = true;
+        setTranscript("");
+        recognition.current.start();
+      } catch (error) {
+        console.warn("Failed to start speech recognition:", error);
+        isStarting.current = false;
+        setIsListening(false);
+      }
     }
   }, [isListening]);
 
   const stopListening = useCallback(() => {
-    if (recognition.current && isListening) {
-      recognition.current.stop();
-      setIsListening(false);
+    if (recognition.current && (isListening || isStarting.current)) {
+      try {
+        recognition.current.stop();
+        setIsListening(false);
+        isStarting.current = false;
+      } catch (error) {
+        console.warn("Failed to stop speech recognition:", error);
+        setIsListening(false);
+        isStarting.current = false;
+      }
     }
   }, [isListening]);
 

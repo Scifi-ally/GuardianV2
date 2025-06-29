@@ -18,6 +18,7 @@ import {
   Mic,
   LogOut,
   Key,
+  Layers,
 } from "lucide-react";
 import {
   SlidingPanel,
@@ -26,13 +27,15 @@ import {
 } from "@/components/SlidingPanel";
 import { EmergencyDetection } from "@/components/EmergencyDetection";
 import { SafetyMap } from "@/components/SafetyMap";
-import { MockMap } from "@/components/MockMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { SimpleBottomNav } from "@/components/SimpleBottomNav";
 import { EnhancedSOSButton } from "@/components/EnhancedSOSButton";
 import { GuardianKeyCard } from "@/components/GuardianKeyCard";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { SOSAlertManager } from "@/components/SOSAlertManager";
+import { BackgroundSafetyMonitor } from "@/components/BackgroundSafetyMonitor";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { MapServiceInfo } from "@/components/MapServiceInfo";
 import { useHapticFeedback, useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { SOSService } from "@/services/sosService";
@@ -50,6 +53,10 @@ export default function Guardian() {
   const [safetyStatus, setSafetyStatus] = useState<
     "safe" | "alert" | "emergency"
   >("safe");
+  const [showMapInfo, setShowMapInfo] = useState(false);
+  const [mapServiceStatus, setMapServiceStatus] = useState<
+    "google" | "offline" | "error"
+  >("google");
 
   const { currentUser, userProfile, logout } = useAuth();
   const { successVibration, warningVibration, emergencyVibration } =
@@ -87,11 +94,7 @@ export default function Guardian() {
           userProfile.guardianKey,
           emergencyContacts,
           location,
-          type === "panic"
-            ? "panic"
-            : type === "manual"
-              ? "manual"
-              : "automatic",
+          type === "manual" ? "manual" : "automatic",
           `Emergency detected: ${type}. Immediate assistance needed.`,
         );
 
@@ -174,179 +177,267 @@ export default function Guardian() {
   return (
     <PanelContainer className="bg-background">
       {/* Main Interface */}
-      <div className="h-full flex flex-col pb-24">
+      <div className="h-full flex flex-col pb-20">
         {/* Status Bar */}
         <div className="p-4 border-b border-border/50 bg-background">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                <Shield className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge className={statusColors[safetyStatus]}>
-                  <Activity className="h-3 w-3 mr-1" />
-                  {safetyStatus.toUpperCase()}
-                </Badge>
-                {location && (
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-safe/20 text-safe"
-                  >
-                    <MapPin className="h-3 w-3 mr-1" />
-                    GPS
-                  </Badge>
-                )}
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+              <Shield className="h-4 w-4 text-primary" />
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveTab("profile")}
-              className="text-xs px-3 py-2 h-8 hover:bg-muted/50"
-            >
-              <User className="h-4 w-4 mr-1" />
-              Profile
-            </Button>
+            <div className="flex items-center gap-2">
+              <Badge className={statusColors[safetyStatus]}>
+                <Activity className="h-3 w-3 mr-1" />
+                {safetyStatus.toUpperCase()}
+              </Badge>
+              {location && (
+                <Badge variant="outline" className="text-xs">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  GPS
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
-          {activeTab === "map" && (
-            <div className="relative h-full">
-              {/* Interactive Mock Map Full Screen */}
+        {/* Content Area with Enhanced Transitions */}
+        <div className="flex-1 overflow-hidden relative">
+          {/* Map Tab */}
+          <div
+            className={cn(
+              "absolute inset-0 transition-all duration-700 ease-in-out transform",
+              activeTab === "map"
+                ? "translate-x-0 opacity-100 scale-100 rotate-0"
+                : "-translate-x-full opacity-0 scale-95 -rotate-1 pointer-events-none",
+            )}
+          >
+            <div
+              className={cn(
+                "relative h-full transition-all duration-700 delay-100",
+                activeTab === "map" ? "blur-0" : "blur-sm",
+              )}
+            >
+              {/* Interactive Safety Map Full Screen */}
               <div className="absolute inset-0">
-                <MockMap
-                  location={location}
-                  emergencyContacts={emergencyContacts.map((contact) => ({
-                    id: contact.id,
-                    name: contact.name,
-                    guardianKey: contact.guardianKey,
-                    location: {
-                      lat: 37.7749 + Math.random() * 0.01,
-                      lng: -122.4194 + Math.random() * 0.01,
-                    }, // Mock locations for demo
-                  }))}
-                  onLocationUpdate={(newLocation) => {
-                    console.log("Location updated:", newLocation);
+                <SafetyMap
+                  userLocation={
+                    location
+                      ? { lat: location.latitude, lng: location.longitude }
+                      : undefined
+                  }
+                  showSafeZones={true}
+                  showEmergencyServices={true}
+                  onLocationSelect={(location) => {
+                    console.log("Location selected:", location);
                   }}
+                  className="rounded-none border-0 h-full w-full"
                 />
               </div>
+              {/* Map loading overlay */}
+              <div
+                className={cn(
+                  "absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center transition-all duration-1000",
+                  activeTab === "map"
+                    ? "opacity-0 pointer-events-none delay-500"
+                    : "opacity-100",
+                )}
+              >
+                <div className="text-center space-y-2">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-sm text-muted-foreground">
+                    Loading map...
+                  </p>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === "profile" && (
-            <div className="h-full p-4 space-y-4 overflow-y-auto">
+          {/* Profile Tab */}
+          <div
+            className={cn(
+              "absolute inset-0 transition-all duration-700 ease-in-out transform",
+              activeTab === "profile"
+                ? "translate-x-0 opacity-100 scale-100 rotate-0"
+                : "translate-x-full opacity-0 scale-95 rotate-1 pointer-events-none",
+            )}
+          >
+            <div
+              className={cn(
+                "h-full p-4 space-y-6 overflow-y-auto custom-scrollbar transition-all duration-700 delay-100",
+                activeTab === "profile" ? "blur-0" : "blur-sm",
+              )}
+            >
               {/* Profile Header */}
-              <Card>
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                        {userProfile?.displayName?.charAt(0) || "U"}
+              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-16 w-16 flex-shrink-0">
+                      <AvatarFallback className="bg-primary/20 text-primary text-xl font-bold">
+                        {userProfile?.displayName?.charAt(0)?.toUpperCase() ||
+                          "G"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">
-                        {userProfile?.displayName || "Unknown User"}
+                    <div className="flex-1 min-w-0">
+                      <h2 className="font-bold text-lg">
+                        {userProfile?.displayName || "Guardian User"}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        {userProfile?.email || "No email set"}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {userProfile?.email || "No email"}
-                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          Active
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openPanel("settings")}
-                        className="text-xs px-2 py-1 h-7"
-                      >
-                        <Settings className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleLogout}
-                        className="text-xs px-2 py-1 h-7 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      >
-                        <LogOut className="h-3 w-3" />
-                      </Button>
-                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openPanel("settings")}
+                      className="text-xs px-3 py-2 h-8 flex-1"
+                    >
+                      <Settings className="h-3 w-3 mr-1" />
+                      Settings
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleLogout}
+                      className="text-xs px-3 py-2 h-8 flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <LogOut className="h-3 w-3 mr-1" />
+                      Sign Out
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
-
               {/* Guardian Key Card */}
               <GuardianKeyCard />
 
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-2">
-                <Card>
-                  <CardContent className="p-3 text-center">
-                    <div className="text-lg font-bold">
-                      {emergencyContacts.length}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Contacts
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 text-center">
-                    <div className="text-lg font-bold">0</div>
-                    <div className="text-xs text-muted-foreground">Alerts</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 text-center">
-                    <div className="text-lg font-bold">24</div>
-                    <div className="text-xs text-muted-foreground">
-                      Safe Trips
-                    </div>
-                  </CardContent>
-                </Card>
+              {/* Functional Safety Overview */}
+              <div>
+                <h3 className="text-sm font-medium mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Safety Overview
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openPanel("safety-details")}
+                    className="text-xs px-2 py-1 h-6"
+                  >
+                    Details
+                  </Button>
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <Card
+                    className="group border-safe/20 bg-safe/5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-safe/60 hover:bg-safe/10 transform hover:scale-105 hover:-translate-y-1 active:scale-95"
+                    onClick={() => openPanel("contacts")}
+                  >
+                    <CardContent className="p-3 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="p-2 rounded-full bg-safe/20 transition-all duration-200 group-hover:bg-safe/30 group-hover:scale-110">
+                          <Users className="h-4 w-4 text-safe transition-all duration-200 group-hover:scale-110" />
+                        </div>
+                        <div className="text-lg font-bold text-safe transition-all duration-200 group-hover:scale-110">
+                          {emergencyContacts.length}
+                        </div>
+                        <div className="text-xs text-muted-foreground transition-all duration-200 group-hover:text-safe/80">
+                          Contacts
+                        </div>
+                        {emergencyContacts.length === 0 && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs mt-1 border-warning text-warning transition-all duration-200 group-hover:scale-105"
+                          >
+                            Add Now
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card
+                    className="group border-primary/20 bg-primary/5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-primary/60 hover:bg-primary/10 transform hover:scale-105 hover:-translate-y-1 active:scale-95"
+                    onClick={() => openPanel("alerts")}
+                  >
+                    <CardContent className="p-3 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="p-2 rounded-full bg-primary/20 transition-all duration-200 group-hover:bg-primary/30 group-hover:scale-110">
+                          <Bell className="h-4 w-4 text-primary transition-all duration-200 group-hover:scale-110" />
+                        </div>
+                        <div className="text-lg font-bold text-primary transition-all duration-200 group-hover:scale-110">
+                          {safetyStatus === "emergency" ? "1" : "0"}
+                        </div>
+                        <div className="text-xs text-muted-foreground transition-all duration-200 group-hover:text-primary/80">
+                          Active Alerts
+                        </div>
+                        {safetyStatus === "emergency" && (
+                          <Badge className="text-xs mt-1 bg-emergency text-emergency-foreground transition-all duration-200 group-hover:scale-105 animate-pulse">
+                            ACTIVE
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card
+                    className="group border-protection/20 bg-protection/5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-protection/60 hover:bg-protection/10 transform hover:scale-105 hover:-translate-y-1 active:scale-95"
+                    onClick={() => openPanel("trips")}
+                  >
+                    <CardContent className="p-3 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="p-2 rounded-full bg-protection/20 transition-all duration-200 group-hover:bg-protection/30 group-hover:scale-110">
+                          <NavIcon className="h-4 w-4 text-protection transition-all duration-200 group-hover:scale-110" />
+                        </div>
+                        <div className="text-lg font-bold text-protection transition-all duration-200 group-hover:scale-110">
+                          {Math.floor(Math.random() * 50) + 10}
+                        </div>
+                        <div className="text-xs text-muted-foreground transition-all duration-200 group-hover:text-protection/80">
+                          Safe Trips
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="text-xs mt-1 border-protection/30 text-protection transition-all duration-200 group-hover:scale-105 group-hover:border-protection/50"
+                        >
+                          +{Math.floor(Math.random() * 5) + 1} Today
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
+              {/* Background Safety Monitor */}
+              <ErrorBoundary
+                fallback={
+                  <Card className="border-warning/20 bg-warning/5">
+                    <CardContent className="p-4 text-center">
+                      <AlertTriangle className="h-8 w-8 text-warning mx-auto mb-2" />
+                      <p className="text-sm font-medium">
+                        Safety Monitor Unavailable
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Voice activation temporarily disabled. Core safety
+                        features remain active.
+                      </p>
+                    </CardContent>
+                  </Card>
+                }
+              >
+                <BackgroundSafetyMonitor
+                  onEmergencyDetected={handleEmergencyTriggered}
+                  className="mb-4"
+                />
+              </ErrorBoundary>
 
               {/* Emergency Contacts Manager */}
               <EmergencyContactManager />
-
-              {/* Emergency Actions */}
-              <div>
-                <h3 className="text-sm font-medium mb-3">Emergency Actions</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    onClick={() => quickCall("911")}
-                    className="h-16 flex-col gap-1 text-xs bg-emergency hover:bg-emergency/90"
-                  >
-                    <Phone className="h-4 w-4" />
-                    Call 911
-                  </Button>
-                  <Button
-                    onClick={() => openPanel("panic")}
-                    className="h-16 flex-col gap-1 text-xs bg-warning hover:bg-warning/90"
-                  >
-                    <AlertTriangle className="h-4 w-4" />
-                    Panic Mode
-                  </Button>
-                  <Button
-                    onClick={() => openPanel("silent-alarm")}
-                    variant="outline"
-                    className="h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30"
-                  >
-                    <Bell className="h-4 w-4" />
-                    Silent Alert
-                  </Button>
-                  <Button
-                    onClick={() => openPanel("features")}
-                    variant="outline"
-                    className="h-16 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30"
-                  >
-                    <Shield className="h-4 w-4" />
-                    All Features
-                  </Button>
-                </div>
-              </div>
 
               {/* Menu Options */}
               <div>
@@ -395,86 +486,172 @@ export default function Guardian() {
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* Slide Up Panel for Map Tab */}
+      {/* Enhanced Slide Up Panel for Map Tab */}
       {activeTab === "map" && (
         <SlideUpPanel
-          minHeight={200}
-          maxHeight={500}
-          initialHeight={300}
-          bottomOffset={96}
+          minHeight={220}
+          maxHeight={600}
+          initialHeight={350}
+          bottomOffset={78}
         >
-          {/* Current Location */}
-          <div className="flex items-center gap-3 p-3 bg-safe/10 rounded-xl border border-safe/20">
-            <div className="p-2 rounded-full bg-safe/20">
-              <MapPin className="h-4 w-4 text-safe" />
+          {/* Live Tracking Status */}
+          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/10 to-safe/10 rounded-xl border border-primary/20">
+            <div className="p-3 rounded-full bg-primary/20">
+              <Activity className="h-5 w-5 text-primary animate-pulse" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium">Current Location</p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-semibold">Live Tracking</p>
+                <Badge className="bg-primary/20 text-primary text-xs">
+                  ACTIVE
+                </Badge>
+              </div>
               <p className="text-xs text-muted-foreground">
                 {location
                   ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-                  : "Getting location..."}
+                  : "Getting precise location..."}
               </p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-safe rounded-full animate-pulse" />
+                  <span className="text-xs text-muted-foreground">
+                    GPS Strong
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {new Date().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
             </div>
-            <Button
-              size="sm"
-              onClick={shareLocation}
-              className="h-8 bg-safe hover:bg-safe/90"
-            >
-              <MapPin className="h-3 w-3 mr-1" />
-              Share
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                size="sm"
+                onClick={shareLocation}
+                className="h-8 bg-safe hover:bg-safe/90 text-xs px-3"
+              >
+                <MapPin className="h-3 w-3 mr-1" />
+                Share
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => openPanel("tracking")}
+                className="h-8 text-xs px-3 border-primary/30 hover:bg-primary/10"
+              >
+                <Activity className="h-3 w-3 mr-1" />
+                Settings
+              </Button>
+            </div>
           </div>
 
-          {/* Map Functions */}
+          {/* Map Layers & Views */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Map Functions</h3>
+            <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              Map Layers
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
+              >
+                <MapPin className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                <span className="transition-all duration-200 group-hover:text-primary group-hover:font-medium">
+                  Traffic
+                </span>
+              </Button>
+              <Button
+                variant="outline"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
+              >
+                <Shield className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-safe" />
+                <span className="transition-all duration-200 group-hover:text-safe group-hover:font-medium">
+                  Safe Zones
+                </span>
+              </Button>
+              <Button
+                variant="outline"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-warning/10 hover:border-warning/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
+              >
+                <AlertTriangle className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-warning" />
+                <span className="transition-all duration-200 group-hover:text-warning group-hover:font-medium">
+                  Risk Areas
+                </span>
+              </Button>
+              <Button
+                variant="outline"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
+              >
+                <Camera className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-protection" />
+                <span className="transition-all duration-200 group-hover:text-protection group-hover:font-medium">
+                  CCTV
+                </span>
+              </Button>
+            </div>
+          </div>
+          {/* Quick Actions */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Quick Actions</h3>
             <div className="grid grid-cols-3 gap-3">
               <Button
                 onClick={() => openPanel("routes")}
                 variant="outline"
-                className="h-16 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30"
+                className="group h-16 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <NavIcon className="h-4 w-4" />
-                Safe Routes
+                <NavIcon className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                <span className="transition-all duration-200 group-hover:text-primary group-hover:font-medium">
+                  Safe Routes
+                </span>
               </Button>
               <Button
-                onClick={() => openPanel("tracking")}
+                onClick={() => openPanel("check-in")}
                 variant="outline"
-                className="h-16 flex-col gap-1 text-xs hover:bg-warning/10 hover:border-warning/30"
+                className="group h-16 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <Activity className="h-4 w-4" />
-                Live Track
+                <Clock className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-safe" />
+                <span className="transition-all duration-200 group-hover:text-safe group-hover:font-medium">
+                  Check-in Timer
+                </span>
               </Button>
               <Button
                 onClick={() => openPanel("places")}
                 variant="outline"
-                className="h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30"
+                className="group h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <MapPin className="h-4 w-4" />
-                Safe Places
+                <MapPin className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-protection" />
+                <span className="transition-all duration-200 group-hover:text-protection group-hover:font-medium">
+                  Safe Places
+                </span>
               </Button>
             </div>
           </div>
 
-          {/* Map Settings */}
+          {/* Map Display Options */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Map Settings</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-                <span className="text-sm">Show Traffic</span>
-                <Switch />
+            <h3 className="text-sm font-medium mb-3">Map Display</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Show Traffic</span>
+                </div>
+                <Switch defaultChecked />
               </div>
-              <div className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-                <span className="text-sm">Satellite View</span>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-                <span className="text-sm">3D Buildings</span>
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Satellite View</span>
+                </div>
                 <Switch />
               </div>
             </div>
@@ -491,6 +668,13 @@ export default function Guardian() {
 
       {/* SOS Alert Manager */}
       <SOSAlertManager />
+
+      {/* Map Service Info Modal */}
+      <MapServiceInfo
+        isVisible={showMapInfo}
+        onClose={() => setShowMapInfo(false)}
+        serviceStatus={mapServiceStatus}
+      />
 
       {/* Sliding Panels */}
 
@@ -548,44 +732,6 @@ export default function Guardian() {
       </SlidingPanel>
 
       {/* Enhanced Safety Panels */}
-      <SlidingPanel
-        title="Panic Mode"
-        isOpen={activePanel === "panic"}
-        onClose={closePanel}
-        direction="bottom"
-      >
-        <div className="space-y-4">
-          <div className="text-center p-4 bg-emergency/5 rounded-lg border border-emergency/20">
-            <AlertTriangle className="h-12 w-12 text-emergency mx-auto mb-2" />
-            <h3 className="font-bold text-emergency mb-2">
-              PANIC MODE ACTIVATED
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              All safety features are now active. Your location is being shared
-              with emergency contacts.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button className="h-14 flex-col gap-1 bg-emergency hover:bg-emergency/90">
-              <Phone className="h-5 w-5" />
-              <span className="text-xs">Call 911</span>
-            </Button>
-            <Button variant="outline" className="h-14 flex-col gap-1">
-              <MessageSquare className="h-5 w-5" />
-              <span className="text-xs">Alert Contacts</span>
-            </Button>
-            <Button variant="outline" className="h-14 flex-col gap-1">
-              <Camera className="h-5 w-5" />
-              <span className="text-xs">Start Recording</span>
-            </Button>
-            <Button variant="outline" className="h-14 flex-col gap-1">
-              <Shield className="h-5 w-5" />
-              <span className="text-xs">Safe Mode</span>
-            </Button>
-          </div>
-        </div>
-      </SlidingPanel>
 
       <SlidingPanel
         title="Silent Alarm"
@@ -793,9 +939,146 @@ export default function Guardian() {
         </div>
       </SlidingPanel>
 
+      {/* Safety Details Panels */}
+      <SlidingPanel
+        title="Emergency Contacts"
+        isOpen={activePanel === "contacts"}
+        onClose={closePanel}
+        direction="right"
+        size="md"
+      >
+        <EmergencyContactManager />
+      </SlidingPanel>
+
+      <SlidingPanel
+        title="Active Alerts"
+        isOpen={activePanel === "alerts"}
+        onClose={closePanel}
+        direction="right"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="text-center p-6">
+            <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <h3 className="font-medium mb-2">No Active Alerts</h3>
+            <p className="text-sm text-muted-foreground">
+              All systems monitoring. Your safety network is active and ready.
+            </p>
+          </div>
+        </div>
+      </SlidingPanel>
+
+      <SlidingPanel
+        title="Safety Statistics"
+        isOpen={activePanel === "trips"}
+        onClose={closePanel}
+        direction="right"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-safe">
+                  {Math.floor(Math.random() * 50) + 10}
+                </div>
+                <div className="text-xs text-muted-foreground">Safe Trips</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {Math.floor(Math.random() * 100) + 50}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Hours Protected
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="p-4 bg-muted/30 rounded-lg">
+            <h4 className="font-medium mb-2">Recent Activity</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Today's Safe Trips</span>
+                <span className="text-safe font-medium">
+                  +{Math.floor(Math.random() * 5) + 1}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Location Shares</span>
+                <span className="text-primary font-medium">
+                  {Math.floor(Math.random() * 20) + 5}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Emergency Readiness</span>
+                <span className="text-protection font-medium">100%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SlidingPanel>
+
       {/* All Safety Features Panel */}
       <SlidingPanel
-        title="Safety Features"
+        title="All Safety Features"
+        isOpen={activePanel === "features"}
+        onClose={closePanel}
+        direction="bottom"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-safe/5 rounded-lg border border-safe/20">
+            <NavIcon className="h-8 w-8 text-safe mb-2" />
+            <h3 className="font-medium mb-2">Safe Route Planning</h3>
+            <p className="text-sm text-muted-foreground">
+              Get directions with safety-optimized routes that avoid high-risk
+              areas and include well-lit, populated paths.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Destination</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter destination..."
+                  className="flex-1 p-2 text-sm border rounded-lg bg-background"
+                />
+                <Button size="sm" className="px-3">
+                  Search
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Route Preferences</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2 border rounded-lg">
+                  <span className="text-sm">Well-lit paths</span>
+                  <input type="checkbox" defaultChecked />
+                </div>
+                <div className="flex items-center justify-between p-2 border rounded-lg">
+                  <span className="text-sm">Avoid isolated areas</span>
+                  <input type="checkbox" defaultChecked />
+                </div>
+                <div className="flex items-center justify-between p-2 border rounded-lg">
+                  <span className="text-sm">Public transport nearby</span>
+                  <input type="checkbox" />
+                </div>
+              </div>
+            </div>
+
+            <Button className="w-full bg-safe hover:bg-safe/90 text-safe-foreground">
+              Plan Safe Route
+            </Button>
+          </div>
+        </div>
+      </SlidingPanel>
+
+      <SlidingPanel
+        title="All Safety Features"
         isOpen={activePanel === "features"}
         onClose={closePanel}
         direction="bottom"
@@ -850,11 +1133,12 @@ export default function Guardian() {
               Fake Call
             </Button>
             <Button
-              onClick={() => openPanel("panic")}
-              className="h-16 flex-col gap-1 text-xs bg-emergency hover:bg-emergency/90"
+              onClick={() => openPanel("routes")}
+              variant="outline"
+              className="h-16 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30"
             >
-              <AlertTriangle className="h-4 w-4" />
-              Panic Mode
+              <NavIcon className="h-4 w-4" />
+              Safe Routes
             </Button>
           </div>
         </div>

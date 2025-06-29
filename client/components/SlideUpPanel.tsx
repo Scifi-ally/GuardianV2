@@ -17,7 +17,7 @@ export function SlideUpPanel({
   minHeight = 200,
   maxHeight = 600,
   initialHeight = 300,
-  bottomOffset = 96, // Bottom navigation height
+  bottomOffset = 80, // Bottom navigation height
   collapsedHeight = 40, // Height when collapsed (just handle visible)
 }: SlideUpPanelProps) {
   const [height, setHeight] = useState(collapsedHeight);
@@ -129,12 +129,13 @@ export function SlideUpPanel({
     <div
       ref={panelRef}
       className={cn(
-        "fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border/50 rounded-t-3xl shadow-2xl transition-all duration-200",
+        "fixed left-0 right-0 z-40 bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl transition-all duration-200 overflow-hidden",
+        "border-t border-border/30",
         isDragging ? "transition-none" : "",
         className,
       )}
       style={{
-        bottom: bottomOffset,
+        bottom: bottomOffset - 2, // Slight overlap to remove gap
         height: height,
         transform: isDragging ? "scale(1.01)" : "scale(1)",
       }}
@@ -143,9 +144,9 @@ export function SlideUpPanel({
       <div
         ref={handleRef}
         className={cn(
-          "flex justify-center py-4 cursor-grab active:cursor-grabbing transition-all duration-200",
+          "flex flex-col items-center cursor-grab active:cursor-grabbing transition-all duration-200",
           isDragging && "cursor-grabbing",
-          isCollapsed && "py-3",
+          isCollapsed ? "py-2" : "py-3",
         )}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
@@ -158,6 +159,11 @@ export function SlideUpPanel({
             isCollapsed && "bg-primary/60 w-16 h-1.5",
           )}
         />
+        {isCollapsed && (
+          <div className="mt-2 text-xs text-muted-foreground animate-pulse">
+            Tap to expand
+          </div>
+        )}
       </div>
 
       {/* Panel Content */}
