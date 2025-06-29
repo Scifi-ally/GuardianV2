@@ -26,7 +26,7 @@ import {
 } from "@/components/SlidingPanel";
 import { EmergencyDetection } from "@/components/EmergencyDetection";
 import { SafetyMap } from "@/components/SafetyMap";
-import { MockMap } from "@/components/MockMap";
+import { GoogleMap } from "@/components/GoogleMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { SimpleBottomNav } from "@/components/SimpleBottomNav";
 import { EnhancedSOSButton } from "@/components/EnhancedSOSButton";
@@ -208,7 +208,7 @@ export default function Guardian() {
             <div className="relative h-full">
               {/* Interactive Mock Map Full Screen */}
               <div className="absolute inset-0">
-                <MockMap
+                <GoogleMap
                   location={location}
                   emergencyContacts={emergencyContacts.map((contact) => ({
                     id: contact.id,
