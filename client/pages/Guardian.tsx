@@ -201,7 +201,7 @@ export default function Guardian() {
               "absolute inset-0 transition-all duration-500 ease-out",
               activeTab === "map"
                 ? "translate-x-0 opacity-100"
-                : "-translate-x-full opacity-0 pointer-events-none"
+                : "-translate-x-full opacity-0 pointer-events-none",
             )}
           >
             <div className="relative h-full">
@@ -232,7 +232,7 @@ export default function Guardian() {
               "absolute inset-0 transition-all duration-500 ease-out",
               activeTab === "profile"
                 ? "translate-x-0 opacity-100"
-                : "translate-x-full opacity-0 pointer-events-none"
+                : "translate-x-full opacity-0 pointer-events-none",
             )}
           >
             <div className="h-full p-4 space-y-6 overflow-y-auto custom-scrollbar">
@@ -322,7 +322,10 @@ export default function Guardian() {
                           Contacts
                         </div>
                         {emergencyContacts.length === 0 && (
-                          <Badge variant="outline" className="text-xs mt-1 border-warning text-warning">
+                          <Badge
+                            variant="outline"
+                            className="text-xs mt-1 border-warning text-warning"
+                          >
                             Add Now
                           </Badge>
                         )}
@@ -369,7 +372,10 @@ export default function Guardian() {
                         <div className="text-xs text-muted-foreground">
                           Safe Trips
                         </div>
-                        <Badge variant="outline" className="text-xs mt-1 border-protection/30 text-protection">
+                        <Badge
+                          variant="outline"
+                          className="text-xs mt-1 border-protection/30 text-protection"
+                        >
                           +{Math.floor(Math.random() * 5) + 1} Today
                         </Badge>
                       </div>
@@ -433,7 +439,7 @@ export default function Guardian() {
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -453,7 +459,9 @@ export default function Guardian() {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <p className="text-sm font-semibold">Live Tracking</p>
-                <Badge className="bg-primary/20 text-primary text-xs">ACTIVE</Badge>
+                <Badge className="bg-primary/20 text-primary text-xs">
+                  ACTIVE
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
                 {location
@@ -463,12 +471,17 @@ export default function Guardian() {
               <div className="flex items-center gap-2 mt-2">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 bg-safe rounded-full animate-pulse" />
-                  <span className="text-xs text-muted-foreground">GPS Strong</span>
+                  <span className="text-xs text-muted-foreground">
+                    GPS Strong
+                  </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-3 w-3 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">
-                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
               </div>
@@ -521,7 +534,8 @@ export default function Guardian() {
                     <div className="flex-1">
                       <p className="text-sm font-medium">{contact.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Live location • {Math.floor(Math.random() * 30) + 1}m away
+                        Live location • {Math.floor(Math.random() * 30) + 1}m
+                        away
                       </p>
                     </div>
                     <div className="text-xs text-safe">Active</div>
@@ -541,7 +555,9 @@ export default function Guardian() {
             ) : (
               <div className="p-4 border border-dashed border-muted rounded-lg text-center">
                 <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm font-medium text-muted-foreground">No contacts sharing location</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  No contacts sharing location
+                </p>
                 <p className="text-xs text-muted-foreground mb-3">
                   Add emergency contacts to track their live location
                 </p>
