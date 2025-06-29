@@ -71,9 +71,7 @@ export function SafetyMap({
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
   const [showRouting, setShowRouting] = useState(false);
-  const [travelMode, setTravelMode] = useState<google.maps.TravelMode>(
-    google.maps.TravelMode.DRIVING,
-  );
+  const [travelMode, setTravelMode] = useState<string>("DRIVING");
   const [routeInfo, setRouteInfo] = useState<{
     duration: string;
     distance: string;
