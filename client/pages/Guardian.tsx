@@ -319,19 +319,19 @@ export default function Guardian() {
                     Call 911
                   </Button>
                   <Button
-                    onClick={() => openPanel("panic")}
-                    className="h-16 flex-col gap-1 text-xs bg-warning hover:bg-warning/90"
-                  >
-                    <AlertTriangle className="h-4 w-4" />
-                    Panic Mode
-                  </Button>
-                  <Button
                     onClick={() => openPanel("silent-alarm")}
-                    variant="outline"
-                    className="h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30"
+                    className="h-16 flex-col gap-1 text-xs bg-warning hover:bg-warning/90"
                   >
                     <Bell className="h-4 w-4" />
                     Silent Alert
+                  </Button>
+                  <Button
+                    onClick={() => openPanel("tracking")}
+                    variant="outline"
+                    className="h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30"
+                  >
+                    <Activity className="h-4 w-4" />
+                    Live Track
                   </Button>
                   <Button
                     onClick={() => openPanel("features")}
