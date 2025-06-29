@@ -131,11 +131,11 @@ export class SOSService {
     onAlert: (alerts: SOSAlert[]) => void,
   ): () => void {
     try {
+      // Simplified query to avoid composite index requirement
+      // We'll filter for active status in memory instead
       const q = query(
         collection(db, "sosAlerts"),
         where("receiverIds", "array-contains", userId),
-        where("status", "==", "active"),
-        orderBy("createdAt", "desc"),
       );
 
       return onSnapshot(
