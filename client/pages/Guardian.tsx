@@ -36,6 +36,7 @@ import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { SOSAlertManager } from "@/components/SOSAlertManager";
 import { BackgroundSafetyMonitor } from "@/components/BackgroundSafetyMonitor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { MapServiceInfo } from "@/components/MapServiceInfo";
 import { useHapticFeedback, useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { SOSService } from "@/services/sosService";
@@ -53,6 +54,10 @@ export default function Guardian() {
   const [safetyStatus, setSafetyStatus] = useState<
     "safe" | "alert" | "emergency"
   >("safe");
+  const [showMapInfo, setShowMapInfo] = useState(false);
+  const [mapServiceStatus, setMapServiceStatus] = useState<
+    "google" | "offline" | "error"
+  >("google");
 
   const { currentUser, userProfile, logout } = useAuth();
   const { successVibration, warningVibration, emergencyVibration } =
@@ -666,6 +671,13 @@ export default function Guardian() {
 
       {/* SOS Alert Manager */}
       <SOSAlertManager />
+
+      {/* Map Service Info Modal */}
+      <MapServiceInfo
+        isVisible={showMapInfo}
+        onClose={() => setShowMapInfo(false)}
+        serviceStatus={mapServiceStatus}
+      />
 
       {/* Sliding Panels */}
 
