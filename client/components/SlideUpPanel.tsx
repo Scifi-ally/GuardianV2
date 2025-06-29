@@ -126,25 +126,24 @@ export function SlideUpPanel({
   }, [isDragging, startY, startHeight, height, minHeight, maxHeight]);
 
   return (
-    <div
-      ref={panelRef}
-      className={cn(
-        "fixed left-0 right-0 bg-background border-t border-border shadow-2xl transition-all duration-300 ease-out rounded-t-xl overflow-hidden",
-        className,
-      )}
-      style={{
-        bottom: bottomOffset,
-        height: `${height}px`,
-        zIndex: 90,
-      }}
-    >
-      {/* Drag Handle */}
+      <div
+        ref={panelRef}
+        className={cn(
+          "fixed left-0 right-0 bg-background border-t border-border shadow-2xl transition-all duration-300 ease-out rounded-t-xl overflow-hidden",
+          className,
+        )}
+        style={{
+          bottom: bottomOffset,
+          height: `${height}px`,
+          zIndex: 90,
+        }}
+      >
+      {/* Drag Handle - Left Side */}
       <div
         ref={handleRef}
         className={cn(
-          "flex flex-col items-center cursor-grab active:cursor-grabbing transition-all duration-200",
+          "absolute left-4 top-3 cursor-grab active:cursor-grabbing transition-all duration-200 flex items-center gap-2",
           isDragging && "cursor-grabbing",
-          isCollapsed ? "py-2" : "py-3",
         )}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
@@ -152,16 +151,16 @@ export function SlideUpPanel({
       >
         <div
           className={cn(
-            "bg-muted rounded-full transition-all duration-200",
-            isDragging ? "bg-primary w-16 h-1.5" : "w-12 h-1",
-            isCollapsed && "bg-primary/60 w-16 h-1.5",
+            "bg-muted-foreground/40 rounded-full transition-all duration-200",
+            isCollapsed ? "w-6 h-1" : "w-8 h-1.5",
           )}
         />
-        {isCollapsed && (
-          <div className="mt-2 text-xs text-muted-foreground animate-pulse">
-            Tap to expand
+        {!isCollapsed && (
+          <div className="text-xs text-muted-foreground font-mono">
+            Drag
           </div>
         )}
+      </div>
       </div>
 
       {/* Panel Content */}
