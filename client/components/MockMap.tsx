@@ -462,50 +462,61 @@ export function MockMap({
         </div>
       </div>
 
-      {/* Map Controls */}
-      <div className="absolute top-6 right-6 space-y-3 z-30">
-        <div className="bg-background/90 backdrop-blur rounded-lg p-1 shadow-lg border border-white/20">
-          <div className="text-xs text-center font-medium mb-1 text-muted-foreground">
-            {mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)}
+      {/* Enhanced Map Controls */}
+      <div className="absolute top-4 right-4 space-y-3 z-30">
+        {/* Map Style Control */}
+        <div className="bg-background/95 backdrop-blur-xl rounded-2xl p-2 shadow-xl border border-border/50">
+          <div className="text-xs text-center font-medium mb-2 text-muted-foreground px-2">
+            {mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)} View
           </div>
           <Button
             size="sm"
-            variant="outline"
-            className="h-8 w-8 p-0 border-0"
+            variant="ghost"
+            className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200"
             onClick={toggleMapStyle}
           >
-            <Layers className="h-3 w-3" />
+            <Layers className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Location Control */}
         <Button
           size="sm"
-          variant="outline"
-          className="h-10 w-10 p-0 bg-background/90 backdrop-blur border-white/20 shadow-lg"
+          variant="ghost"
+          className="h-12 w-12 p-0 bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all duration-300 hover:scale-105"
           onClick={getCurrentLocation}
         >
-          <Locate className="h-4 w-4" />
+          <Locate className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* Location Accuracy Display */}
-      {location?.accuracy && (
-        <div className="absolute bottom-6 left-6 z-30">
-          <div className="bg-background/90 backdrop-blur rounded-lg p-3 shadow-lg border border-white/20">
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="font-medium">Live Location</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Accuracy: ±{Math.round(location.accuracy)}m
-            </p>
-          </div>
+      {/* Custom Zoom Controls */}
+      <div className="absolute bottom-24 right-4 flex flex-col gap-1 z-30">
+        <div className="bg-background/95 backdrop-blur-xl rounded-2xl p-1 shadow-xl border border-border/50">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 text-lg font-bold"
+            onClick={zoomIn}
+          >
+            +
+          </Button>
+          <div className="h-px bg-border/50 mx-2" />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-10 w-10 p-0 rounded-xl hover:bg-primary/10 hover:text-primary transition-all duration-200 text-lg font-bold"
+            onClick={zoomOut}
+          >
+            −
+          </Button>
         </div>
-      )}
 
-      {/* Enhanced Map Info */}
-      <div className="absolute bottom-2 left-2 text-xs text-muted-foreground bg-background/95 backdrop-blur px-3 py-2 rounded-lg shadow-xl border border-white/20 z-30 space-y-1">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-safe rounded-full animate-pulse" />
+        {/* Zoom Level Indicator */}
+        <div className="bg-background/95 backdrop-blur-xl rounded-lg px-2 py-1 shadow-lg border border-border/50 text-center">
+          <span className="text-xs font-medium text-muted-foreground">{zoom}x</span>
+        </div>
+      </div>
           <span className="font-medium">Guardian Map © 2024</span>
         </div>
         <div className="text-xs">
@@ -513,9 +524,7 @@ export function MockMap({
         </div>
         <div className="text-xs">Zoom: {zoom}x</div>
         {isPanning && (
-          <div className="text-primary font-medium animate-pulse">
-            Panning...
-          </div>
+          <div className="text-primary font-medium animate-pulse">Panning...</div>
         )}
         <div className="text-xs text-safe">Interactive Offline Mode</div>
       </div>
