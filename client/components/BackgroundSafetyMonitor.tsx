@@ -57,6 +57,15 @@ export function BackgroundSafetyMonitor({
     setIsVoiceListening(isListening);
   }, [isListening]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (isVoiceListening) {
+        stopListening();
+      }
+    };
+  }, []);
+
   // Monitor voice commands for emergency keywords
   useEffect(() => {
     if (transcript) {
