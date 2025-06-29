@@ -188,48 +188,53 @@ export function BackgroundSafetyMonitor({
 
       recognition.onerror = (event: any) => {
         const errorType = event.error;
-        console.error("Speech recognition error:", errorType);
-
-        setIsListening(false);
 
         // Handle different types of errors
         switch (errorType) {
           case "no-speech":
-            // This is normal - just means no speech was detected
-            // Don't show error to user, just continue listening
-            console.log("No speech detected, continuing to listen...");
-            setLastError(null); // Clear any previous errors
-            break;
+            // This is completely normal - just means no speech was detected
+            // Don't log anything, don't set listening to false, just ignore
+            return; // Exit early without any logging or state changes
 
           case "audio-capture":
             console.error(
               "Audio capture failed - microphone may not be available",
             );
+            setIsListening(false);
             setLastError("Microphone unavailable");
-            setVoiceDetection(false); // Disable voice detection
+            setVoiceDetection(false);
             break;
 
           case "not-allowed":
             console.error("Microphone permission denied");
+            setIsListening(false);
             setLastError("Microphone permission denied");
-            setVoiceDetection(false); // Disable voice detection
+            setVoiceDetection(false);
             setMicrophonePermission("denied");
             break;
 
           case "network":
             console.error("Network error in speech recognition");
+            setIsListening(false);
             setLastError("Network error");
             // Will retry automatically through onend handler
             break;
 
           case "service-not-allowed":
             console.error("Speech recognition service not allowed");
+            setIsListening(false);
             setLastError("Speech service unavailable");
-            setVoiceDetection(false); // Disable voice detection
+            setVoiceDetection(false);
             break;
 
+          case "aborted":
+            // Speech recognition was aborted, this is normal when stopping
+            setIsListening(false);
+            return; // Don't log this as an error
+
           default:
-            console.error("Unknown speech recognition error:", errorType);
+            console.error("Speech recognition error:", errorType);
+            setIsListening(false);
             setLastError(`Recognition error: ${errorType}`);
             break;
         }
