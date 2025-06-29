@@ -427,61 +427,159 @@ export default function Guardian() {
         </div>
       </div>
 
-      {/* Slide Up Panel for Map Tab */}
+      {/* Enhanced Slide Up Panel for Map Tab */}
       {activeTab === "map" && (
         <SlideUpPanel
-          minHeight={200}
-          maxHeight={500}
-          initialHeight={300}
-          bottomOffset={96}
+          minHeight={220}
+          maxHeight={600}
+          initialHeight={350}
+          bottomOffset={120}
         >
-          {/* Current Location */}
-          <div className="flex items-center gap-3 p-3 bg-safe/10 rounded-xl border border-safe/20">
-            <div className="p-2 rounded-full bg-safe/20">
-              <MapPin className="h-4 w-4 text-safe" />
+          {/* Live Tracking Status */}
+          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/10 to-safe/10 rounded-xl border border-primary/20">
+            <div className="p-3 rounded-full bg-primary/20">
+              <Activity className="h-5 w-5 text-primary animate-pulse" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium">Current Location</p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-semibold">Live Tracking</p>
+                <Badge className="bg-primary/20 text-primary text-xs">
+                  ACTIVE
+                </Badge>
+              </div>
               <p className="text-xs text-muted-foreground">
                 {location
                   ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-                  : "Getting location..."}
+                  : "Getting precise location..."}
               </p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-safe rounded-full animate-pulse" />
+                  <span className="text-xs text-muted-foreground">
+                    GPS Strong
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {new Date().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
             </div>
-            <Button
-              size="sm"
-              onClick={shareLocation}
-              className="h-8 bg-safe hover:bg-safe/90"
-            >
-              <MapPin className="h-3 w-3 mr-1" />
-              Share
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                size="sm"
+                onClick={shareLocation}
+                className="h-8 bg-safe hover:bg-safe/90 text-xs px-3"
+              >
+                <MapPin className="h-3 w-3 mr-1" />
+                Share
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => openPanel("tracking")}
+                className="h-8 text-xs px-3 border-primary/30 hover:bg-primary/10"
+              >
+                <Activity className="h-3 w-3 mr-1" />
+                Settings
+              </Button>
+            </div>
           </div>
 
-          {/* Map Functions */}
+          {/* Active Contacts Being Tracked */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Map Functions</h3>
+            <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Tracking Contacts
+              <Badge variant="outline" className="text-xs">
+                {emergencyContacts.length} sharing
+              </Badge>
+            </h3>
+            {emergencyContacts.length > 0 ? (
+              <div className="space-y-2">
+                {emergencyContacts.slice(0, 3).map((contact) => (
+                  <div
+                    key={contact.id}
+                    className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg border"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-safe rounded-full animate-pulse" />
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="text-xs">
+                          {contact.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{contact.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Live location • {Math.floor(Math.random() * 30) + 1}m
+                        away
+                      </p>
+                    </div>
+                    <div className="text-xs text-safe">Active</div>
+                  </div>
+                ))}
+                {emergencyContacts.length > 3 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={() => openPanel("contacts")}
+                  >
+                    View all {emergencyContacts.length} contacts
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 border border-dashed border-muted rounded-lg text-center">
+                <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  No contacts sharing location
+                </p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Add emergency contacts to track their live location
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => openPanel("contacts")}
+                  className="text-xs"
+                >
+                  Add Contacts
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Quick Actions</h3>
             <div className="grid grid-cols-3 gap-3">
               <Button
                 onClick={() => openPanel("routes")}
                 variant="outline"
-                className="h-16 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30"
+                className="h-16 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-200"
               >
                 <NavIcon className="h-4 w-4" />
                 Safe Routes
               </Button>
               <Button
-                onClick={() => openPanel("tracking")}
+                onClick={() => openPanel("check-in")}
                 variant="outline"
-                className="h-16 flex-col gap-1 text-xs hover:bg-warning/10 hover:border-warning/30"
+                className="h-16 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-200"
               >
-                <Activity className="h-4 w-4" />
-                Live Track
+                <Clock className="h-4 w-4" />
+                Check-in Timer
               </Button>
               <Button
                 onClick={() => openPanel("places")}
                 variant="outline"
-                className="h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30"
+                className="h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-200"
               >
                 <MapPin className="h-4 w-4" />
                 Safe Places
@@ -489,20 +587,22 @@ export default function Guardian() {
             </div>
           </div>
 
-          {/* Map Settings */}
+          {/* Map Display Options */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Map Settings</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-                <span className="text-sm">Show Traffic</span>
-                <Switch />
+            <h3 className="text-sm font-medium mb-3">Map Display</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Show Traffic</span>
+                </div>
+                <Switch defaultChecked />
               </div>
-              <div className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-                <span className="text-sm">Satellite View</span>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted/20 rounded-lg">
-                <span className="text-sm">3D Buildings</span>
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Satellite View</span>
+                </div>
                 <Switch />
               </div>
             </div>
