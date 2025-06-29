@@ -104,13 +104,25 @@ export function BackgroundSafetyMonitor({
 
       recognition.onend = () => {
         setIsListening(false);
-        // Restart recognition if voice detection is enabled
+        // Restart recognition if voice detection is enabled and not manually stopped
         if (voiceDetection && isActive) {
           setTimeout(() => {
             try {
-              recognition.start();
+              if (voiceDetection && isActive) {
+                recognition.start();
+              }
             } catch (error) {
               console.log("Speech recognition restart failed:", error);
+              // Wait longer before next retry if there's an error
+              setTimeout(() => {
+                if (voiceDetection && isActive) {
+                  try {
+                    recognition.start();
+                  } catch (retryError) {
+                    console.log("Speech recognition retry failed:", retryError);
+                  }
+                }
+              }, 5000);
             }
           }, 1000);
         }
@@ -145,8 +157,45 @@ export function BackgroundSafetyMonitor({
       };
 
       recognition.onerror = (event: any) => {
-        console.error("Speech recognition error:", event.error);
+        const errorType = event.error;
+        console.error("Speech recognition error:", errorType);
+
         setIsListening(false);
+
+        // Handle different types of errors
+        switch (errorType) {
+          case "no-speech":
+            // This is normal - just means no speech was detected
+            // Don't show error to user, just continue listening
+            console.log("No speech detected, continuing to listen...");
+            break;
+
+          case "audio-capture":
+            console.error(
+              "Audio capture failed - microphone may not be available",
+            );
+            setVoiceDetection(false); // Disable voice detection
+            break;
+
+          case "not-allowed":
+            console.error("Microphone permission denied");
+            setVoiceDetection(false); // Disable voice detection
+            break;
+
+          case "network":
+            console.error("Network error in speech recognition");
+            // Will retry automatically through onend handler
+            break;
+
+          case "service-not-allowed":
+            console.error("Speech recognition service not allowed");
+            setVoiceDetection(false); // Disable voice detection
+            break;
+
+          default:
+            console.error("Unknown speech recognition error:", errorType);
+            break;
+        }
       };
 
       recognitionRef.current = recognition;
