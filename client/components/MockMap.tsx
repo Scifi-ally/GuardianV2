@@ -278,6 +278,9 @@ export function MockMap({
 
   return (
     <div className={cn("relative w-full h-full overflow-hidden", className)}>
+      {/* Map Loading Effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-safe/5 animate-pulse opacity-50 pointer-events-none" />
+
       {/* Mock Map Background */}
       <div
         className={cn(
@@ -499,16 +502,27 @@ export function MockMap({
         </div>
       )}
 
-      {/* Map Info */}
-      <div className="absolute bottom-2 left-2 text-xs text-muted-foreground bg-background/90 backdrop-blur px-3 py-2 rounded-lg shadow-lg z-30 space-y-1">
-        <div>Guardian Map © 2024</div>
-        <div>
+      {/* Enhanced Map Info */}
+      <div className="absolute bottom-2 left-2 text-xs text-muted-foreground bg-background/95 backdrop-blur px-3 py-2 rounded-lg shadow-xl border border-white/20 z-30 space-y-1">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-safe rounded-full animate-pulse" />
+          <span className="font-medium">Guardian Map © 2024</span>
+        </div>
+        <div className="text-xs">
           Center: {center.lat.toFixed(4)}, {center.lng.toFixed(4)}
         </div>
-        <div>Zoom: {zoom}</div>
+        <div className="text-xs">Zoom: {zoom}x</div>
         {isPanning && (
-          <div className="text-primary font-medium">Panning...</div>
+          <div className="text-primary font-medium animate-pulse">
+            Panning...
+          </div>
         )}
+        <div className="text-xs text-safe">Interactive Offline Mode</div>
+      </div>
+
+      {/* Map Attribution */}
+      <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/95 backdrop-blur px-2 py-1 rounded shadow-lg z-30">
+        Offline Guardian Maps
       </div>
     </div>
   );
