@@ -808,11 +808,12 @@ export default function Guardian() {
               Fake Call
             </Button>
             <Button
-              onClick={() => openPanel("panic")}
-              className="h-16 flex-col gap-1 text-xs bg-emergency hover:bg-emergency/90"
+              onClick={() => openPanel("routes")}
+              variant="outline"
+              className="h-16 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30"
             >
-              <AlertTriangle className="h-4 w-4" />
-              Panic Mode
+              <NavIcon className="h-4 w-4" />
+              Safe Routes
             </Button>
           </div>
         </div>
