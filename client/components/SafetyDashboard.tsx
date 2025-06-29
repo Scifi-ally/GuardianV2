@@ -168,13 +168,17 @@ export function SafetyDashboard({
   }, [userProfile]);
 
   const getSafetyGrade = (score: number) => {
-    if (score >= 90)
+    // Ensure score is a valid number
+    const validScore =
+      typeof score === "number" && !isNaN(score) && isFinite(score) ? score : 0;
+
+    if (validScore >= 90)
       return { grade: "A+", color: "text-safe", bg: "bg-safe/10" };
-    if (score >= 80)
+    if (validScore >= 80)
       return { grade: "A", color: "text-safe", bg: "bg-safe/10" };
-    if (score >= 70)
+    if (validScore >= 70)
       return { grade: "B", color: "text-primary", bg: "bg-primary/10" };
-    if (score >= 60)
+    if (validScore >= 60)
       return { grade: "C", color: "text-warning", bg: "bg-warning/10" };
     return { grade: "D", color: "text-destructive", bg: "bg-destructive/10" };
   };
