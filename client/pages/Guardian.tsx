@@ -595,19 +595,19 @@ export default function Guardian() {
             <div className="grid grid-cols-2 gap-3">
               <Button
                 variant="outline"
-                className="group h-14 flex-col gap-2 text-sm border-2 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
+                className="group h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
               >
-                <MapPin className="h-5 w-5 transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
-                <span className="font-medium transition-all duration-200 group-hover:text-primary">
+                <MapPin className="h-5 w-5 text-orange-600 transition-all duration-200 group-hover:scale-110" />
+                <span className="font-medium transition-all duration-200">
                   Traffic Layer
                 </span>
               </Button>
               <Button
                 variant="outline"
-                className="group h-14 flex-col gap-2 text-sm border-2 hover:bg-safe/10 hover:border-safe/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
+                className="group h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
               >
-                <Shield className="h-5 w-5 transition-all duration-200 group-hover:scale-110 group-hover:text-safe" />
-                <span className="font-medium transition-all duration-200 group-hover:text-safe">
+                <Shield className="h-5 w-5 text-green-600 transition-all duration-200 group-hover:scale-110" />
+                <span className="font-medium transition-all duration-200">
                   Safe Zones
                 </span>
               </Button>
