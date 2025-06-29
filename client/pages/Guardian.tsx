@@ -74,6 +74,30 @@ export default function Guardian() {
 
   const emergencyContacts = userProfile?.emergencyContacts || [];
 
+  // Subscribe to emergency alerts
+  useEffect(() => {
+    if (!userProfile?.uid) return;
+
+    const unsubscribe = emergencyContactService.subscribeToEmergencyAlerts(
+      userProfile.uid,
+      (alerts) => {
+        if (alerts.length > 0) {
+          const latestAlert = alerts[0];
+          setEmergencyAlert(latestAlert);
+          setShowEmergencyPopup(true);
+          setSafetyStatus("emergency");
+
+          // Request notification permission if not granted
+          if (Notification.permission !== "granted") {
+            Notification.requestPermission();
+          }
+        }
+      },
+    );
+
+    return unsubscribe;
+  }, [userProfile?.uid]);
+
   const openPanel = useCallback(
     (panelId: string) => {
       setActivePanel(panelId);
