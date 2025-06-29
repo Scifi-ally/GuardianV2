@@ -520,114 +520,62 @@ export default function Guardian() {
         </div>
       </div>
 
-      {/* Slide Up Panel for Map Tab */}
+      {/* Simplified Slide Up Panel for Map Tab */}
       {activeTab === "map" && (
         <SlideUpPanel
-          minHeight={200}
-          maxHeight={500}
-          initialHeight={280}
+          minHeight={160}
+          maxHeight={320}
+          initialHeight={200}
           bottomOffset={85}
         >
-          {/* Quick Actions */}
-          <div>
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-black" />
-              Emergency Actions
-            </h3>
-            <div className="grid grid-cols-3 gap-3">
-              <Button
-                onClick={() => {
-                  setActiveTab("dashboard");
-                }}
-                variant="outline"
-                className="h-16 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
-              >
-                <NavIcon className="h-5 w-5 text-blue-600" />
-                <span className="font-medium">Safe Routes</span>
-              </Button>
-              <Button
-                onClick={() => {
-                  setActiveTab("dashboard");
-                }}
-                variant="outline"
-                className="h-16 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
-              >
-                <Clock className="h-5 w-5 text-green-600" />
-                <span className="font-medium">Check-in</span>
-              </Button>
-              <Button
-                onClick={shareLocation}
-                variant="outline"
-                className="h-16 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
-              >
-                <MapPin className="h-5 w-5 text-purple-600" />
-                <span className="font-medium">Share Location</span>
-              </Button>
-            </div>
+          {/* Essential Actions Only */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <Button
+              onClick={shareLocation}
+              variant="outline"
+              className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
+            >
+              <MapPin className="h-5 w-5 text-green-600" />
+              <span className="font-medium">Share Location</span>
+            </Button>
+            <Button
+              onClick={() => {
+                setActiveTab("dashboard");
+              }}
+              variant="outline"
+              className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
+            >
+              <Zap className="h-5 w-5 text-red-600" />
+              <span className="font-medium">Emergency</span>
+            </Button>
           </div>
 
-          {/* Map Controls */}
-          <div>
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Layers className="h-5 w-5 text-black" />
-              Map Controls
-            </h3>
-
-            {/* Map Type Controls */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <Button
-                onClick={() => {
-                  // Function will be passed as prop to SafetyMap
-                  if (window.guardian_toggleTraffic) {
-                    window.guardian_toggleTraffic();
-                  }
-                }}
-                variant="outline"
-                className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
-              >
-                <Navigation className="h-5 w-5 text-orange-600" />
-                <span className="font-medium">Traffic</span>
-              </Button>
-              <Button
-                onClick={() => {
-                  // Function will be passed as prop to SafetyMap
-                  if (window.guardian_toggleSatellite) {
-                    window.guardian_toggleSatellite();
-                  }
-                }}
-                variant="outline"
-                className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
-              >
-                <Eye className="h-5 w-5 text-blue-600" />
-                <span className="font-medium">Satellite</span>
-              </Button>
-            </div>
-
-            {/* Safety Layer Controls */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                onClick={() => {
-                  // Toggle safe zones display
-                  console.log("Toggle Safe Zones");
-                }}
-                variant="outline"
-                className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
-              >
-                <Shield className="h-5 w-5 text-green-600" />
-                <span className="font-medium">Safe Zones</span>
-              </Button>
-              <Button
-                onClick={() => {
-                  // Toggle risk areas display
-                  console.log("Toggle Risk Areas");
-                }}
-                variant="outline"
-                className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
-              >
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <span className="font-medium">Risk Areas</span>
-              </Button>
-            </div>
+          {/* Map View Controls */}
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              onClick={() => {
+                if (window.guardian_toggleTraffic) {
+                  window.guardian_toggleTraffic();
+                }
+              }}
+              variant="outline"
+              className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
+            >
+              <Navigation className="h-5 w-5 text-orange-600" />
+              <span className="font-medium">Traffic</span>
+            </Button>
+            <Button
+              onClick={() => {
+                if (window.guardian_toggleSatellite) {
+                  window.guardian_toggleSatellite();
+                }
+              }}
+              variant="outline"
+              className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
+            >
+              <Eye className="h-5 w-5 text-blue-600" />
+              <span className="font-medium">Satellite</span>
+            </Button>
           </div>
         </SlideUpPanel>
       )}
