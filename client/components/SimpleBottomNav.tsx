@@ -65,7 +65,7 @@ export function SimpleBottomNav({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
+    <div className="fixed bottom-0 left-0 right-0 z-[100]">
       {/* Minimal Background */}
       <div className="bg-black/80 backdrop-blur-xl border-t border-white/10">
         {/* Compact SOS Button */}
