@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   Menu,
   Shield,
+  Navigation,
   Navigation as NavIcon,
   Phone,
   MessageSquare,
