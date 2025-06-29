@@ -30,7 +30,7 @@ export interface SOSAlert {
   status: "active" | "resolved" | "cancelled";
   createdAt: Date;
   resolvedAt?: Date;
-  type: "manual" | "automatic" | "panic";
+  type: "manual" | "automatic" | "panic" | "voice-activation";
   priority: "low" | "medium" | "high" | "critical";
 }
 
