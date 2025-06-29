@@ -236,7 +236,6 @@ export default function Guardian() {
             )}
           >
             <div className="h-full p-4 space-y-6 overflow-y-auto custom-scrollbar">
-            <div className="h-full p-4 space-y-6 overflow-y-auto">
               {/* Profile Header */}
               <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
                 <CardContent className="p-4">
