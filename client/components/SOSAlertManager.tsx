@@ -192,7 +192,9 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
                         : "text-warning",
                     )}
                   />
-                  <Badge className={priorityColors[alert.priority]} size="sm">
+                  <Badge
+                    className={cn(priorityColors[alert.priority], "text-xs")}
+                  >
                     {alert.priority.toUpperCase()}
                   </Badge>
                 </div>
