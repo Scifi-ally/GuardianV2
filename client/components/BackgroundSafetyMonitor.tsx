@@ -541,10 +541,24 @@ export function BackgroundSafetyMonitor({
                       Auto-trigger SOS after 5 seconds when emergency keywords
                       detected
                     </p>
+                    {lastError && (
+                      <p className="text-xs text-destructive mt-1">
+                        {lastError}
+                      </p>
+                    )}
                   </div>
                   <Switch
                     checked={voiceDetection}
-                    onCheckedChange={setVoiceDetection}
+                    onCheckedChange={(checked) => {
+                      if (checked && microphonePermission === "denied") {
+                        requestMicrophonePermission();
+                      } else {
+                        setVoiceDetection(checked);
+                        if (checked) {
+                          setLastError(null);
+                        }
+                      }
+                    }}
                     disabled={!voiceSupported}
                   />
                 </div>
