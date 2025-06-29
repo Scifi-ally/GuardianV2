@@ -267,21 +267,8 @@ export function GuardianKeyCard() {
           {/* Actions */}
           <div className="flex gap-3">
             <Button
-              onClick={generateNewKey}
-              disabled={isGenerating}
-              variant="outline"
-              className="flex-1 border-2 border-warning/30 text-warning hover:bg-warning hover:text-warning-foreground"
-            >
-              {isGenerating ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4 mr-2" />
-              )}
-              {isGenerating ? "Generating..." : "Regenerate"}
-            </Button>
-            <Button
               onClick={shareKey}
-              className="flex-1 bg-primary hover:bg-primary/90"
+              className="w-full bg-black hover:bg-gray-800 text-white"
             >
               <Share className="h-4 w-4 mr-2" />
               Share Key
