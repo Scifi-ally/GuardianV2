@@ -293,12 +293,12 @@ export function SafetyDashboard({
                 <Users className="h-6 w-6 text-safe transition-all duration-200 group-hover:scale-110" />
               </div>
               <div className="text-2xl font-bold text-safe transition-all duration-200 group-hover:scale-110">
-                {metrics.emergencyContactsCount}
+                {metrics.emergencyContactsCount || 0}
               </div>
               <div className="text-sm text-muted-foreground transition-all duration-200 group-hover:text-safe/80">
                 Emergency Contacts
               </div>
-              {metrics.emergencyContactsCount === 0 && (
+              {(metrics.emergencyContactsCount || 0) === 0 && (
                 <Badge
                   variant="outline"
                   className="text-xs mt-1 border-warning text-warning transition-all duration-200 group-hover:scale-105"
