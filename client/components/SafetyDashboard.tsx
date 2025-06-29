@@ -363,7 +363,7 @@ export function SafetyDashboard({
                   Location Shares
                 </span>
                 <span className="font-bold text-safe">
-                  {metrics.locationShares}
+                  {metrics.locationShares || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -372,7 +372,7 @@ export function SafetyDashboard({
                   Protection Time
                 </span>
                 <span className="font-bold text-primary">
-                  {formatDuration(metrics.protectionHours)}
+                  {formatDuration(metrics.protectionHours || 0)}
                 </span>
               </div>
             </div>
@@ -384,7 +384,7 @@ export function SafetyDashboard({
                   Safe Journeys
                 </span>
                 <span className="font-bold text-protection">
-                  {metrics.safeTripsCount}
+                  {metrics.safeTripsCount || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
