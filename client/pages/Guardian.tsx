@@ -264,7 +264,7 @@ export default function Guardian() {
   return (
     <PanelContainer className="bg-gradient-to-br from-background via-muted/5 to-safe/5">
       {/* Main Interface */}
-      <div className="h-full flex flex-col pb-20">
+      <div className="h-full flex flex-col pb-24">
         {/* Minimal Header */}
         <div className="p-3 border-b border-border/30 bg-background/95 backdrop-blur-sm">
           <div className="flex items-center justify-between">
