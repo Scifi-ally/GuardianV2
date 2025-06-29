@@ -642,30 +642,30 @@ export default function Guardian() {
               <Button
                 onClick={() => openPanel("routes")}
                 variant="outline"
-                className="group h-18 flex-col gap-2 text-sm border-2 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
+                className="group h-18 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <NavIcon className="h-5 w-5 transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
-                <span className="font-medium transition-all duration-200 group-hover:text-primary">
+                <NavIcon className="h-5 w-5 text-blue-600 transition-all duration-200 group-hover:scale-110" />
+                <span className="font-medium transition-all duration-200">
                   Safe Routes
                 </span>
               </Button>
               <Button
                 onClick={() => openPanel("check-in")}
                 variant="outline"
-                className="group h-18 flex-col gap-2 text-sm border-2 hover:bg-safe/10 hover:border-safe/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
+                className="group h-18 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <Clock className="h-5 w-5 transition-all duration-200 group-hover:scale-110 group-hover:text-safe" />
-                <span className="font-medium transition-all duration-200 group-hover:text-safe">
+                <Clock className="h-5 w-5 text-green-600 transition-all duration-200 group-hover:scale-110" />
+                <span className="font-medium transition-all duration-200">
                   Check-in
                 </span>
               </Button>
               <Button
                 onClick={() => openPanel("places")}
                 variant="outline"
-                className="group h-18 flex-col gap-2 text-sm border-2 hover:bg-protection/10 hover:border-protection/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
+                className="group h-18 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <MapPin className="h-5 w-5 transition-all duration-200 group-hover:scale-110 group-hover:text-protection" />
-                <span className="font-medium transition-all duration-200 group-hover:text-protection">
+                <MapPin className="h-5 w-5 text-purple-600 transition-all duration-200 group-hover:scale-110" />
+                <span className="font-medium transition-all duration-200">
                   Safe Places
                 </span>
               </Button>
