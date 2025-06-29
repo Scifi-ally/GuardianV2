@@ -520,176 +520,113 @@ export default function Guardian() {
         </div>
       </div>
 
-      {/* Enhanced Slide Up Panel for Map Tab */}
+      {/* Slide Up Panel for Map Tab */}
       {activeTab === "map" && (
         <SlideUpPanel
-          minHeight={240}
-          maxHeight={650}
-          initialHeight={380}
+          minHeight={200}
+          maxHeight={500}
+          initialHeight={280}
           bottomOffset={85}
         >
-          {/* Enhanced Live Tracking Status */}
-          <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/10 via-safe/10 to-protection/10 rounded-xl border-2 border-primary/20 shadow-lg">
-            <div className="p-4 rounded-full bg-primary/20 border-2 border-primary/30">
-              <Activity className="h-6 w-6 text-primary animate-pulse" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-lg font-bold">Live Protection</h3>
-                <Badge className="bg-primary/20 text-primary border-primary/30">
-                  ACTIVE
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">
-                {location
-                  ? `Precise location: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-                  : "Acquiring GPS signal..."}
-              </p>
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-safe rounded-full animate-pulse" />
-                  <span className="text-muted-foreground">GPS Strong</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    {new Date().toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Shield className="h-3 w-3 text-safe" />
-                  <span className="text-muted-foreground">Protected</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Button
-                size="sm"
-                onClick={shareLocation}
-                className="h-10 bg-white hover:bg-gray-50 text-black border-2 border-gray-300 hover:border-gray-400 px-4 shadow-lg transition-all duration-200 transform hover:scale-105"
-              >
-                <MapPin className="h-4 w-4 mr-2 text-green-600" />
-                Share Location
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => openPanel("tracking")}
-                className="h-10 px-4 bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:scale-105"
-              >
-                <Activity className="h-4 w-4 mr-2 text-blue-600" />
-                Settings
-              </Button>
-            </div>
-          </div>
-
-          {/* Enhanced Map Layers & Views */}
+          {/* Quick Actions */}
           <div>
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Layers className="h-5 w-5 text-primary" />
-              Map Controls
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                className="group h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
-              >
-                <MapPin className="h-5 w-5 text-orange-600 transition-all duration-200 group-hover:scale-110" />
-                <span className="font-medium transition-all duration-200">
-                  Traffic Layer
-                </span>
-              </Button>
-              <Button
-                variant="outline"
-                className="group h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
-              >
-                <Shield className="h-5 w-5 text-green-600 transition-all duration-200 group-hover:scale-110" />
-                <span className="font-medium transition-all duration-200">
-                  Safe Zones
-                </span>
-              </Button>
-              <Button
-                variant="outline"
-                className="group h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
-              >
-                <AlertTriangle className="h-5 w-5 text-red-600 transition-all duration-200 group-hover:scale-110" />
-                <span className="font-medium transition-all duration-200">
-                  Risk Areas
-                </span>
-              </Button>
-              <Button
-                variant="outline"
-                className="group h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
-              >
-                <Eye className="h-5 w-5 text-blue-600 transition-all duration-200 group-hover:scale-110" />
-                <span className="font-medium transition-all duration-200">
-                  CCTV Cameras
-                </span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Enhanced Quick Actions */}
-          <div>
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
+              <Zap className="h-5 w-5 text-black" />
               Emergency Actions
             </h3>
             <div className="grid grid-cols-3 gap-3">
               <Button
-                onClick={() => openPanel("routes")}
+                onClick={() => {
+                  setActiveTab("dashboard");
+                }}
                 variant="outline"
-                className="group h-18 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
+                className="h-16 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
               >
-                <NavIcon className="h-5 w-5 text-blue-600 transition-all duration-200 group-hover:scale-110" />
-                <span className="font-medium transition-all duration-200">
-                  Safe Routes
-                </span>
+                <NavIcon className="h-5 w-5 text-blue-600" />
+                <span className="font-medium">Safe Routes</span>
               </Button>
               <Button
-                onClick={() => openPanel("check-in")}
+                onClick={() => {
+                  setActiveTab("dashboard");
+                }}
                 variant="outline"
-                className="group h-18 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
+                className="h-16 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
               >
-                <Clock className="h-5 w-5 text-green-600 transition-all duration-200 group-hover:scale-110" />
-                <span className="font-medium transition-all duration-200">
-                  Check-in
-                </span>
+                <Clock className="h-5 w-5 text-green-600" />
+                <span className="font-medium">Check-in</span>
               </Button>
               <Button
-                onClick={() => openPanel("places")}
+                onClick={shareLocation}
                 variant="outline"
-                className="group h-18 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
+                className="h-16 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
               >
-                <MapPin className="h-5 w-5 text-purple-600 transition-all duration-200 group-hover:scale-110" />
-                <span className="font-medium transition-all duration-200">
-                  Safe Places
-                </span>
+                <MapPin className="h-5 w-5 text-purple-600" />
+                <span className="font-medium">Share Location</span>
               </Button>
             </div>
           </div>
 
-          {/* Map Display Options */}
+          {/* Map Controls */}
           <div>
-            <h3 className="text-lg font-bold mb-4">Display Options</h3>
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Layers className="h-5 w-5 text-black" />
+              Map Controls
+            </h3>
+
+            {/* Map Type Controls */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <Button
+                onClick={() => {
+                  // Function will be passed as prop to SafetyMap
+                  if (window.guardian_toggleTraffic) {
+                    window.guardian_toggleTraffic();
+                  }
+                }}
+                variant="outline"
+                className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
+              >
+                <Navigation className="h-5 w-5 text-orange-600" />
+                <span className="font-medium">Traffic</span>
+              </Button>
+              <Button
+                onClick={() => {
+                  // Function will be passed as prop to SafetyMap
+                  if (window.guardian_toggleSatellite) {
+                    window.guardian_toggleSatellite();
+                  }
+                }}
+                variant="outline"
+                className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
+              >
+                <Eye className="h-5 w-5 text-blue-600" />
+                <span className="font-medium">Satellite</span>
+              </Button>
+            </div>
+
+            {/* Safety Layer Controls */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center justify-between p-4 bg-muted/20 rounded-lg border-2 border-muted/30">
-                <div className="flex items-center gap-3">
-                  <Activity className="h-5 w-5 text-muted-foreground" />
-                  <span className="font-medium">Show Traffic</span>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between p-4 bg-muted/20 rounded-lg border-2 border-muted/30">
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-muted-foreground" />
-                  <span className="font-medium">Satellite View</span>
-                </div>
-                <Switch />
-              </div>
+              <Button
+                onClick={() => {
+                  // Toggle safe zones display
+                  console.log("Toggle Safe Zones");
+                }}
+                variant="outline"
+                className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
+              >
+                <Shield className="h-5 w-5 text-green-600" />
+                <span className="font-medium">Safe Zones</span>
+              </Button>
+              <Button
+                onClick={() => {
+                  // Toggle risk areas display
+                  console.log("Toggle Risk Areas");
+                }}
+                variant="outline"
+                className="h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300"
+              >
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <span className="font-medium">Risk Areas</span>
+              </Button>
             </div>
           </div>
         </SlideUpPanel>
