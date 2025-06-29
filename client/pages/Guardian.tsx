@@ -346,7 +346,7 @@ export default function Guardian() {
           >
             <div
               className={cn(
-                "h-full p-4 space-y-6 overflow-y-auto custom-scrollbar transition-all duration-700 delay-100",
+                "h-full p-4 pb-8 space-y-6 overflow-y-auto custom-scrollbar transition-all duration-700 delay-100",
                 activeTab === "profile" ? "blur-0" : "blur-sm",
               )}
             >
