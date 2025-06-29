@@ -126,18 +126,18 @@ export function SlideUpPanel({
   }, [isDragging, startY, startHeight, height, minHeight, maxHeight]);
 
   return (
-      <div
-        ref={panelRef}
-        className={cn(
-          "fixed left-0 right-0 bg-background border-t border-border shadow-2xl transition-all duration-300 ease-out rounded-t-xl overflow-hidden",
-          className,
-        )}
-        style={{
-          bottom: bottomOffset,
-          height: `${height}px`,
-          zIndex: 90,
-        }}
-      >
+    <div
+      ref={panelRef}
+      className={cn(
+        "fixed left-0 right-0 bg-background border-t border-border shadow-2xl transition-all duration-300 ease-out rounded-t-xl overflow-hidden",
+        className,
+      )}
+      style={{
+        bottom: bottomOffset,
+        height: `${height}px`,
+        zIndex: 90,
+      }}
+    >
       {/* Drag Handle - Left Side */}
       <div
         ref={handleRef}
@@ -156,25 +156,21 @@ export function SlideUpPanel({
           )}
         />
         {!isCollapsed && (
-          <div className="text-xs text-muted-foreground font-mono">
-            Drag
-          </div>
+          <div className="text-xs text-muted-foreground font-mono">Drag</div>
         )}
-      </div>
       </div>
 
       {/* Panel Content */}
       <div
         className={cn(
-          "px-6 pb-6 h-full transition-opacity duration-200 custom-scrollbar",
+          "px-6 pb-8 h-full transition-opacity duration-200 custom-scrollbar bg-white",
           isCollapsed
-            ? "opacity-0 pointer-events-none overflow-hidden"
-            : "opacity-100 overflow-y-auto",
+            ? "opacity-0 pointer-events-none overflow-hidden pt-2"
+            : "opacity-100 overflow-y-auto pt-12",
         )}
+        style={{ maxHeight: `${height - 20}px` }}
       >
-        <div className="space-y-4" style={{ paddingBottom: "2rem" }}>
-          {children}
-        </div>
+        <div className="space-y-4 text-black">{children}</div>
       </div>
 
       {/* Resize Indicator */}
