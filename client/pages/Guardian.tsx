@@ -39,6 +39,8 @@ import { SOSAlertManager } from "@/components/SOSAlertManager";
 import { BackgroundSafetyMonitor } from "@/components/BackgroundSafetyMonitor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MapServiceInfo } from "@/components/MapServiceInfo";
+import { SafetyDashboard } from "@/components/SafetyDashboard";
+import { EmergencyAlertPopup } from "@/components/EmergencyAlertPopup";
 import { useHapticFeedback, useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { SOSService } from "@/services/sosService";
