@@ -560,31 +560,39 @@ export default function Guardian() {
             <div className="grid grid-cols-2 gap-3">
               <Button
                 variant="outline"
-                className="h-12 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-200"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
               >
-                <MapPin className="h-4 w-4" />
-                Traffic
+                <MapPin className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                <span className="transition-all duration-200 group-hover:text-primary group-hover:font-medium">
+                  Traffic
+                </span>
               </Button>
               <Button
                 variant="outline"
-                className="h-12 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-200"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
               >
-                <Shield className="h-4 w-4" />
-                Safe Zones
+                <Shield className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-safe" />
+                <span className="transition-all duration-200 group-hover:text-safe group-hover:font-medium">
+                  Safe Zones
+                </span>
               </Button>
               <Button
                 variant="outline"
-                className="h-12 flex-col gap-1 text-xs hover:bg-warning/10 hover:border-warning/30 transition-all duration-200"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-warning/10 hover:border-warning/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
               >
-                <AlertTriangle className="h-4 w-4" />
-                Risk Areas
+                <AlertTriangle className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-warning" />
+                <span className="transition-all duration-200 group-hover:text-warning group-hover:font-medium">
+                  Risk Areas
+                </span>
               </Button>
               <Button
                 variant="outline"
-                className="h-12 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-200"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
               >
-                <Camera className="h-4 w-4" />
-                CCTV
+                <Camera className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-protection" />
+                <span className="transition-all duration-200 group-hover:text-protection group-hover:font-medium">
+                  CCTV
+                </span>
               </Button>
             </div>
           </div>
@@ -595,26 +603,32 @@ export default function Guardian() {
               <Button
                 onClick={() => openPanel("routes")}
                 variant="outline"
-                className="h-16 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-200"
+                className="group h-16 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <NavIcon className="h-4 w-4" />
-                Safe Routes
+                <NavIcon className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                <span className="transition-all duration-200 group-hover:text-primary group-hover:font-medium">
+                  Safe Routes
+                </span>
               </Button>
               <Button
                 onClick={() => openPanel("check-in")}
                 variant="outline"
-                className="h-16 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-200"
+                className="group h-16 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <Clock className="h-4 w-4" />
-                Check-in Timer
+                <Clock className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-safe" />
+                <span className="transition-all duration-200 group-hover:text-safe group-hover:font-medium">
+                  Check-in Timer
+                </span>
               </Button>
               <Button
                 onClick={() => openPanel("places")}
                 variant="outline"
-                className="h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-200"
+                className="group h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <MapPin className="h-4 w-4" />
-                Safe Places
+                <MapPin className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-protection" />
+                <span className="transition-all duration-200 group-hover:text-protection group-hover:font-medium">
+                  Safe Places
+                </span>
               </Button>
             </div>
           </div>
