@@ -63,18 +63,56 @@ export function QuickActions() {
           const message = `Guardian Location Share: I'm at https://maps.google.com/?q=${latitude},${longitude}\n\nShared via Guardian Safety App at ${new Date().toLocaleString()}`;
 
           if (navigator.share) {
-            await navigator.share({
-              title: "Guardian Location",
-              text: message,
-            });
+            try {
+              await navigator.share({
+                title: "Guardian Location",
+                text: message,
+              });
+            } catch (shareError) {
+              // Fallback to clipboard
+              await copyToClipboardSafe(message);
+              alert("Location copied to clipboard!");
+            }
           } else {
-            await navigator.clipboard.writeText(message);
+            await copyToClipboardSafe(message);
             alert("Location copied to clipboard!");
           }
         });
       }
     } catch (error) {
       console.error("Share failed:", error);
+      alert("Failed to get location. Please check your location permissions.");
+    }
+  };
+
+  // Safe clipboard copy function with fallback
+  const copyToClipboardSafe = async (text: string): Promise<void> => {
+    try {
+      // Try modern Clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+
+      // Fallback method
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+
+      try {
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      console.error("Clipboard copy failed:", error);
+      // Show the text to user as last resort
+      prompt("Copy this location manually:", text);
     }
   };
 
