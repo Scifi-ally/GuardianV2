@@ -613,19 +613,19 @@ export default function Guardian() {
               </Button>
               <Button
                 variant="outline"
-                className="group h-14 flex-col gap-2 text-sm border-2 hover:bg-warning/10 hover:border-warning/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
+                className="group h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
               >
-                <AlertTriangle className="h-5 w-5 transition-all duration-200 group-hover:scale-110 group-hover:text-warning" />
-                <span className="font-medium transition-all duration-200 group-hover:text-warning">
+                <AlertTriangle className="h-5 w-5 text-red-600 transition-all duration-200 group-hover:scale-110" />
+                <span className="font-medium transition-all duration-200">
                   Risk Areas
                 </span>
               </Button>
               <Button
                 variant="outline"
-                className="group h-14 flex-col gap-2 text-sm border-2 hover:bg-protection/10 hover:border-protection/50 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
+                className="group h-14 flex-col gap-2 text-sm bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95"
               >
-                <Eye className="h-5 w-5 transition-all duration-200 group-hover:scale-110 group-hover:text-protection" />
-                <span className="font-medium transition-all duration-200 group-hover:text-protection">
+                <Eye className="h-5 w-5 text-blue-600 transition-all duration-200 group-hover:scale-110" />
+                <span className="font-medium transition-all duration-200">
                   CCTV Cameras
                 </span>
               </Button>
