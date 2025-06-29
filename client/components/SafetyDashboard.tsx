@@ -248,9 +248,14 @@ export function SafetyDashboard({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Safety Score</span>
-              <span className="font-bold">{metrics.safetyScore}/100</span>
+              <span className="font-bold">
+                {Math.floor(metrics.safetyScore || 0)}/100
+              </span>
             </div>
-            <Progress value={metrics.safetyScore} className="h-3" />
+            <Progress
+              value={isNaN(metrics.safetyScore) ? 0 : metrics.safetyScore}
+              className="h-3"
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-4 text-center">
