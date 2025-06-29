@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Wrapper } from "@googlemaps/react-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Shield, Locate, Layers } from "lucide-react";
+import { MapPin, Shield, Locate, Layers, AlertTriangle } from "lucide-react";
+import { MockMap } from "@/components/MockMap";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
 
@@ -337,25 +338,45 @@ function MapComponent({
 }
 
 export function GoogleMap(props: GoogleMapProps) {
+  const [useFallback, setUseFallback] = useState(false);
+
   const render = (status: string) => {
     switch (status) {
       case "LOADING":
         return (
-          <div className="w-full h-full flex items-center justify-center bg-muted/20">
-            <div className="text-center space-y-2">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-muted-foreground">Loading map...</p>
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-safe/5">
+            <div className="text-center space-y-4">
+              <div className="relative">
+                <div className="w-12 h-12 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="absolute inset-0 w-12 h-12 border-3 border-primary/30 rounded-full animate-ping" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Loading Guardian Map...</p>
+                <p className="text-xs text-muted-foreground">
+                  Securing your location
+                </p>
+              </div>
             </div>
           </div>
         );
       case "FAILURE":
+        // Auto-fallback to MockMap after a brief delay
+        setTimeout(() => setUseFallback(true), 1000);
         return (
-          <div className="w-full h-full flex items-center justify-center bg-muted/20">
-            <div className="text-center space-y-2">
-              <MapPin className="h-8 w-8 text-muted-foreground mx-auto" />
-              <p className="text-sm text-muted-foreground">
-                Failed to load map
-              </p>
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-warning/5 to-muted/5">
+            <div className="text-center space-y-4 max-w-sm px-4">
+              <div className="p-4 rounded-full bg-warning/10 w-fit mx-auto">
+                <AlertTriangle className="h-8 w-8 text-warning" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Map Service Unavailable</p>
+                <p className="text-xs text-muted-foreground">
+                  Google Maps billing not enabled. Switching to offline map...
+                </p>
+              </div>
+              <div className="w-full bg-muted rounded-full h-1">
+                <div className="bg-primary h-1 rounded-full animate-pulse w-3/4"></div>
+              </div>
             </div>
           </div>
         );
@@ -363,6 +384,23 @@ export function GoogleMap(props: GoogleMapProps) {
         return <MapComponent {...props} />;
     }
   };
+
+  // Use fallback MockMap if Google Maps failed
+  if (useFallback) {
+    return (
+      <div className="relative w-full h-full">
+        <MockMap {...props} />
+
+        {/* Fallback indicator */}
+        <div className="absolute top-4 left-4 z-50">
+          <Badge className="bg-warning/90 text-warning-foreground backdrop-blur shadow-lg">
+            <Shield className="h-3 w-3 mr-1" />
+            Offline Mode
+          </Badge>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Wrapper
