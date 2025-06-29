@@ -37,22 +37,25 @@ export function BackgroundSafetyMonitor({
     isSupported: voiceSupported,
   } = useVoiceActivation();
 
-  // Voice activation for emergency keywords
+  // Voice activation for emergency keywords with proper state management
   useEffect(() => {
-    if (safetyServices.voiceActivation && voiceSupported && !isListening) {
-      startListening();
-      setIsVoiceListening(true);
-    } else if (!safetyServices.voiceActivation && isListening) {
-      stopListening();
-      setIsVoiceListening(false);
+    if (safetyServices.voiceActivation && voiceSupported) {
+      if (!isListening && !isVoiceListening) {
+        startListening();
+        setIsVoiceListening(true);
+      }
+    } else if (!safetyServices.voiceActivation) {
+      if (isListening || isVoiceListening) {
+        stopListening();
+        setIsVoiceListening(false);
+      }
     }
-  }, [
-    safetyServices.voiceActivation,
-    voiceSupported,
-    isListening,
-    startListening,
-    stopListening,
-  ]);
+  }, [safetyServices.voiceActivation, voiceSupported]);
+
+  // Sync local state with hook state
+  useEffect(() => {
+    setIsVoiceListening(isListening);
+  }, [isListening]);
 
   // Monitor voice commands for emergency keywords
   useEffect(() => {
