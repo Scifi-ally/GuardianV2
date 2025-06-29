@@ -569,18 +569,18 @@ export default function Guardian() {
               <Button
                 size="sm"
                 onClick={shareLocation}
-                className="h-10 bg-safe hover:bg-safe/90 text-safe-foreground px-4 shadow-lg transition-all duration-200 transform hover:scale-105"
+                className="h-10 bg-white hover:bg-gray-50 text-black border-2 border-gray-300 hover:border-gray-400 px-4 shadow-lg transition-all duration-200 transform hover:scale-105"
               >
-                <MapPin className="h-4 w-4 mr-2" />
+                <MapPin className="h-4 w-4 mr-2 text-green-600" />
                 Share Location
               </Button>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => openPanel("tracking")}
-                className="h-10 px-4 border-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-200 transform hover:scale-105"
+                className="h-10 px-4 bg-white text-black border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:scale-105"
               >
-                <Activity className="h-4 w-4 mr-2" />
+                <Activity className="h-4 w-4 mr-2 text-blue-600" />
                 Settings
               </Button>
             </div>
