@@ -178,7 +178,7 @@ export default function Guardian() {
   return (
     <PanelContainer className="bg-background">
       {/* Main Interface */}
-      <div className="h-full flex flex-col pb-24">
+      <div className="h-full flex flex-col pb-20">
         {/* Status Bar */}
         <div className="p-4 border-b border-border/50 bg-background">
           <div className="flex items-center gap-3">
@@ -499,7 +499,7 @@ export default function Guardian() {
           minHeight={220}
           maxHeight={600}
           initialHeight={350}
-          bottomOffset={120}
+          bottomOffset={100}
         >
           {/* Live Tracking Status */}
           <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/10 to-safe/10 rounded-xl border border-primary/20">
