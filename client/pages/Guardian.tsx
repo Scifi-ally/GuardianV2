@@ -290,32 +290,59 @@ export default function Guardian() {
               {/* Guardian Key Card */}
               <GuardianKeyCard />
 
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-2">
-                <Card>
-                  <CardContent className="p-3 text-center">
-                    <div className="text-lg font-bold">
-                      {emergencyContacts.length}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Contacts
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 text-center">
-                    <div className="text-lg font-bold">0</div>
-                    <div className="text-xs text-muted-foreground">Alerts</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-3 text-center">
-                    <div className="text-lg font-bold">24</div>
-                    <div className="text-xs text-muted-foreground">
-                      Safe Trips
-                    </div>
-                  </CardContent>
-                </Card>
+              {/* Safety Stats */}
+              <div>
+                <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Safety Overview
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <Card className="border-safe/20 bg-safe/5">
+                    <CardContent className="p-3 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="p-2 rounded-full bg-safe/20">
+                          <Users className="h-4 w-4 text-safe" />
+                        </div>
+                        <div className="text-lg font-bold text-safe">
+                          {emergencyContacts.length}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Emergency Contacts
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardContent className="p-3 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="p-2 rounded-full bg-primary/20">
+                          <Bell className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="text-lg font-bold text-primary">0</div>
+                        <div className="text-xs text-muted-foreground">
+                          Active Alerts
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-protection/20 bg-protection/5">
+                    <CardContent className="p-3 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="p-2 rounded-full bg-protection/20">
+                          <NavIcon className="h-4 w-4 text-protection" />
+                        </div>
+                        <div className="text-lg font-bold text-protection">
+                          24
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Safe Journeys
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
 
               {/* Emergency Contacts Manager */}
