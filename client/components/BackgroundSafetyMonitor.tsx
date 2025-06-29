@@ -95,12 +95,21 @@ export function BackgroundSafetyMonitor({
       if (!userProfile) return;
 
       try {
+        const locationData = location
+          ? {
+              latitude: location.latitude,
+              longitude: location.longitude,
+              accuracy: location.accuracy,
+              timestamp: new Date(),
+            }
+          : undefined;
+
         await SOSService.sendSOSAlert(
           userProfile.uid,
           userProfile.displayName,
           userProfile.guardianKey,
           userProfile.emergencyContacts,
-          location,
+          locationData,
           "voice-activation",
           `Voice emergency detected: "${keyword}". Automatic alert triggered.`,
         );
