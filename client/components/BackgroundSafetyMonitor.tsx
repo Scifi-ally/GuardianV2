@@ -89,6 +89,32 @@ export function BackgroundSafetyMonitor({
     "aide", // Help in French
   ];
 
+  // Check microphone permission
+  useEffect(() => {
+    const checkMicrophonePermission = async () => {
+      try {
+        if (navigator.permissions && navigator.permissions.query) {
+          const permission = await navigator.permissions.query({
+            name: "microphone" as PermissionName,
+          });
+          setMicrophonePermission(permission.state);
+
+          permission.onchange = () => {
+            setMicrophonePermission(permission.state);
+          };
+        } else {
+          // Fallback for browsers that don't support permissions API
+          setMicrophonePermission("unknown");
+        }
+      } catch (error) {
+        console.log("Could not check microphone permission:", error);
+        setMicrophonePermission("unknown");
+      }
+    };
+
+    checkMicrophonePermission();
+  }, []);
+
   // Initialize speech recognition
   useEffect(() => {
     const SpeechRecognition =
