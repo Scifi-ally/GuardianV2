@@ -263,43 +263,30 @@ export default function Guardian() {
     <PanelContainer className="bg-gradient-to-br from-background via-muted/5 to-safe/5">
       {/* Main Interface */}
       <div className="h-full flex flex-col pb-20">
-        {/* Enhanced Status Bar */}
-        <div className="p-4 border-b border-border/50 bg-gradient-to-r from-background to-primary/5 shadow-sm">
+        {/* Minimal Header */}
+        <div className="p-3 border-b border-border/30 bg-background/95 backdrop-blur-sm">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="p-3 rounded-xl bg-primary/10 border-2 border-primary/20">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-safe rounded-full border-2 border-background animate-pulse" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold">Guardian Shield</h1>
-                <div className="flex items-center gap-3">
-                  <Badge
-                    className={statusColors[safetyStatus]}
-                    variant="outline"
-                  >
-                    <Activity className="h-3 w-3 mr-1" />
-                    {safetyStatus.toUpperCase()}
-                  </Badge>
-                  {location && (
-                    <Badge variant="outline" className="text-xs">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      GPS Active
-                    </Badge>
-                  )}
-                </div>
-              </div>
+            <h1 className="text-xl font-bold tracking-wide">Guardian</h1>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  document.documentElement.classList.toggle("dark");
+                }}
+                className="p-2 rounded-full"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => openPanel("settings")}
+                className="p-2 rounded-full"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => openPanel("settings")}
-              className="p-2"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
