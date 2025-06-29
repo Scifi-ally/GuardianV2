@@ -265,22 +265,42 @@ export function BackgroundSafetyMonitor({
   useEffect(() => {
     if (!voiceSupported || !recognitionRef.current) return;
 
-    if (voiceDetection && isActive) {
-      try {
-        recognitionRef.current.start();
-      } catch (error) {
-        console.log("Speech recognition already running");
+    if (voiceDetection && isActive && !lastError) {
+      // Only start if not already listening
+      if (!isListening) {
+        try {
+          recognitionRef.current.start();
+        } catch (error) {
+          // Silently handle "already started" errors
+          if (
+            error instanceof Error &&
+            !error.message.includes("already started")
+          ) {
+            console.log("Speech recognition start failed:", error);
+          }
+        }
       }
     } else {
-      recognitionRef.current.stop();
+      // Stop recognition when disabled
+      if (isListening) {
+        try {
+          recognitionRef.current.abort(); // Use abort for immediate stop
+        } catch (error) {
+          // Silently handle stop errors
+        }
+      }
     }
 
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+      if (recognitionRef.current && isListening) {
+        try {
+          recognitionRef.current.abort();
+        } catch (error) {
+          // Silently handle cleanup errors
+        }
       }
     };
-  }, [voiceDetection, isActive, voiceSupported]);
+  }, [voiceDetection, isActive, voiceSupported, lastError, isListening]);
 
   // Update activity and detection count
   useEffect(() => {
