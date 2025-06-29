@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 0%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Women's Safety App Colors */
+    --safe: 140 65% 55%;
+    --safe-foreground: 0 0% 100%;
+    --emergency: 0 85% 65%;
+    --emergency-foreground: 0 0% 100%;
+    --warning: 35 90% 60%;
+    --warning-foreground: 0 0% 100%;
+    --protection: 280 85% 65%;
+    --protection-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 320 15% 8%;
+    --foreground: 320 15% 95%;
+
+    --card: 320 15% 10%;
+    --card-foreground: 320 15% 95%;
+
+    --popover: 320 15% 10%;
+    --popover-foreground: 320 15% 95%;
+
+    --primary: 280 85% 70%;
+    --primary-foreground: 320 15% 8%;
+
+    --secondary: 320 10% 15%;
+    --secondary-foreground: 320 15% 95%;
+
+    --muted: 320 10% 15%;
+    --muted-foreground: 320 10% 65%;
+
+    --accent: 320 10% 15%;
+    --accent-foreground: 320 15% 95%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 320 10% 20%;
+    --input: 320 10% 20%;
+    --ring: 280 85% 70%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Women's Safety App Dark Colors */
+    --safe: 140 60% 50%;
+    --safe-foreground: 0 0% 100%;
+    --emergency: 0 80% 60%;
+    --emergency-foreground: 0 0% 100%;
+    --warning: 35 85% 55%;
+    --warning-foreground: 0 0% 100%;
+    --protection: 280 85% 70%;
+    --protection-foreground: 320 15% 8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar styles - hide scrollbars but maintain functionality */
+@layer utilities {
+  .custom-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+
+  /* Global scrollbar hiding for specific areas */
+  .overflow-y-auto,
+  .overflow-x-auto,
+  .overflow-auto {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  }
+
+  .overflow-y-auto::-webkit-scrollbar,
+  .overflow-x-auto::-webkit-scrollbar,
+  .overflow-auto::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+
+  /* Maintain scroll functionality with hidden scrollbar for specific components */
+  .scroll-area {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scroll-area::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Smooth transitions for touch interactions */
+@layer utilities {
+  .touch-pan-x {
+    touch-action: pan-x;
+  }
+
+  .touch-pan-y {
+    touch-action: pan-y;
+  }
+
+  .touch-none {
+    touch-action: none;
+  }
+}
