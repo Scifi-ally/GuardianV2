@@ -225,12 +225,17 @@ export default function Guardian() {
       const message = `Guardian Alert: I'm at https://maps.google.com/?q=${loc.latitude},${loc.longitude}`;
 
       if (navigator.share) {
-        await navigator.share({
-          title: "Guardian Location",
-          text: message,
-        });
+        try {
+          await navigator.share({
+            title: "Guardian Location",
+            text: message,
+          });
+        } catch (shareError) {
+          await safeClipboardCopy(message);
+          alert("Location copied to clipboard!");
+        }
       } else {
-        await navigator.clipboard.writeText(message);
+        await safeClipboardCopy(message);
         alert("Location copied to clipboard!");
       }
       successVibration();
@@ -238,6 +243,28 @@ export default function Guardian() {
       console.error("Share failed:", error);
     }
   }, [getCurrentLocation, successVibration]);
+
+  // Safe clipboard copy helper
+  const safeClipboardCopy = async (text: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      console.error("Copy failed:", error);
+      prompt("Please copy this manually:", text);
+    }
+  };
 
   const quickCall = useCallback(
     (phone: string) => {
