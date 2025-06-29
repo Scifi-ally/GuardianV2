@@ -2,7 +2,24 @@ import { useEffect, useState, useRef } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Navigation, Shield, AlertTriangle, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  MapPin,
+  Navigation,
+  Shield,
+  AlertTriangle,
+  Users,
+  Plus,
+  Minus,
+  Locate,
+  Route,
+  X,
+  Search,
+  Clock,
+  Car,
+  Navigation2,
+  Layers,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
@@ -48,9 +65,21 @@ export function SafetyMap({
     lat: number;
     lng: number;
   }>({
-    lat: userLocation?.lat || 28.6139, // Default to New Delhi
+    lat: userLocation?.lat || 28.6139,
     lng: userLocation?.lng || 77.209,
   });
+  const [fromLocation, setFromLocation] = useState("");
+  const [toLocation, setToLocation] = useState("");
+  const [showRouting, setShowRouting] = useState(false);
+  const [travelMode, setTravelMode] = useState<google.maps.TravelMode>(
+    google.maps.TravelMode.DRIVING,
+  );
+  const [routeInfo, setRouteInfo] = useState<{
+    duration: string;
+    distance: string;
+  } | null>(null);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [zoom, setZoom] = useState(15);
   const markersRef = useRef<google.maps.Marker[]>([]);
 
   // Load Google Maps
@@ -69,47 +98,108 @@ export function SafetyMap({
       .catch(console.error);
   }, []);
 
-  // Initialize map
+  // Check for dark theme
+  useEffect(() => {
+    const checkTheme = () => {
+      setIsDarkTheme(document.documentElement.classList.contains("dark"));
+    };
+
+    checkTheme();
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Initialize map with custom styling
   useEffect(() => {
     if (!isLoaded || !mapRef.current) return;
 
+    const darkMapStyles = [
+      { elementType: "geometry", stylers: [{ color: "#212121" }] },
+      { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+      {
+        featureType: "administrative",
+        elementType: "geometry",
+        stylers: [{ color: "#757575" }],
+      },
+      {
+        featureType: "road",
+        elementType: "geometry.fill",
+        stylers: [{ color: "#2c2c2c" }],
+      },
+      {
+        featureType: "road",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#8a8a8a" }],
+      },
+      {
+        featureType: "road.arterial",
+        elementType: "geometry",
+        stylers: [{ color: "#373737" }],
+      },
+      {
+        featureType: "road.highway",
+        elementType: "geometry",
+        stylers: [{ color: "#3c3c3c" }],
+      },
+      {
+        featureType: "road.highway.controlled_access",
+        elementType: "geometry",
+        stylers: [{ color: "#4e4e4e" }],
+      },
+      {
+        featureType: "road.local",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#616161" }],
+      },
+      {
+        featureType: "water",
+        elementType: "geometry",
+        stylers: [{ color: "#000000" }],
+      },
+      {
+        featureType: "water",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#3d3d3d" }],
+      },
+    ];
+
+    const lightMapStyles = [
+      {
+        featureType: "all",
+        elementType: "geometry",
+        stylers: [{ color: "#f5f5f5" }],
+      },
+      {
+        featureType: "road",
+        elementType: "geometry",
+        stylers: [{ color: "#ffffff" }],
+      },
+      {
+        featureType: "water",
+        elementType: "geometry",
+        stylers: [{ color: "#c9c9c9" }],
+      },
+    ];
+
     const mapInstance = new google.maps.Map(mapRef.current, {
       center: currentLocation,
-      zoom: 15,
-      styles: [
-        {
-          featureType: "all",
-          elementType: "geometry",
-          stylers: [{ color: "#1f2937" }],
-        },
-        {
-          featureType: "all",
-          elementType: "labels.text.fill",
-          stylers: [{ color: "#ffffff" }],
-        },
-        {
-          featureType: "all",
-          elementType: "labels.text.stroke",
-          stylers: [{ color: "#000000" }, { lightness: 13 }],
-        },
-        {
-          featureType: "road",
-          elementType: "geometry",
-          stylers: [{ color: "#374151" }],
-        },
-        {
-          featureType: "water",
-          elementType: "geometry",
-          stylers: [{ color: "#1e40af" }],
-        },
-      ],
+      zoom: zoom,
+      styles: isDarkTheme ? darkMapStyles : lightMapStyles,
       disableDefaultUI: true,
-      zoomControl: true,
       mapTypeControl: false,
-      scaleControl: true,
+      zoomControl: false,
+      scaleControl: false,
       streetViewControl: false,
       rotateControl: false,
       fullscreenControl: false,
+      gestureHandling: "greedy",
     });
 
     const dirService = new google.maps.DirectionsService();
@@ -124,135 +214,30 @@ export function SafetyMap({
 
     dirRenderer.setMap(mapInstance);
 
+    // Custom zoom controls
+    mapInstance.addListener("zoom_changed", () => {
+      setZoom(mapInstance.getZoom() || 15);
+    });
+
     setMap(mapInstance);
     setDirectionsService(dirService);
     setDirectionsRenderer(dirRenderer);
-  }, [isLoaded, currentLocation, emergencyMode]);
+  }, [isLoaded, currentLocation, emergencyMode, isDarkTheme, zoom]);
 
-  // Update user location
-  useEffect(() => {
-    if (userLocation) {
-      setCurrentLocation(userLocation);
-      if (map) {
-        map.setCenter(userLocation);
-      }
-    }
-  }, [userLocation, map]);
-
-  // Add markers
-  useEffect(() => {
-    if (!map || !isLoaded) return;
-
-    // Clear existing markers
-    markersRef.current.forEach((marker) => marker.setMap(null));
-    markersRef.current = [];
-
-    // Add user location marker
-    const userMarker = new google.maps.Marker({
-      position: currentLocation,
-      map: map,
-      title: "Your Location",
-      icon: {
-        url:
-          "data:image/svg+xml;charset=UTF-8," +
-          encodeURIComponent(`
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#3b82f6" width="32" height="32">
-            <circle cx="12" cy="12" r="8" fill="#3b82f6" stroke="#ffffff" stroke-width="2"/>
-            <circle cx="12" cy="12" r="3" fill="#ffffff"/>
-          </svg>
-        `),
-        scaledSize: new google.maps.Size(32, 32),
-        anchor: new google.maps.Point(16, 16),
-      },
-    });
-
-    markersRef.current.push(userMarker);
-
-    // Add safety location markers
-    const mockSafetyLocations: SafetyLocation[] = [
-      {
-        id: "police1",
-        name: "Police Station",
-        lat: currentLocation.lat + 0.01,
-        lng: currentLocation.lng + 0.01,
-        type: "police",
-      },
-      {
-        id: "hospital1",
-        name: "General Hospital",
-        lat: currentLocation.lat - 0.01,
-        lng: currentLocation.lng + 0.015,
-        type: "hospital",
-      },
-      {
-        id: "safe1",
-        name: "Safe Zone - Shopping Mall",
-        lat: currentLocation.lat + 0.005,
-        lng: currentLocation.lng - 0.008,
-        type: "safe",
-      },
-    ];
-
-    const allLocations = [...safetyLocations, ...mockSafetyLocations];
-
-    allLocations.forEach((location) => {
-      const iconColors = {
-        safe: "#22c55e",
-        emergency: "#ef4444",
-        police: "#3b82f6",
-        hospital: "#f59e0b",
-      };
-
-      const marker = new google.maps.Marker({
-        position: { lat: location.lat, lng: location.lng },
-        map: map,
-        title: location.name,
-        icon: {
-          url:
-            "data:image/svg+xml;charset=UTF-8," +
-            encodeURIComponent(`
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${iconColors[location.type]}" width="24" height="24">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-              <circle cx="12" cy="9" r="2.5" fill="white"/>
-            </svg>
-          `),
-          scaledSize: new google.maps.Size(32, 32),
-          anchor: new google.maps.Point(16, 32),
-        },
-      });
-
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="color: black; padding: 8px;">
-            <h3 style="margin: 0 0 4px 0; font-weight: bold;">${location.name}</h3>
-            <p style="margin: 0; font-size: 12px; color: #666;">${location.type.charAt(0).toUpperCase() + location.type.slice(1)}</p>
-          </div>
-        `,
-      });
-
-      marker.addListener("click", () => {
-        infoWindow.open(map, marker);
-        onLocationSelect?.(location);
-      });
-
-      markersRef.current.push(marker);
-    });
-  }, [map, isLoaded, currentLocation, safetyLocations, onLocationSelect]);
-
-  // Handle emergency navigation
-  useEffect(() => {
+  // Handle routing
+  const calculateRoute = async () => {
     if (
-      !map ||
       !directionsService ||
       !directionsRenderer ||
-      !destinationLocation
+      !fromLocation ||
+      !toLocation
     )
       return;
 
     const request: google.maps.DirectionsRequest = {
-      origin: currentLocation,
-      destination: destinationLocation,
-      travelMode: google.maps.TravelMode.DRIVING,
+      origin: fromLocation,
+      destination: toLocation,
+      travelMode: travelMode,
       avoidHighways: false,
       avoidTolls: false,
     };
@@ -260,17 +245,19 @@ export function SafetyMap({
     directionsService.route(request, (result, status) => {
       if (status === "OK" && result) {
         directionsRenderer.setDirections(result);
+        const route = result.routes[0];
+        const leg = route.legs[0];
+        setRouteInfo({
+          duration: leg.duration?.text || "",
+          distance: leg.distance?.text || "",
+        });
+      } else {
+        console.error("Directions request failed:", status);
       }
     });
-  }, [
-    map,
-    directionsService,
-    directionsRenderer,
-    currentLocation,
-    destinationLocation,
-  ]);
+  };
 
-  const handleGetLocation = () => {
+  const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -288,42 +275,11 @@ export function SafetyMap({
     }
   };
 
-  const findNearestHospital = () => {
-    if (!map) return;
-
-    const request = {
-      location: currentLocation,
-      radius: 5000,
-      type: "hospital",
-    };
-
-    const service = new google.maps.places.PlacesService(map);
-    service.nearbySearch(request, (results, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-        const nearest = results[0];
-        if (nearest.geometry?.location) {
-          const hospitalLocation = {
-            lat: nearest.geometry.location.lat(),
-            lng: nearest.geometry.location.lng(),
-          };
-
-          // Start navigation to nearest hospital
-          const request: google.maps.DirectionsRequest = {
-            origin: currentLocation,
-            destination: hospitalLocation,
-            travelMode: google.maps.TravelMode.DRIVING,
-            avoidHighways: false,
-            avoidTolls: false,
-          };
-
-          directionsService?.route(request, (result, status) => {
-            if (status === "OK" && result) {
-              directionsRenderer?.setDirections(result);
-            }
-          });
-        }
-      }
-    });
+  const adjustZoom = (delta: number) => {
+    if (map) {
+      const newZoom = Math.max(1, Math.min(20, zoom + delta));
+      map.setZoom(newZoom);
+    }
   };
 
   if (!isLoaded) {
@@ -337,7 +293,7 @@ export function SafetyMap({
         <div className="text-center space-y-2">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-sm text-muted-foreground">
-            Loading Google Maps...
+            Loading Guardian Maps...
           </p>
         </div>
       </div>
@@ -347,42 +303,183 @@ export function SafetyMap({
   return (
     <div
       className={cn(
-        "relative h-full w-full rounded-lg overflow-hidden border",
+        "relative h-full w-full rounded-lg overflow-hidden",
         className,
       )}
     >
-      {/* Custom Map Controls */}
-      <div className="absolute top-4 left-4 z-[1000] space-y-2">
-        <Button
-          onClick={handleGetLocation}
-          className="bg-black/80 hover:bg-black text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium shadow-xl border border-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105"
-        >
-          <Navigation className="h-4 w-4" />
-          My Location
-        </Button>
-        {emergencyMode && (
-          <Button
-            onClick={findNearestHospital}
-            className="bg-emergency/90 hover:bg-emergency text-emergency-foreground px-4 py-2 rounded-lg flex items-center gap-2 font-medium shadow-xl border border-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105"
-          >
-            <AlertTriangle className="h-4 w-4" />
-            Nearest Hospital
-          </Button>
+      {/* Routing Controls */}
+      <div className="absolute top-4 left-4 right-4 z-[1000] space-y-3">
+        {!showRouting ? (
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowRouting(true)}
+              className="bg-black/80 hover:bg-black text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium shadow-xl border border-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+            >
+              <Route className="h-4 w-4" />
+              Get Directions
+            </Button>
+            {emergencyMode && (
+              <Badge className="bg-emergency text-emergency-foreground animate-pulse shadow-lg">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                EMERGENCY MODE
+              </Badge>
+            )}
+          </div>
+        ) : (
+          <div className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-white font-semibold flex items-center gap-2">
+                <Navigation2 className="h-4 w-4" />
+                Route Planning
+              </h3>
+              <Button
+                onClick={() => setShowRouting(false)}
+                variant="ghost"
+                size="sm"
+                className="text-white hover:bg-white/10 p-1"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="relative">
+                <Input
+                  placeholder="From location..."
+                  value={fromLocation}
+                  onChange={(e) => setFromLocation(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/60 pr-10"
+                />
+                <Button
+                  onClick={getCurrentLocation}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1 text-white hover:bg-white/10 p-1"
+                >
+                  <Locate className="h-3 w-3" />
+                </Button>
+              </div>
+
+              <div className="relative">
+                <Input
+                  placeholder="To destination..."
+                  value={toLocation}
+                  onChange={(e) => setToLocation(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setTravelMode(google.maps.TravelMode.DRIVING)}
+                variant={
+                  travelMode === google.maps.TravelMode.DRIVING
+                    ? "default"
+                    : "ghost"
+                }
+                size="sm"
+                className="text-xs"
+              >
+                <Car className="h-3 w-3 mr-1" />
+                Drive
+              </Button>
+              <Button
+                onClick={() => setTravelMode(google.maps.TravelMode.WALKING)}
+                variant={
+                  travelMode === google.maps.TravelMode.WALKING
+                    ? "default"
+                    : "ghost"
+                }
+                size="sm"
+                className="text-xs"
+              >
+                <Users className="h-3 w-3 mr-1" />
+                Walk
+              </Button>
+              <Button
+                onClick={calculateRoute}
+                className="bg-primary hover:bg-primary/90 text-xs flex-1"
+                disabled={!fromLocation || !toLocation}
+              >
+                <Navigation className="h-3 w-3 mr-1" />
+                Calculate Route
+              </Button>
+            </div>
+
+            {routeInfo && (
+              <div className="bg-white/10 rounded-lg p-3 space-y-1">
+                <div className="flex items-center justify-between text-white text-sm">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    <span>{routeInfo.duration}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-3 w-3" />
+                    <span>{routeInfo.distance}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Emergency Mode Indicator */}
-      {emergencyMode && (
-        <div className="absolute top-4 right-4 z-[1000]">
-          <Badge className="bg-emergency text-emergency-foreground animate-pulse shadow-lg">
-            <AlertTriangle className="h-3 w-3 mr-1" />
-            EMERGENCY MODE
-          </Badge>
+      {/* Custom Map Controls */}
+      <div className="absolute bottom-4 right-4 z-[1000] space-y-2">
+        {/* Zoom Controls */}
+        <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg overflow-hidden">
+          <Button
+            onClick={() => adjustZoom(1)}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10 w-10 h-10 p-0 rounded-none border-b border-white/20"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => adjustZoom(-1)}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10 w-10 h-10 p-0 rounded-none"
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
         </div>
-      )}
+
+        {/* Location Button */}
+        <Button
+          onClick={getCurrentLocation}
+          className="bg-black/80 hover:bg-black text-white w-10 h-10 p-0 rounded-lg shadow-xl border border-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+        >
+          <Locate className="h-4 w-4" />
+        </Button>
+
+        {/* Layers Button */}
+        <Button
+          onClick={() => {
+            if (map) {
+              const currentType = map.getMapTypeId();
+              map.setMapTypeId(
+                currentType === "roadmap" ? "satellite" : "roadmap",
+              );
+            }
+          }}
+          className="bg-black/80 hover:bg-black text-white w-10 h-10 p-0 rounded-lg shadow-xl border border-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+        >
+          <Layers className="h-4 w-4" />
+        </Button>
+      </div>
 
       {/* Map Container */}
       <div ref={mapRef} className="h-full w-full" />
+
+      {/* Zoom Level Indicator */}
+      <div className="absolute bottom-4 left-4 z-[1000]">
+        <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg px-3 py-1">
+          <span className="text-white text-xs font-mono">Zoom: {zoom}</span>
+        </div>
+      </div>
     </div>
   );
 }
