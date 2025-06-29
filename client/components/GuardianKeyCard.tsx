@@ -148,16 +148,16 @@ export function GuardianKeyCard() {
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-3">
             <div className="relative">
-              <div className="p-3 rounded-full bg-primary/20 border-2 border-primary/30">
-                <Key className="h-6 w-6 text-primary" />
+              <div className="p-3 rounded-full bg-gray-100 border-2 border-gray-200">
+                <Key className="h-6 w-6 text-black" />
               </div>
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-safe rounded-full border-2 border-background flex items-center justify-center">
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                 <Shield className="h-3 w-3 text-white" />
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-bold">Guardian Key</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-lg font-bold text-black">Guardian Key</h3>
+              <p className="text-sm text-gray-600 font-mono">
                 Your unique safety identifier
               </p>
             </div>
