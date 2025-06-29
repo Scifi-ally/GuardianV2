@@ -440,26 +440,6 @@ export function MockMap({
             </div>
           );
         })}
-
-        {/* Zoom Controls */}
-        <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-30">
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 w-8 p-0 bg-background/90 backdrop-blur border-white/20 shadow-lg"
-            onClick={zoomIn}
-          >
-            +
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 w-8 p-0 bg-background/90 backdrop-blur border-white/20 shadow-lg"
-            onClick={zoomOut}
-          >
-            −
-          </Button>
-        </div>
       </div>
 
       {/* Enhanced Map Controls */}
@@ -514,25 +494,69 @@ export function MockMap({
 
         {/* Zoom Level Indicator */}
         <div className="bg-background/95 backdrop-blur-xl rounded-lg px-2 py-1 shadow-lg border border-border/50 text-center">
-          <span className="text-xs font-medium text-muted-foreground">{zoom}x</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {zoom}x
+          </span>
         </div>
-      </div>
-          <span className="font-medium">Guardian Map © 2024</span>
-        </div>
-        <div className="text-xs">
-          Center: {center.lat.toFixed(4)}, {center.lng.toFixed(4)}
-        </div>
-        <div className="text-xs">Zoom: {zoom}x</div>
-        {isPanning && (
-          <div className="text-primary font-medium animate-pulse">Panning...</div>
-        )}
-        <div className="text-xs text-safe">Interactive Offline Mode</div>
       </div>
 
-      {/* Map Attribution */}
-      <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/95 backdrop-blur px-2 py-1 rounded shadow-lg z-30">
-        Offline Guardian Maps
+      {/* Enhanced Location Status */}
+      {location?.accuracy && (
+        <div className="absolute bottom-24 left-4 z-30">
+          <div className="bg-background/95 backdrop-blur-xl rounded-2xl p-4 shadow-xl border border-border/50">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="relative">
+                <div className="w-3 h-3 bg-safe rounded-full animate-pulse" />
+                <div className="absolute inset-0 w-3 h-3 bg-safe/30 rounded-full animate-ping" />
+              </div>
+              <span className="font-semibold text-sm text-safe">
+                Live Tracking
+              </span>
+            </div>
+            <div className="space-y-1 text-xs">
+              <p className="text-muted-foreground">
+                Accuracy:{" "}
+                <span className="text-foreground font-medium">
+                  ±{Math.round(location.accuracy)}m
+                </span>
+              </p>
+              <p className="text-muted-foreground">
+                Position:{" "}
+                <span className="text-foreground font-medium">
+                  {location.latitude.toFixed(4)},{" "}
+                  {location.longitude.toFixed(4)}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clean Map Attribution */}
+      <div className="absolute bottom-4 left-4 z-30">
+        <div className="bg-background/95 backdrop-blur-xl rounded-xl px-3 py-2 shadow-lg border border-border/50">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+            <span className="text-xs font-medium text-muted-foreground">
+              Guardian Map
+            </span>
+          </div>
+        </div>
       </div>
+
+      {/* Interactive Status */}
+      {isPanning && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
+          <div className="bg-background/95 backdrop-blur-xl rounded-2xl px-4 py-2 shadow-xl border border-border/50">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full animate-spin" />
+              <span className="text-sm font-medium text-primary">
+                Moving...
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
