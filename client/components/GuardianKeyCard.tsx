@@ -196,7 +196,7 @@ export function GuardianKeyCard() {
               <Input
                 value={formatKeyForDisplay(guardianKey)}
                 readOnly
-                className="text-center font-mono text-lg tracking-wider border-2 bg-muted/20 pr-20"
+                className="text-center font-mono text-lg tracking-wider border-2 bg-gray-50 pr-20 text-black"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                 <Button
