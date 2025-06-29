@@ -338,7 +338,26 @@ function MapComponent({
 }
 
 export function GoogleMap(props: GoogleMapProps) {
-  const [useFallback, setUseFallback] = useState(false);
+  const [useFallback, setUseFallback] = useState(true); // Start with fallback due to billing error
+  const [showTransition, setShowTransition] = useState(false);
+
+  // Immediately use MockMap due to billing restrictions
+  // This can be changed back to false when billing is enabled
+  if (useFallback) {
+    return (
+      <div className="relative w-full h-full">
+        <MockMap {...props} />
+
+        {/* Enhanced fallback indicator */}
+        <div className="absolute top-4 left-4 z-50">
+          <Badge className="bg-primary/90 text-primary-foreground backdrop-blur shadow-lg border border-primary/20">
+            <Shield className="h-3 w-3 mr-1" />
+            Guardian Map
+          </Badge>
+        </div>
+      </div>
+    );
+  }
 
   const render = (status: string) => {
     switch (status) {
@@ -360,47 +379,13 @@ export function GoogleMap(props: GoogleMapProps) {
           </div>
         );
       case "FAILURE":
-        // Auto-fallback to MockMap after a brief delay
-        setTimeout(() => setUseFallback(true), 1000);
-        return (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-warning/5 to-muted/5">
-            <div className="text-center space-y-4 max-w-sm px-4">
-              <div className="p-4 rounded-full bg-warning/10 w-fit mx-auto">
-                <AlertTriangle className="h-8 w-8 text-warning" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Map Service Unavailable</p>
-                <p className="text-xs text-muted-foreground">
-                  Google Maps billing not enabled. Switching to offline map...
-                </p>
-              </div>
-              <div className="w-full bg-muted rounded-full h-1">
-                <div className="bg-primary h-1 rounded-full animate-pulse w-3/4"></div>
-              </div>
-            </div>
-          </div>
-        );
+        // Immediate fallback to MockMap
+        setUseFallback(true);
+        return null; // Will re-render with MockMap
       default:
         return <MapComponent {...props} />;
     }
   };
-
-  // Use fallback MockMap if Google Maps failed
-  if (useFallback) {
-    return (
-      <div className="relative w-full h-full">
-        <MockMap {...props} />
-
-        {/* Fallback indicator */}
-        <div className="absolute top-4 left-4 z-50">
-          <Badge className="bg-warning/90 text-warning-foreground backdrop-blur shadow-lg">
-            <Shield className="h-3 w-3 mr-1" />
-            Offline Mode
-          </Badge>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <Wrapper
