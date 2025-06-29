@@ -228,7 +228,9 @@ export function SafetyMap({
       !directionsService ||
       !directionsRenderer ||
       !fromLocation ||
-      !toLocation
+      !toLocation ||
+      !isLoaded ||
+      typeof google === "undefined"
     )
       return;
 
