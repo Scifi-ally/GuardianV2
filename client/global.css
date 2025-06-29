@@ -118,77 +118,149 @@
   }
 }
 
-/* Enhanced scrollbar styles - completely hide scrollbars */
+/* COMPLETE SCROLLBAR VISIBILITY DISABLE */
+@layer base {
+  /* Global scrollbar hiding - highest priority */
+  html {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    overflow-x: hidden;
+  }
+
+  html::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    overflow-x: hidden;
+  }
+
+  body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Universal scrollbar hiding for ALL elements */
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-track {
+    display: none !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    display: none !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-corner {
+    display: none !important;
+    background: transparent !important;
+  }
+}
+
 @layer utilities {
+  /* Custom scrollbar class for specific elements */
   .custom-scrollbar {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
-    width: 0;
-    height: 0;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
-  /* Global scrollbar hiding for all overflow elements */
+  /* All overflow variants */
   .overflow-y-auto,
   .overflow-x-auto,
   .overflow-auto,
   .overflow-hidden,
-  .overflow-scroll {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
+  .overflow-scroll,
+  .overflow-visible {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   .overflow-y-auto::-webkit-scrollbar,
   .overflow-x-auto::-webkit-scrollbar,
   .overflow-auto::-webkit-scrollbar,
   .overflow-hidden::-webkit-scrollbar,
-  .overflow-scroll::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
-    width: 0;
-    height: 0;
+  .overflow-scroll::-webkit-scrollbar,
+  .overflow-visible::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
-  /* Maintain scroll functionality with hidden scrollbar for specific components */
+  /* Scroll area components */
   .scroll-area {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   .scroll-area::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
-  /* Hide all scrollbars globally */
-  * {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+  /* Textarea and input scrollbars */
+  textarea,
+  input[type="text"],
+  input[type="search"],
+  select {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
-  *::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+  textarea::-webkit-scrollbar,
+  input[type="text"]::-webkit-scrollbar,
+  input[type="search"]::-webkit-scrollbar,
+  select::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
-  /* Remove any default browser styling that might cause lines */
-  html,
-  body {
-    overflow-x: hidden;
-  }
-
-  /* Fix any border/outline issues */
+  /* Remove focus outlines that could appear as lines */
   *:focus {
-    outline: none;
+    outline: none !important;
   }
 
   *:focus-visible {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
+    outline: 2px solid hsl(var(--ring)) !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Hide any potential scrollbar spaces */
+  .hide-scrollbar {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 }
 
