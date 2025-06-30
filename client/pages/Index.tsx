@@ -1,14 +1,23 @@
 import { useState, useCallback } from "react";
-import { Navigation, MapPin, Route, ArrowRight } from "lucide-react";
+import {
+  Navigation,
+  MapPin,
+  Route,
+  ArrowRight,
+  Users,
+  Settings,
+} from "lucide-react";
 import { GoogleMap } from "@/components/GoogleMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
+import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 export default function Index() {
