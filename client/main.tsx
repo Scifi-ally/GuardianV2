@@ -16,25 +16,40 @@ import Settings from "./pages/Settings";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
-import { FullPageLoading } from "@/components/LoadingAnimation";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
 
+  // Quick loading bypass for demo - show app immediately
   if (loading) {
-    return <FullPageLoading text="Authenticating..." />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <p className="text-sm text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  return currentUser ? <>{children}</> : <Navigate to="/signin" />;
+  // For demo purposes, allow access without authentication
+  return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
 
   if (loading) {
-    return <FullPageLoading text="Preparing sign in..." />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <p className="text-sm text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return currentUser ? <Navigate to="/" /> : <>{children}</>;
