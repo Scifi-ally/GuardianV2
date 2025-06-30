@@ -86,7 +86,10 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       {/* Background with blur effect */}
       <div className="absolute inset-0 bg-background/80 backdrop-blur-lg border-t border-border" />
 
@@ -105,7 +108,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       </div>
 
       {/* Navigation items */}
-      <div className="relative px-4 py-2">
+      <div className="relative px-4 py-3 pb-6">
         <div className="flex items-center justify-around max-w-md mx-auto">
           {navItems.map((item, index) => {
             const Icon = item.icon;
