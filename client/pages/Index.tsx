@@ -111,7 +111,7 @@ export default function Index() {
       </div>
 
       {/* Google Map */}
-      <div className="absolute inset-0 top-0 z-10">
+      <div className="absolute inset-0 top-0 z-10 pt-36">
         <GoogleMap
           location={location}
           emergencyContacts={emergencyContacts.map((contact) => ({
