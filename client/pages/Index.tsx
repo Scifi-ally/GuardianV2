@@ -69,7 +69,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       {/* Compact To/From Section at Top */}
-      <div className="relative z-20 bg-background/95 backdrop-blur-md border-b border-border/20 shadow-sm">
+      <div className="relative z-20 bg-background/95 backdrop-blur-md border-b border-border/20 shadow-sm transform transition-all duration-300 ease-out">
         <div className="container mx-auto px-3 py-3">
           <div className="flex items-center gap-2">
             {/* From Input */}
