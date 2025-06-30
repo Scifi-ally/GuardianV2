@@ -168,7 +168,10 @@ export default function Index() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="navigation" className="mt-4 space-y-4">
+          <TabsContent
+            value="navigation"
+            className="mt-4 space-y-4 transform transition-all duration-300 ease-out animate-in slide-in-from-right-1"
+          >
             {isNavigating && routeInstructions.length > 0 ? (
               // Navigation Instructions
               <div className="space-y-4">
