@@ -134,7 +134,7 @@ export default function Index() {
         minHeight={180}
         maxHeight={500}
         initialHeight={280}
-        bottomOffset={100}
+        bottomOffset={120}
         collapsedHeight={60}
       >
         {isNavigating && routeInstructions.length > 0 ? (
