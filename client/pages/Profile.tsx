@@ -1,14 +1,101 @@
-import { useState } from "react";
-import { User, Edit, Shield, Settings, LogOut, Camera } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  User,
+  Edit,
+  Settings,
+  LogOut,
+  Camera,
+  Copy,
+  RefreshCw,
+  Key,
+} from "lucide-react";
 import { MagicNavbar } from "@/components/MagicNavbar";
+import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { useAuth } from "@/contexts/AuthContext";
+import { EmergencyKeyService } from "@/services/emergencyKeyService";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 export default function Profile() {
   const { currentUser, userProfile, logout } = useAuth();
+  const [guardianKey, setGuardianKey] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [regenerating, setRegenerating] = useState(false);
+
+  useEffect(() => {
+    loadGuardianKey();
+  }, [currentUser]);
+
+  const loadGuardianKey = async () => {
+    if (!currentUser) return;
+
+    setLoading(true);
+    try {
+      let key = await EmergencyKeyService.getUserGuardianKey(currentUser.uid);
+
+      if (!key) {
+        // Create new guardian key if user doesn't have one
+        const result = await EmergencyKeyService.createGuardianKey(
+          currentUser.uid,
+          userProfile?.displayName ||
+            currentUser.displayName ||
+            "Guardian User",
+          userProfile?.email || currentUser.email || "",
+        );
+
+        if (result.success && result.guardianKey) {
+          key = result.guardianKey;
+          toast.success("Guardian key created successfully!");
+        } else {
+          toast.error("Failed to create guardian key");
+        }
+      }
+
+      setGuardianKey(key || "");
+    } catch (error) {
+      console.error("Error loading guardian key:", error);
+      toast.error("Failed to load guardian key");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopyKey = async () => {
+    try {
+      await navigator.clipboard.writeText(guardianKey);
+      toast.success("Guardian key copied to clipboard!");
+    } catch (error) {
+      toast.error("Failed to copy key");
+    }
+  };
+
+  const handleRegenerateKey = async () => {
+    if (!currentUser) return;
+
+    setRegenerating(true);
+    try {
+      const result = await EmergencyKeyService.regenerateGuardianKey(
+        currentUser.uid,
+        userProfile?.displayName || currentUser.displayName || "Guardian User",
+        userProfile?.email || currentUser.email || "",
+      );
+
+      if (result.success && result.guardianKey) {
+        setGuardianKey(result.guardianKey);
+        toast.success("New guardian key generated!");
+      } else {
+        toast.error(result.error || "Failed to regenerate key");
+      }
+    } catch (error) {
+      console.error("Error regenerating key:", error);
+      toast.error("Failed to regenerate key");
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   const handleSOSPress = () => {
     console.log("SOS triggered from profile");
@@ -56,14 +143,67 @@ export default function Profile() {
                 <p className="text-sm text-muted-foreground">
                   {userProfile?.email || currentUser?.email || "No email set"}
                 </p>
-                <Badge className="bg-safe text-safe-foreground">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Verified Account
-                </Badge>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Guardian Key Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-primary" />
+              Your Guardian Key
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <Key className="h-4 w-4" />
+              <AlertDescription>
+                Share this unique key with trusted contacts so they can add you
+                to their emergency network.
+              </AlertDescription>
+            </Alert>
+
+            <div className="flex items-center gap-3">
+              {loading ? (
+                <div className="flex-1 h-12 bg-muted/50 rounded-lg animate-pulse" />
+              ) : (
+                <>
+                  <div className="flex-1 p-3 bg-muted/30 rounded-lg border font-mono text-lg tracking-wider text-center">
+                    {guardianKey || "No key generated"}
+                  </div>
+                  <Button
+                    onClick={handleCopyKey}
+                    variant="outline"
+                    size="icon"
+                    disabled={!guardianKey}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={handleRegenerateKey}
+                    variant="outline"
+                    size="icon"
+                    disabled={regenerating || !guardianKey}
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${regenerating ? "animate-spin" : ""}`}
+                    />
+                  </Button>
+                </>
+              )}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Keep this key private and only share with people you trust for
+              emergencies.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Emergency Contacts */}
+        <EmergencyContactManager />
 
         {/* Essential Actions */}
         <Card>
@@ -94,29 +234,6 @@ export default function Profile() {
               <LogOut className="h-4 w-4 mr-3" />
               Sign Out
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Account Info */}
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="font-medium mb-3">Account Information</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Account Type</span>
-                <span className="font-medium">Guardian Premium</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Member Since</span>
-                <span className="font-medium">March 2024</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
-                <Badge variant="outline" className="text-xs">
-                  Active
-                </Badge>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </main>
