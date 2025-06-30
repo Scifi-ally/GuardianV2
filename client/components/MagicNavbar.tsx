@@ -20,15 +20,8 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { id: "home", label: "Home", icon: Home, path: "/" },
-  { id: "contacts", label: "Contacts", icon: Users, path: "/contacts" },
+  { id: "map", label: "Map", icon: MapPin, path: "/" },
   { id: "sos", label: "SOS", icon: AlertTriangle, path: "", isSpecial: true },
-  {
-    id: "navigation",
-    label: "Routes",
-    icon: NavigationIcon,
-    path: "/navigation",
-  },
   { id: "profile", label: "Profile", icon: User, path: "/profile" },
 ];
 
