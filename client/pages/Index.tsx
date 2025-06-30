@@ -188,11 +188,12 @@ export default function Index() {
                     <Card
                       key={index}
                       className={cn(
-                        "transition-all duration-200",
+                        "transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md",
                         index === 0
-                          ? "border-primary bg-primary/5"
-                          : "bg-muted/30",
+                          ? "border-foreground bg-foreground/5 animate-in slide-in-from-left-2"
+                          : "bg-muted/30 animate-in slide-in-from-left-1",
                       )}
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <CardContent className="p-3">
                         <div className="flex items-start gap-3">
