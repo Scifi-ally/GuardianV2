@@ -15,6 +15,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { EmergencyKeyService } from "@/services/emergencyKeyService";
 
 interface GuardianUser extends User {
   guardianKey?: string;
