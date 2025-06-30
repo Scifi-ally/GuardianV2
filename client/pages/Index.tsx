@@ -22,7 +22,12 @@ export default function Index() {
     avoidHighways: false,
     preferWellLit: true,
     avoidIsolated: true,
+    showTraffic: true,
+    satelliteView: false,
   });
+  const [mapStyle, setMapStyle] = useState<"normal" | "gray" | "satellite">(
+    "gray",
+  );
 
   const { location, getCurrentLocation } = useGeolocation();
   const { userProfile } = useAuth();
