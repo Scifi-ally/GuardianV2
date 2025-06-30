@@ -150,14 +150,10 @@ export default function Index() {
           defaultValue={isNavigating ? "navigation" : "settings"}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="navigation" className="text-xs">
               <Navigation className="h-4 w-4 mr-1" />
               Routes
-            </TabsTrigger>
-            <TabsTrigger value="contacts" className="text-xs">
-              <Users className="h-4 w-4 mr-1" />
-              Contacts
             </TabsTrigger>
             <TabsTrigger value="settings" className="text-xs">
               <Settings className="h-4 w-4 mr-1" />
