@@ -337,7 +337,7 @@ export default function Index() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
                     <div>
                       <p className="text-sm font-medium">
                         Avoid isolated areas
