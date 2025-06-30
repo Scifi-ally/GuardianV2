@@ -46,15 +46,15 @@ const AppRoutes = () => (
       path="/"
       element={
         <ProtectedRoute>
-          <Guardian />
+          <Index />
         </ProtectedRoute>
       }
     />
     <Route
-      path="/old"
+      path="/guardian"
       element={
         <ProtectedRoute>
-          <Index />
+          <Guardian />
         </ProtectedRoute>
       }
     />
