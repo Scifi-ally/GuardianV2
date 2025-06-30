@@ -39,17 +39,28 @@ export default function Index() {
 
     setIsNavigating(true);
 
-    // Mock route instructions - in real app would use Google Directions API
+    // Generate route instructions based on settings
     const mockInstructions = [
-      "Head north on Main Street toward Oak Avenue",
-      "Turn right onto Oak Avenue",
-      "Continue straight for 0.5 miles",
-      "Turn left onto Park Street",
-      "Destination will be on your right",
+      `Starting from ${fromLocation}`,
+      routeSettings.preferWellLit
+        ? "Taking well-lit route via Main Street (recommended)"
+        : "Head north on Main Street toward Oak Avenue",
+      routeSettings.avoidHighways
+        ? "Avoiding highways - using local roads"
+        : "Continue on highway for fastest route",
+      routeSettings.avoidIsolated
+        ? "Route optimized to stay in populated areas"
+        : "Turn right onto Oak Avenue",
+      `Arriving at ${toLocation}`,
     ];
 
+    // Add traffic consideration if enabled
+    if (routeSettings.showTraffic) {
+      mockInstructions.splice(1, 0, "Traffic conditions: Light traffic ahead");
+    }
+
     setRouteInstructions(mockInstructions);
-  }, [fromLocation, toLocation]);
+  }, [fromLocation, toLocation, routeSettings]);
 
   const handleUseCurrentLocation = useCallback(async () => {
     try {
