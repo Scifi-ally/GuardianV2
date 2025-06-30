@@ -211,40 +211,40 @@ function MapComponent({
         switch (style) {
           case "gray":
             return [
-              { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+              { elementType: "geometry", stylers: [{ color: "#f8f9fa" }] },
               { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
               {
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#616161" }],
+                stylers: [{ color: "#495057" }],
               },
               {
                 elementType: "labels.text.stroke",
-                stylers: [{ color: "#f5f5f5" }],
+                stylers: [{ color: "#ffffff" }],
               },
               {
                 featureType: "administrative.land_parcel",
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#bdbdbd" }],
+                stylers: [{ color: "#6c757d" }],
               },
               {
                 featureType: "poi",
                 elementType: "geometry",
-                stylers: [{ color: "#eeeeee" }],
+                stylers: [{ color: "#e9ecef" }],
               },
               {
                 featureType: "poi",
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#757575" }],
+                stylers: [{ color: "#6c757d" }],
               },
               {
                 featureType: "poi.park",
                 elementType: "geometry",
-                stylers: [{ color: "#e5e5e5" }],
+                stylers: [{ color: "#dee2e6" }],
               },
               {
                 featureType: "poi.park",
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#9e9e9e" }],
+                stylers: [{ color: "#6c757d" }],
               },
               {
                 featureType: "road",
@@ -252,44 +252,54 @@ function MapComponent({
                 stylers: [{ color: "#ffffff" }],
               },
               {
+                featureType: "road",
+                elementType: "geometry.stroke",
+                stylers: [{ color: "#dee2e6" }],
+              },
+              {
                 featureType: "road.arterial",
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#757575" }],
+                stylers: [{ color: "#495057" }],
               },
               {
                 featureType: "road.highway",
                 elementType: "geometry",
-                stylers: [{ color: "#dadada" }],
+                stylers: [{ color: "#e9ecef" }],
+              },
+              {
+                featureType: "road.highway",
+                elementType: "geometry.stroke",
+                stylers: [{ color: "#ced4da" }],
               },
               {
                 featureType: "road.highway",
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#616161" }],
+                stylers: [{ color: "#212529" }],
               },
               {
                 featureType: "road.local",
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#9e9e9e" }],
+                stylers: [{ color: "#6c757d" }],
               },
               {
                 featureType: "transit.line",
                 elementType: "geometry",
-                stylers: [{ color: "#e5e5e5" }],
+                stylers: [{ color: "#dee2e6" }],
               },
               {
                 featureType: "transit.station",
                 elementType: "geometry",
-                stylers: [{ color: "#eeeeee" }],
+                stylers: [{ color: "#e9ecef" }],
               },
               {
                 featureType: "water",
                 elementType: "geometry",
-                stylers: [{ color: "#c9c9c9" }],
+                stylers: [{ color: "#adb5bd" }],
               },
               {
                 featureType: "water",
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#9e9e9e" }],
+                stylers: [{ color: "#495057" }],
               },
             ];
           case "satellite":
