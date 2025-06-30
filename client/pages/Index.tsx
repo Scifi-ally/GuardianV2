@@ -257,7 +257,10 @@ export default function Index() {
             )}
           </TabsContent>
 
-          <TabsContent value="settings" className="mt-4 space-y-4">
+          <TabsContent
+            value="settings"
+            className="mt-4 space-y-4 transform transition-all duration-300 ease-out animate-in slide-in-from-left-1"
+          >
             <div className="space-y-4">
               {/* Map Style Settings */}
               <div>
