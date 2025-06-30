@@ -247,87 +247,143 @@ export default function Index() {
           </TabsContent>
 
           <TabsContent value="settings" className="mt-4 space-y-4">
-            <h3 className="text-lg font-semibold">Route Preferences</h3>
+            <div className="space-y-4">
+              {/* Map Style Settings */}
+              <div>
+                <h4 className="text-sm font-medium mb-3">Map Display</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">Map Style</p>
+                      <p className="text-xs text-muted-foreground">
+                        Choose your preferred map appearance
+                      </p>
+                    </div>
+                    <select
+                      value={mapStyle}
+                      onChange={(e) =>
+                        setMapStyle(
+                          e.target.value as "normal" | "gray" | "satellite",
+                        )
+                      }
+                      className="text-sm border rounded-md px-2 py-1 bg-background"
+                    >
+                      <option value="normal">Normal</option>
+                      <option value="gray">Gray</option>
+                      <option value="satellite">Satellite</option>
+                    </select>
+                  </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
-                <div>
-                  <p className="text-sm font-medium">Prefer well-lit paths</p>
-                  <p className="text-xs text-muted-foreground">
-                    Choose routes with better lighting
-                  </p>
+                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">Show Traffic</p>
+                      <p className="text-xs text-muted-foreground">
+                        Display real-time traffic conditions
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={routeSettings.showTraffic}
+                      onChange={(e) =>
+                        setRouteSettings((prev) => ({
+                          ...prev,
+                          showTraffic: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4"
+                    />
+                  </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={routeSettings.preferWellLit}
-                  onChange={(e) =>
-                    setRouteSettings((prev) => ({
-                      ...prev,
-                      preferWellLit: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4"
-                />
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
-                <div>
-                  <p className="text-sm font-medium">Avoid isolated areas</p>
-                  <p className="text-xs text-muted-foreground">
-                    Stay in populated areas when possible
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={routeSettings.avoidIsolated}
-                  onChange={(e) =>
-                    setRouteSettings((prev) => ({
-                      ...prev,
-                      avoidIsolated: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4"
-                />
-              </div>
+              {/* Route Preferences */}
+              <div>
+                <h4 className="text-sm font-medium mb-3">Route Preferences</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">
+                        Prefer well-lit paths
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Choose routes with better lighting
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={routeSettings.preferWellLit}
+                      onChange={(e) =>
+                        setRouteSettings((prev) => ({
+                          ...prev,
+                          preferWellLit: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4"
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
-                <div>
-                  <p className="text-sm font-medium">Avoid highways</p>
-                  <p className="text-xs text-muted-foreground">
-                    Use local roads instead
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={routeSettings.avoidHighways}
-                  onChange={(e) =>
-                    setRouteSettings((prev) => ({
-                      ...prev,
-                      avoidHighways: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4"
-                />
-              </div>
+                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">
+                        Avoid isolated areas
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Stay in populated areas when possible
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={routeSettings.avoidIsolated}
+                      onChange={(e) =>
+                        setRouteSettings((prev) => ({
+                          ...prev,
+                          avoidIsolated: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4"
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
-                <div>
-                  <p className="text-sm font-medium">Avoid tolls</p>
-                  <p className="text-xs text-muted-foreground">
-                    Choose toll-free routes
-                  </p>
+                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">Avoid highways</p>
+                      <p className="text-xs text-muted-foreground">
+                        Use local roads instead
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={routeSettings.avoidHighways}
+                      onChange={(e) =>
+                        setRouteSettings((prev) => ({
+                          ...prev,
+                          avoidHighways: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">Avoid tolls</p>
+                      <p className="text-xs text-muted-foreground">
+                        Choose toll-free routes
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={routeSettings.avoidTolls}
+                      onChange={(e) =>
+                        setRouteSettings((prev) => ({
+                          ...prev,
+                          avoidTolls: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4"
+                    />
+                  </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={routeSettings.avoidTolls}
-                  onChange={(e) =>
-                    setRouteSettings((prev) => ({
-                      ...prev,
-                      avoidTolls: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4"
-                />
               </div>
             </div>
           </TabsContent>
