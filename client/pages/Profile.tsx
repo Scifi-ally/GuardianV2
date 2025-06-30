@@ -181,16 +181,6 @@ export default function Profile() {
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
-                  <Button
-                    onClick={handleRegenerateKey}
-                    variant="outline"
-                    size="icon"
-                    disabled={regenerating || !guardianKey}
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 ${regenerating ? "animate-spin" : ""}`}
-                    />
-                  </Button>
                 </>
               )}
             </div>
