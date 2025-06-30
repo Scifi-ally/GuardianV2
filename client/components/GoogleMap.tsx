@@ -16,6 +16,8 @@ interface GoogleMapProps {
     location?: { lat: number; lng: number };
   }>;
   onLocationUpdate?: (location: { lat: number; lng: number }) => void;
+  mapStyle?: "normal" | "gray" | "satellite";
+  showTraffic?: boolean;
   className?: string;
 }
 
