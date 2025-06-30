@@ -338,11 +338,10 @@ function MapComponent({
 }
 
 export function GoogleMap(props: GoogleMapProps) {
-  const [useFallback, setUseFallback] = useState(true); // Start with fallback due to billing error
+  const [useFallback, setUseFallback] = useState(false); // Enable Google Maps by default
   const [showTransition, setShowTransition] = useState(false);
 
-  // Immediately use MockMap due to billing restrictions
-  // This can be changed back to false when billing is enabled
+  // Use real Google Maps with provided API key
   if (useFallback) {
     return (
       <div className="relative w-full h-full">
