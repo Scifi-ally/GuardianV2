@@ -81,8 +81,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setAuthAction("Generating your Guardian key...");
 
-    // Generate unique guardian key
-    const guardianKey = generateGuardianKey();
+    // Generate unique guardian key using EmergencyKeyService
+    const keyResult = await EmergencyKeyService.createGuardianKey(
+      user.uid,
+      name,
+      user.email!,
+    );
+
+    const guardianKey = keyResult.guardianKey || "TEMP-KEY";
 
     setAuthAction("Finalizing setup...");
 
