@@ -372,7 +372,7 @@ function MapComponent({
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
             scale: 6,
-            fillColor: "#10b981",
+            fillColor: "#6c757d",
             fillOpacity: 1,
             strokeColor: "#ffffff",
             strokeWeight: 2,
