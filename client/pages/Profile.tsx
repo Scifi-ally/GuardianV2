@@ -62,31 +62,6 @@ export default function Profile() {
     }
   };
 
-  const handleRegenerateKey = async () => {
-    if (!currentUser) return;
-
-    setRegenerating(true);
-    try {
-      const result = await EmergencyKeyService.regenerateGuardianKey(
-        currentUser.uid,
-        userProfile?.displayName || currentUser.displayName || "Guardian User",
-        userProfile?.email || currentUser.email || "",
-      );
-
-      if (result.success && result.guardianKey) {
-        setGuardianKey(result.guardianKey);
-        toast.success("New guardian key generated!");
-      } else {
-        toast.error(result.error || "Failed to regenerate key");
-      }
-    } catch (error) {
-      console.error("Error regenerating key:", error);
-      toast.error("Failed to regenerate key");
-    } finally {
-      setRegenerating(false);
-    }
-  };
-
   const handleSOSPress = () => {
     console.log("SOS triggered from profile");
   };
