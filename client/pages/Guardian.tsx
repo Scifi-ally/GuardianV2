@@ -338,33 +338,61 @@ export default function Guardian() {
               </CardContent>
             </Card>
 
-            {/* Safety Overview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Safety Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {emergencyContacts.length}
-                    </div>
-                    <div className="text-sm text-gray-600">Contacts</div>
+            {/* Guardian Key Card */}
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+              <CardContent className="p-6">
+                <div className="text-center space-y-4">
+                  <div className="p-3 bg-primary/10 rounded-xl w-fit mx-auto">
+                    <Shield className="h-8 w-8 text-primary" />
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {safetyStatus === "emergency" ? "1" : "0"}
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                      Your Guardian Key
+                    </h3>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-primary/20">
+                      <div className="text-3xl font-mono font-bold text-primary tracking-wider">
+                        {userProfile?.guardianKey || "LOADING..."}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">Active Alerts</div>
+                    <p className="text-sm text-gray-600 mt-3">
+                      Share this key with trusted contacts so they can connect
+                      to your safety network
+                    </p>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {Math.floor(Math.random() * 50) + 10}
-                    </div>
-                    <div className="text-sm text-gray-600">Safe Trips</div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (userProfile?.guardianKey) {
+                          navigator.clipboard.writeText(
+                            userProfile.guardianKey,
+                          );
+                          toast({
+                            description: "Guardian Key copied to clipboard",
+                          });
+                        }
+                      }}
+                      className="flex-1"
+                    >
+                      Copy Key
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (userProfile?.guardianKey && navigator.share) {
+                          navigator.share({
+                            title: "My Guardian Key",
+                            text: `My Guardian safety key is: ${userProfile.guardianKey}`,
+                          });
+                        }
+                      }}
+                      className="flex-1"
+                    >
+                      <Share className="h-4 w-4 mr-1" />
+                      Share
+                    </Button>
                   </div>
                 </div>
               </CardContent>
