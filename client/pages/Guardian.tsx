@@ -225,25 +225,10 @@ export default function Guardian() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div
-                        className={cn(
-                          "w-3 h-3 rounded-full",
-                          locationSharing ? "bg-green-500" : "bg-gray-400",
-                        )}
-                      />
+                      <div className="w-3 h-3 bg-green-500 rounded-full" />
                       <span className="text-sm font-medium">
-                        {locationSharing
-                          ? "Live Tracking Active"
-                          : "Tracking Paused"}
+                        Live Tracking Active
                       </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={toggleLocationSharing}
-                        className="h-6 px-2 text-xs"
-                      >
-                        {locationSharing ? "Pause" : "Start"}
-                      </Button>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="text-xs">

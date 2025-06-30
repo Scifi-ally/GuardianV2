@@ -72,7 +72,7 @@ function generateGuardianKey(): string {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<GuardianUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false for immediate access
   const [authAction, setAuthAction] = useState<string>("");
 
   async function signup(email: string, password: string, name: string) {
@@ -221,56 +221,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const guardianUser = user as GuardianUser;
-        setCurrentUser(guardianUser);
-        await loadUserProfile(user.uid);
-      } else {
-        // Create demo user for development
-        const demoUser = {
-          uid: "demo-user-123",
-          email: "demo@guardian.app",
-          displayName: "Demo User",
-          emailVerified: true,
-        } as GuardianUser;
+    // Initialize demo user immediately
+    const demoUser = {
+      uid: "demo-user-123",
+      email: "demo@guardian.app",
+      displayName: "Demo User",
+      emailVerified: true,
+    } as GuardianUser;
 
-        const demoProfile: UserProfile = {
-          uid: "demo-user-123",
-          email: "demo@guardian.app",
-          displayName: "Demo User",
+    const demoProfile: UserProfile = {
+      uid: "demo-user-123",
+      email: "demo@guardian.app",
+      displayName: "Demo User",
+      guardianKey: "DEMO1234",
+      emergencyContacts: [
+        {
+          id: "contact-1",
           guardianKey: "DEMO1234",
-          emergencyContacts: [
-            {
-              id: "contact-1",
-              guardianKey: "DEMO1234",
-              name: "John Doe",
-              phone: "+1234567890",
-              priority: 1,
-              addedAt: new Date(),
-              isActive: true,
-            },
-            {
-              id: "contact-2",
-              guardianKey: "DEMO1234",
-              name: "Jane Smith",
-              phone: "+0987654321",
-              priority: 2,
-              addedAt: new Date(),
-              isActive: true,
-            },
-          ],
-          createdAt: new Date(),
-          lastActive: new Date(),
-        };
+          name: "John Doe",
+          phone: "+1234567890",
+          priority: 1,
+          addedAt: new Date(),
+          isActive: true,
+        },
+        {
+          id: "contact-2",
+          guardianKey: "DEMO1234",
+          name: "Jane Smith",
+          phone: "+0987654321",
+          priority: 2,
+          addedAt: new Date(),
+          isActive: true,
+        },
+      ],
+      createdAt: new Date(),
+      lastActive: new Date(),
+    };
 
-        setCurrentUser(demoUser);
-        setUserProfile(demoProfile);
-      }
-      setLoading(false);
-    });
-
-    return unsubscribe;
+    setCurrentUser(demoUser);
+    setUserProfile(demoProfile);
+    setLoading(false);
   }, []);
 
   const value: AuthContextType = {
