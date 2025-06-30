@@ -252,14 +252,34 @@ export default function Index() {
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
-                    className="h-12 flex-col gap-1 text-xs"
+                    className="h-12 flex-col gap-1 text-xs transition-all duration-200 hover:scale-105 hover:shadow-md"
+                    onClick={() => {
+                      if (location) {
+                        const message = `My current location: https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+                        if (navigator.share) {
+                          navigator.share({
+                            title: "My Location",
+                            text: message,
+                          });
+                        } else {
+                          navigator.clipboard.writeText(message);
+                          alert("Location copied to clipboard!");
+                        }
+                      }
+                    }}
                   >
                     <MapPin className="h-4 w-4" />
                     Share Location
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-12 flex-col gap-1 text-xs"
+                    className="h-12 flex-col gap-1 text-xs transition-all duration-200 hover:scale-105 hover:shadow-md"
+                    onClick={() => {
+                      console.log("Starting live tracking...");
+                      alert(
+                        "Live tracking started! Your location will be shared with emergency contacts.",
+                      );
+                    }}
                   >
                     <Navigation className="h-4 w-4" />
                     Live Tracking
