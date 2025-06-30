@@ -17,7 +17,7 @@ export function SlideUpPanel({
   minHeight = 200,
   maxHeight = 600,
   initialHeight = 300,
-  bottomOffset = 80, // Bottom navigation height
+  bottomOffset = 96, // Bottom navigation height
   collapsedHeight = 40, // Height when collapsed (just handle visible)
 }: SlideUpPanelProps) {
   const [height, setHeight] = useState(collapsedHeight);
@@ -135,7 +135,7 @@ export function SlideUpPanel({
         className,
       )}
       style={{
-        bottom: bottomOffset - 2, // Slight overlap to remove gap
+        bottom: bottomOffset,
         height: height,
         transform: isDragging ? "scale(1.01)" : "scale(1)",
       }}

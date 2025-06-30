@@ -76,6 +76,29 @@ export default function Index() {
       <NavHeader />
 
       <main className="container px-4 py-6 space-y-8 pb-32">
+        {/* Status Bar */}
+        <AnimatedCard direction="down" delay={100}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Badge className={statusColors[safetyStatus]}>
+                <Activity className="h-3 w-3 mr-1" />
+                {statusLabels[safetyStatus]}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                Last seen: {lastLocation}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="transition-all duration-200 hover:scale-105"
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Check-in
+            </Button>
+          </div>
+        </AnimatedCard>
+
         {/* Welcome Section */}
         <AnimatedCard direction="fade" delay={200}>
           <Card className="text-center py-8 bg-gradient-to-br from-background to-muted/10 border-0 shadow-sm">

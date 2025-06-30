@@ -27,6 +27,7 @@ import {
 } from "@/components/SlidingPanel";
 import { EmergencyDetection } from "@/components/EmergencyDetection";
 import { SafetyMap } from "@/components/SafetyMap";
+import { GoogleMap } from "@/components/GoogleMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { SimpleBottomNav } from "@/components/SimpleBottomNav";
 import { EnhancedSOSButton } from "@/components/EnhancedSOSButton";
@@ -216,20 +217,22 @@ export default function Guardian() {
                 activeTab === "map" ? "blur-0" : "blur-sm",
               )}
             >
-              {/* Interactive Safety Map Full Screen */}
+              {/* Interactive Google Map Full Screen */}
               <div className="absolute inset-0">
-                <SafetyMap
-                  userLocation={
-                    location
-                      ? { lat: location.latitude, lng: location.longitude }
-                      : undefined
-                  }
-                  showSafeZones={true}
-                  showEmergencyServices={true}
-                  onLocationSelect={(location) => {
-                    console.log("Location selected:", location);
+                <GoogleMap
+                  location={location}
+                  emergencyContacts={emergencyContacts.map((contact) => ({
+                    id: contact.id,
+                    name: contact.name,
+                    guardianKey: contact.guardianKey,
+                    location: {
+                      lat: 37.7749 + Math.random() * 0.01,
+                      lng: -122.4194 + Math.random() * 0.01,
+                    }, // Mock locations for demo
+                  }))}
+                  onLocationUpdate={(newLocation) => {
+                    console.log("Location updated:", newLocation);
                   }}
-                  className="rounded-none border-0 h-full w-full"
                 />
               </div>
               {/* Map loading overlay */}
@@ -496,7 +499,7 @@ export default function Guardian() {
           minHeight={220}
           maxHeight={600}
           initialHeight={350}
-          bottomOffset={78}
+          bottomOffset={100}
         >
           {/* Live Tracking Status */}
           <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/10 to-safe/10 rounded-xl border border-primary/20">
