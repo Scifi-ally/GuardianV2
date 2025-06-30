@@ -138,76 +138,126 @@ export default function Index() {
         />
       </div>
 
-      {/* Slide Up Panel for Navigation Instructions and Settings */}
+      {/* Slide Up Panel with Tabs for Navigation, Contacts, and Settings */}
       <SlideUpPanel
-        minHeight={180}
-        maxHeight={500}
-        initialHeight={280}
+        minHeight={200}
+        maxHeight={600}
+        initialHeight={320}
         bottomOffset={120}
         collapsedHeight={60}
       >
-        {isNavigating && routeInstructions.length > 0 ? (
-          // Navigation Instructions
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Navigation className="h-5 w-5 text-primary" />
-                Turn-by-Turn Directions
-              </h3>
-              <Badge className="bg-primary/20 text-primary">Active</Badge>
-            </div>
+        <Tabs
+          defaultValue={isNavigating ? "navigation" : "settings"}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="navigation" className="text-xs">
+              <Navigation className="h-4 w-4 mr-1" />
+              Routes
+            </TabsTrigger>
+            <TabsTrigger value="contacts" className="text-xs">
+              <Users className="h-4 w-4 mr-1" />
+              Contacts
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs">
+              <Settings className="h-4 w-4 mr-1" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
 
-            <div className="space-y-3">
-              {routeInstructions.map((instruction, index) => (
-                <Card
-                  key={index}
-                  className={cn(
-                    "transition-all duration-200",
-                    index === 0 ? "border-primary bg-primary/5" : "bg-muted/30",
-                  )}
+          <TabsContent value="navigation" className="mt-4 space-y-4">
+            {isNavigating && routeInstructions.length > 0 ? (
+              // Navigation Instructions
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Navigation className="h-5 w-5 text-primary" />
+                    Turn-by-Turn Directions
+                  </h3>
+                  <Badge className="bg-primary/20 text-primary">Active</Badge>
+                </div>
+
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  {routeInstructions.map((instruction, index) => (
+                    <Card
+                      key={index}
+                      className={cn(
+                        "transition-all duration-200",
+                        index === 0
+                          ? "border-primary bg-primary/5"
+                          : "bg-muted/30",
+                      )}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                              index === 0
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground",
+                            )}
+                          >
+                            {index + 1}
+                          </div>
+                          <p
+                            className={cn(
+                              "text-sm flex-1",
+                              index === 0
+                                ? "font-medium text-primary"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {instruction}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsNavigating(false);
+                    setRouteInstructions([]);
+                  }}
+                  className="w-full"
                 >
-                  <CardContent className="p-3">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                          index === 0
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {index + 1}
-                      </div>
-                      <p
-                        className={cn(
-                          "text-sm flex-1",
-                          index === 0
-                            ? "font-medium text-primary"
-                            : "text-muted-foreground",
-                        )}
-                      >
-                        {instruction}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  End Navigation
+                </Button>
+              </div>
+            ) : (
+              // Route Planning
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Route Planning</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-12 flex-col gap-1 text-xs"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Share Location
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-12 flex-col gap-1 text-xs"
+                  >
+                    <Navigation className="h-4 w-4" />
+                    Live Tracking
+                  </Button>
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsNavigating(false);
-                setRouteInstructions([]);
-              }}
-              className="w-full"
-            >
-              End Navigation
-            </Button>
-          </div>
-        ) : (
-          // Route Settings and Options
-          <div className="space-y-4">
+          <TabsContent value="contacts" className="mt-4">
+            <div className="space-y-4">
+              <EmergencyContactManager className="border-0 shadow-none p-0" />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-4 space-y-4">
             <h3 className="text-lg font-semibold">Route Preferences</h3>
 
             <div className="space-y-3">
@@ -291,28 +341,8 @@ export default function Index() {
                 />
               </div>
             </div>
-
-            <div className="pt-4">
-              <h4 className="text-sm font-medium mb-3">Quick Actions</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  className="h-12 flex-col gap-1 text-xs"
-                >
-                  <MapPin className="h-4 w-4" />
-                  Share Location
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-12 flex-col gap-1 text-xs"
-                >
-                  <Navigation className="h-4 w-4" />
-                  Live Tracking
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </SlideUpPanel>
 
       {/* Magic Navbar */}
