@@ -1,256 +1,313 @@
-import { useState } from "react";
-import {
-  MapPin,
-  Navigation,
-  Users,
-  Settings,
-  Activity,
-  Clock,
-  Shield,
-  Heart,
-} from "lucide-react";
-import { Navigation as NavHeader } from "@/components/Navigation";
+import { useState, useCallback } from "react";
+import { Navigation, MapPin, Route, ArrowRight } from "lucide-react";
+import { GoogleMap } from "@/components/GoogleMap";
+import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
-import { ScrollProgress } from "@/components/ScrollProgress";
-import { AnimatedCard } from "@/components/AnimatedCard";
-import { LoadingAnimation, CardSkeleton } from "@/components/LoadingAnimation";
-import { SafetyFeatureCard } from "@/components/SafetyFeatureCard";
-import { QuickActions } from "@/components/QuickActions";
+import { useGeolocation } from "@/hooks/use-device-apis";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function Index() {
-  const [lastLocation, setLastLocation] = useState("Downtown Coffee Shop");
-  const [safetyStatus, setSafetyStatus] = useState<
-    "safe" | "alert" | "emergency"
-  >("safe");
-  const [isLoading, setIsLoading] = useState(true);
-
-  useState(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
+  const [fromLocation, setFromLocation] = useState("");
+  const [toLocation, setToLocation] = useState("");
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [routeInstructions, setRouteInstructions] = useState<string[]>([]);
+  const [routeSettings, setRouteSettings] = useState({
+    avoidTolls: false,
+    avoidHighways: false,
+    preferWellLit: true,
+    avoidIsolated: true,
   });
 
-  const handleEmergencyTrigger = () => {
-    setSafetyStatus("emergency");
-    console.log("Emergency triggered!");
-    setTimeout(() => setSafetyStatus("safe"), 5000);
-  };
+  const { location, getCurrentLocation } = useGeolocation();
+  const { userProfile } = useAuth();
 
-  const handleMapPress = () => {
-    console.log("Map pressed");
-  };
+  const emergencyContacts = userProfile?.emergencyContacts || [];
 
-  const handleProfilePress = () => {
-    console.log("Profile pressed");
-  };
+  const handleSearch = useCallback(async () => {
+    if (!fromLocation || !toLocation) return;
 
-  const statusColors = {
-    safe: "bg-safe text-safe-foreground",
-    alert: "bg-warning text-warning-foreground",
-    emergency: "bg-emergency text-emergency-foreground",
-  };
+    setIsNavigating(true);
 
-  const statusLabels = {
-    safe: "Safe",
-    alert: "On Alert",
-    emergency: "Emergency Active",
-  };
+    // Mock route instructions - in real app would use Google Directions API
+    const mockInstructions = [
+      "Head north on Main Street toward Oak Avenue",
+      "Turn right onto Oak Avenue",
+      "Continue straight for 0.5 miles",
+      "Turn left onto Park Street",
+      "Destination will be on your right",
+    ];
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <LoadingAnimation size="lg" />
-          <p className="text-muted-foreground">Loading Guardian...</p>
-        </div>
-      </div>
-    );
-  }
+    setRouteInstructions(mockInstructions);
+  }, [fromLocation, toLocation]);
+
+  const handleUseCurrentLocation = useCallback(async () => {
+    try {
+      const currentLoc = await getCurrentLocation();
+      setFromLocation(
+        `${currentLoc.latitude.toFixed(4)}, ${currentLoc.longitude.toFixed(4)}`,
+      );
+    } catch (error) {
+      console.error("Error getting current location:", error);
+    }
+  }, [getCurrentLocation]);
+
+  const handleSOSPress = useCallback(() => {
+    console.log("SOS activated");
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
-      <ScrollProgress />
-      <NavHeader />
+      {/* To/From Section at Top */}
+      <div className="relative z-20 bg-background/95 backdrop-blur-lg border-b border-border/50 p-4">
+        <div className="space-y-4">
+          <h1 className="text-lg font-semibold text-center">Safe Navigation</h1>
 
-      <main className="container px-4 py-6 space-y-8 pb-32">
-        {/* Status Bar */}
-        <AnimatedCard direction="down" delay={100}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Badge className={statusColors[safetyStatus]}>
-                <Activity className="h-3 w-3 mr-1" />
-                {statusLabels[safetyStatus]}
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                Last seen: {lastLocation}
-              </span>
+          <div className="space-y-3">
+            {/* From Input */}
+            <div className="relative">
+              <Input
+                placeholder="From location"
+                value={fromLocation}
+                onChange={(e) => setFromLocation(e.target.value)}
+                className="pr-10"
+              />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleUseCurrentLocation}
+                className="absolute right-1 top-1 h-8 w-8 p-0"
+              >
+                <MapPin className="h-4 w-4" />
+              </Button>
             </div>
+
+            {/* To Input */}
+            <div className="relative">
+              <Input
+                placeholder="To destination"
+                value={toLocation}
+                onChange={(e) => setToLocation(e.target.value)}
+                className="pr-10"
+              />
+              <ArrowRight className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+            </div>
+
+            {/* Search Button */}
             <Button
-              variant="ghost"
-              size="sm"
-              className="transition-all duration-200 hover:scale-105"
+              onClick={handleSearch}
+              className="w-full"
+              disabled={!fromLocation || !toLocation}
             >
-              <Clock className="h-4 w-4 mr-2" />
-              Check-in
+              <Route className="h-4 w-4 mr-2" />
+              Find Safe Route
             </Button>
           </div>
-        </AnimatedCard>
+        </div>
+      </div>
 
-        {/* Welcome Section */}
-        <AnimatedCard direction="fade" delay={200}>
-          <Card className="text-center py-8 bg-gradient-to-br from-background to-muted/10 border-0 shadow-sm">
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
-                  <Shield className="h-12 w-12 text-primary" />
-                </div>
+      {/* Google Map */}
+      <div className="absolute inset-0 top-0 z-10">
+        <GoogleMap
+          location={location}
+          emergencyContacts={emergencyContacts.map((contact) => ({
+            id: contact.id,
+            name: contact.name,
+            guardianKey: contact.guardianKey,
+            location: {
+              lat: 37.7749 + Math.random() * 0.01,
+              lng: -122.4194 + Math.random() * 0.01,
+            },
+          }))}
+          onLocationUpdate={(newLocation) => {
+            console.log("Location updated:", newLocation);
+          }}
+        />
+      </div>
+
+      {/* Slide Up Panel for Navigation Instructions and Settings */}
+      <SlideUpPanel
+        minHeight={180}
+        maxHeight={500}
+        initialHeight={280}
+        bottomOffset={100}
+        collapsedHeight={60}
+      >
+        {isNavigating && routeInstructions.length > 0 ? (
+          // Navigation Instructions
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Navigation className="h-5 w-5 text-primary" />
+                Turn-by-Turn Directions
+              </h3>
+              <Badge className="bg-primary/20 text-primary">Active</Badge>
+            </div>
+
+            <div className="space-y-3">
+              {routeInstructions.map((instruction, index) => (
+                <Card
+                  key={index}
+                  className={cn(
+                    "transition-all duration-200",
+                    index === 0 ? "border-primary bg-primary/5" : "bg-muted/30",
+                  )}
+                >
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={cn(
+                          "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                          index === 0
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {index + 1}
+                      </div>
+                      <p
+                        className={cn(
+                          "text-sm flex-1",
+                          index === 0
+                            ? "font-medium text-primary"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {instruction}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsNavigating(false);
+                setRouteInstructions([]);
+              }}
+              className="w-full"
+            >
+              End Navigation
+            </Button>
+          </div>
+        ) : (
+          // Route Settings and Options
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Route Preferences</h3>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
                 <div>
-                  <h2 className="text-3xl font-bold mb-2">Stay Safe</h2>
-                  <p className="text-muted-foreground max-w-md mx-auto text-lg">
-                    Your personal safety companion. Use the SOS button below for
-                    emergencies.
+                  <p className="text-sm font-medium">Prefer well-lit paths</p>
+                  <p className="text-xs text-muted-foreground">
+                    Choose routes with better lighting
                   </p>
                 </div>
+                <input
+                  type="checkbox"
+                  checked={routeSettings.preferWellLit}
+                  onChange={(e) =>
+                    setRouteSettings((prev) => ({
+                      ...prev,
+                      preferWellLit: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4"
+                />
               </div>
 
-              <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2 bg-safe/10 px-3 py-2 rounded-full">
-                  <Shield className="h-4 w-4 text-safe" />
-                  <span>Secure</span>
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                <div>
+                  <p className="text-sm font-medium">Avoid isolated areas</p>
+                  <p className="text-xs text-muted-foreground">
+                    Stay in populated areas when possible
+                  </p>
                 </div>
-                <div className="flex items-center gap-2 bg-primary/10 px-3 py-2 rounded-full">
-                  <Heart className="h-4 w-4 text-primary" />
-                  <span>Trusted</span>
-                </div>
+                <input
+                  type="checkbox"
+                  checked={routeSettings.avoidIsolated}
+                  onChange={(e) =>
+                    setRouteSettings((prev) => ({
+                      ...prev,
+                      avoidIsolated: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4"
+                />
               </div>
-            </CardContent>
-          </Card>
-        </AnimatedCard>
 
-        {/* Quick Actions */}
-        <AnimatedCard direction="up" delay={300}>
-          <Card className="transition-all duration-300 hover:shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <QuickActions />
-            </CardContent>
-          </Card>
-        </AnimatedCard>
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                <div>
+                  <p className="text-sm font-medium">Avoid highways</p>
+                  <p className="text-xs text-muted-foreground">
+                    Use local roads instead
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={routeSettings.avoidHighways}
+                  onChange={(e) =>
+                    setRouteSettings((prev) => ({
+                      ...prev,
+                      avoidHighways: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4"
+                />
+              </div>
 
-        {/* Safety Features */}
-        <div>
-          <AnimatedCard direction="up" delay={400}>
-            <h3 className="text-xl font-semibold mb-6">Safety Features</h3>
-          </AnimatedCard>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <AnimatedCard direction="up" delay={500}>
-              <SafetyFeatureCard
-                title="Share Location"
-                description="Share your real-time location with trusted contacts via secure link"
-                icon={MapPin}
-                buttonText="Share Now"
-                variant="safe"
-                onClick={() => console.log("Share location")}
-                className="transition-all duration-300 hover:scale-105"
-              />
-            </AnimatedCard>
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
+                <div>
+                  <p className="text-sm font-medium">Avoid tolls</p>
+                  <p className="text-xs text-muted-foreground">
+                    Choose toll-free routes
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={routeSettings.avoidTolls}
+                  onChange={(e) =>
+                    setRouteSettings((prev) => ({
+                      ...prev,
+                      avoidTolls: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4"
+                />
+              </div>
+            </div>
 
-            <AnimatedCard direction="up" delay={600}>
-              <SafetyFeatureCard
-                title="Safe Route"
-                description="Get navigation with safety-optimized routes for walking or driving"
-                icon={Navigation}
-                buttonText="Plan Route"
-                variant="primary"
-                onClick={() => console.log("Plan route")}
-                className="transition-all duration-300 hover:scale-105"
-              />
-            </AnimatedCard>
-
-            <AnimatedCard direction="up" delay={700}>
-              <SafetyFeatureCard
-                title="Emergency Contacts"
-                description="Manage your trusted contacts who will be notified during emergencies"
-                icon={Users}
-                buttonText="Manage"
-                variant="default"
-                onClick={() => console.log("Manage contacts")}
-                className="transition-all duration-300 hover:scale-105"
-              />
-            </AnimatedCard>
+            <div className="pt-4">
+              <h4 className="text-sm font-medium mb-3">Quick Actions</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="h-12 flex-col gap-1 text-xs"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Share Location
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-12 flex-col gap-1 text-xs"
+                >
+                  <Navigation className="h-4 w-4" />
+                  Live Tracking
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+      </SlideUpPanel>
 
-        {/* Recent Activity */}
-        <AnimatedCard direction="up" delay={800}>
-          <Card className="transition-all duration-300 hover:shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between py-3 transition-all duration-200 hover:bg-muted/50 rounded-lg px-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-safe/10">
-                      <MapPin className="h-4 w-4 text-safe" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Location shared</p>
-                      <p className="text-xs text-muted-foreground">
-                        2 hours ago
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    Safe
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between py-3 transition-all duration-200 hover:bg-muted/50 rounded-lg px-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-primary/10">
-                      <Navigation className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        Safe route completed
-                      </p>
-                      <p className="text-xs text-muted-foreground">Yesterday</p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    Complete
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between py-3 transition-all duration-200 hover:bg-muted/50 rounded-lg px-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-muted">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Contact added</p>
-                      <p className="text-xs text-muted-foreground">
-                        3 days ago
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    Added
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </AnimatedCard>
-      </main>
-
-      <MagicNavbar onSOSPress={handleEmergencyTrigger} />
+      {/* Magic Navbar */}
+      <MagicNavbar onSOSPress={handleSOSPress} />
     </div>
   );
 }
