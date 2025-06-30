@@ -1,54 +1,29 @@
-import { useEffect, useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  Circle,
-  useMap,
-} from "react-leaflet";
-import L from "leaflet";
+import { useEffect, useState, useRef } from "react";
+import { Loader } from "@googlemaps/js-api-loader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Navigation, Shield, AlertTriangle, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  MapPin,
+  Navigation,
+  Shield,
+  AlertTriangle,
+  Users,
+  Plus,
+  Minus,
+  Locate,
+  Route,
+  X,
+  Search,
+  Clock,
+  Car,
+  Navigation2,
+  Layers,
+  Eye,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Fix for default markers in React-Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
-
-// Custom icons
-const safeZoneIcon = new L.Icon({
-  iconUrl:
-    "data:image/svg+xml;base64," +
-    btoa(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#22c55e" width="24" height="24">
-      <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 22L10.91 9.74L2 9L10.91 8.26L12 2Z"/>
-    </svg>
-  `),
-  iconSize: [30, 30],
-  iconAnchor: [15, 15],
-});
-
-const emergencyIcon = new L.Icon({
-  iconUrl:
-    "data:image/svg+xml;base64," +
-    btoa(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ef4444" width="24" height="24">
-      <path d="M1 21H23L12 2L1 21Z M13 18H11V16H13V18Z M13 14H11V10H13V14Z"/>
-    </svg>
-  `),
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
-});
+const GOOGLE_MAPS_API_KEY = "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
 
 interface SafetyLocation {
   id: string;
@@ -66,16 +41,8 @@ interface SafetyMapProps {
   showEmergencyServices?: boolean;
   onLocationSelect?: (location: SafetyLocation) => void;
   className?: string;
-}
-
-function MapController({ center }: { center: [number, number] }) {
-  const map = useMap();
-
-  useEffect(() => {
-    map.setView(center, map.getZoom());
-  }, [center, map]);
-
-  return null;
+  emergencyMode?: boolean;
+  destinationLocation?: { lat: number; lng: number };
 }
 
 export function SafetyMap({
@@ -85,25 +52,194 @@ export function SafetyMap({
   showEmergencyServices = true,
   onLocationSelect,
   className,
+  emergencyMode = false,
+  destinationLocation,
 }: SafetyMapProps) {
-  const [currentLocation, setCurrentLocation] = useState<[number, number]>([
-    userLocation?.lat || 28.6139, // Default to New Delhi
-    userLocation?.lng || 77.209,
-  ]);
-  const [mapReady, setMapReady] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [directionsService, setDirectionsService] =
+    useState<google.maps.DirectionsService | null>(null);
+  const [directionsRenderer, setDirectionsRenderer] =
+    useState<google.maps.DirectionsRenderer | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lng: number;
+  }>({
+    lat: userLocation?.lat || 28.6139,
+    lng: userLocation?.lng || 77.209,
+  });
+  const [fromLocation, setFromLocation] = useState("");
+  const [toLocation, setToLocation] = useState("");
+  const [showRouting, setShowRouting] = useState(false);
+  const [travelMode, setTravelMode] = useState<string>("DRIVING");
+  const [routeInfo, setRouteInfo] = useState<{
+    duration: string;
+    distance: string;
+  } | null>(null);
+  const [zoom, setZoom] = useState(15);
+  const [showTraffic, setShowTraffic] = useState(false);
+  const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
+  const markersRef = useRef<google.maps.Marker[]>([]);
 
+  // Load Google Maps
   useEffect(() => {
-    if (userLocation) {
-      setCurrentLocation([userLocation.lat, userLocation.lng]);
-    }
-  }, [userLocation]);
+    const loader = new Loader({
+      apiKey: GOOGLE_MAPS_API_KEY,
+      version: "weekly",
+      libraries: ["places", "geometry"],
+    });
 
-  const handleGetLocation = () => {
+    loader
+      .load()
+      .then(() => {
+        setIsLoaded(true);
+      })
+      .catch(console.error);
+  }, []);
+
+  // Initialize map with white background and better styling
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current || typeof google === "undefined") return;
+
+    const mapInstance = new google.maps.Map(mapRef.current, {
+      center: currentLocation,
+      zoom: zoom,
+      mapTypeId: mapType,
+      disableDefaultUI: true,
+      backgroundColor: "#ffffff",
+      styles: [
+        {
+          featureType: "all",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#000000" }],
+        },
+        {
+          featureType: "all",
+          elementType: "labels.text.stroke",
+          stylers: [{ color: "#ffffff" }, { weight: 2 }],
+        },
+      ],
+      gestureHandling: "greedy",
+    });
+
+    const dirService = new google.maps.DirectionsService();
+    const dirRenderer = new google.maps.DirectionsRenderer({
+      suppressMarkers: false,
+      polylineOptions: {
+        strokeColor: emergencyMode ? "#ef4444" : "#22c55e",
+        strokeWeight: 6,
+        strokeOpacity: 0.8,
+      },
+    });
+
+    dirRenderer.setMap(mapInstance);
+
+    // Initialize traffic layer
+    const trafficLayer = new google.maps.TrafficLayer();
+    trafficLayerRef.current = trafficLayer;
+
+    // Custom zoom controls
+    mapInstance.addListener("zoom_changed", () => {
+      setZoom(mapInstance.getZoom() || 15);
+    });
+
+    setMap(mapInstance);
+    setDirectionsService(dirService);
+    setDirectionsRenderer(dirRenderer);
+  }, [isLoaded, currentLocation, emergencyMode, zoom, mapType]);
+
+  // Handle traffic layer toggle
+  const toggleTraffic = () => {
+    if (!map || !trafficLayerRef.current) return;
+
+    if (showTraffic) {
+      trafficLayerRef.current.setMap(null);
+    } else {
+      trafficLayerRef.current.setMap(map);
+    }
+    setShowTraffic(!showTraffic);
+  };
+
+  // Handle map type toggle
+  const toggleSatellite = () => {
+    if (!map) return;
+
+    const newType = mapType === "roadmap" ? "satellite" : "roadmap";
+    setMapType(newType);
+    map.setMapTypeId(newType);
+  };
+
+  // Expose functions globally for SlideUpPanel controls
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.guardian_toggleTraffic = toggleTraffic;
+      window.guardian_toggleSatellite = toggleSatellite;
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        delete window.guardian_toggleTraffic;
+        delete window.guardian_toggleSatellite;
+      }
+    };
+  }, [map, showTraffic, mapType]);
+
+  // Handle routing
+  const calculateRoute = async () => {
+    if (
+      !directionsService ||
+      !directionsRenderer ||
+      !fromLocation ||
+      !toLocation ||
+      !isLoaded ||
+      typeof google === "undefined"
+    )
+      return;
+
+    const googleTravelMode =
+      travelMode === "DRIVING"
+        ? google.maps.TravelMode.DRIVING
+        : travelMode === "WALKING"
+          ? google.maps.TravelMode.WALKING
+          : travelMode === "TRANSIT"
+            ? google.maps.TravelMode.TRANSIT
+            : google.maps.TravelMode.DRIVING;
+
+    const request: google.maps.DirectionsRequest = {
+      origin: fromLocation,
+      destination: toLocation,
+      travelMode: googleTravelMode,
+      avoidHighways: false,
+      avoidTolls: false,
+    };
+
+    directionsService.route(request, (result, status) => {
+      if (status === "OK" && result) {
+        directionsRenderer.setDirections(result);
+        const route = result.routes[0];
+        const leg = route.legs[0];
+        setRouteInfo({
+          duration: leg.duration?.text || "",
+          distance: leg.distance?.text || "",
+        });
+      } else {
+        console.error("Directions request failed:", status);
+      }
+    });
+  };
+
+  const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setCurrentLocation([latitude, longitude]);
+          const newLocation = { lat: latitude, lng: longitude };
+          setCurrentLocation(newLocation);
+          if (map) {
+            map.setCenter(newLocation);
+          }
         },
         (error) => {
           console.error("Error getting location:", error);
@@ -112,77 +248,220 @@ export function SafetyMap({
     }
   };
 
-  const mockSafetyLocations: SafetyLocation[] = [
-    {
-      id: "police1",
-      name: "Police Station",
-      lat: currentLocation[0] + 0.01,
-      lng: currentLocation[1] + 0.01,
-      type: "police",
-    },
-    {
-      id: "hospital1",
-      name: "General Hospital",
-      lat: currentLocation[0] - 0.01,
-      lng: currentLocation[1] + 0.015,
-      type: "hospital",
-    },
-    {
-      id: "safe1",
-      name: "Safe Zone - Shopping Mall",
-      lat: currentLocation[0] + 0.005,
-      lng: currentLocation[1] - 0.008,
-      type: "safe",
-    },
-  ];
+  const adjustZoom = (delta: number) => {
+    if (map) {
+      const newZoom = Math.max(1, Math.min(20, zoom + delta));
+      map.setZoom(newZoom);
+    }
+  };
 
-  const allLocations = [...safetyLocations, ...mockSafetyLocations];
+  if (!isLoaded) {
+    return (
+      <div
+        className={cn(
+          "relative h-full w-full rounded-lg overflow-hidden border bg-white flex items-center justify-center",
+          className,
+        )}
+      >
+        <div className="text-center space-y-2">
+          <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-black font-mono">
+            Loading Guardian Maps...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       className={cn(
-        "relative h-full w-full rounded-lg overflow-hidden border",
+        "relative h-full w-full rounded-lg overflow-hidden bg-white",
         className,
       )}
     >
-      {/* Custom Map Controls */}
-      <div className="absolute top-4 left-4 z-[1000] space-y-2">
-        <button
-          onClick={handleGetLocation}
-          className="bg-black/80 hover:bg-black text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium shadow-xl border border-white/20 backdrop-blur-sm transition-all duration-200 hover:scale-105"
-        >
-          <Navigation className="h-4 w-4" />
-          My Location
-        </button>
+      {/* Routing Controls */}
+      <div className="absolute top-4 left-4 right-4 z-[1000] space-y-3">
+        {!showRouting ? (
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowRouting(true)}
+              className="bg-white hover:bg-gray-50 text-black px-4 py-2 rounded-lg flex items-center gap-2 font-medium shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
+            >
+              <Route className="h-4 w-4" />
+              Get Directions
+            </Button>
+            {emergencyMode && (
+              <Badge className="bg-red-500 text-white animate-pulse shadow-lg">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                EMERGENCY MODE
+              </Badge>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-xl p-4 space-y-3 shadow-lg">
+            <div className="flex items-center justify-between">
+              <h3 className="text-black font-semibold flex items-center gap-2 font-mono">
+                <Navigation2 className="h-4 w-4" />
+                Route Planning
+              </h3>
+              <Button
+                onClick={() => setShowRouting(false)}
+                variant="ghost"
+                size="sm"
+                className="text-black hover:bg-gray-100 p-1"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="relative">
+                <Input
+                  placeholder="From location..."
+                  value={fromLocation}
+                  onChange={(e) => setFromLocation(e.target.value)}
+                  className="bg-white border-gray-300 text-black placeholder:text-gray-500 pr-10"
+                />
+                <Button
+                  onClick={getCurrentLocation}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1 text-black hover:bg-gray-100 p-1"
+                >
+                  <Locate className="h-3 w-3" />
+                </Button>
+              </div>
+
+              <div className="relative">
+                <Input
+                  placeholder="To destination..."
+                  value={toLocation}
+                  onChange={(e) => setToLocation(e.target.value)}
+                  className="bg-white border-gray-300 text-black placeholder:text-gray-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setTravelMode("DRIVING")}
+                variant={travelMode === "DRIVING" ? "default" : "ghost"}
+                size="sm"
+                className="text-xs"
+              >
+                <Car className="h-3 w-3 mr-1" />
+                Drive
+              </Button>
+              <Button
+                onClick={() => setTravelMode("WALKING")}
+                variant={travelMode === "WALKING" ? "default" : "ghost"}
+                size="sm"
+                className="text-xs"
+              >
+                <Users className="h-3 w-3 mr-1" />
+                Walk
+              </Button>
+              <Button
+                onClick={calculateRoute}
+                className="bg-black hover:bg-gray-800 text-white text-xs flex-1"
+                disabled={!fromLocation || !toLocation}
+              >
+                <Navigation className="h-3 w-3 mr-1" />
+                Calculate Route
+              </Button>
+            </div>
+
+            {routeInfo && (
+              <div className="bg-gray-100 rounded-lg p-3 space-y-1">
+                <div className="flex items-center justify-between text-black text-sm font-mono">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    <span>{routeInfo.duration}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-3 w-3" />
+                    <span>{routeInfo.distance}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      <MapContainer
-        center={currentLocation}
-        zoom={15}
-        className="h-full w-full rounded-lg bw-map"
-        whenReady={() => setMapReady(true)}
-        style={{ background: "#000000" }}
-        zoomControl={false}
-        attributionControl={false}
-      >
-        <MapController center={currentLocation} />
+      {/* Left Side Controls */}
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-[1000] space-y-2">
+        {/* Zoom Controls */}
+        <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-lg overflow-hidden shadow-lg">
+          <Button
+            onClick={() => adjustZoom(1)}
+            variant="ghost"
+            size="sm"
+            className="text-black hover:bg-gray-100 w-10 h-10 p-0 rounded-none border-b border-gray-200"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => adjustZoom(-1)}
+            variant="ghost"
+            size="sm"
+            className="text-black hover:bg-gray-100 w-10 h-10 p-0 rounded-none"
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+        </div>
 
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          className="bw-tiles"
-        />
+        {/* Location Button */}
+        <Button
+          onClick={getCurrentLocation}
+          className="bg-white hover:bg-gray-50 text-black w-10 h-10 p-0 rounded-lg shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105"
+        >
+          <Locate className="h-4 w-4" />
+        </Button>
+      </div>
 
-        {/* User Location */}
-        <Marker position={currentLocation}>
-          <Popup className="bw-popup">
-            <div className="text-center p-2 bg-black text-white rounded">
-              <MapPin className="h-4 w-4 mx-auto mb-2 text-white" />
-              <strong>Your Location</strong>
-              <p className="text-sm text-gray-300">You are here</p>
-            </div>
-          </Popup>
-        </Marker>
-      </MapContainer>
+      {/* Right Side Controls */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 z-[1000] space-y-2">
+        {/* Traffic Toggle */}
+        <Button
+          onClick={toggleTraffic}
+          className={cn(
+            "w-10 h-10 p-0 rounded-lg shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105",
+            showTraffic
+              ? "bg-orange-500 hover:bg-orange-600 text-white"
+              : "bg-white hover:bg-gray-50 text-black",
+          )}
+        >
+          <Navigation className="h-4 w-4" />
+        </Button>
+
+        {/* Satellite Toggle */}
+        <Button
+          onClick={toggleSatellite}
+          className={cn(
+            "w-10 h-10 p-0 rounded-lg shadow-lg border border-gray-200 transition-all duration-200 hover:scale-105",
+            mapType === "satellite"
+              ? "bg-blue-500 hover:bg-blue-600 text-white"
+              : "bg-white hover:bg-gray-50 text-black",
+          )}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Map Container */}
+      <div ref={mapRef} className="h-full w-full" />
+
+      {/* Bottom Status */}
+      <div className="absolute bottom-4 left-4 z-[1000]">
+        <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-lg px-3 py-1 shadow-lg">
+          <span className="text-black text-xs font-mono">
+            Zoom: {zoom} | {mapType === "satellite" ? "Satellite" : "Map"} |
+            Traffic: {showTraffic ? "ON" : "OFF"}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
