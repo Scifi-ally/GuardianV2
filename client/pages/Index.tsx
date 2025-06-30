@@ -69,49 +69,72 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       {/* To/From Section at Top */}
-      <div className="relative z-20 bg-background/95 backdrop-blur-lg border-b border-border/50 p-4">
-        <div className="space-y-4">
-          <h1 className="text-lg font-semibold text-center">Safe Navigation</h1>
+      <div className="relative z-20 bg-background/98 backdrop-blur-xl border-b border-border/30 shadow-lg">
+        <div className="container mx-auto px-4 py-6">
+          <div className="space-y-5">
+            <div className="text-center space-y-2">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-safe bg-clip-text text-transparent">
+                Safe Navigation
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                Plan your journey with safety-first routing
+              </p>
+            </div>
 
-          <div className="space-y-3">
-            {/* From Input */}
-            <div className="relative">
-              <Input
-                placeholder="From location"
-                value={fromLocation}
-                onChange={(e) => setFromLocation(e.target.value)}
-                className="pr-10"
-              />
+            <div className="space-y-4">
+              {/* From Input */}
+              <div className="relative group">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
+                  <div className="w-3 h-3 bg-primary rounded-full border-2 border-background shadow-sm"></div>
+                </div>
+                <Input
+                  placeholder="From location"
+                  value={fromLocation}
+                  onChange={(e) => setFromLocation(e.target.value)}
+                  className="pl-9 pr-12 h-12 text-sm border-2 focus:border-primary/50 bg-background/80 backdrop-blur-sm transition-all duration-200 group-hover:shadow-md"
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleUseCurrentLocation}
+                  className="absolute right-2 top-2 h-8 w-8 p-0 hover:bg-primary/10 transition-colors"
+                  title="Use current location"
+                >
+                  <MapPin className="h-4 w-4 text-primary" />
+                </Button>
+              </div>
+
+              {/* Connection Line */}
+              <div className="flex justify-center">
+                <div className="w-px h-4 bg-gradient-to-b from-primary to-safe"></div>
+              </div>
+
+              {/* To Input */}
+              <div className="relative group">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
+                  <div className="w-3 h-3 bg-safe rounded-full border-2 border-background shadow-sm"></div>
+                </div>
+                <Input
+                  placeholder="To destination"
+                  value={toLocation}
+                  onChange={(e) => setToLocation(e.target.value)}
+                  className="pl-9 pr-12 h-12 text-sm border-2 focus:border-safe/50 bg-background/80 backdrop-blur-sm transition-all duration-200 group-hover:shadow-md"
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+
+              {/* Search Button */}
               <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleUseCurrentLocation}
-                className="absolute right-1 top-1 h-8 w-8 p-0"
+                onClick={handleSearch}
+                className="w-full h-12 bg-gradient-to-r from-primary to-safe hover:from-primary/90 hover:to-safe/90 text-white font-medium shadow-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:transform-none"
+                disabled={!fromLocation || !toLocation}
               >
-                <MapPin className="h-4 w-4" />
+                <Route className="h-5 w-5 mr-2" />
+                Find Safe Route
               </Button>
             </div>
-
-            {/* To Input */}
-            <div className="relative">
-              <Input
-                placeholder="To destination"
-                value={toLocation}
-                onChange={(e) => setToLocation(e.target.value)}
-                className="pr-10"
-              />
-              <ArrowRight className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
-            </div>
-
-            {/* Search Button */}
-            <Button
-              onClick={handleSearch}
-              className="w-full"
-              disabled={!fromLocation || !toLocation}
-            >
-              <Route className="h-4 w-4 mr-2" />
-              Find Safe Route
-            </Button>
           </div>
         </div>
       </div>
