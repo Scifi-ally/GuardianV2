@@ -196,11 +196,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Create a minimal profile if nothing exists
         const currentUser = auth.currentUser;
         if (currentUser) {
+          // Try to create guardian key, fallback to temporary key if fails
+          const keyResult = await EmergencyKeyService.createGuardianKey(
+            currentUser.uid,
+            currentUser.displayName || "Guardian User",
+            currentUser.email || "",
+          );
+
           const fallbackProfile: UserProfile = {
             uid: currentUser.uid,
             email: currentUser.email || "",
             displayName: currentUser.displayName || "Guardian User",
-            guardianKey: generateGuardianKey(),
+            guardianKey: keyResult.guardianKey || "TEMP-KEY",
             emergencyContacts: [],
             createdAt: new Date(),
             lastActive: new Date(),
