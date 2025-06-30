@@ -14,7 +14,6 @@ export default function Profile() {
   const { currentUser, userProfile, logout } = useAuth();
   const [guardianKey, setGuardianKey] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [regenerating, setRegenerating] = useState(false);
 
   useEffect(() => {
     loadGuardianKey();
