@@ -129,42 +129,14 @@ export function EmergencyDetection({
       };
 
       if (navigator.share) {
-        try {
-          await navigator.share(shareData);
-        } catch (shareError) {
-          await copyTextSafe(shareData.text);
-          alert("Location copied to clipboard");
-        }
+        await navigator.share(shareData);
       } else {
-        await copyTextSafe(shareData.text);
+        await navigator.clipboard.writeText(shareData.text);
         alert("Location copied to clipboard");
       }
       successVibration();
     } catch (error) {
       console.error("Failed to share location:", error);
-    }
-  };
-
-  // Safe copy function
-  const copyTextSafe = async (text: string) => {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        // Fallback method
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-      }
-    } catch (error) {
-      console.error("Copy failed:", error);
-      prompt("Please copy this manually:", text);
     }
   };
 

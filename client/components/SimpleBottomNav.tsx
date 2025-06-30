@@ -1,33 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
-  Home,
   MapPin,
   User,
   AlertTriangle,
+  Phone,
   Shield,
-  Activity,
+  Camera,
+  MessageSquare,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-interface NavItem {
-  id: string;
-  label: string;
-  icon: typeof Home;
-  isSpecial?: boolean;
-}
-
-const navItems: NavItem[] = [
-  { id: "map", label: "Map", icon: MapPin },
-  { id: "sos", label: "SOS", icon: AlertTriangle, isSpecial: true },
-  { id: "profile", label: "Profile", icon: User },
-];
+import { cn } from "@/lib/utils";
 
 interface SimpleBottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  onSOSPress: (alertId?: string) => void;
+  onSOSPress: () => void;
 }
 
 export function SimpleBottomNav({
@@ -35,23 +24,24 @@ export function SimpleBottomNav({
   onTabChange,
   onSOSPress,
 }: SimpleBottomNavProps) {
-  const [sosPressed, setSOSPressed] = useState(false);
+  const [sosPressed, setSosPressed] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [panicMode, setPanicMode] = useState(false);
+  const [panicTimer, setPanicTimer] = useState<NodeJS.Timeout | null>(null);
 
   const handleSOSPress = () => {
     if (sosPressed) return;
 
-    setSOSPressed(true);
+    setSosPressed(true);
     setCountdown(3);
 
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(countdownInterval);
-          setSOSPressed(false);
-          // Generate alert ID and trigger SOS
-          const alertId = `ALERT-${Date.now()}`;
-          onSOSPress(alertId);
+          setSosPressed(false);
+          onSOSPress();
+          activatePanicMode();
           return 0;
         }
         return prev - 1;
@@ -60,82 +50,252 @@ export function SimpleBottomNav({
   };
 
   const handleCancelSOS = () => {
-    setSOSPressed(false);
+    setSosPressed(false);
     setCountdown(0);
   };
 
+  const activatePanicMode = useCallback(() => {
+    setPanicMode(true);
+    // Auto-deactivate panic mode after 5 minutes
+    const timer = setTimeout(
+      () => {
+        setPanicMode(false);
+      },
+      5 * 60 * 1000,
+    );
+    setPanicTimer(timer);
+  }, []);
+
+  const deactivatePanicMode = useCallback(() => {
+    setPanicMode(false);
+    if (panicTimer) {
+      clearTimeout(panicTimer);
+      setPanicTimer(null);
+    }
+  }, [panicTimer]);
+
+  useEffect(() => {
+    return () => {
+      if (panicTimer) {
+        clearTimeout(panicTimer);
+      }
+    };
+  }, [panicTimer]);
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100]">
-      {/* Minimal Background */}
-      <div className="bg-black/80 backdrop-blur-xl border-t border-white/10">
-        {/* Compact SOS Button */}
-        <div className="relative flex justify-center">
-          <div className="absolute -top-8 flex justify-center">
-            {sosPressed ? (
-              <Button
-                onClick={handleCancelSOS}
-                className="w-16 h-16 rounded-full bg-warning/90 hover:bg-warning text-warning-foreground shadow-xl border-2 border-white/20 animate-pulse"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="text-lg font-bold">{countdown}</div>
-                  <span className="text-xs">Cancel</span>
+    <>
+      {/* Panic Mode Overlay */}
+      {panicMode && (
+        <div className="fixed bottom-20 left-4 right-4 z-40">
+          <Card className="border-emergency bg-emergency/5 backdrop-blur-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded-full bg-emergency/20">
+                    <AlertTriangle className="h-4 w-4 text-emergency animate-pulse" />
+                  </div>
+                  <Badge className="bg-emergency text-emergency-foreground text-xs">
+                    PANIC MODE ACTIVE
+                  </Badge>
                 </div>
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSOSPress}
-                className="w-16 h-16 rounded-full bg-emergency hover:bg-emergency/90 text-emergency-foreground shadow-xl border-2 border-white/20 transform hover:scale-110 transition-all duration-200"
-              >
-                <div className="flex flex-col items-center">
-                  <AlertTriangle className="h-5 w-5" />
-                  <span className="text-xs font-bold">SOS</span>
-                </div>
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Compact Navigation Bar */}
-        <div className="px-4 pt-12 pb-4">
-          <div className="flex items-center justify-around max-w-sm mx-auto">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              const isSpecial = item.isSpecial;
-
-              if (isSpecial) {
-                // Empty space for SOS button
-                return <div key={item.id} className="w-8" />;
-              }
-
-              return (
                 <Button
-                  key={item.id}
-                  onClick={() => onTabChange(item.id)}
+                  onClick={deactivatePanicMode}
                   variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-xs hover:bg-emergency/10"
+                >
+                  Deactivate
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2">
+                <Button
+                  onClick={() => (window.location.href = "tel:911")}
+                  size="sm"
+                  className="h-12 flex-col gap-1 text-xs bg-emergency hover:bg-emergency/90"
+                >
+                  <Phone className="h-4 w-4" />
+                  911
+                </Button>
+                <Button
+                  onClick={() => {
+                    /* Add silent alert functionality */
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="h-12 flex-col gap-1 text-xs border-warning hover:bg-warning/10"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Alert
+                </Button>
+                <Button
+                  onClick={() => {
+                    /* Add camera functionality */
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="h-12 flex-col gap-1 text-xs border-primary hover:bg-primary/10"
+                >
+                  <Camera className="h-4 w-4" />
+                  Record
+                </Button>
+                <Button
+                  onClick={() => {
+                    /* Add safe mode functionality */
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="h-12 flex-col gap-1 text-xs border-safe hover:bg-safe/10"
+                >
+                  <Shield className="h-4 w-4" />
+                  Safe
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 overflow-hidden">
+        {/* Background with blur and gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/98 to-background/90 backdrop-blur-xl" />
+
+        {/* Navigation Content */}
+        <div className="relative max-w-sm mx-auto px-4 py-2">
+          <div className="flex items-end justify-center gap-20">
+            {/* Map Button */}
+            <div className="relative flex flex-col items-center group">
+              <div
+                className={cn(
+                  "absolute inset-0 rounded-2xl transition-all duration-500 opacity-0 group-hover:opacity-100",
+                  activeTab === "map"
+                    ? "bg-primary/20 blur-xl scale-110"
+                    : "bg-primary/10 blur-lg scale-105",
+                )}
+              />
+              <Button
+                onClick={() => onTabChange("map")}
+                variant="ghost"
+                className={cn(
+                  "relative h-12 w-12 rounded-2xl transition-all duration-500 transform backdrop-blur-sm",
+                  "hover:shadow-lg hover:-translate-y-1 active:scale-95",
+                  activeTab === "map"
+                    ? "bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 text-primary scale-110 shadow-xl border-2 border-primary/30 ring-4 ring-primary/10"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10 hover:scale-105 hover:border-primary/20 border-2 border-transparent",
+                )}
+              >
+                <MapPin
                   className={cn(
-                    "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200",
-                    isActive
-                      ? "text-white bg-white/10"
-                      : "text-white/60 hover:text-white hover:bg-white/5",
+                    "transition-all duration-300",
+                    activeTab === "map" ? "h-8 w-8" : "h-7 w-7",
+                  )}
+                />
+              </Button>
+              <span
+                className={cn(
+                  "text-xs font-medium mt-1 transition-all duration-300",
+                  activeTab === "map"
+                    ? "text-primary scale-110"
+                    : "text-muted-foreground group-hover:text-primary",
+                )}
+              >
+                Map
+              </span>
+            </div>
+
+            {/* SOS Button - Center Elevated */}
+            <div className="relative flex flex-col items-center -mt-4">
+              {panicMode && (
+                <div className="absolute -top-2 -right-2 h-4 w-4 bg-emergency rounded-full border-2 border-white shadow-2xl" />
+              )}
+              <div className="absolute inset-0 rounded-full bg-emergency/20 blur-2xl scale-125 opacity-50" />
+              {!sosPressed ? (
+                <Button
+                  onClick={handleSOSPress}
+                  className={cn(
+                    "relative h-18 w-18 rounded-full transition-all duration-300 transform",
+                    "bg-gradient-to-br from-emergency via-emergency/90 to-emergency/80",
+                    "hover:from-emergency/95 hover:via-emergency/85 hover:to-emergency/75",
+                    "text-emergency-foreground shadow-2xl border-4 border-white/70",
+                    "hover:scale-110 hover:shadow-emergency/25 hover:-translate-y-2",
+                    "active:scale-105 active:translate-y-0",
+                    panicMode && "ring-4 ring-emergency/30 border-emergency/50",
                   )}
                 >
-                  <Icon
-                    className={cn(
-                      "h-4 w-4 transition-all duration-200",
-                      isActive && "scale-110",
-                    )}
-                  />
-                  <span className="text-xs font-medium">{item.label}</span>
-                  {isActive && (
-                    <div className="w-1 h-1 bg-white rounded-full" />
-                  )}
+                  <div className="flex flex-col items-center justify-center gap-1">
+                    <AlertTriangle className="h-7 w-7 drop-shadow-lg" />
+                    <span className="text-xs font-bold drop-shadow-lg">
+                      SOS
+                    </span>
+                  </div>
                 </Button>
-              );
-            })}
+              ) : (
+                <Button
+                  onClick={handleCancelSOS}
+                  className={cn(
+                    "relative h-18 w-18 rounded-full transition-all duration-200",
+                    "bg-gradient-to-br from-warning via-warning/90 to-warning/80 text-warning-foreground",
+                    "shadow-2xl border-4 border-white/70 ring-4 ring-warning/30",
+                  )}
+                >
+                  <div className="flex flex-col items-center justify-center gap-1">
+                    <div className="text-lg font-bold drop-shadow-lg">
+                      {countdown}
+                    </div>
+                    <span className="text-xs font-medium drop-shadow-lg">
+                      Cancel
+                    </span>
+                  </div>
+                </Button>
+              )}
+              <span className="text-xs font-bold mt-2 text-emergency">
+                Emergency
+              </span>
+            </div>
+
+            {/* Profile Button */}
+            <div className="relative flex flex-col items-center group">
+              <div
+                className={cn(
+                  "absolute inset-0 rounded-2xl transition-all duration-500 opacity-0 group-hover:opacity-100",
+                  activeTab === "profile"
+                    ? "bg-primary/20 blur-xl scale-110"
+                    : "bg-primary/10 blur-lg scale-105",
+                )}
+              />
+              <Button
+                onClick={() => onTabChange("profile")}
+                variant="ghost"
+                className={cn(
+                  "relative h-12 w-12 rounded-2xl transition-all duration-500 transform backdrop-blur-sm",
+                  "hover:shadow-lg hover:-translate-y-1 active:scale-95",
+                  activeTab === "profile"
+                    ? "bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 text-primary scale-110 shadow-xl border-2 border-primary/30 ring-4 ring-primary/10"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10 hover:scale-105 hover:border-primary/20 border-2 border-transparent",
+                )}
+              >
+                <User
+                  className={cn(
+                    "transition-all duration-300",
+                    activeTab === "profile" ? "h-8 w-8" : "h-7 w-7",
+                  )}
+                />
+              </Button>
+              <span
+                className={cn(
+                  "text-xs font-medium mt-1 transition-all duration-300",
+                  activeTab === "profile"
+                    ? "text-primary scale-110"
+                    : "text-muted-foreground group-hover:text-primary",
+                )}
+              >
+                Profile
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

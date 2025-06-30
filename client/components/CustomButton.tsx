@@ -25,15 +25,15 @@ export function CustomButton({
 
   const variants = {
     primary:
-      "bg-white text-black hover:bg-gray-50 shadow-lg hover:shadow-xl border-2 border-gray-300 hover:border-gray-400",
+      "bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-800 shadow-lg hover:shadow-xl border border-gray-700",
     secondary:
-      "bg-gray-100 text-black hover:bg-gray-200 shadow-md hover:shadow-lg border-2 border-gray-300 hover:border-gray-400",
+      "bg-white text-black hover:bg-gray-100 shadow-md hover:shadow-lg border border-gray-300",
     emergency:
-      "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 shadow-lg hover:shadow-xl border-2 border-red-500",
+      "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 shadow-lg hover:shadow-xl border border-red-500",
     ghost:
-      "bg-transparent text-black hover:bg-gray-100 border-2 border-gray-300 hover:border-gray-400",
+      "bg-transparent text-gray-700 hover:bg-gray-100 border border-gray-300 hover:border-gray-400",
     black:
-      "bg-black text-white hover:bg-gray-900 shadow-xl border-2 border-gray-700 hover:border-gray-600",
+      "bg-black text-white hover:bg-gray-900 shadow-xl border border-gray-800",
   };
 
   const sizes = {
