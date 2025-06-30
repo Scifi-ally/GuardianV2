@@ -1,14 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  User,
-  Edit,
-  Settings,
-  LogOut,
-  Camera,
-  Copy,
-  RefreshCw,
-  Key,
-} from "lucide-react";
+import { User, Edit, Settings, LogOut, Camera, Copy, Key } from "lucide-react";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { useAuth } from "@/contexts/AuthContext";
