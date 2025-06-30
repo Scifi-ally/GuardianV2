@@ -17,13 +17,26 @@ import {
   Clock,
   Zap,
   Map,
+  MessageSquare,
+  Route,
+  Share,
+  HelpCircle,
+  X,
 } from "lucide-react";
 import { GoogleMap } from "@/components/GoogleMap";
 import { ModernBottomNav } from "@/components/ModernBottomNav";
 import { ModernSOSButton } from "@/components/ModernSOSButton";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
+import {
+  SettingsPanel,
+  CameraPanel,
+  CheckInPanel,
+  NotificationsPanel,
+  SafeRoutesPanel,
+} from "@/components/FunctionalPanels";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation, useHapticFeedback } from "@/hooks/use-device-apis";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,11 +49,13 @@ export default function Guardian() {
     "safe" | "alert" | "emergency"
   >("safe");
   const [showPanel, setShowPanel] = useState<string | null>(null);
+  const [locationSharing, setLocationSharing] = useState(false);
 
   const { currentUser, userProfile, logout } = useAuth();
   const { successVibration, warningVibration, emergencyVibration } =
     useHapticFeedback();
   const { location, getCurrentLocation } = useGeolocation();
+  const { toast } = useToast();
 
   const emergencyContacts = userProfile?.emergencyContacts || [];
 
@@ -64,6 +79,73 @@ export default function Guardian() {
       console.error("Failed to logout:", error);
     }
   }, [logout]);
+
+  const shareLocation = useCallback(async () => {
+    try {
+      const loc = await getCurrentLocation();
+      const message = `Guardian Alert: I'm at https://maps.google.com/?q=${loc.latitude},${loc.longitude}`;
+
+      if (navigator.share) {
+        await navigator.share({
+          title: "Guardian Location",
+          text: message,
+        });
+      } else {
+        await navigator.clipboard.writeText(message);
+        toast({
+          description: "Location copied to clipboard!",
+        });
+      }
+      successVibration();
+    } catch (error) {
+      console.error("Share failed:", error);
+      toast({
+        title: "Share failed",
+        description: "Could not share location",
+        variant: "destructive",
+      });
+    }
+  }, [getCurrentLocation, successVibration, toast]);
+
+  const toggleLocationSharing = useCallback(() => {
+    setLocationSharing((prev) => !prev);
+    toast({
+      description: locationSharing
+        ? "Location sharing disabled"
+        : "Location sharing enabled",
+    });
+    successVibration();
+  }, [locationSharing, toast, successVibration]);
+
+  const callEmergency = useCallback(() => {
+    window.location.href = "tel:911";
+    emergencyVibration();
+    toast({
+      description: "Calling emergency services...",
+    });
+  }, [emergencyVibration, toast]);
+
+  const sendQuickAlert = useCallback(() => {
+    toast({
+      description: "Quick alert sent to emergency contacts",
+    });
+    warningVibration();
+  }, [toast, warningVibration]);
+
+  const openMapsApp = useCallback(() => {
+    if (location) {
+      const url = `https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+      window.open(url, "_blank");
+      toast({
+        description: "Opening in Google Maps...",
+      });
+    }
+  }, [location, toast]);
+
+  const openContactsManager = useCallback(() => {
+    setShowPanel("contacts");
+    successVibration();
+  }, [successVibration]);
 
   const statusColors = {
     safe: "bg-green-100 text-green-800 border-green-200",
@@ -143,16 +225,41 @@ export default function Guardian() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full" />
+                      <div
+                        className={cn(
+                          "w-3 h-3 rounded-full",
+                          locationSharing ? "bg-green-500" : "bg-gray-400",
+                        )}
+                      />
                       <span className="text-sm font-medium">
-                        Live Tracking Active
+                        {locationSharing
+                          ? "Live Tracking Active"
+                          : "Tracking Paused"}
                       </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={toggleLocationSharing}
+                        className="h-6 px-2 text-xs"
+                      >
+                        {locationSharing ? "Pause" : "Start"}
+                      </Button>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {location
-                        ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-                        : "Getting location..."}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {location
+                          ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+                          : "Getting location..."}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={shareLocation}
+                        className="h-6 px-2"
+                      >
+                        <Share className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-4 gap-2">
@@ -187,7 +294,7 @@ export default function Guardian() {
                       size="sm"
                       variant="outline"
                       className="h-12 flex-col gap-1 text-xs"
-                      onClick={() => setShowPanel("emergency")}
+                      onClick={callEmergency}
                     >
                       <Phone className="h-4 w-4" />
                       Call
@@ -305,9 +412,26 @@ export default function Guardian() {
                             {contact.phone}
                           </div>
                         </div>
-                        <Button size="sm" variant="outline">
-                          <Phone className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              (window.location.href = `tel:${contact.phone}`)
+                            }
+                          >
+                            <Phone className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              (window.location.href = `sms:${contact.phone}?body=Guardian Alert: I need help!`)
+                            }
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                     {emergencyContacts.length > 3 && (
@@ -322,7 +446,7 @@ export default function Guardian() {
                     <p className="text-gray-600 mb-3">
                       No emergency contacts added
                     </p>
-                    <Button size="sm" onClick={() => setShowPanel("contacts")}>
+                    <Button size="sm" onClick={openContactsManager}>
                       Add Contacts
                     </Button>
                   </div>
@@ -374,6 +498,44 @@ export default function Guardian() {
 
                 <Button
                   variant="outline"
+                  className="w-full justify-between h-12"
+                  onClick={() => setShowPanel("routes")}
+                >
+                  <div className="flex items-center gap-3">
+                    <Route className="h-5 w-5" />
+                    Safe Routes
+                  </div>
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-between h-12"
+                  onClick={sendQuickAlert}
+                >
+                  <div className="flex items-center gap-3">
+                    <MessageSquare className="h-5 w-5" />
+                    Send Quick Alert
+                  </div>
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-between h-12"
+                  onClick={() =>
+                    toast({ description: "Help center opening..." })
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <HelpCircle className="h-5 w-5" />
+                    Help & Support
+                  </div>
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+
+                <Button
+                  variant="outline"
                   className="w-full justify-between h-12 text-red-600 hover:bg-red-50"
                   onClick={handleLogout}
                 >
@@ -396,29 +558,50 @@ export default function Guardian() {
         onSOSPress={handleSOSPress}
       />
 
-      {/* Side Panels */}
+      {/* Functional Panels */}
+      <SettingsPanel
+        isOpen={showPanel === "settings"}
+        onClose={() => setShowPanel(null)}
+      />
+
+      <CameraPanel
+        isOpen={showPanel === "camera"}
+        onClose={() => setShowPanel(null)}
+      />
+
+      <CheckInPanel
+        isOpen={showPanel === "checkin"}
+        onClose={() => setShowPanel(null)}
+      />
+
+      <NotificationsPanel
+        isOpen={showPanel === "notifications"}
+        onClose={() => setShowPanel(null)}
+      />
+
+      <SafeRoutesPanel
+        isOpen={showPanel === "routes"}
+        onClose={() => setShowPanel(null)}
+      />
+
+      {/* Emergency Contacts Panel */}
       {showPanel === "contacts" && (
         <div
           className="fixed inset-0 bg-black/50 z-50"
           onClick={() => setShowPanel(null)}
         >
           <div className="absolute right-0 top-0 bottom-0 w-80 bg-white p-6 overflow-y-auto">
-            <h3 className="text-xl font-bold mb-6">Emergency Contacts</h3>
-            <EmergencyContactManager />
-          </div>
-        </div>
-      )}
-
-      {showPanel === "settings" && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50"
-          onClick={() => setShowPanel(null)}
-        >
-          <div className="absolute right-0 top-0 bottom-0 w-80 bg-white p-6">
-            <h3 className="text-xl font-bold mb-6">Settings</h3>
-            <div className="space-y-4">
-              <p className="text-gray-600">Settings panel content goes here</p>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold">Emergency Contacts</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPanel(null)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
+            <EmergencyContactManager />
           </div>
         </div>
       )}
