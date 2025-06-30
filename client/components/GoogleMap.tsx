@@ -25,6 +25,8 @@ function MapComponent({
   location,
   emergencyContacts = [],
   onLocationUpdate,
+  mapStyle: propMapStyle = "gray",
+  showTraffic = true,
 }: GoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -32,7 +34,8 @@ function MapComponent({
   const [contactMarkers, setContactMarkers] = useState<google.maps.Marker[]>(
     [],
   );
-  const [mapStyle, setMapStyle] = useState<"normal" | "dark">("normal");
+  const [trafficLayer, setTrafficLayer] =
+    useState<google.maps.TrafficLayer | null>(null);
 
   // Initialize map
   useEffect(() => {
