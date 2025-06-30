@@ -56,15 +56,7 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-function generateGuardianKey(): string {
-  // Generate a unique 8-character alphanumeric key
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result = "";
-  for (let i = 0; i < 8; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
+// Guardian key generation is now handled by EmergencyKeyService
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<GuardianUser | null>(null);
