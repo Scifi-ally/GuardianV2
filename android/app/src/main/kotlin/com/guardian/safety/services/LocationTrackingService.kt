@@ -17,15 +17,14 @@ import com.guardian.safety.MainActivity
 import com.guardian.safety.R
 import com.guardian.safety.data.models.Location
 import com.guardian.safety.data.repositories.SOSRepository
-import dagger.hilt.android.AndroidEntryPoint
+import com.guardian.safety.di.AppModule
 import kotlinx.coroutines.*
-import javax.inject.Inject
 
-@AndroidEntryPoint
 class LocationTrackingService : Service() {
 
-    @Inject
-    lateinit var sosRepository: SOSRepository
+    private val sosRepository: SOSRepository by lazy {
+        SOSRepository(AppModule.provideFirebaseFirestore())
+    }
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
@@ -74,7 +73,7 @@ class LocationTrackingService : Service() {
                         accuracy = location.accuracy,
                         timestamp = System.currentTimeMillis()
                     )
-                    
+
                     currentSOSAlertId?.let { alertId ->
                         serviceScope.launch {
                             sosRepository.updateSOSLocation(alertId, guardianLocation)
@@ -109,7 +108,7 @@ class LocationTrackingService : Service() {
                 locationCallback,
                 Looper.getMainLooper()
             )
-            
+
             startForeground(NOTIFICATION_ID, createNotification())
         } catch (e: SecurityException) {
             stopSelf()

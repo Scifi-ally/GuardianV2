@@ -20,7 +20,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.guardian.safety.R
 import com.guardian.safety.presentation.viewmodels.AuthViewModel
@@ -31,11 +31,11 @@ import com.guardian.safety.ui.theme.GuardianRed
 @Composable
 fun AuthScreen(
     onNavigateToMain: () -> Unit,
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val uiState by authViewModel.uiState.collectAsStateWithLifecycle()
     val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
-    
+
     var isSignUp by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -169,7 +169,7 @@ fun AuthScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank() && 
+            enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank() &&
                     (!isSignUp || displayName.isNotBlank()),
             colors = ButtonDefaults.buttonColors(containerColor = GuardianBlue)
         ) {
@@ -191,7 +191,7 @@ fun AuthScreen(
 
         // Switch Mode
         TextButton(
-            onClick = { 
+            onClick = {
                 isSignUp = !isSignUp
                 authViewModel.clearError()
             }

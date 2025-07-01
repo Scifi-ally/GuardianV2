@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.guardian.safety.presentation.components.MagicNavbar
@@ -32,8 +32,8 @@ import com.guardian.safety.ui.theme.*
 @Composable
 fun GuardianScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = hiltViewModel(),
-    sosViewModel: SOSViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    sosViewModel: SOSViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
@@ -104,9 +104,9 @@ fun GuardianScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (receivedAlerts.isNotEmpty()) 
-                            GuardianRed.copy(alpha = 0.1f) 
-                        else 
+                        containerColor = if (receivedAlerts.isNotEmpty())
+                            GuardianRed.copy(alpha = 0.1f)
+                        else
                             GuardianGreen.copy(alpha = 0.1f)
                     )
                 ) {
@@ -125,18 +125,18 @@ fun GuardianScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (receivedAlerts.isNotEmpty()) 
-                                    "Emergency Alert Active" 
-                                else 
+                                text = if (receivedAlerts.isNotEmpty())
+                                    "Emergency Alert Active"
+                                else
                                     "All Safe",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Medium,
                                 color = if (receivedAlerts.isNotEmpty()) GuardianRed else GuardianGreen
                             )
                             Text(
-                                text = if (receivedAlerts.isNotEmpty()) 
-                                    "${receivedAlerts.size} active alert(s)" 
-                                else 
+                                text = if (receivedAlerts.isNotEmpty())
+                                    "${receivedAlerts.size} active alert(s)"
+                                else
                                     "No active emergencies",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Gray
@@ -195,7 +195,7 @@ fun GuardianScreen(
                 receivedAlerts.forEach { alert ->
                     SOSNotificationPanel(
                         alert = alert,
-                        onAcknowledge = { 
+                        onAcknowledge = {
                             userProfile?.let { user ->
                                 sosViewModel.acknowledgeAlert(alert.id, user.uid)
                             }

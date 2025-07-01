@@ -20,18 +20,18 @@ import com.guardian.safety.R
 import com.guardian.safety.data.models.Location
 import com.guardian.safety.data.repositories.AuthRepository
 import com.guardian.safety.data.repositories.SOSRepository
-import dagger.hilt.android.AndroidEntryPoint
+import com.guardian.safety.di.AppModule
 import kotlinx.coroutines.*
-import javax.inject.Inject
 
-@AndroidEntryPoint
 class SOSAlertService : Service() {
 
-    @Inject
-    lateinit var sosRepository: SOSRepository
+    private val sosRepository: SOSRepository by lazy {
+        SOSRepository(AppModule.provideFirebaseFirestore())
+    }
 
-    @Inject
-    lateinit var authRepository: AuthRepository
+    private val authRepository: AuthRepository by lazy {
+        AuthRepository(AppModule.provideFirebaseAuth(), AppModule.provideFirebaseFirestore())
+    }
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var vibrator: Vibrator
@@ -71,7 +71,7 @@ class SOSAlertService : Service() {
             try {
                 // Get current location
                 val location = getCurrentLocation()
-                
+
                 // Get user profile
                 val userResult = authRepository.getCurrentUserProfile()
                 if (userResult.isFailure) {
@@ -169,7 +169,7 @@ class SOSAlertService : Service() {
     private fun triggerEmergencyEffects() {
         // Vibration pattern: short-long-short-long
         val vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500)
-        
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createWaveform(vibrationPattern, -1))
         } else {

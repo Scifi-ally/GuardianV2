@@ -9,11 +9,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class SOSRepository @Inject constructor(
+class SOSRepository(
     private val firestore: FirebaseFirestore
 ) {
 
@@ -35,7 +32,7 @@ class SOSRepository @Inject constructor(
                 recipients = recipients,
                 timestamp = System.currentTimeMillis()
             )
-            
+
             firestore.collection("sosAlerts").document(alertId).set(alert).await()
             Result.success(alertId)
         } catch (e: Exception) {
@@ -47,7 +44,7 @@ class SOSRepository @Inject constructor(
         return try {
             val alertRef = firestore.collection("sosAlerts").document(alertId)
             val currentAlert = alertRef.get().await().toObject(SOSAlert::class.java)
-            
+
             if (currentAlert != null) {
                 val updatedHistory = currentAlert.locationHistory + location
                 alertRef.update(
@@ -57,7 +54,7 @@ class SOSRepository @Inject constructor(
                     )
                 ).await()
             }
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -96,14 +93,14 @@ class SOSRepository @Inject constructor(
                     close(error)
                     return@addSnapshotListener
                 }
-                
+
                 val alerts = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(SOSAlert::class.java)
                 } ?: emptyList()
-                
+
                 trySend(alerts)
             }
-        
+
         awaitClose { listener.remove() }
     }
 
@@ -116,14 +113,14 @@ class SOSRepository @Inject constructor(
                     close(error)
                     return@addSnapshotListener
                 }
-                
+
                 val alerts = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(SOSAlert::class.java)
                 } ?: emptyList()
-                
+
                 trySend(alerts)
             }
-        
+
         awaitClose { listener.remove() }
     }
 }

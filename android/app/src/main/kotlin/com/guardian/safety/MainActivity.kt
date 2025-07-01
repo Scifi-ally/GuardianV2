@@ -12,7 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -26,14 +26,12 @@ import com.guardian.safety.presentation.screens.profile.ProfileScreen
 import com.guardian.safety.presentation.screens.settings.SettingsScreen
 import com.guardian.safety.presentation.viewmodels.AuthViewModel
 import com.guardian.safety.ui.theme.GuardianTheme
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         setContent {
             GuardianTheme {
                 GuardianApp()
@@ -46,7 +44,7 @@ class MainActivity : ComponentActivity() {
 fun GuardianApp() {
     val systemUiController = rememberSystemUiController()
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = hiltViewModel()
+    val authViewModel: AuthViewModel = viewModel()
 
     LaunchedEffect(Unit) {
         systemUiController.setStatusBarColor(
@@ -72,27 +70,27 @@ fun GuardianApp() {
                     }
                 )
             }
-            
+
             composable("guardian") {
                 GuardianScreen(navController = navController)
             }
-            
+
             composable("map") {
                 MapScreen(navController = navController)
             }
-            
+
             composable("contacts") {
                 ContactsScreen(navController = navController)
             }
-            
+
             composable("navigation") {
                 NavigationScreen(navController = navController)
             }
-            
+
             composable("profile") {
                 ProfileScreen(navController = navController)
             }
-            
+
             composable("settings") {
                 SettingsScreen(navController = navController)
             }

@@ -5,11 +5,7 @@ import com.guardian.safety.data.models.EmergencyContact
 import com.guardian.safety.data.models.User
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
-
-@Singleton
-class EmergencyContactsRepository @Inject constructor(
+class EmergencyContactsRepository(
     private val firestore: FirebaseFirestore
 ) {
 
@@ -105,12 +101,12 @@ class EmergencyContactsRepository @Inject constructor(
     suspend fun generateGuardianKey(userId: String): Result<String> {
         return try {
             val guardianKey = generateUniqueKey()
-            
+
             // Update user with the new guardian key
             firestore.collection("users").document(userId)
                 .update("guardianKey", guardianKey)
                 .await()
-            
+
             Result.success(guardianKey)
         } catch (e: Exception) {
             Result.failure(e)
@@ -120,7 +116,7 @@ class EmergencyContactsRepository @Inject constructor(
     private suspend fun generateUniqueKey(): String {
         var attempts = 0
         val maxAttempts = 10
-        
+
         while (attempts < maxAttempts) {
             val key = generateRandomKey()
             val existingUser = findUserByGuardianKey(key)
@@ -129,7 +125,7 @@ class EmergencyContactsRepository @Inject constructor(
             }
             attempts++
         }
-        
+
         // Fallback to UUID if we can't generate a unique key
         return UUID.randomUUID().toString().replace("-", "").take(8).uppercase()
     }
