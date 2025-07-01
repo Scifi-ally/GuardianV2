@@ -1,10 +1,13 @@
 package com.guardian.safety.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
@@ -22,15 +25,15 @@ fun RealGoogleMap(
     safeZones: List<LatLng> = emptyList()
 ) {
     val context = LocalContext.current
-    
+
     // Default location (San Francisco) if no user location
     val defaultLocation = LatLng(37.7749, -122.4194)
     val mapCenter = userLocation ?: defaultLocation
-    
+
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(mapCenter, 15f)
     }
-    
+
     // Update camera when user location changes
     LaunchedEffect(userLocation) {
         userLocation?.let { location ->
@@ -39,20 +42,20 @@ fun RealGoogleMap(
             )
         }
     }
-    
+
     val mapProperties = MapProperties(
         isMyLocationEnabled = userLocation != null,
         mapType = MapType.NORMAL,
         isTrafficEnabled = true
     )
-    
+
     val mapUiSettings = MapUiSettings(
         myLocationButtonEnabled = true,
         zoomControlsEnabled = false,
         compassEnabled = true,
         mapToolbarEnabled = false
     )
-    
+
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
@@ -68,7 +71,7 @@ fun RealGoogleMap(
                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
             )
         }
-        
+
         // Destination marker
         destination?.let { dest ->
             Marker(
@@ -77,7 +80,7 @@ fun RealGoogleMap(
                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
             )
         }
-        
+
         // Route polyline (simplified - in real app would use Directions API)
         if (isNavigating && userLocation != null && destination != null) {
             Polyline(
@@ -86,7 +89,7 @@ fun RealGoogleMap(
                 width = 8f
             )
         }
-        
+
         // Emergency services markers
         emergencyServices.forEach { location ->
             Marker(
@@ -96,7 +99,7 @@ fun RealGoogleMap(
                 snippet = "Hospital/Police Station"
             )
         }
-        
+
         // Safe zones (circles)
         safeZones.forEach { location ->
             Circle(
@@ -126,16 +129,22 @@ fun MapControls(
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = GuardianBlue
         ) {
-            androidx.compose.material.icons.Icons.Default.MyLocation
+            Icon(
+                imageVector = Icons.Default.MyLocation,
+                contentDescription = "My Location"
+            )
         }
-        
+
         FloatingActionButton(
             onClick = onMapTypeToggle,
             modifier = Modifier.size(48.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = GuardianBlue
         ) {
-            androidx.compose.material.icons.Icons.Default.Layers
+            Icon(
+                imageVector = Icons.Default.Layers,
+                contentDescription = "Map Type"
+            )
         }
     }
 }

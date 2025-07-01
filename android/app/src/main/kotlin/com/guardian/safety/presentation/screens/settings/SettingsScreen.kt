@@ -52,7 +52,7 @@ fun SettingsScreen(
             ) {
                 Column(
                     modifier = Modifier.padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontAlignment
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,

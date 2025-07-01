@@ -52,8 +52,9 @@ fun SignUpScreen(
     }
 
     val loading = authState is AuthState.Loading
+    val currentState = authState
     val error = validationError.ifEmpty {
-        if (authState is AuthState.Error) authState.message else ""
+        if (currentState is AuthState.Error) currentState.message else ""
     }
 
     // Background gradient matching web app

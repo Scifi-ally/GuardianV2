@@ -2,21 +2,27 @@ package com.guardian.safety.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Guardian Brand Colors - matching client/global.css
-val GuardianBlue = Color(0xFF2563EB)
-val GuardianBlueLight = Color(0xFF3B82F6)
-val GuardianBlueDark = Color(0xFF1E40AF)
+// Guardian Brand Colors - matching client/global.css and web app theme
+// Primary theme colors for women's safety app
+val GuardianPrimary = Color(0xFF9333EA) // Purple - matching --protection
+val GuardianPrimaryLight = Color(0xFFA855F7)
+val GuardianPrimaryDark = Color(0xFF7C3AED)
 
-val GuardianRed = Color(0xFFDC2626)
+val GuardianRed = Color(0xFFDC2626) // Emergency red
 val GuardianRedLight = Color(0xFFEF4444)
 val GuardianRedDark = Color(0xFFB91C1C)
 
-val GuardianGreen = Color(0xFF16A34A)
+val GuardianGreen = Color(0xFF16A34A) // Safe color
 val GuardianGreenLight = Color(0xFF22C55E)
 val GuardianGreenDark = Color(0xFF15803D)
 
-val GuardianYellow = Color(0xFFEAB308)
+val GuardianYellow = Color(0xFFEAB308) // Warning color
 val GuardianOrange = Color(0xFFEA580C)
+
+// Keep legacy names for compatibility
+val GuardianBlue = Color(0xFF2563EB)
+val GuardianBlueLight = Color(0xFF3B82F6)
+val GuardianBlueDark = Color(0xFF1E40AF)
 val GuardianPurple = Color(0xFF9333EA)
 
 // Gray Scale - matching tailwind colors

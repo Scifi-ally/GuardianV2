@@ -125,6 +125,7 @@ fun BottomNavigation(
                     )
                 }
             }
+        }
 
             NavItem(
                 icon = Icons.Default.Contacts,
@@ -169,13 +170,13 @@ private fun NavItem(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = GuardianGray600,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.size(20.dp)
             )
             Text(
                 text = label,
                 fontSize = 8.sp,
-                color = GuardianGray600
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         }
     }

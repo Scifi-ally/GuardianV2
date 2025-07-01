@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = GuardianBlue,
+    primary = GuardianBlack, // Black primary to match web app
     secondary = GuardianGreen,
     tertiary = GuardianRed,
     background = GuardianDark,
@@ -31,7 +31,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = GuardianBlue,
+    primary = GuardianBlack, // Black primary to match web app exactly
     secondary = GuardianGreen,
     tertiary = GuardianRed,
     background = GuardianWhite,
@@ -48,8 +48,8 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun GuardianTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color disabled to use custom purple theme matching web app
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

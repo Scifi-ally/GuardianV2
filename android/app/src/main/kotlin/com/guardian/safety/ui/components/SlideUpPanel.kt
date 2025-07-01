@@ -2,7 +2,7 @@ package com.guardian.safety.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInFromLeft
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.guardian.safety.ui.theme.*
+import com.guardian.safety.data.model.RouteStep
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,7 +33,7 @@ fun SlideUpPanel(
     onTabSelected: (String) -> Unit,
     isNavigating: Boolean,
     onEndNavigation: () -> Unit,
-    routeSteps: List<String> = emptyList(),
+    routeSteps: List<RouteStep> = emptyList(),
     routeSummary: String = ""
 ) {
     Surface(
@@ -54,10 +55,8 @@ fun SlideUpPanel(
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = GuardianBlue,
                 indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        modifier = Modifier.tabIndicatorOffset(
-                            tabPositions[if (selectedTab == "navigation") 0 else 1]
-                        ),
+                    TabRowDefaults.PrimaryIndicator(
+                        modifier = Modifier,
                         color = GuardianBlue
                     )
                 }
@@ -125,7 +124,7 @@ fun SlideUpPanel(
 private fun NavigationTabContent(
     isNavigating: Boolean,
     onEndNavigation: () -> Unit,
-    routeSteps: List<String> = emptyList(),
+    routeSteps: List<RouteStep> = emptyList(),
     routeSummary: String = ""
 ) {
     if (isNavigating) {
@@ -171,7 +170,8 @@ private fun NavigationTabContent(
 
                     AnimatedVisibility(
                         visible = visible,
-                        enter = slideInFromLeft(
+                        enter = slideInHorizontally(
+                            initialOffsetX = { -it },
                             animationSpec = tween(300, easing = EaseOutCubic)
                         ) + fadeIn(
                             animationSpec = tween(300)

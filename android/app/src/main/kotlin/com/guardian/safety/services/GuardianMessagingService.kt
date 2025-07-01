@@ -62,7 +62,7 @@ class GuardianMessagingService : FirebaseMessagingService() {
                 createAcknowledgeIntent(alertId)
             )
             .addAction(
-                R.drawable.ic_navigation,
+                android.R.drawable.ic_menu_directions,
                 "Navigate",
                 createNavigateIntent(alertId)
             )
@@ -123,7 +123,7 @@ class GuardianMessagingService : FirebaseMessagingService() {
         val notification = NotificationCompat.Builder(this, GuardianApplication.GENERAL_CHANNEL_ID)
             .setContentTitle("👥 Emergency Contact Request")
             .setContentText("$requesterName wants to add you as an emergency contact")
-            .setSmallIcon(R.drawable.ic_people)
+            .setSmallIcon(android.R.drawable.ic_menu_agenda)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_SOCIAL)
@@ -150,7 +150,7 @@ class GuardianMessagingService : FirebaseMessagingService() {
         val notification = NotificationCompat.Builder(this, GuardianApplication.GENERAL_CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(body)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
@@ -186,7 +186,7 @@ class GuardianMessagingService : FirebaseMessagingService() {
     private fun triggerEmergencyVibration() {
         val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
         val pattern = longArrayOf(0, 1000, 500, 1000, 500, 1000, 500, 1000)
-        
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
         } else {

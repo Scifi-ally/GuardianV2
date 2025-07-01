@@ -1,6 +1,7 @@
 package com.guardian.safety.presentation.screens.tutorial
 
 import androidx.compose.animation.*
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +19,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.guardian.safety.ui.theme.*
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun InteractiveSafetyTutorial(
     onDismiss: () -> Unit
@@ -125,14 +127,14 @@ fun InteractiveSafetyTutorial(
                 AnimatedContent(
                     targetState = currentStep,
                     transitionSpec = {
-                        slideInHorizontally(initialOffsetX = { it }) with 
+                        slideInHorizontally(initialOffsetX = { it }) with
                         slideOutHorizontally(targetOffsetX = { -it })
                     },
                     modifier = Modifier.weight(1f),
                     label = "tutorial_content"
                 ) { step ->
                     val currentTutorialStep = tutorialSteps[step]
-                    
+
                     LazyColumn(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -190,8 +192,8 @@ fun InteractiveSafetyTutorial(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     TextButton(
-                        onClick = { 
-                            if (currentStep > 0) currentStep-- 
+                        onClick = {
+                            if (currentStep > 0) currentStep--
                         },
                         enabled = currentStep > 0
                     ) {
@@ -285,7 +287,7 @@ fun SOSStep() {
                 )
             }
         }
-        
+
         Text(
             text = "Press and hold the SOS button for 3 seconds to send emergency alerts to all your contacts.",
             style = MaterialTheme.typography.bodyMedium,
@@ -300,7 +302,7 @@ fun GuardianKeyStep() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Gray100
+            containerColor = GuardianGray100
         )
     ) {
         Column(
@@ -430,7 +432,7 @@ fun CompletionStep() {
             text = "🎉",
             style = MaterialTheme.typography.displayLarge
         )
-        
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(

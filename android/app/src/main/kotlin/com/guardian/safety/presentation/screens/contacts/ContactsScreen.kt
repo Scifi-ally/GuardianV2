@@ -31,7 +31,7 @@ fun ContactsScreen(
 ) {
     val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
     val uiState by contactsViewModel.uiState.collectAsStateWithLifecycle()
-    
+
     var showAddContactDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -97,12 +97,12 @@ fun ContactsScreen(
 
             // Contacts List
             val emergencyContacts = userProfile?.emergencyContacts ?: emptyList()
-            
+
             if (emergencyContacts.isEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = Gray100
+                        containerColor = GuardianGray100
                     )
                 ) {
                     Column(
@@ -154,7 +154,7 @@ fun ContactsScreen(
                         ContactCard(
                             contact = contact,
                             onEdit = { /* TODO: Implement edit */ },
-                            onDelete = { 
+                            onDelete = {
                                 userProfile?.let { user ->
                                     contactsViewModel.removeContact(user.uid, contact.id)
                                 }

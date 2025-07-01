@@ -1,5 +1,6 @@
 package com.guardian.safety.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -149,7 +150,7 @@ fun RouteSearchSection(
 
         // Travel mode selection
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -159,11 +160,11 @@ fun RouteSearchSection(
                 fontSize = 12.sp,
                 color = GuardianGray600
             )
-            
+
             // Walking
             FilterChip(
                 onClick = { onTravelModeChange("WALKING") },
-                label = { 
+                label = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.DirectionsWalk,
@@ -181,11 +182,11 @@ fun RouteSearchSection(
                     selectedLabelColor = GuardianWhite
                 )
             )
-            
+
             // Driving
             FilterChip(
                 onClick = { onTravelModeChange("DRIVING") },
-                label = { 
+                label = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.DirectionsCar,
@@ -203,11 +204,11 @@ fun RouteSearchSection(
                     selectedLabelColor = GuardianWhite
                 )
             )
-            
+
             // Bicycling
             FilterChip(
                 onClick = { onTravelModeChange("BICYCLING") },
-                label = { 
+                label = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.DirectionsBike,

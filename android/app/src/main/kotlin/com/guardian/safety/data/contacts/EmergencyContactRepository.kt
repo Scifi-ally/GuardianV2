@@ -14,7 +14,7 @@ import javax.inject.Singleton
 class EmergencyContactRepository @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
-    
+
     fun getEmergencyContacts(userId: String): Flow<List<EmergencyContact>> = callbackFlow {
         val listener = firestore.collection("users")
             .document(userId)
@@ -23,7 +23,7 @@ class EmergencyContactRepository @Inject constructor(
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
-                
+
                 if (snapshot != null && snapshot.exists()) {
                     val contacts = snapshot.get("emergencyContacts") as? List<Map<String, Any>>
                     val emergencyContacts = contacts?.mapNotNull { contactMap ->
@@ -41,50 +41,50 @@ class EmergencyContactRepository @Inject constructor(
                             null
                         }
                     } ?: emptyList()
-                    
+
                     trySend(emergencyContacts)
                 } else {
                     trySend(emptyList())
                 }
             }
-        
+
         awaitClose { listener.remove() }
     }
-    
+
     suspend fun addEmergencyContact(
-        userId: String, 
+        userId: String,
         contact: EmergencyContact
     ): Result<Unit> {
         return try {
             val userDoc = firestore.collection("users").document(userId)
             val snapshot = userDoc.get().await()
-            
+
             val currentContacts = if (snapshot.exists()) {
                 val contacts = snapshot.get("emergencyContacts") as? List<Map<String, Any>>
                 contacts?.toMutableList() ?: mutableListOf()
             } else {
                 mutableListOf()
             }
-            
+
             currentContacts.add(
                 mapOf(
                     "id" to contact.id,
                     "guardianKey" to contact.guardianKey,
                     "name" to contact.name,
-                    "phone" to contact.phone,
+                    "phone" to (contact.phone ?: ""),
                     "priority" to contact.priority,
                     "addedAt" to contact.addedAt,
                     "isActive" to contact.isActive
                 )
             )
-            
+
             userDoc.update("emergencyContacts", currentContacts).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     suspend fun removeEmergencyContact(
         userId: String,
         contactId: String
@@ -92,29 +92,29 @@ class EmergencyContactRepository @Inject constructor(
         return try {
             val userDoc = firestore.collection("users").document(userId)
             val snapshot = userDoc.get().await()
-            
+
             if (snapshot.exists()) {
                 val contacts = snapshot.get("emergencyContacts") as? List<Map<String, Any>>
-                val updatedContacts = contacts?.filterNot { 
-                    it["id"] == contactId 
+                val updatedContacts = contacts?.filterNot {
+                    it["id"] == contactId
                 } ?: emptyList()
-                
+
                 userDoc.update("emergencyContacts", updatedContacts).await()
             }
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     suspend fun findContactByGuardianKey(guardianKey: String): EmergencyContact? {
         return try {
             val snapshot = firestore.collection("users")
                 .whereEqualTo("guardianKey", guardianKey)
                 .get()
                 .await()
-            
+
             if (!snapshot.isEmpty) {
                 val userDoc = snapshot.documents.first()
                 EmergencyContact(

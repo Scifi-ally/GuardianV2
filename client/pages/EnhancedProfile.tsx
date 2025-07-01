@@ -22,6 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { GuardianKeyCard } from "@/components/GuardianKeyCard";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { MagicNavbar } from "@/components/MagicNavbar";
+import { SimpleBottomNav } from "@/components/SimpleBottomNav";
 import { cn } from "@/lib/utils";
 
 export default function EnhancedProfile() {

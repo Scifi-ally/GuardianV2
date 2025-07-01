@@ -102,13 +102,51 @@ export function SOSNotificationPanel({
 
       // Also respond that we're navigating
       if (userProfile && alert.id) {
+        // Convert LocationData to GeolocationPosition format
+        const geolocationPosition: GeolocationPosition | undefined =
+          currentLocation
+            ? {
+                coords: {
+                  latitude: currentLocation.latitude,
+                  longitude: currentLocation.longitude,
+                  accuracy: currentLocation.accuracy,
+                  altitude: null,
+                  altitudeAccuracy: null,
+                  heading: null,
+                  speed: null,
+                  toJSON: () => ({
+                    latitude: currentLocation.latitude,
+                    longitude: currentLocation.longitude,
+                    accuracy: currentLocation.accuracy,
+                    altitude: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    speed: null,
+                  }),
+                },
+                timestamp: currentLocation.timestamp,
+                toJSON: () => ({
+                  coords: {
+                    latitude: currentLocation.latitude,
+                    longitude: currentLocation.longitude,
+                    accuracy: currentLocation.accuracy,
+                    altitude: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    speed: null,
+                  },
+                  timestamp: currentLocation.timestamp,
+                }),
+              }
+            : undefined;
+
         await SOSService.respondToSOS(
           alert.id,
           userProfile.uid,
           userProfile.displayName,
           "enroute",
           "Navigating to your location",
-          currentLocation,
+          geolocationPosition,
         );
       }
     } catch (error) {

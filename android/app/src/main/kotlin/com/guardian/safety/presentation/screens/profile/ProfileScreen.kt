@@ -168,7 +168,7 @@ fun ProfileScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = Gray100
+                                containerColor = GuardianGray100
                             )
                         ) {
                             Row(
@@ -343,10 +343,10 @@ fun ProfileAction(
             modifier = Modifier.size(48.dp),
             shape = CircleShape,
             colors = CardDefaults.cardColors(
-                containerColor = if (isDestructive) 
-                    GuardianRed.copy(alpha = 0.1f) 
-                else 
-                    Gray100
+                containerColor = if (isDestructive)
+                    GuardianRed.copy(alpha = 0.1f)
+                else
+                    GuardianGray100
             )
         ) {
             Box(

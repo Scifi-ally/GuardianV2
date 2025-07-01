@@ -71,7 +71,7 @@ class SOSAlertService : Service() {
             try {
                 // Get current location
                 val location = getCurrentLocation()
-                
+
                 // Get user profile
                 val userResult = authRepository.getCurrentUserProfile()
                 if (userResult.isFailure) {
@@ -169,7 +169,7 @@ class SOSAlertService : Service() {
     private fun triggerEmergencyEffects() {
         // Vibration pattern: short-long-short-long
         val vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500)
-        
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createWaveform(vibrationPattern, -1))
         } else {
@@ -210,7 +210,7 @@ class SOSAlertService : Service() {
         val notification = NotificationCompat.Builder(this, GuardianApplication.GENERAL_CHANNEL_ID)
             .setContentTitle("SOS Alert Failed")
             .setContentText(message)
-            .setSmallIcon(R.drawable.ic_error)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_ERROR)
