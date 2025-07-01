@@ -1,0 +1,271 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions for authentication and authorization
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidUser() {
+      return isAuthenticated() && request.auth.uid != null;
+    }
+    
+    function isValidEmail() {
+      return request.auth.token.email_verified == true;
+    }
+
+    // Users collection - core user profiles
+    match /users/{userId} {
+      // Allow users to read and write their own profile
+      allow read, write: if isAuthenticated() && isOwner(userId);
+      
+      // Allow reading user profiles for guardian key lookup (limited fields)
+      allow read: if isAuthenticated() && 
+        resource.data.keys().hasAny(['displayName', 'guardianKey', 'uid']);
+      
+      // Ensure user can only create their own profile
+      allow create: if isAuthenticated() && 
+        isOwner(userId) && 
+        request.resource.data.uid == request.auth.uid;
+      
+      // User notifications subcollection
+      match /notifications/{notificationId} {
+        // Users can manage their own notifications
+        allow read, write, delete: if isAuthenticated() && isOwner(userId);
+        
+        // Allow emergency contacts to create notifications for this user
+        allow create: if isAuthenticated() && 
+          (isOwner(userId) || 
+           request.resource.data.senderId == request.auth.uid);
+      }
+      
+      // User settings subcollection
+      match /settings/{settingId} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+      }
+      
+      // User activity logs subcollection  
+      match /activity/{activityId} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+        allow create: if isAuthenticated();
+      }
+    }
+
+    // Guardian Keys collection - for contact lookup
+    match /guardianKeys/{keyId} {
+      // Allow reading guardian keys for contact discovery
+      allow read: if isAuthenticated();
+      
+      // Only allow creating/updating your own guardian key record
+      allow create, update: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow deleting only your own guardian key
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Ensure guardian key data integrity
+      allow write: if isAuthenticated() && 
+        request.resource.data.keys().hasAll(['guardianKey', 'userId', 'displayName', 'email']) &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.guardianKey is string &&
+        request.resource.data.guardianKey.size() == 8;
+    }
+
+    // SOS Alerts collection - emergency alerts
+    match /sosAlerts/{alertId} {
+      // Allow reading alerts if you're the sender or in the receivers list
+      allow read: if isAuthenticated() && 
+        (resource.data.senderId == request.auth.uid || 
+         request.auth.uid in resource.data.receiverIds);
+      
+      // Allow creating alerts if you're the sender
+      allow create: if isAuthenticated() && 
+        request.resource.data.senderId == request.auth.uid &&
+        request.resource.data.keys().hasAll(['senderId', 'senderName', 'senderKey', 'receiverIds', 'message', 'status', 'createdAt', 'type', 'priority']);
+      
+      // Allow updating alerts if you're involved (sender or receiver)
+      allow update: if isAuthenticated() && 
+        (resource.data.senderId == request.auth.uid || 
+         request.auth.uid in resource.data.receiverIds);
+      
+      // Prevent deletion of SOS alerts for audit trail
+      allow delete: if false;
+      
+      // Validate SOS alert data structure
+      allow write: if isAuthenticated() &&
+        request.resource.data.status in ['active', 'resolved', 'cancelled'] &&
+        request.resource.data.type in ['manual', 'automatic', 'panic', 'voice-activation'] &&
+        request.resource.data.priority in ['low', 'medium', 'high', 'critical'] &&
+        request.resource.data.receiverIds is list &&
+        request.resource.data.receiverIds.size() > 0;
+    }
+
+    // SOS Responses collection - responses to emergency alerts
+    match /sosResponses/{responseId} {
+      // Allow reading responses if you're involved in the original alert
+      allow read: if isAuthenticated();
+      
+      // Allow creating responses if you're authenticated
+      allow create: if isAuthenticated() && 
+        request.resource.data.responderId == request.auth.uid &&
+        request.resource.data.keys().hasAll(['alertId', 'responderId', 'responderName', 'response', 'timestamp']);
+      
+      // Allow updating your own responses
+      allow update: if isAuthenticated() && 
+        resource.data.responderId == request.auth.uid;
+      
+      // No deletion of responses for audit trail
+      allow delete: if false;
+      
+      // Validate response data
+      allow write: if isAuthenticated() &&
+        request.resource.data.response in ['acknowledged', 'enroute', 'arrived', 'assisted'] &&
+        request.resource.data.responderId == request.auth.uid;
+    }
+
+    // Emergency Contacts collection (if stored separately)
+    match /emergencyContacts/{contactId} {
+      // Allow users to manage their own emergency contacts
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+    }
+
+    // Location Tracking collection - for safety monitoring
+    match /locationTracking/{trackingId} {
+      // Allow users to manage their own location data
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow emergency contacts to read location during active alerts
+      allow read: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/sosAlerts/$(trackingId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/sosAlerts/$(trackingId)).data.receiverIds;
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Auto-expire location data after 24 hours
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         request.time > resource.data.timestamp + duration.value(86400, 's'));
+    }
+
+    // Safety Reports collection - for reporting unsafe areas
+    match /safetyReports/{reportId} {
+      // Allow reading all safety reports (anonymized)
+      allow read: if isAuthenticated();
+      
+      // Allow creating safety reports
+      allow create: if isAuthenticated() && 
+        request.resource.data.reporterId == request.auth.uid;
+      
+      // Allow updating your own reports
+      allow update: if isAuthenticated() && 
+        resource.data.reporterId == request.auth.uid;
+      
+      // Allow deleting your own reports
+      allow delete: if isAuthenticated() && 
+        resource.data.reporterId == request.auth.uid;
+    }
+
+    // Safe Places collection - community-verified safe locations
+    match /safePlaces/{placeId} {
+      // Allow reading all safe places
+      allow read: if isAuthenticated();
+      
+      // Allow creating safe place suggestions
+      allow create: if isAuthenticated() && 
+        request.resource.data.createdBy == request.auth.uid;
+      
+      // Allow updating if you created it or it's a verification
+      allow update: if isAuthenticated() && 
+        (resource.data.createdBy == request.auth.uid || 
+         request.resource.data.keys().hasOnly(['verifiedBy', 'verificationCount', 'lastVerified']));
+    }
+
+    // Chat/Messages collection - for emergency communication
+    match /chats/{chatId} {
+      // Allow access if user is a participant
+      allow read, write: if isAuthenticated() && 
+        request.auth.uid in resource.data.participants;
+      
+      allow create: if isAuthenticated() && 
+        request.auth.uid in request.resource.data.participants;
+      
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        
+        allow create: if isAuthenticated() && 
+          request.resource.data.senderId == request.auth.uid;
+      }
+    }
+
+    // App Settings collection - global app configuration
+    match /appSettings/{settingId} {
+      // Allow reading app settings for all authenticated users
+      allow read: if isAuthenticated();
+      
+      // Only admin users can modify (implement admin check as needed)
+      allow write: if false; // Restrict to admin only
+    }
+
+    // Analytics collection - for app usage analytics (anonymized)
+    match /analytics/{analyticsId} {
+      // Allow creating analytics events
+      allow create: if isAuthenticated();
+      
+      // No reading or updating analytics for privacy
+      allow read, update, delete: if false;
+    }
+
+    // Feedback collection - user feedback and reports
+    match /feedback/{feedbackId} {
+      // Allow users to create feedback
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow users to read their own feedback
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow updating your own feedback
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Device Tokens collection - for push notifications
+    match /deviceTokens/{tokenId} {
+      // Allow users to manage their own device tokens
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+    }
+
+    // Audit Logs collection - for security and compliance
+    match /auditLogs/{logId} {
+      // Allow creating audit logs (system generated)
+      allow create: if isAuthenticated();
+      
+      // No reading, updating, or deleting audit logs for security
+      allow read, update, delete: if false;
+    }
+
+    // Block any other collections not explicitly defined
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

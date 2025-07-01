@@ -1,0 +1,149 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidImageFile() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 10 * 1024 * 1024; // 10MB limit
+    }
+    
+    function isValidVideoFile() {
+      return request.resource.contentType.matches('video/.*') &&
+             request.resource.size < 100 * 1024 * 1024; // 100MB limit
+    }
+    
+    function isValidAudioFile() {
+      return request.resource.contentType.matches('audio/.*') &&
+             request.resource.size < 25 * 1024 * 1024; // 25MB limit
+    }
+
+    // User profile pictures
+    match /users/{userId}/profile/{imageId} {
+      // Allow users to upload and manage their own profile pictures
+      allow read: if isAuthenticated();
+      allow write, delete: if isAuthenticated() && 
+        isOwner(userId) && 
+        isValidImageFile();
+    }
+
+    // Emergency evidence uploads (photos, videos, audio)
+    match /evidence/{userId}/{alertId}/{fileId} {
+      // Allow emergency contacts to read evidence during active alerts
+      allow read: if isAuthenticated() && 
+        (isOwner(userId) || 
+         exists(/databases/(default)/documents/sosAlerts/$(alertId)) &&
+         request.auth.uid in get(/databases/(default)/documents/sosAlerts/$(alertId)).data.receiverIds);
+      
+      // Allow uploading evidence during emergencies
+      allow create: if isAuthenticated() && 
+        isOwner(userId) && 
+        (isValidImageFile() || isValidVideoFile() || isValidAudioFile());
+      
+      // Allow deleting your own evidence (after emergency resolved)
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Safety report media (photos of unsafe areas, incidents)
+    match /safety-reports/{userId}/{reportId}/{fileId} {
+      // Allow reading safety report media (for community awareness)
+      allow read: if isAuthenticated();
+      
+      // Allow uploading media with safety reports
+      allow create: if isAuthenticated() && 
+        isOwner(userId) && 
+        isValidImageFile();
+      
+      // Allow deleting your own safety report media
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Safe places photos (community verified safe locations)
+    match /safe-places/{placeId}/{fileId} {
+      // Allow reading safe place photos
+      allow read: if isAuthenticated();
+      
+      // Allow uploading photos of safe places
+      allow create: if isAuthenticated() && isValidImageFile();
+      
+      // Allow deleting if you uploaded it
+      allow delete: if isAuthenticated() && 
+        resource.metadata.uploadedBy == request.auth.uid;
+    }
+
+    // Temporary uploads (for processing before moving to permanent location)
+    match /temp/{userId}/{fileId} {
+      // Allow temporary uploads for processing
+      allow read, write, delete: if isAuthenticated() && 
+        isOwner(userId) && 
+        (isValidImageFile() || isValidVideoFile() || isValidAudioFile());
+      
+      // Auto-delete temporary files after 24 hours
+      allow delete: if request.time > resource.timeCreated + duration.value(86400, 's');
+    }
+
+    // App assets and public content
+    match /public/{allPaths=**} {
+      // Allow reading public assets
+      allow read: if true;
+      
+      // No writing to public assets
+      allow write: if false;
+    }
+
+    // Chat media (photos/videos shared in emergency chats)
+    match /chats/{chatId}/{messageId}/{fileId} {
+      // Allow reading if user is part of the chat
+      allow read: if isAuthenticated() && 
+        request.auth.uid in get(/databases/(default)/documents/chats/$(chatId)).data.participants;
+      
+      // Allow uploading media to chats you're part of
+      allow create: if isAuthenticated() && 
+        request.auth.uid in get(/databases/(default)/documents/chats/$(chatId)).data.participants &&
+        (isValidImageFile() || isValidVideoFile() || isValidAudioFile());
+      
+      // Allow deleting your own uploads
+      allow delete: if isAuthenticated() && 
+        resource.metadata.uploadedBy == request.auth.uid;
+    }
+
+    // Location screenshots (for sharing location via image)
+    match /locations/{userId}/{locationId}/{fileId} {
+      // Allow emergency contacts to view location screenshots
+      allow read: if isAuthenticated() && 
+        (isOwner(userId) || 
+         request.auth.uid in get(/databases/(default)/documents/users/$(userId)).data.emergencyContacts);
+      
+      // Allow uploading location screenshots
+      allow create: if isAuthenticated() && 
+        isOwner(userId) && 
+        isValidImageFile();
+      
+      // Allow deleting your own location screenshots
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Backup data exports
+    match /backups/{userId}/{backupId} {
+      // Allow users to download their own data backups
+      allow read: if isAuthenticated() && isOwner(userId);
+      
+      // System generated backups only
+      allow write: if false;
+    }
+
+    // Block any other paths not explicitly allowed
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

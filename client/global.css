@@ -1,0 +1,390 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Universal outline removal - highest priority */
+* {
+  outline: none !important;
+}
+
+*:focus,
+*:focus-visible,
+*:focus-within,
+*:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 0%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Women's Safety App Colors */
+    --safe: 140 65% 55%;
+    --safe-foreground: 0 0% 100%;
+    --emergency: 0 85% 65%;
+    --emergency-foreground: 0 0% 100%;
+    --warning: 35 90% 60%;
+    --warning-foreground: 0 0% 100%;
+    --protection: 280 85% 65%;
+    --protection-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 320 15% 8%;
+    --foreground: 320 15% 95%;
+
+    --card: 320 15% 10%;
+    --card-foreground: 320 15% 95%;
+
+    --popover: 320 15% 10%;
+    --popover-foreground: 320 15% 95%;
+
+    --primary: 280 85% 70%;
+    --primary-foreground: 320 15% 8%;
+
+    --secondary: 320 10% 15%;
+    --secondary-foreground: 320 15% 95%;
+
+    --muted: 320 10% 15%;
+    --muted-foreground: 320 10% 65%;
+
+    --accent: 320 10% 15%;
+    --accent-foreground: 320 15% 95%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 320 10% 20%;
+    --input: 320 10% 20%;
+    --ring: 280 85% 70%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Women's Safety App Dark Colors */
+    --safe: 140 60% 50%;
+    --safe-foreground: 0 0% 100%;
+    --emergency: 0 80% 60%;
+    --emergency-foreground: 0 0% 100%;
+    --warning: 35 85% 55%;
+    --warning-foreground: 0 0% 100%;
+    --protection: 280 85% 70%;
+    --protection-foreground: 320 15% 8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    outline: none;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: 16px; /* Increased from default 14px */
+    line-height: 1.6; /* Better line spacing for readability */
+  }
+
+  /* Improve readability across common text elements */
+  .text-xs {
+    font-size: 0.8rem;
+  } /* Slightly larger than default 0.75rem */
+  .text-sm {
+    font-size: 0.95rem;
+  } /* Increased from 0.875rem */
+  .text-base {
+    font-size: 1.1rem;
+  } /* Increased from 1rem */
+  .text-lg {
+    font-size: 1.25rem;
+  } /* Increased from 1.125rem */
+  .text-xl {
+    font-size: 1.4rem;
+  } /* Increased from 1.25rem */
+}
+
+/* COMPLETE SCROLLBAR VISIBILITY DISABLE */
+@layer base {
+  /* Global scrollbar hiding - highest priority */
+  html {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    overflow-x: hidden;
+  }
+
+  html::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    overflow-x: hidden;
+  }
+
+  body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Universal scrollbar hiding for ALL elements */
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-track {
+    display: none !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    display: none !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-corner {
+    display: none !important;
+    background: transparent !important;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar class for specific elements */
+  .custom-scrollbar {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* All overflow variants */
+  .overflow-y-auto,
+  .overflow-x-auto,
+  .overflow-auto,
+  .overflow-hidden,
+  .overflow-scroll,
+  .overflow-visible {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar,
+  .overflow-x-auto::-webkit-scrollbar,
+  .overflow-auto::-webkit-scrollbar,
+  .overflow-hidden::-webkit-scrollbar,
+  .overflow-scroll::-webkit-scrollbar,
+  .overflow-visible::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Scroll area components */
+  .scroll-area {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .scroll-area::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Textarea and input scrollbars */
+  textarea,
+  input[type="text"],
+  input[type="search"],
+  select {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  textarea::-webkit-scrollbar,
+  input[type="text"]::-webkit-scrollbar,
+  input[type="search"]::-webkit-scrollbar,
+  select::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Remove focus outlines that could appear as lines */
+  *:focus {
+    outline: none !important;
+  }
+
+  *:focus-visible {
+    outline: none !important;
+    outline-offset: 0 !important;
+  }
+
+  /* Additional comprehensive outline removal */
+  *:focus-within {
+    outline: none !important;
+  }
+
+  *:active {
+    outline: none !important;
+  }
+
+  button:focus,
+  input:focus,
+  textarea:focus,
+  select:focus,
+  a:focus,
+  [tabindex]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  a:focus-visible,
+  [tabindex]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide any potential scrollbar spaces */
+  .hide-scrollbar {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Additional comprehensive scrollbar hiding */
+  div,
+  main,
+  section,
+  article,
+  aside,
+  nav,
+  header,
+  footer {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  div::-webkit-scrollbar,
+  main::-webkit-scrollbar,
+  section::-webkit-scrollbar,
+  article::-webkit-scrollbar,
+  aside::-webkit-scrollbar,
+  nav::-webkit-scrollbar,
+  header::-webkit-scrollbar,
+  footer::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Force hide scrollbars on common UI components */
+  [class*="overflow"],
+  [class*="scroll"],
+  .container,
+  .content,
+  .panel,
+  .modal {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  [class*="overflow"]::-webkit-scrollbar,
+  [class*="scroll"]::-webkit-scrollbar,
+  .container::-webkit-scrollbar,
+  .content::-webkit-scrollbar,
+  .panel::-webkit-scrollbar,
+  .modal::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+/* Smooth transitions for touch interactions */
+@layer utilities {
+  .touch-pan-x {
+    touch-action: pan-x;
+  }
+
+  .touch-pan-y {
+    touch-action: pan-y;
+  }
+
+  .touch-none {
+    touch-action: none;
+  }
+}

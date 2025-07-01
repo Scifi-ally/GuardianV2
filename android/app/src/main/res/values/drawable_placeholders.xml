@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 
+    NOTE: You'll need to add these drawable resources:
+    - ic_shield (shield icon for the app logo)
+    - ic_location (location icon for notifications)
+    - ic_emergency (emergency alert icon)
+    - ic_check (checkmark icon)
+    - ic_navigation (navigation icon)
+    - ic_people (people/contacts icon)
+    - ic_error (error icon)
+    - ic_notification (general notification icon)
+    
+    You can create these as vector drawables or use Material Design icons.
+    -->
+</resources>
