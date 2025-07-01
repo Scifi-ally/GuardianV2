@@ -26,12 +26,8 @@ color guardian_yellow
 color white
 drawable ic_check
 drawable ic_emergency
-drawable ic_launcher_background
-drawable ic_launcher_foreground
 drawable ic_location
 drawable ic_shield
-mipmap ic_launcher
-mipmap ic_launcher_round
 string app_name
 string gcm_defaultSenderId
 string google_api_key
@@ -43,7 +39,6 @@ string location_tracking_title
 string project_id
 string sos_notification_text
 string sos_notification_title
-style Theme.GuardianSafety
 style Theme.Guardian.Fallback
 style Theme.Guardian.Simple
 xml backup_rules

@@ -16,6 +16,13 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+
+    <!-- Google Maps API Key -->
+    <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE" />
 
     <application
         android:name=".GuardianApplication"
@@ -26,13 +33,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.GuardianSafety"
         tools:targetApi="31">
 
         <activity
-            android:name=".MinimalMainActivity"
+            android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop">
+            android:theme="@style/Theme.Guardian.Fallback">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

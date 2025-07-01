@@ -393,66 +393,6 @@
     <string name="indeterminate">Partially checked</string>
     <string name="location_tracking_text">Sharing your location for emergency response</string>
     <string name="location_tracking_title">Guardian Location Tracking</string>
-    <string name="m3c_bottom_sheet_collapse_description">Collapse bottom sheet</string>
-    <string name="m3c_bottom_sheet_dismiss_description">Dismiss bottom sheet</string>
-    <string name="m3c_bottom_sheet_drag_handle_description">Drag handle</string>
-    <string name="m3c_bottom_sheet_expand_description">Expand bottom sheet</string>
-    <string name="m3c_bottom_sheet_pane_title">Bottom Sheet</string>
-    <string name="m3c_date_input_headline">Entered date</string>
-    <string name="m3c_date_input_headline_description">Entered date: %1$s</string>
-    <string name="m3c_date_input_invalid_for_pattern">Date does not match expected pattern: %1$s</string>
-    <string name="m3c_date_input_invalid_not_allowed">Date not allowed: %1$s</string>
-    <string name="m3c_date_input_invalid_year_range">
-        Date out of expected year range %1$s - %2$s
-    </string>
-    <string name="m3c_date_input_label">Date</string>
-    <string name="m3c_date_input_no_input_description">None</string>
-    <string name="m3c_date_input_title">Select date</string>
-    <string name="m3c_date_picker_headline">"Selected date"</string>
-    <string name="m3c_date_picker_headline_description">Current selection: %1$s</string>
-    <string name="m3c_date_picker_navigate_to_year_description">Navigate to year %1$s</string>
-    <string name="m3c_date_picker_no_selection_description">None</string>
-    <string name="m3c_date_picker_scroll_to_earlier_years">Scroll to show earlier years</string>
-    <string name="m3c_date_picker_scroll_to_later_years">Scroll to show later years</string>
-    <string name="m3c_date_picker_switch_to_calendar_mode">Switch to calendar input mode</string>
-    <string name="m3c_date_picker_switch_to_day_selection">
-        "Swipe to select a year, or tap to switch back to selecting a day"
-    </string>
-    <string name="m3c_date_picker_switch_to_input_mode">Switch to text input mode</string>
-    <string name="m3c_date_picker_switch_to_next_month">"Change to next month"</string>
-    <string name="m3c_date_picker_switch_to_previous_month">"Change to previous month"</string>
-    <string name="m3c_date_picker_switch_to_year_selection">"Switch to selecting a year"</string>
-    <string name="m3c_date_picker_title">"Select date"</string>
-    <string name="m3c_date_picker_today_description">Today</string>
-    <string name="m3c_date_picker_year_picker_pane_title">Year picker visible</string>
-    <string name="m3c_date_range_input_invalid_range_input">Invalid date range input</string>
-    <string name="m3c_date_range_input_title">Enter dates</string>
-    <string name="m3c_date_range_picker_day_in_range">In range</string>
-    <string name="m3c_date_range_picker_end_headline">End date</string>
-    <string name="m3c_date_range_picker_scroll_to_next_month">Scroll to show the next month</string>
-    <string name="m3c_date_range_picker_scroll_to_previous_month">Scroll to show the previous month</string>
-    <string name="m3c_date_range_picker_start_headline">Start date</string>
-    <string name="m3c_date_range_picker_title">Select dates</string>
-    <string name="m3c_dialog">"Dialog"</string>
-    <string name="m3c_dropdown_menu_collapsed">Collapsed</string>
-    <string name="m3c_dropdown_menu_expanded">Expanded</string>
-    <string name="m3c_search_bar_search">Search</string>
-    <string name="m3c_snackbar_dismiss">Dismiss</string>
-    <string name="m3c_suggestions_available">Suggestions below</string>
-    <string name="m3c_time_picker_am">AM</string>
-    <string name="m3c_time_picker_hour">Hour</string>
-    <string name="m3c_time_picker_hour_24h_suffix">%1$d hours</string>
-    <string name="m3c_time_picker_hour_selection">Select hour</string>
-    <string name="m3c_time_picker_hour_suffix">%1$d o\'clock</string>
-    <string name="m3c_time_picker_hour_text_field">for hour</string>
-    <string name="m3c_time_picker_minute">Minute</string>
-    <string name="m3c_time_picker_minute_selection">Select minutes</string>
-    <string name="m3c_time_picker_minute_suffix">%1$d minutes</string>
-    <string name="m3c_time_picker_minute_text_field">for minutes</string>
-    <string name="m3c_time_picker_period_toggle_description">Select AM or PM</string>
-    <string name="m3c_time_picker_pm">PM</string>
-    <string name="m3c_tooltip_long_press_label">Show tooltip</string>
-    <string name="m3c_tooltip_pane_description">Tooltip</string>
     <string name="navigation_menu">"Navigation menu"</string>
     <string name="not_selected">Not selected</string>
     <string name="off">Off</string>
@@ -468,8 +408,6 @@
     <string name="switch_role">Switch</string>
     <string name="tab">Tab</string>
     <string name="template_percent"><ns1:g id="percentage">%1$d</ns1:g> percent.</string>
-    <string name="tooltip_description">tooltip</string>
-    <string name="tooltip_label">show tooltip</string>
     <style name="AlertDialog.AppCompat" parent="Base.AlertDialog.AppCompat"/>
     <style name="AlertDialog.AppCompat.Light" parent="Base.AlertDialog.AppCompat.Light"/>
     <style name="Animation.AppCompat.Dialog" parent="Base.Animation.AppCompat.Dialog"/>
@@ -1891,14 +1829,15 @@
         <item name="colorPrimary">@color/guardian_blue</item>
         <item name="colorPrimaryDark">@color/guardian_blue_dark</item>
         <item name="colorAccent">@color/guardian_green</item>
-
+        
         
         <item name="android:colorBackground">@color/white</item>
-
+        <item name="colorSurface">@color/white</item>
+        
         
         <item name="android:statusBarColor">@color/white</item>
         <item name="android:windowLightStatusBar">true</item>
-
+        
         
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
@@ -1914,30 +1853,6 @@
         
         <item name="android:statusBarColor">@color/white</item>
         <item name="android:windowLightStatusBar">true</item>
-    </style>
-    <style name="Theme.GuardianSafety" parent="Theme.AppCompat.DayNight">
-        
-        <item name="colorPrimary">@color/guardian_blue</item>
-        <item name="colorPrimaryDark">@color/guardian_blue_dark</item>
-        <item name="colorAccent">@color/guardian_green</item>
-
-        
-        <item name="android:colorBackground">@color/white</item>
-
-        
-        <item name="android:textColorPrimary">@color/black</item>
-        <item name="android:textColorSecondary">@color/gray_600</item>
-
-        
-        <item name="android:statusBarColor">@color/guardian_blue</item>
-        <item name="android:windowLightStatusBar">false</item>
-
-        
-        <item name="android:navigationBarColor">@color/white</item>
-        <item name="android:windowLightNavigationBar">true</item>
-
-        
-        <item name="android:windowBackground">@color/white</item>
     </style>
     <style name="ThemeOverlay.AppCompat" parent="Base.ThemeOverlay.AppCompat"/>
     <style name="ThemeOverlay.AppCompat.ActionBar" parent="Base.ThemeOverlay.AppCompat.ActionBar"/>

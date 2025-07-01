@@ -2,6 +2,8 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("kotlin-kapt")
+    id("dagger.hilt.android.plugin")
     id("kotlin-parcelize")
 }
 
@@ -64,27 +66,34 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
 
-    // Navigation
+    // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.7.5")
 
-    // ViewModel
+    // ViewModel Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
-    // Removed Hilt to fix KAPT compilation issues
+    // Hilt for DI
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
-    // Firebase
+    // Firebase - matching web app
     implementation(platform("com.google.firebase:firebase-bom:32.6.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-functions-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+
+    // Google Play Services for Maps and Location
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.maps.android:maps-compose:4.3.0")
 
     // Location Services
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
-
-    // Permissions
-    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
@@ -100,17 +109,20 @@ dependencies {
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    // System UI Controller
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
-
     // Animation
     implementation("com.airbnb.android:lottie-compose:6.1.0")
+
+    // System UI Controller for Compose
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
+
+    // Permissions for Compose
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2023.10.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

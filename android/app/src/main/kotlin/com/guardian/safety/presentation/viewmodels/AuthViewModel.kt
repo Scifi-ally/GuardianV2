@@ -9,15 +9,17 @@ import com.google.firebase.auth.FirebaseUser
 import com.guardian.safety.data.models.User
 import com.guardian.safety.data.repositories.AuthRepository
 import com.guardian.safety.data.repositories.EmergencyContactsRepository
-import com.guardian.safety.di.AppModule
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AuthViewModel(
-    private val authRepository: AuthRepository = AuthRepository(AppModule.provideFirebaseAuth(), AppModule.provideFirebaseFirestore()),
-    private val emergencyContactsRepository: EmergencyContactsRepository = EmergencyContactsRepository(AppModule.provideFirebaseFirestore())
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val emergencyContactsRepository: EmergencyContactsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -42,7 +44,7 @@ class AuthViewModel(
             authRepository.currentUser.collect { user ->
                 _currentUser.value = user
                 isAuthenticated = user != null
-
+                
                 if (user != null) {
                     loadUserProfile()
                 } else {
@@ -55,7 +57,7 @@ class AuthViewModel(
     fun signIn(email: String, password: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-
+            
             val result = authRepository.signInWithEmailAndPassword(email, password)
             if (result.isSuccess) {
                 loadUserProfile()
@@ -71,15 +73,15 @@ class AuthViewModel(
     fun signUp(email: String, password: String, displayName: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-
+            
             val result = authRepository.createUserWithEmailAndPassword(email, password)
             if (result.isSuccess) {
                 val user = result.getOrNull()!!
-
+                
                 // Generate guardian key
                 val keyResult = emergencyContactsRepository.generateGuardianKey(user.uid)
                 val guardianKey = keyResult.getOrNull() ?: ""
-
+                
                 // Create user profile
                 val userProfile = User(
                     uid = user.uid,
@@ -89,7 +91,7 @@ class AuthViewModel(
                     createdAt = System.currentTimeMillis(),
                     lastSeen = System.currentTimeMillis()
                 )
-
+                
                 val profileResult = authRepository.createUserProfile(userProfile)
                 if (profileResult.isSuccess) {
                     _userProfile.value = userProfile
@@ -133,7 +135,7 @@ class AuthViewModel(
     fun updateUserProfile(user: User) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-
+            
             val result = authRepository.updateUserProfile(user)
             if (result.isSuccess) {
                 _userProfile.value = user

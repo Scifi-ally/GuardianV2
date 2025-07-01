@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.guardian.safety.presentation.components.MagicNavbar
@@ -29,7 +29,7 @@ import com.guardian.safety.ui.theme.*
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
@@ -343,9 +343,9 @@ fun ProfileAction(
             modifier = Modifier.size(48.dp),
             shape = CircleShape,
             colors = CardDefaults.cardColors(
-                containerColor = if (isDestructive)
-                    GuardianRed.copy(alpha = 0.1f)
-                else
+                containerColor = if (isDestructive) 
+                    GuardianRed.copy(alpha = 0.1f) 
+                else 
                     Gray100
             )
         ) {

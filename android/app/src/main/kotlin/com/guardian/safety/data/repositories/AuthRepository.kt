@@ -8,12 +8,15 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AuthRepository(
+@Singleton
+class AuthRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) {
-
+    
     val currentUser: Flow<FirebaseUser?> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { auth ->
             trySend(auth.currentUser)

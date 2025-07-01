@@ -3,14 +3,16 @@ package com.guardian.safety.presentation.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.guardian.safety.data.repositories.EmergencyContactsRepository
-import com.guardian.safety.di.AppModule
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ContactsViewModel(
-    private val emergencyContactsRepository: EmergencyContactsRepository = EmergencyContactsRepository(AppModule.provideFirebaseFirestore())
+@HiltViewModel
+class ContactsViewModel @Inject constructor(
+    private val emergencyContactsRepository: EmergencyContactsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ContactsUiState())
@@ -25,11 +27,11 @@ class ContactsViewModel(
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-
+            
             val result = emergencyContactsRepository.addEmergencyContact(
                 userId, name, relationship, guardianKey, priority
             )
-
+            
             if (result.isFailure) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -44,9 +46,9 @@ class ContactsViewModel(
     fun removeContact(userId: String, contactId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-
+            
             val result = emergencyContactsRepository.removeEmergencyContact(userId, contactId)
-
+            
             if (result.isFailure) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.guardian.safety.data.models.EmergencyContact
@@ -26,12 +26,12 @@ import com.guardian.safety.ui.theme.*
 @Composable
 fun ContactsScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel(),
-    contactsViewModel: ContactsViewModel = viewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    contactsViewModel: ContactsViewModel = hiltViewModel()
 ) {
     val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
     val uiState by contactsViewModel.uiState.collectAsStateWithLifecycle()
-
+    
     var showAddContactDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -97,7 +97,7 @@ fun ContactsScreen(
 
             // Contacts List
             val emergencyContacts = userProfile?.emergencyContacts ?: emptyList()
-
+            
             if (emergencyContacts.isEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -154,7 +154,7 @@ fun ContactsScreen(
                         ContactCard(
                             contact = contact,
                             onEdit = { /* TODO: Implement edit */ },
-                            onDelete = {
+                            onDelete = { 
                                 userProfile?.let { user ->
                                     contactsViewModel.removeContact(user.uid, contact.id)
                                 }

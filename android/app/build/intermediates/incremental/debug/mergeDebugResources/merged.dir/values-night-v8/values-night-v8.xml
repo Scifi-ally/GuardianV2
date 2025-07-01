@@ -7,29 +7,5 @@
     <style name="Theme.AppCompat.DayNight.Dialog.MinWidth" parent="Theme.AppCompat.Dialog.MinWidth"/>
     <style name="Theme.AppCompat.DayNight.DialogWhenLarge" parent="Theme.AppCompat.DialogWhenLarge"/>
     <style name="Theme.AppCompat.DayNight.NoActionBar" parent="Theme.AppCompat.NoActionBar"/>
-    <style name="Theme.GuardianSafety" parent="Theme.AppCompat.DayNight">
-        
-        <item name="colorPrimary">@color/guardian_blue_light</item>
-        <item name="colorPrimaryDark">@color/guardian_blue_dark</item>
-        <item name="colorAccent">@color/guardian_green_light</item>
-
-        
-        <item name="android:colorBackground">@color/gray_900</item>
-
-        
-        <item name="android:textColorPrimary">@color/white</item>
-        <item name="android:textColorSecondary">@color/gray_300</item>
-
-        
-        <item name="android:statusBarColor">@color/gray_900</item>
-        <item name="android:windowLightStatusBar">false</item>
-
-        
-        <item name="android:navigationBarColor">@color/gray_900</item>
-        <item name="android:windowLightNavigationBar">false</item>
-
-        
-        <item name="android:windowBackground">@color/gray_900</item>
-    </style>
     <style name="ThemeOverlay.AppCompat.DayNight" parent="ThemeOverlay.AppCompat.Dark"/>
 </resources>

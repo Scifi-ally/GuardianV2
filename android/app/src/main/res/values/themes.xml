@@ -1,28 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Guardian Safety App Theme -->
-    <style name="Theme.GuardianSafety" parent="Theme.AppCompat.DayNight">
-        <!-- Primary brand color -->
-        <item name="colorPrimary">@color/guardian_blue</item>
-        <item name="colorPrimaryDark">@color/guardian_blue_dark</item>
-        <item name="colorAccent">@color/guardian_green</item>
-
-        <!-- Background colors -->
-        <item name="android:colorBackground">@color/white</item>
-
-        <!-- Text colors -->
-        <item name="android:textColorPrimary">@color/black</item>
-        <item name="android:textColorSecondary">@color/gray_600</item>
-
-        <!-- Status bar -->
-        <item name="android:statusBarColor">@color/guardian_blue</item>
-        <item name="android:windowLightStatusBar">false</item>
-
-        <!-- Navigation bar -->
-        <item name="android:navigationBarColor">@color/white</item>
-        <item name="android:windowLightNavigationBar">true</item>
-
-        <!-- Window background -->
-        <item name="android:windowBackground">@color/white</item>
-    </style>
+    <!-- No custom themes - using Android defaults only -->
 </resources>

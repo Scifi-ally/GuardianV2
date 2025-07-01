@@ -7,14 +7,16 @@ import androidx.lifecycle.viewModelScope
 import com.guardian.safety.data.models.SOSAlert
 import com.guardian.safety.data.repositories.SOSRepository
 import com.guardian.safety.services.SOSAlertService
-import com.guardian.safety.di.AppModule
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SOSViewModel(
-    private val sosRepository: SOSRepository = SOSRepository(AppModule.provideFirebaseFirestore())
+@HiltViewModel
+class SOSViewModel @Inject constructor(
+    private val sosRepository: SOSRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SOSUiState())
@@ -28,14 +30,14 @@ class SOSViewModel(
 
     fun startSOSCountdown(context: Context, message: String = "Emergency! I need help!") {
         _uiState.value = _uiState.value.copy(isSOSActive = true, countdown = 3)
-
+        
         // Start countdown
         viewModelScope.launch {
             for (i in 3 downTo 1) {
                 _uiState.value = _uiState.value.copy(countdown = i)
                 kotlinx.coroutines.delay(1000)
             }
-
+            
             // Send SOS alert
             sendSOSAlert(context, message)
         }
@@ -51,7 +53,7 @@ class SOSViewModel(
             putExtra(SOSAlertService.EXTRA_MESSAGE, message)
         }
         context.startService(intent)
-
+        
         _uiState.value = _uiState.value.copy(
             isSOSActive = false,
             countdown = 0,
