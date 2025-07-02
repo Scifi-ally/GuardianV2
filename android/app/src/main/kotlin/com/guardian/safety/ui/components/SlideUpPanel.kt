@@ -1,424 +1,216 @@
 package com.guardian.safety.ui.components
 
 import androidx.compose.animation.core.*
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import com.guardian.safety.ui.theme.*
-import com.guardian.safety.data.model.RouteStep
-import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SlideUpPanel(
     modifier: Modifier = Modifier,
-    selectedTab: String,
-    onTabSelected: (String) -> Unit,
-    isNavigating: Boolean,
-    onEndNavigation: () -> Unit,
-    routeSteps: List<RouteStep> = emptyList(),
-    routeSummary: String = ""
+    children: @Composable () -> Unit,
+    minHeight: Float = 200f,
+    maxHeight: Float? = null,
+    initialHeight: Float? = null,
+    bottomOffset: Float = 96f,
+    collapsedHeight: Float = 40f,
+    onTouchOutside: (() -> Unit)? = null
 ) {
-    Surface(
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.toFloat()
+    
+    val actualMaxHeight = maxHeight ?: (screenHeight * 0.8f)
+    val actualInitialHeight = initialHeight ?: (screenHeight * 0.45f)
+    
+    var height by remember { mutableStateOf(collapsedHeight) }
+    var isDragging by remember { mutableStateOf(false) }
+    var isCollapsed by remember { mutableStateOf(true) }
+    
+    val animatedHeight by animateFloatAsState(
+        targetValue = height,
+        animationSpec = if (isDragging) tween(0) else spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "panel_height"
+    )
+    
+    val scope = rememberCoroutineScope()
+    
+    // Handle drag gestures
+    val dragState = rememberDragGestureState(
+        onDragStart = { isDragging = true },
+        onDragEnd = { 
+            isDragging = false
+            
+            // Snap to positions matching web app
+            val snapThreshold = 50f
+            val midHeight = (minHeight + actualMaxHeight) / 2f
+            
+            when {
+                height < collapsedHeight + snapThreshold -> {
+                    height = collapsedHeight
+                    isCollapsed = true
+                }
+                height < minHeight + snapThreshold -> {
+                    height = minHeight
+                    isCollapsed = false
+                }
+                height > actualMaxHeight - snapThreshold -> {
+                    height = actualMaxHeight
+                    isCollapsed = false
+                }
+                kotlin.math.abs(height - midHeight) < snapThreshold -> {
+                    height = midHeight
+                    isCollapsed = false
+                }
+                else -> {
+                    isCollapsed = false
+                }
+            }
+        },
+        onDrag = { deltaY ->
+            val newHeight = (height - deltaY).coerceIn(collapsedHeight, actualMaxHeight)
+            height = newHeight
+            isCollapsed = newHeight <= collapsedHeight + 10f
+        }
+    )
+    
+    Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(350.dp),
+            .height(animatedHeight.dp)
+            .offset(y = (screenHeight - animatedHeight - bottomOffset).dp),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-        shadowElevation = 8.dp
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.98f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 24.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Tab Row
-            TabRow(
-                selectedTabIndex = if (selectedTab == "navigation") 0 else 1,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = GuardianBlue,
-                indicator = { tabPositions ->
-                    TabRowDefaults.PrimaryIndicator(
-                        modifier = Modifier,
-                        color = GuardianBlue
-                    )
-                }
-            ) {
-                Tab(
-                    selected = selectedTab == "navigation",
-                    onClick = { onTabSelected("navigation") }
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Navigation,
-                            contentDescription = "Routes",
-                            modifier = Modifier.size(16.dp)
+            // Drag Handle - matching web app exactly
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(if (isCollapsed) 40.dp else 48.dp)
+                    .clickable {
+                        scope.launch {
+                            if (isCollapsed) {
+                                height = actualInitialHeight
+                                isCollapsed = false
+                            } else {
+                                height = collapsedHeight
+                                isCollapsed = true
+                            }
+                        }
+                    }
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDragStart = { dragState.onDragStart() },
+                            onDragEnd = { dragState.onDragEnd() },
+                            onDrag = { _, dragAmount -> dragState.onDrag(dragAmount.y) }
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Handle bar
+                    Box(
+                        modifier = Modifier
+                            .width(if (isDragging || isCollapsed) 64.dp else 48.dp)
+                            .height(if (isDragging) 6.dp else 4.dp)
+                            .background(
+                                if (isDragging || isCollapsed) 
+                                    MaterialTheme.colorScheme.onSurface 
+                                else 
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                RoundedCornerShape(2.dp)
+                            )
+                    )
+                    
+                    if (isCollapsed) {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Routes",
-                            fontSize = 12.sp
+                            text = "Tap to expand",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.animateContentSize()
                         )
                     }
                 }
-
-                Tab(
-                    selected = selectedTab == "settings",
-                    onClick = { onTabSelected("settings") }
+            }
+            
+            // Panel Content - matching web app behavior
+            if (!isCollapsed) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 24.dp, vertical = 0.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Settings",
-                            fontSize = 12.sp
-                        )
-                    }
+                    children()
                 }
+                
+                // Bottom padding
+                Spacer(modifier = Modifier.height(32.dp))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Tab Content
-            when (selectedTab) {
-                "navigation" -> NavigationTabContent(
-                    isNavigating = isNavigating,
-                    onEndNavigation = onEndNavigation,
-                    routeSteps = routeSteps,
-                    routeSummary = routeSummary
-                )
-                "settings" -> SettingsTabContent()
-            }
-        }
-    }
-}
-
-@Composable
-private fun NavigationTabContent(
-    isNavigating: Boolean,
-    onEndNavigation: () -> Unit,
-    routeSteps: List<RouteStep> = emptyList(),
-    routeSummary: String = ""
-) {
-    if (isNavigating) {
-        // Navigation Instructions
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Turn-by-Turn Navigation",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
+            
+            // Resize Indicator (debug mode)
+            if (isDragging) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(16.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            RoundedCornerShape(4.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "${height.toInt()}dp",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                )
-                Badge(
-                    containerColor = GuardianBlue.copy(alpha = 0.2f),
-                    contentColor = GuardianBlue
-                ) {
-                    Text("Active", fontSize = 10.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Real navigation steps from routing data
-            val navigationSteps = routeSteps.map { step ->
-                "${step.instruction} (${step.distance})"
-            }
-
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                itemsIndexed(navigationSteps) { index, step ->
-                    var visible by remember { mutableStateOf(false) }
-
-                    LaunchedEffect(Unit) {
-                        kotlinx.coroutines.delay(index * 100L) // Staggered animation
-                        visible = true
-                    }
-
-                    AnimatedVisibility(
-                        visible = visible,
-                        enter = slideInHorizontally(
-                            initialOffsetX = { -it },
-                            animationSpec = tween(300, easing = EaseOutCubic)
-                        ) + fadeIn(
-                            animationSpec = tween(300)
-                        )
-                    ) {
-                        NavigationStepCard(
-                            step = step,
-                            isActive = index == 0
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = onEndNavigation,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors()
-            ) {
-                Text("End Navigation")
-            }
-        }
-    } else {
-        // Route Planning
-        Column {
-            Text(
-                text = "Route Planning",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { /* Share location */ },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Share Location",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text("Share Location", fontSize = 10.sp)
-                    }
-                }
-
-                OutlinedButton(
-                    onClick = { /* Live tracking */ },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Navigation,
-                            contentDescription = "Live Tracking",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text("Live Tracking", fontSize = 10.sp)
-                    }
                 }
             }
         }
     }
 }
 
-@Composable
-private fun SettingsTabContent() {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            Text(
-                text = "Map Display",
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Medium
-                )
-            )
-        }
-
-        item {
-            SettingsCard(
-                title = "Show Traffic",
-                description = "Display real-time traffic conditions",
-                checked = true,
-                onCheckedChange = { }
-            )
-        }
-
-        item {
-            SettingsCard(
-                title = "Show Safe Zones",
-                description = "Display nearby safe areas and police stations",
-                checked = true,
-                onCheckedChange = { }
-            )
-        }
-
-        item {
-            SettingsCard(
-                title = "Emergency Services",
-                description = "Show hospitals and emergency services",
-                checked = true,
-                onCheckedChange = { }
-            )
-        }
-
-        item {
-            Text(
-                text = "Route Preferences",
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Medium
-                )
-            )
-        }
-
-        item {
-            SettingsCard(
-                title = "Prefer well-lit paths",
-                description = "Choose routes with better lighting",
-                checked = true,
-                onCheckedChange = { }
-            )
-        }
-
-        item {
-            SettingsCard(
-                title = "Avoid isolated areas",
-                description = "Stay in populated areas when possible",
-                checked = true,
-                onCheckedChange = { }
-            )
-        }
-    }
-}
+// Helper class for drag gesture state
+class DragGestureState(
+    val onDragStart: () -> Unit,
+    val onDragEnd: () -> Unit,
+    val onDrag: (Float) -> Unit
+)
 
 @Composable
-private fun NavigationStepCard(
-    step: String,
-    isActive: Boolean = false
-) {
-    val cardScale by animateFloatAsState(
-        targetValue = if (isActive) 1.02f else 1f,
-        animationSpec = tween(300),
-        label = "CardScale"
-    )
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(cardScale),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isActive) {
-                GuardianBlue.copy(alpha = 0.05f)
-            } else {
-                GuardianGray50
-            }
-        ),
-        border = if (isActive) {
-            androidx.compose.foundation.BorderStroke(
-                1.dp,
-                GuardianBlue.copy(alpha = 0.3f)
-            )
-        } else null
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowForward,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = GuardianBlue
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = step,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}
-
-@Composable
-private fun SettingsCard(
-    title: String,
-    description: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val cardScale by animateFloatAsState(
-        targetValue = if (isPressed) 1.02f else 1f,
-        animationSpec = tween(200),
-        label = "SettingsCardScale"
-    )
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(cardScale),
-        colors = CardDefaults.cardColors(
-            containerColor = GuardianGray50
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium
-                    )
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = GuardianGray600
-                )
-            }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = GuardianWhite,
-                    checkedTrackColor = GuardianBlue
-                )
-            )
-        }
+fun rememberDragGestureState(
+    onDragStart: () -> Unit,
+    onDragEnd: () -> Unit,
+    onDrag: (Float) -> Unit
+): DragGestureState {
+    return remember {
+        DragGestureState(onDragStart, onDragEnd, onDrag)
     }
 }

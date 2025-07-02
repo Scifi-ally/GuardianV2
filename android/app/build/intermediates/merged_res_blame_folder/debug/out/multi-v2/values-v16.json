@@ -1,20 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.guardian.safety.app-mergeDebugResources-69:/values-v16/values-v16.xml",
+            "outputFile": "com.guardian.safety.app-mergeDebugResources-73:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Sahaj\\.gradle\\caches\\8.12\\transforms\\9c98086687babf21ababb022353aac5f\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
-                    "from": {
-                        "startLines": "2",
-                        "startColumns": "4",
-                        "startOffsets": "55",
-                        "endColumns": "65",
-                        "endOffsets": "116"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\Sahaj\\.gradle\\caches\\8.12\\transforms\\0520edfddc7646c2b66bd4aca8eecd45\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
+                    "source": "C:\\Users\\Sahaj\\.gradle\\caches\\8.12\\transforms\\aa3f701a7bfce30b38cc19d971a59d13\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -30,6 +20,16 @@
                         "endLines": "6",
                         "endColumns": "12",
                         "endOffsets": "289"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Sahaj\\.gradle\\caches\\8.12\\transforms\\8f8d9cca5ff6238679125c70f9a85759\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "65",
+                        "endOffsets": "116"
                     }
                 }
             ]

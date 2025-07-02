@@ -8,12 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, Mail, Lock, ArrowRight } from "lucide-react";
 import { LoadingAnimation } from "@/components/LoadingAnimation";
+import { cn } from "@/lib/utils";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -56,36 +58,40 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-primary/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/10 to-primary/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="p-4 rounded-full bg-primary/10 w-fit mx-auto">
+        {/* Header - matching Android structure exactly */}
+        <div className="text-center space-y-4 mb-6">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <Shield className="h-12 w-12 text-primary" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold">Welcome Back</h1>
-            <p className="text-muted-foreground">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-foreground">Welcome Back</h1>
+            <p className="text-muted-foreground text-base">
               Sign in to your Guardian account
             </p>
           </div>
         </div>
 
-        {/* Sign In Form */}
-        <Card className="border-0 shadow-xl bg-background/50 backdrop-blur">
-          <CardHeader>
-            <CardTitle className="text-center">Sign In</CardTitle>
+        {/* Sign In Card - matching Android styling exactly */}
+        <Card className="border-0 shadow-xl bg-background/50 backdrop-blur rounded-2xl mx-2">
+          <CardHeader className="pb-6">
+            <CardTitle className="text-center text-xl font-bold">
+              Sign In
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 px-6 pb-6">
             {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                <p className="text-destructive text-sm">{error}</p>
+              </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -94,14 +100,16 @@ export default function SignIn() {
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-12 border border-input rounded-lg"
                     disabled={loading}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -110,7 +118,7 @@ export default function SignIn() {
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-12 border border-input rounded-lg"
                     disabled={loading}
                   />
                 </div>
@@ -118,36 +126,47 @@ export default function SignIn() {
 
               <Button
                 type="submit"
-                className="w-full h-12 text-base"
+                className={cn(
+                  "w-full h-12 text-base font-medium transition-all duration-100 rounded-lg",
+                  "bg-primary hover:bg-primary/90 text-primary-foreground",
+                  isPressed && "scale-[0.96]",
+                )}
                 disabled={loading}
+                onMouseDown={() => setIsPressed(true)}
+                onMouseUp={() => setIsPressed(false)}
+                onMouseLeave={() => setIsPressed(false)}
+                onTouchStart={() => setIsPressed(true)}
+                onTouchEnd={() => setIsPressed(false)}
               >
                 {loading ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <LoadingAnimation size="sm" variant="dots" />
                     <span>Signing in...</span>
                   </div>
                 ) : (
-                  <>
-                    Sign In
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </>
+                  <div className="flex items-center justify-center gap-2">
+                    <span>Sign In</span>
+                    <ArrowRight className="h-5 w-5" />
+                  </div>
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        {/* Sign Up Link */}
-        <div className="text-center">
-          <p className="text-muted-foreground">
-            Don't have an account?{" "}
+        {/* Sign Up Link - matching Android */}
+        <div className="text-center pt-6">
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-muted-foreground text-sm">
+              Don't have an account?
+            </span>
             <Link
               to="/signup"
-              className="text-primary hover:underline font-medium"
+              className="text-primary font-medium text-sm hover:underline"
             >
               Sign up
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

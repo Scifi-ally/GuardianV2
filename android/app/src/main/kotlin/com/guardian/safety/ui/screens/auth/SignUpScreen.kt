@@ -1,7 +1,10 @@
 package com.guardian.safety.ui.screens.auth
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -66,7 +70,7 @@ fun SignUpScreen(
                     colors = listOf(
                         MaterialTheme.colorScheme.background,
                         GuardianGray50,
-                        GuardianBlue.copy(alpha = 0.05f)
+                        GuardianBlack.copy(alpha = 0.05f)
                     )
                 )
             )
@@ -87,14 +91,14 @@ fun SignUpScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(RoundedCornerShape(40.dp))
-                        .background(GuardianBlue.copy(alpha = 0.1f)),
+                        .background(GuardianBlack.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Security,
                         contentDescription = "Guardian Shield",
                         modifier = Modifier.size(48.dp),
-                        tint = GuardianBlue
+                        tint = GuardianBlack
                     )
                 }
 
@@ -241,8 +245,17 @@ fun SignUpScreen(
                         placeholder = { Text("Confirm your password") }
                     )
 
-                    // Sign Up Button
+                    // Sign Up Button with press animation - matching SignIn screen exactly
+                    val buttonInteractionSource = remember { MutableInteractionSource() }
+                    val isPressed by buttonInteractionSource.collectIsPressedAsState()
+                    val buttonScale by animateFloatAsState(
+                        targetValue = if (isPressed) 0.96f else 1f,
+                        animationSpec = tween(100),
+                        label = "ButtonScale"
+                    )
+
                     Button(
+                        interactionSource = buttonInteractionSource,
                         onClick = {
                             when {
                                 name.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() -> {
@@ -263,10 +276,11 @@ fun SignUpScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp),
+                            .height(48.dp)
+                            .scale(buttonScale),
                         enabled = !loading,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = GuardianBlue
+                            containerColor = GuardianBlack
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -328,7 +342,7 @@ fun SignUpScreen(
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
                     ),
-                    color = GuardianBlue,
+                    color = GuardianBlack,
                     modifier = Modifier.clickable { onNavigateToSignIn() }
                 )
             }

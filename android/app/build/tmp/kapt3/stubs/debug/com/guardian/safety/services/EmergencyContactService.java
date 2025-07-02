@@ -1,0 +1,29 @@
+package com.guardian.safety.services;
+
+@javax.inject.Singleton()
+@kotlin.Metadata(mv = {1, 9, 0}, k = 1, xi = 48, d1 = {"\u0000D\n\u0002\u0018\u0002\n\u0002\u0010\u0000\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\u000e\n\u0002\b\u0004\n\u0002\u0010 \n\u0002\b\u000b\n\u0002\u0010\b\n\u0002\b\u0006\n\u0002\u0010\u000b\n\u0002\b\u0002\n\u0002\u0010\u0002\n\u0002\b\u000e\b\u0007\u0018\u00002\u00020\u0001B\u000f\b\u0007\u0012\u0006\u0010\u0002\u001a\u00020\u0003\u00a2\u0006\u0002\u0010\u0004J,\u0010\u0005\u001a\b\u0012\u0004\u0012\u00020\u00070\u00062\u0006\u0010\b\u001a\u00020\t2\u0006\u0010\n\u001a\u00020\u0007H\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b\u000b\u0010\fJ8\u0010\r\u001a\u000e\u0012\n\u0012\b\u0012\u0004\u0012\u00020\u00070\u000e0\u00062\u0006\u0010\b\u001a\u00020\t2\f\u0010\u000f\u001a\b\u0012\u0004\u0012\u00020\u00070\u000eH\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b\u0010\u0010\u0011J$\u0010\u0012\u001a\b\u0012\u0004\u0012\u00020\t0\u00062\u0006\u0010\b\u001a\u00020\tH\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b\u0013\u0010\u0014J.\u0010\u0015\u001a\n\u0012\u0006\u0012\u0004\u0018\u00010\u00070\u00062\u0006\u0010\b\u001a\u00020\t2\u0006\u0010\u0016\u001a\u00020\tH\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b\u0017\u0010\u0018J\u000e\u0010\u0019\u001a\u00020\u001a2\u0006\u0010\n\u001a\u00020\u0007J*\u0010\u001b\u001a\u000e\u0012\n\u0012\b\u0012\u0004\u0012\u00020\u00070\u000e0\u00062\u0006\u0010\b\u001a\u00020\tH\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b\u001c\u0010\u0014J2\u0010\u001d\u001a\u000e\u0012\n\u0012\b\u0012\u0004\u0012\u00020\u00070\u000e0\u00062\u0006\u0010\b\u001a\u00020\t2\u0006\u0010\u001e\u001a\u00020\tH\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b\u001f\u0010\u0018J\u0010\u0010 \u001a\u00020!2\u0006\u0010\"\u001a\u00020\tH\u0002J,\u0010#\u001a\b\u0012\u0004\u0012\u00020$0\u00062\u0006\u0010\b\u001a\u00020\t2\u0006\u0010%\u001a\u00020\tH\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b&\u0010\u0018J2\u0010\'\u001a\u000e\u0012\n\u0012\b\u0012\u0004\u0012\u00020\u00070\u000e0\u00062\u0006\u0010\b\u001a\u00020\t2\u0006\u0010(\u001a\u00020\tH\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b)\u0010\u0018J,\u0010*\u001a\b\u0012\u0004\u0012\u00020$0\u00062\u0006\u0010\b\u001a\u00020\t2\u0006\u0010%\u001a\u00020\tH\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b+\u0010\u0018J\u001a\u0010,\u001a\b\u0012\u0004\u0012\u00020\u00070\u000e2\f\u0010\u000f\u001a\b\u0012\u0004\u0012\u00020\u00070\u000eJ,\u0010-\u001a\b\u0012\u0004\u0012\u00020\u00070\u00062\u0006\u0010\b\u001a\u00020\t2\u0006\u0010\n\u001a\u00020\u0007H\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b.\u0010\fJ$\u0010/\u001a\b\u0012\u0004\u0012\u00020$0\u00062\u0006\u0010\n\u001a\u00020\u0007H\u0086@\u00f8\u0001\u0000\u00f8\u0001\u0001\u00a2\u0006\u0004\b0\u00101R\u000e\u0010\u0002\u001a\u00020\u0003X\u0082\u0004\u00a2\u0006\u0002\n\u0000\u0082\u0002\u000b\n\u0002\b!\n\u0005\b\u00a1\u001e0\u0001\u00a8\u00062"}, d2 = {"Lcom/guardian/safety/services/EmergencyContactService;", "", "firestore", "Lcom/google/firebase/firestore/FirebaseFirestore;", "(Lcom/google/firebase/firestore/FirebaseFirestore;)V", "addEmergencyContact", "Lkotlin/Result;", "Lcom/guardian/safety/ui/components/EmergencyContact;", "userId", "", "contact", "addEmergencyContact-0E7RQCE", "(Ljava/lang/String;Lcom/guardian/safety/ui/components/EmergencyContact;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", "bulkAddContacts", "", "contacts", "bulkAddContacts-0E7RQCE", "(Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", "exportContacts", "exportContacts-gIAlu-s", "(Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", "findContactByGuardianKey", "guardianKey", "findContactByGuardianKey-0E7RQCE", "(Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", "getContactPriority", "", "getEmergencyContacts", "getEmergencyContacts-gIAlu-s", "importContacts", "csvData", "importContacts-0E7RQCE", "isValidPhoneNumber", "", "phone", "removeEmergencyContact", "", "contactId", "removeEmergencyContact-0E7RQCE", "searchContacts", "query", "searchContacts-0E7RQCE", "setPrimaryContact", "setPrimaryContact-0E7RQCE", "sortContactsByPriority", "updateEmergencyContact", "updateEmergencyContact-0E7RQCE", "validateContact", "validateContact-gIAlu-s", "(Lcom/guardian/safety/ui/components/EmergencyContact;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", "app_debug"})
+public final class EmergencyContactService {
+    @org.jetbrains.annotations.NotNull()
+    private final com.google.firebase.firestore.FirebaseFirestore firestore = null;
+    
+    @javax.inject.Inject()
+    public EmergencyContactService(@org.jetbrains.annotations.NotNull()
+    com.google.firebase.firestore.FirebaseFirestore firestore) {
+        super();
+    }
+    
+    public final int getContactPriority(@org.jetbrains.annotations.NotNull()
+    com.guardian.safety.ui.components.EmergencyContact contact) {
+        return 0;
+    }
+    
+    @org.jetbrains.annotations.NotNull()
+    public final java.util.List<com.guardian.safety.ui.components.EmergencyContact> sortContactsByPriority(@org.jetbrains.annotations.NotNull()
+    java.util.List<com.guardian.safety.ui.components.EmergencyContact> contacts) {
+        return null;
+    }
+    
+    private final boolean isValidPhoneNumber(java.lang.String phone) {
+        return false;
+    }
+}

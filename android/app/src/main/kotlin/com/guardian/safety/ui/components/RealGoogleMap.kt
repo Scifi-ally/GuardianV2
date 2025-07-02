@@ -18,35 +18,57 @@ fun RealGoogleMap(
     modifier: Modifier = Modifier,
     userLocation: LatLng?,
     destination: LatLng?,
-    travelMode: String,
-    isNavigating: Boolean,
+    travelMode: String = "WALKING",
+    isNavigating: Boolean = false,
     onMapClick: (LatLng) -> Unit = {},
     emergencyServices: List<LatLng> = emptyList(),
-    safeZones: List<LatLng> = emptyList()
+    safeZones: List<LatLng> = emptyList(),
+    mapTheme: String = "light", // Match web app: "light" | "dark"
+    mapType: String = "normal", // Match web app: "normal" | "satellite"
+    showTraffic: Boolean = true,
+    showSafeZones: Boolean = true,
+    showEmergencyServices: Boolean = true,
+    enableSatelliteView: Boolean = false,
+    zoomLevel: Float = 15f,
+    trackUserLocation: Boolean = true
 ) {
     val context = LocalContext.current
 
-    // Default location (San Francisco) if no user location
+    // Default location (San Francisco) matching web app
     val defaultLocation = LatLng(37.7749, -122.4194)
     val mapCenter = userLocation ?: defaultLocation
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(mapCenter, 15f)
+        position = CameraPosition.fromLatLngZoom(mapCenter, zoomLevel)
     }
 
-    // Update camera when user location changes
+    // Update camera when user location changes (matching web app behavior)
     LaunchedEffect(userLocation) {
         userLocation?.let { location ->
-            cameraPositionState.animate(
-                CameraUpdateFactory.newLatLngZoom(location, 15f)
-            )
+            if (trackUserLocation) {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLngZoom(location, zoomLevel)
+                )
+            }
         }
     }
 
+    // Map properties matching web app configuration
+    val actualMapType = when (mapType) {
+        "satellite" -> MapType.SATELLITE
+        "hybrid" -> MapType.HYBRID
+        "terrain" -> MapType.TERRAIN
+        else -> MapType.NORMAL
+    }
+
     val mapProperties = MapProperties(
-        isMyLocationEnabled = userLocation != null,
-        mapType = MapType.NORMAL,
-        isTrafficEnabled = true
+        isMyLocationEnabled = userLocation != null && trackUserLocation,
+        mapType = if (enableSatelliteView) MapType.SATELLITE else actualMapType,
+        isTrafficEnabled = showTraffic,
+        // Add dark theme support matching web app
+        mapStyleOptions = if (mapTheme == "dark") {
+            MapStyleOptions.loadRawResourceStyle(context, android.R.raw.dark_map_style)
+        } else null
     )
 
     val mapUiSettings = MapUiSettings(
@@ -81,34 +103,49 @@ fun RealGoogleMap(
             )
         }
 
-        // Route polyline (simplified - in real app would use Directions API)
+        // Route polyline matching web app styling
         if (isNavigating && userLocation != null && destination != null) {
             Polyline(
                 points = listOf(userLocation, destination),
-                color = GuardianBlue,
-                width = 8f
+                color = MaterialTheme.colorScheme.primary, // Use theme primary (black)
+                width = 8f,
+                pattern = listOf(
+                    Dash(20f), Gap(10f) // Dashed line like web app
+                )
             )
         }
 
-        // Emergency services markers
-        emergencyServices.forEach { location ->
-            Marker(
-                state = MarkerState(position = location),
-                title = "Emergency Service",
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED),
-                snippet = "Hospital/Police Station"
-            )
+        // Emergency services markers (only if enabled)
+        if (showEmergencyServices) {
+            emergencyServices.forEach { location ->
+                Marker(
+                    state = MarkerState(position = location),
+                    title = "Emergency Service",
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED),
+                    snippet = "Hospital/Police Station"
+                )
+            }
         }
 
-        // Safe zones (circles)
-        safeZones.forEach { location ->
-            Circle(
-                center = location,
-                radius = 200.0, // 200 meters
-                fillColor = SafeColor.copy(alpha = 0.2f),
-                strokeColor = SafeColor,
-                strokeWidth = 2f
-            )
+        // Safe zones (circles) - only if enabled, matching web app
+        if (showSafeZones) {
+            safeZones.forEach { location ->
+                Circle(
+                    center = location,
+                    radius = 200.0, // 200 meters
+                    fillColor = SafeColor.copy(alpha = 0.2f),
+                    strokeColor = SafeColor,
+                    strokeWidth = 2f
+                )
+
+                // Add marker for safe zone center
+                Marker(
+                    state = MarkerState(position = location),
+                    title = "Safe Zone",
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
+                    snippet = "Safe area - 200m radius"
+                )
+            }
         }
     }
 }

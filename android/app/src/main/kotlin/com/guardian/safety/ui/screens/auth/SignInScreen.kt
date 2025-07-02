@@ -65,7 +65,7 @@ fun SignInScreen(
                     colors = listOf(
                         MaterialTheme.colorScheme.background,
                         GuardianGray50,
-                        GuardianBlue.copy(alpha = 0.05f)
+                        GuardianBlack.copy(alpha = 0.05f)
                     )
                 )
             )
@@ -87,14 +87,14 @@ fun SignInScreen(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(RoundedCornerShape(40.dp))
-                        .background(GuardianBlue.copy(alpha = 0.1f)),
+                        .background(GuardianBlack.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Security,
                         contentDescription = "Guardian Shield",
                         modifier = Modifier.size(48.dp),
-                        tint = GuardianBlue
+                        tint = GuardianBlack
                     )
                 }
 
@@ -229,7 +229,7 @@ fun SignInScreen(
                             .scale(buttonScale),
                         enabled = !loading,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = GuardianBlue
+                            containerColor = GuardianBlack
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -291,7 +291,7 @@ fun SignInScreen(
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
                     ),
-                    color = GuardianBlue,
+                    color = GuardianBlack,
                     modifier = Modifier.clickable { onNavigateToSignUp() }
                 )
             }

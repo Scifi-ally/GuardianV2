@@ -24,10 +24,13 @@ color guardian_red_dark
 color guardian_red_light
 color guardian_yellow
 color white
+drawable ic_call
 drawable ic_check
 drawable ic_emergency
 drawable ic_location
 drawable ic_shield
+mipmap ic_launcher
+mipmap ic_launcher_round
 string app_name
 string gcm_defaultSenderId
 string google_api_key

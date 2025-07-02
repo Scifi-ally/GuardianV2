@@ -62,37 +62,23 @@ export function LoadingAnimation({
 
   if (variant === "dots") {
     return (
-      <div className={cn("flex items-center gap-1", className)}>
-        <div
-          className={cn(
-            "bg-primary rounded-full animate-bounce",
-            size === "sm" && "h-1 w-1",
-            size === "md" && "h-2 w-2",
-            size === "lg" && "h-3 w-3",
-            size === "xl" && "h-4 w-4",
-          )}
-          style={{ animationDelay: "0ms" }}
-        />
-        <div
-          className={cn(
-            "bg-primary rounded-full animate-bounce",
-            size === "sm" && "h-1 w-1",
-            size === "md" && "h-2 w-2",
-            size === "lg" && "h-3 w-3",
-            size === "xl" && "h-4 w-4",
-          )}
-          style={{ animationDelay: "150ms" }}
-        />
-        <div
-          className={cn(
-            "bg-primary rounded-full animate-bounce",
-            size === "sm" && "h-1 w-1",
-            size === "md" && "h-2 w-2",
-            size === "lg" && "h-3 w-3",
-            size === "xl" && "h-4 w-4",
-          )}
-          style={{ animationDelay: "300ms" }}
-        />
+      <div className={cn("flex items-center justify-center gap-1", className)}>
+        {[0, 1, 2].map((index) => (
+          <div
+            key={index}
+            className={cn(
+              "bg-current rounded-full",
+              size === "sm" && "h-1 w-1",
+              size === "md" && "h-1.5 w-1.5",
+              size === "lg" && "h-2 w-2",
+              size === "xl" && "h-3 w-3",
+            )}
+            style={{
+              animation: `loading-dot-scale 600ms ease-in-out infinite alternate`,
+              animationDelay: `${index * 150}ms`,
+            }}
+          />
+        ))}
       </div>
     );
   }

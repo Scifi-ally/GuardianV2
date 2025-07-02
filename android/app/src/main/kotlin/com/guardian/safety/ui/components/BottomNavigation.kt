@@ -20,19 +20,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.guardian.safety.ui.navigation.Screen
 import com.guardian.safety.ui.theme.*
 
+// Exact 3-tab navigation matching web app MagicNavbar
 @Composable
 fun BottomNavigation(
     navController: NavHostController,
     onSOSPress: () -> Unit
 ) {
-    // Enhanced SOS pulse animation matching web app
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // SOS pulse animation matching web app exactly
     val infiniteTransition = rememberInfiniteTransition(label = "SOS Pulse")
     val sosScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = 1.1f,
+        targetValue = 1.25f,
         animationSpec = infiniteRepeatable(
             animation = tween(1000, easing = EaseInOutCubic),
             repeatMode = RepeatMode.Reverse
@@ -40,7 +45,6 @@ fun BottomNavigation(
         label = "SOS Scale"
     )
 
-    // SOS glow effect
     val sosGlow by infiniteTransition.animateFloat(
         initialValue = 0.3f,
         targetValue = 0.8f,
@@ -51,93 +55,105 @@ fun BottomNavigation(
         label = "SOS Glow"
     )
 
-    Card(
+    // Exact web app navigation structure: Map, SOS, Profile
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.8f))
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+        // Background blur effect
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
         ) {
-            // Navigation items matching web app
-            NavItem(
-                icon = Icons.Default.Home,
-                label = "Home",
-                onClick = { navController.navigate(Screen.Index.route) }
-            )
-
-            NavItem(
-                icon = Icons.Default.People,
-                label = "Guardian",
-                onClick = { navController.navigate(Screen.Guardian.route) }
-            )
-
-            // SOS Button - center piece like web app with enhanced animation
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(64.dp)
-                    .scale(sosScale),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Glow effect background
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(
-                            GuardianRed.copy(alpha = sosGlow * 0.3f),
-                            CircleShape
-                        )
+                // Map Tab - using exact web app icon
+                NavItem(
+                    icon = Icons.Default.LocationOn, // MapPin equivalent
+                    label = "Map",
+                    isActive = currentRoute == Screen.Index.route,
+                    onClick = { navController.navigate(Screen.Index.route) }
                 )
 
-                Button(
-                    onClick = onSOSPress,
-                    modifier = Modifier.size(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = GuardianRed
-                    ),
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(0.dp)
+                // SOS Button - Center (matching web app exactly)
+                Box(
+                    modifier = Modifier.scale(sosScale),
+                    contentAlignment = Alignment.Center
                 ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Emergency,
-                        contentDescription = "SOS",
-                        tint = GuardianWhite,
-                        modifier = Modifier.size(20.dp)
+                    // Multiple glow layers matching web app
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .background(
+                                GuardianRed.copy(alpha = sosGlow * 0.1f),
+                                CircleShape
+                            )
                     )
-                    Text(
-                        text = "SOS",
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = GuardianWhite
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .background(
+                                GuardianRed.copy(alpha = sosGlow * 0.2f),
+                                CircleShape
+                            )
                     )
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(
+                                GuardianRed.copy(alpha = sosGlow * 0.3f),
+                                CircleShape
+                            )
+                    )
+
+                    Button(
+                        onClick = onSOSPress,
+                        modifier = Modifier.size(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GuardianRed
+                        ),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ReportProblem, // AlertTriangle equivalent
+                                contentDescription = "SOS",
+                                tint = GuardianWhite,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "SOS",
+                                fontSize = 7.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = GuardianWhite
+                            )
+                        }
+                    }
                 }
+
+                // Profile Tab - using exact web app icon
+                NavItem(
+                    icon = Icons.Default.Person, // User equivalent
+                    label = "Profile",
+                    isActive = currentRoute == Screen.Profile.route,
+                    onClick = { navController.navigate(Screen.Profile.route) }
+                )
             }
-        }
-
-            NavItem(
-                icon = Icons.Default.Contacts,
-                label = "Contacts",
-                onClick = { navController.navigate(Screen.Contacts.route) }
-            )
-
-            NavItem(
-                icon = Icons.Default.Person,
-                label = "Profile",
-                onClick = { navController.navigate(Screen.Profile.route) }
-            )
         }
     }
 }
@@ -146,38 +162,55 @@ fun BottomNavigation(
 private fun NavItem(
     icon: ImageVector,
     label: String,
+    isActive: Boolean,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+
     val navScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.9f else 1f,
+        targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(100),
         label = "NavItemScale"
     )
 
-    IconButton(
-        onClick = onClick,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .size(48.dp)
-            .scale(navScale),
-        interactionSource = interactionSource
+            .scale(navScale)
+            .padding(8.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        // Background circle for active items
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(
+                    if (isActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else androidx.compose.ui.graphics.Color.Transparent,
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.size(20.dp)
-            )
-            Text(
-                text = label,
-                fontSize = 8.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
+            IconButton(
+                onClick = onClick,
+                modifier = Modifier.size(48.dp),
+                interactionSource = interactionSource
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Text(
+            text = label,
+            fontSize = 9.sp,
+            fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,
+            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
     }
 }

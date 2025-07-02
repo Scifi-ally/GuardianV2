@@ -16,8 +16,10 @@ import com.guardian.safety.ui.screens.dashboard.IndexScreen
 import com.guardian.safety.ui.screens.contacts.ContactsScreen
 import com.guardian.safety.ui.screens.navigation.NavigationScreen
 import com.guardian.safety.ui.screens.profile.ProfileScreen
+import com.guardian.safety.ui.screens.profile.EnhancedProfileScreen
 import com.guardian.safety.ui.screens.settings.SettingsScreen
 import com.guardian.safety.ui.screens.guardian.GuardianScreen
+import com.guardian.safety.ui.screens.guardian.EnhancedGuardianScreen
 
 sealed class Screen(val route: String) {
     object SignIn : Screen("signin")
@@ -132,7 +134,7 @@ fun GuardianNavigation(
         }
 
         composable(Screen.Profile.route) {
-            ProfileScreen(navController = navController)
+            EnhancedProfileScreen(navController = navController)
         }
 
         composable(Screen.Settings.route) {

@@ -1,73 +1,77 @@
-com.guardian.safety.app-activity-1.8.2-0 C:\Users\Sahaj\.gradle\caches\8.12\transforms\01f553e2ef62ca50e65fed506200d8fe\transformed\activity-1.8.2\res
-com.guardian.safety.app-fragment-1.5.1-1 C:\Users\Sahaj\.gradle\caches\8.12\transforms\042f4f45301ac679629f1cdfbb320442\transformed\fragment-1.5.1\res
-com.guardian.safety.app-appcompat-1.6.1-2 C:\Users\Sahaj\.gradle\caches\8.12\transforms\0520edfddc7646c2b66bd4aca8eecd45\transformed\appcompat-1.6.1\res
-com.guardian.safety.app-lifecycle-livedata-2.7.0-3 C:\Users\Sahaj\.gradle\caches\8.12\transforms\05fe7c6fa1cb5e2e64cfb4e4892923f6\transformed\lifecycle-livedata-2.7.0\res
-com.guardian.safety.app-navigation-common-ktx-2.7.5-4 C:\Users\Sahaj\.gradle\caches\8.12\transforms\07943b769eec9eda1d07ee1d11b93dd3\transformed\navigation-common-ktx-2.7.5\res
-com.guardian.safety.app-core-runtime-2.2.0-5 C:\Users\Sahaj\.gradle\caches\8.12\transforms\0bbd8b3f08a33897b27ba6fc639c32cf\transformed\core-runtime-2.2.0\res
-com.guardian.safety.app-lifecycle-runtime-2.7.0-6 C:\Users\Sahaj\.gradle\caches\8.12\transforms\1524a2accb98fb1f84101b48ada901d4\transformed\lifecycle-runtime-2.7.0\res
-com.guardian.safety.app-datastore-1.0.0-7 C:\Users\Sahaj\.gradle\caches\8.12\transforms\1b573ee42e2bc2ff3feb73f3df408c92\transformed\datastore-1.0.0\res
-com.guardian.safety.app-navigation-common-2.7.5-8 C:\Users\Sahaj\.gradle\caches\8.12\transforms\1e601c097ac7d4d43915db7ddbba1cb1\transformed\navigation-common-2.7.5\res
-com.guardian.safety.app-emoji2-1.4.0-9 C:\Users\Sahaj\.gradle\caches\8.12\transforms\226a60fde309be5abddb25df9e724f03\transformed\emoji2-1.4.0\res
-com.guardian.safety.app-savedstate-1.2.1-10 C:\Users\Sahaj\.gradle\caches\8.12\transforms\25a9bdb07b90caf647188d1d9e9722d3\transformed\savedstate-1.2.1\res
-com.guardian.safety.app-play-services-base-18.1.0-11 C:\Users\Sahaj\.gradle\caches\8.12\transforms\28d73fbf181a9066e5961804ef984bcf\transformed\play-services-base-18.1.0\res
-com.guardian.safety.app-lifecycle-livedata-core-ktx-2.7.0-12 C:\Users\Sahaj\.gradle\caches\8.12\transforms\2b1d3f3e6555a6a9934b1ebdfc36b23b\transformed\lifecycle-livedata-core-ktx-2.7.0\res
-com.guardian.safety.app-ui-tooling-preview-release-13 C:\Users\Sahaj\.gradle\caches\8.12\transforms\2c2ffc36a4aa8688a3b42001125c4142\transformed\ui-tooling-preview-release\res
-com.guardian.safety.app-ui-test-manifest-1.5.4-14 C:\Users\Sahaj\.gradle\caches\8.12\transforms\2c3d53d92217944996ac33350087601c\transformed\ui-test-manifest-1.5.4\res
-com.guardian.safety.app-lifecycle-runtime-ktx-2.7.0-15 C:\Users\Sahaj\.gradle\caches\8.12\transforms\2f05082f0a91e2582433c66035d69bd1\transformed\lifecycle-runtime-ktx-2.7.0\res
-com.guardian.safety.app-material-ripple-1.4.3-16 C:\Users\Sahaj\.gradle\caches\8.12\transforms\300a9cd89fb787b7989581607958bcbb\transformed\material-ripple-1.4.3\res
-com.guardian.safety.app-foundation-layout-release-17 C:\Users\Sahaj\.gradle\caches\8.12\transforms\33872cc9645763f9f8b27803175f235a\transformed\foundation-layout-release\res
-com.guardian.safety.app-ui-geometry-release-18 C:\Users\Sahaj\.gradle\caches\8.12\transforms\34514a8fef1d0e6faab7911602833ba3\transformed\ui-geometry-release\res
-com.guardian.safety.app-ui-release-19 C:\Users\Sahaj\.gradle\caches\8.12\transforms\350e33370bc07b90c02f30888a7b2b4a\transformed\ui-release\res
-com.guardian.safety.app-animation-core-release-20 C:\Users\Sahaj\.gradle\caches\8.12\transforms\3e1b286c9b707c1804de4c02a7a67410\transformed\animation-core-release\res
-com.guardian.safety.app-ads-adservices-java-1.0.0-beta05-21 C:\Users\Sahaj\.gradle\caches\8.12\transforms\3fb4388ec9852b71b93dee57078762a2\transformed\ads-adservices-java-1.0.0-beta05\res
-com.guardian.safety.app-lifecycle-viewmodel-2.7.0-22 C:\Users\Sahaj\.gradle\caches\8.12\transforms\4150c1f7ece495206ea1e97905d88ab6\transformed\lifecycle-viewmodel-2.7.0\res
-com.guardian.safety.app-foundation-release-23 C:\Users\Sahaj\.gradle\caches\8.12\transforms\445e3c33914955df8401d6f9ea941aed\transformed\foundation-release\res
-com.guardian.safety.app-material-icons-core-1.4.3-24 C:\Users\Sahaj\.gradle\caches\8.12\transforms\46304aa58f19103eb2f949210be6c19f\transformed\material-icons-core-1.4.3\res
-com.guardian.safety.app-savedstate-ktx-1.2.1-25 C:\Users\Sahaj\.gradle\caches\8.12\transforms\466cc0b69a9b1348dff79138c33fa87d\transformed\savedstate-ktx-1.2.1\res
-com.guardian.safety.app-ui-unit-release-26 C:\Users\Sahaj\.gradle\caches\8.12\transforms\479d97d1e717759bb1c8b34f45be62de\transformed\ui-unit-release\res
-com.guardian.safety.app-navigation-runtime-2.7.5-27 C:\Users\Sahaj\.gradle\caches\8.12\transforms\4a348dc21eeb6e09d18a0709217ba56b\transformed\navigation-runtime-2.7.5\res
-com.guardian.safety.app-navigation-runtime-ktx-2.7.5-28 C:\Users\Sahaj\.gradle\caches\8.12\transforms\4f22cb42a01ad0e37b4c5bfcae3d88c9\transformed\navigation-runtime-ktx-2.7.5\res
-com.guardian.safety.app-play-services-basement-18.1.0-29 C:\Users\Sahaj\.gradle\caches\8.12\transforms\51b9ea993339311e4879496b795bdc54\transformed\play-services-basement-18.1.0\res
-com.guardian.safety.app-coil-base-2.5.0-30 C:\Users\Sahaj\.gradle\caches\8.12\transforms\58ace98e9316a435e3afccc3dea33f7e\transformed\coil-base-2.5.0\res
-com.guardian.safety.app-customview-poolingcontainer-1.0.0-31 C:\Users\Sahaj\.gradle\caches\8.12\transforms\599ee535a1156faac871c26e1586a92d\transformed\customview-poolingcontainer-1.0.0\res
-com.guardian.safety.app-firebase-messaging-23.3.1-32 C:\Users\Sahaj\.gradle\caches\8.12\transforms\5fc804cec478d2c7c5ff6afe92cb0a79\transformed\firebase-messaging-23.3.1\res
-com.guardian.safety.app-lifecycle-process-2.7.0-33 C:\Users\Sahaj\.gradle\caches\8.12\transforms\6be34ce2c995f88797ba37f2c0a6fe38\transformed\lifecycle-process-2.7.0\res
-com.guardian.safety.app-appcompat-resources-1.6.1-34 C:\Users\Sahaj\.gradle\caches\8.12\transforms\6f47aed3b09158f3be1697f646da68d6\transformed\appcompat-resources-1.6.1\res
-com.guardian.safety.app-activity-compose-1.8.2-35 C:\Users\Sahaj\.gradle\caches\8.12\transforms\787cd13895ec65f822e1d603a48aede7\transformed\activity-compose-1.8.2\res
-com.guardian.safety.app-ui-util-release-36 C:\Users\Sahaj\.gradle\caches\8.12\transforms\7e7845669d62eb960a8312616d152a4d\transformed\ui-util-release\res
-com.guardian.safety.app-ui-graphics-release-37 C:\Users\Sahaj\.gradle\caches\8.12\transforms\7ed896f157968420d125a6bb4531c76a\transformed\ui-graphics-release\res
-com.guardian.safety.app-annotation-experimental-1.3.0-38 C:\Users\Sahaj\.gradle\caches\8.12\transforms\8deaf70b96d4b8a4da05993af81247e3\transformed\annotation-experimental-1.3.0\res
-com.guardian.safety.app-runtime-release-39 C:\Users\Sahaj\.gradle\caches\8.12\transforms\91cacf5516e6969e4c138738bbe32737\transformed\runtime-release\res
-com.guardian.safety.app-core-1.12.0-40 C:\Users\Sahaj\.gradle\caches\8.12\transforms\9c98086687babf21ababb022353aac5f\transformed\core-1.12.0\res
-com.guardian.safety.app-activity-ktx-1.8.2-41 C:\Users\Sahaj\.gradle\caches\8.12\transforms\a417e48c19eabd2747e19a99563f83bd\transformed\activity-ktx-1.8.2\res
-com.guardian.safety.app-emoji2-views-helper-1.4.0-42 C:\Users\Sahaj\.gradle\caches\8.12\transforms\a6d21e8b43b3aa68091d8b9c4e13de55\transformed\emoji2-views-helper-1.4.0\res
-com.guardian.safety.app-datastore-preferences-1.0.0-43 C:\Users\Sahaj\.gradle\caches\8.12\transforms\aabd07c36241c081172ee51693cf100d\transformed\datastore-preferences-1.0.0\res
-com.guardian.safety.app-hilt-navigation-compose-1.1.0-44 C:\Users\Sahaj\.gradle\caches\8.12\transforms\aca1d43871c43503040dfe79f68f6427\transformed\hilt-navigation-compose-1.1.0\res
-com.guardian.safety.app-ads-adservices-1.0.0-beta05-45 C:\Users\Sahaj\.gradle\caches\8.12\transforms\b1420ce95aabeaf4d691d876bd417d6c\transformed\ads-adservices-1.0.0-beta05\res
-com.guardian.safety.app-ui-tooling-release-46 C:\Users\Sahaj\.gradle\caches\8.12\transforms\b1fdafd6d8a8d70656bef6821884cb70\transformed\ui-tooling-release\res
-com.guardian.safety.app-ui-tooling-data-release-47 C:\Users\Sahaj\.gradle\caches\8.12\transforms\b4f2d1e44e53137b40176091005d166a\transformed\ui-tooling-data-release\res
-com.guardian.safety.app-ui-text-release-48 C:\Users\Sahaj\.gradle\caches\8.12\transforms\bc3fcba759fa7fb34601e8df41072d4a\transformed\ui-text-release\res
-com.guardian.safety.app-lifecycle-viewmodel-savedstate-2.7.0-49 C:\Users\Sahaj\.gradle\caches\8.12\transforms\cd4a3b426ca1b3df55f686e2e7b824b5\transformed\lifecycle-viewmodel-savedstate-2.7.0\res
-com.guardian.safety.app-navigation-compose-2.7.5-50 C:\Users\Sahaj\.gradle\caches\8.12\transforms\cd9a576aaa7100a0dc65e234151ca2cc\transformed\navigation-compose-2.7.5\res
-com.guardian.safety.app-lottie-6.1.0-51 C:\Users\Sahaj\.gradle\caches\8.12\transforms\d119636d239142a348aaa65e637ff6d6\transformed\lottie-6.1.0\res
-com.guardian.safety.app-startup-runtime-1.1.1-52 C:\Users\Sahaj\.gradle\caches\8.12\transforms\d166488d8843be354df797678e94bfc3\transformed\startup-runtime-1.1.1\res
-com.guardian.safety.app-play-services-measurement-api-21.5.0-53 C:\Users\Sahaj\.gradle\caches\8.12\transforms\d300f91e4fcfe1392fa183504806ca13\transformed\play-services-measurement-api-21.5.0\res
-com.guardian.safety.app-lifecycle-viewmodel-ktx-2.7.0-54 C:\Users\Sahaj\.gradle\caches\8.12\transforms\d37192209e61cda3c55c0dbe52c13a13\transformed\lifecycle-viewmodel-ktx-2.7.0\res
-com.guardian.safety.app-browser-1.4.0-55 C:\Users\Sahaj\.gradle\caches\8.12\transforms\d434d418ca90453d82ffa4d8ef476895\transformed\browser-1.4.0\res
-com.guardian.safety.app-runtime-saveable-release-56 C:\Users\Sahaj\.gradle\caches\8.12\transforms\da55e28d1b8247519fe656d46801167a\transformed\runtime-saveable-release\res
-com.guardian.safety.app-animation-release-57 C:\Users\Sahaj\.gradle\caches\8.12\transforms\dc8c6ee756cc48d4096f2646871b7867\transformed\animation-release\res
-com.guardian.safety.app-lifecycle-livedata-core-2.7.0-58 C:\Users\Sahaj\.gradle\caches\8.12\transforms\e3dff46c8f4779aec0c52cdc6aebf703\transformed\lifecycle-livedata-core-2.7.0\res
-com.guardian.safety.app-profileinstaller-1.3.1-59 C:\Users\Sahaj\.gradle\caches\8.12\transforms\eb8ed5676c4d0d17e4dc74504171f590\transformed\profileinstaller-1.3.1\res
-com.guardian.safety.app-material-1.4.3-60 C:\Users\Sahaj\.gradle\caches\8.12\transforms\ee1d58abdf0d39c058165bd030479d67\transformed\material-1.4.3\res
-com.guardian.safety.app-lifecycle-viewmodel-compose-2.7.0-61 C:\Users\Sahaj\.gradle\caches\8.12\transforms\f20efbb1c9d5196a9a08c012cf455357\transformed\lifecycle-viewmodel-compose-2.7.0\res
-com.guardian.safety.app-play-services-maps-18.2.0-62 C:\Users\Sahaj\.gradle\caches\8.12\transforms\f6125e0e44661a38c10613635115a9f2\transformed\play-services-maps-18.2.0\res
-com.guardian.safety.app-core-ktx-1.12.0-63 C:\Users\Sahaj\.gradle\caches\8.12\transforms\f8a737878c3c26e613a153ba98f03e54\transformed\core-ktx-1.12.0\res
-com.guardian.safety.app-firebase-common-20.4.2-64 C:\Users\Sahaj\.gradle\caches\8.12\transforms\f8ee575662a4bbcb6244900bb69c904b\transformed\firebase-common-20.4.2\res
-com.guardian.safety.app-hilt-navigation-1.1.0-65 C:\Users\Sahaj\.gradle\caches\8.12\transforms\f98e892940ad97fd3266dd19989d2055\transformed\hilt-navigation-1.1.0\res
-com.guardian.safety.app-res-66 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\generated\res\processDebugGoogleServices
-com.guardian.safety.app-resValues-67 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\generated\res\resValues\debug
-com.guardian.safety.app-packageDebugResources-68 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
-com.guardian.safety.app-packageDebugResources-69 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
-com.guardian.safety.app-merged_res-70 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\intermediates\merged_res\debug
-com.guardian.safety.app-debug-71 C:\Users\Sahaj\Desktop\Guardian App\android\app\src\debug\res
-com.guardian.safety.app-main-72 C:\Users\Sahaj\Desktop\Guardian App\android\app\src\main\res
+com.guardian.safety.app-core-runtime-2.2.0-0 C:\Users\Sahaj\.gradle\caches\8.12\transforms\0333c62852d9cd382570d3e133868e9e\transformed\core-runtime-2.2.0\res
+com.guardian.safety.app-lifecycle-runtime-compose-2.7.0-1 C:\Users\Sahaj\.gradle\caches\8.12\transforms\06cb9d51ed849f9f1d2d9e91727550c4\transformed\lifecycle-runtime-compose-2.7.0\res
+com.guardian.safety.app-material-icons-core-release-2 C:\Users\Sahaj\.gradle\caches\8.12\transforms\0b7d7057587c1a8cb4c76319ef774b82\transformed\material-icons-core-release\res
+com.guardian.safety.app-hilt-navigation-1.1.0-3 C:\Users\Sahaj\.gradle\caches\8.12\transforms\114aea5887c4e9462e906a435aecf1b0\transformed\hilt-navigation-1.1.0\res
+com.guardian.safety.app-runtime-release-4 C:\Users\Sahaj\.gradle\caches\8.12\transforms\14508335190c26575682a4661a991cc3\transformed\runtime-release\res
+com.guardian.safety.app-material-ripple-release-5 C:\Users\Sahaj\.gradle\caches\8.12\transforms\15e15cf0406f73717085df46352d7f8b\transformed\material-ripple-release\res
+com.guardian.safety.app-lifecycle-livedata-2.7.0-6 C:\Users\Sahaj\.gradle\caches\8.12\transforms\16d6531555983288240afc1cd87eb953\transformed\lifecycle-livedata-2.7.0\res
+com.guardian.safety.app-maps-compose-4.3.0-7 C:\Users\Sahaj\.gradle\caches\8.12\transforms\18b52fdfe644b4921cd0c4baac5e23a2\transformed\maps-compose-4.3.0\res
+com.guardian.safety.app-startup-runtime-1.1.1-8 C:\Users\Sahaj\.gradle\caches\8.12\transforms\1994faf601c6fa92ac461a55e4b0ebde\transformed\startup-runtime-1.1.1\res
+com.guardian.safety.app-lifecycle-runtime-2.7.0-9 C:\Users\Sahaj\.gradle\caches\8.12\transforms\2d08c1b60d2cc8abbc8de7c729bef5bf\transformed\lifecycle-runtime-2.7.0\res
+com.guardian.safety.app-lifecycle-process-2.7.0-10 C:\Users\Sahaj\.gradle\caches\8.12\transforms\2dfbdc5eb1ef58e5e1a9b5adcc344702\transformed\lifecycle-process-2.7.0\res
+com.guardian.safety.app-lifecycle-livedata-core-ktx-2.7.0-11 C:\Users\Sahaj\.gradle\caches\8.12\transforms\34f2b4730b412a9e9beeb4e0c695a139\transformed\lifecycle-livedata-core-ktx-2.7.0\res
+com.guardian.safety.app-ui-util-release-12 C:\Users\Sahaj\.gradle\caches\8.12\transforms\35313504bb835824cbcf8bd6c249e88e\transformed\ui-util-release\res
+com.guardian.safety.app-play-services-basement-18.1.0-13 C:\Users\Sahaj\.gradle\caches\8.12\transforms\3d9239a0329e9f409da413f423184d38\transformed\play-services-basement-18.1.0\res
+com.guardian.safety.app-activity-compose-1.8.2-14 C:\Users\Sahaj\.gradle\caches\8.12\transforms\3e4ef095d03b281de3d55d4af68f3168\transformed\activity-compose-1.8.2\res
+com.guardian.safety.app-animation-core-release-15 C:\Users\Sahaj\.gradle\caches\8.12\transforms\4e491954f5b3fccb9f30f5998ec59fbf\transformed\animation-core-release\res
+com.guardian.safety.app-ads-adservices-1.0.0-beta05-16 C:\Users\Sahaj\.gradle\caches\8.12\transforms\565be10386f27119101dc6ccc8bdda35\transformed\ads-adservices-1.0.0-beta05\res
+com.guardian.safety.app-navigation-common-2.7.5-17 C:\Users\Sahaj\.gradle\caches\8.12\transforms\56e9e7a9ab3b6917c2c5d2916a509d32\transformed\navigation-common-2.7.5\res
+com.guardian.safety.app-appcompat-resources-1.6.1-18 C:\Users\Sahaj\.gradle\caches\8.12\transforms\5784db9ebfc04cd7b711ccc6c0d09c9e\transformed\appcompat-resources-1.6.1\res
+com.guardian.safety.app-ui-tooling-release-19 C:\Users\Sahaj\.gradle\caches\8.12\transforms\589710eb1dd50c513e2ce5748a629206\transformed\ui-tooling-release\res
+com.guardian.safety.app-navigation-runtime-ktx-2.7.5-20 C:\Users\Sahaj\.gradle\caches\8.12\transforms\58c42dac6f1398206acfbb4f46dc817a\transformed\navigation-runtime-ktx-2.7.5\res
+com.guardian.safety.app-savedstate-1.2.1-21 C:\Users\Sahaj\.gradle\caches\8.12\transforms\5b74f74f333edd1a6ef84183d9269350\transformed\savedstate-1.2.1\res
+com.guardian.safety.app-savedstate-ktx-1.2.1-22 C:\Users\Sahaj\.gradle\caches\8.12\transforms\5e0699c4867bc972d2447b5dc68c1656\transformed\savedstate-ktx-1.2.1\res
+com.guardian.safety.app-lifecycle-livedata-core-2.7.0-23 C:\Users\Sahaj\.gradle\caches\8.12\transforms\6247f1145f702575955a156f7a566ad0\transformed\lifecycle-livedata-core-2.7.0\res
+com.guardian.safety.app-lifecycle-viewmodel-compose-2.7.0-24 C:\Users\Sahaj\.gradle\caches\8.12\transforms\62fed32061e3e5f4f8df53749d094d50\transformed\lifecycle-viewmodel-compose-2.7.0\res
+com.guardian.safety.app-foundation-layout-release-25 C:\Users\Sahaj\.gradle\caches\8.12\transforms\643e0667895c4c052281fcd79ba65bbc\transformed\foundation-layout-release\res
+com.guardian.safety.app-profileinstaller-1.3.1-26 C:\Users\Sahaj\.gradle\caches\8.12\transforms\6fb7ba96b00fbc725e3d86d5f26c87bb\transformed\profileinstaller-1.3.1\res
+com.guardian.safety.app-ui-geometry-release-27 C:\Users\Sahaj\.gradle\caches\8.12\transforms\702be77546f3e00cfc4dff6564048e5f\transformed\ui-geometry-release\res
+com.guardian.safety.app-browser-1.4.0-28 C:\Users\Sahaj\.gradle\caches\8.12\transforms\79e15c6d812804762953de0fc95833cb\transformed\browser-1.4.0\res
+com.guardian.safety.app-annotation-experimental-1.4.0-29 C:\Users\Sahaj\.gradle\caches\8.12\transforms\7bc21e880f754b815dfeac909e96d48a\transformed\annotation-experimental-1.4.0\res
+com.guardian.safety.app-lifecycle-viewmodel-savedstate-2.7.0-30 C:\Users\Sahaj\.gradle\caches\8.12\transforms\7c445ee97863ba18f37050fc87827cf0\transformed\lifecycle-viewmodel-savedstate-2.7.0\res
+com.guardian.safety.app-ui-test-manifest-1.6.1-31 C:\Users\Sahaj\.gradle\caches\8.12\transforms\83a84e7e0b3fa3e53c3cb2054e4e8390\transformed\ui-test-manifest-1.6.1\res
+com.guardian.safety.app-firebase-common-20.4.2-32 C:\Users\Sahaj\.gradle\caches\8.12\transforms\86e740bd5b5b92d2485d41bcdb32da9c\transformed\firebase-common-20.4.2\res
+com.guardian.safety.app-datastore-preferences-1.0.0-33 C:\Users\Sahaj\.gradle\caches\8.12\transforms\87b0dc2071a474cbc2b26b4233ee9a92\transformed\datastore-preferences-1.0.0\res
+com.guardian.safety.app-ads-adservices-java-1.0.0-beta05-34 C:\Users\Sahaj\.gradle\caches\8.12\transforms\8d7657056d3ecad3a409719bb298a7e8\transformed\ads-adservices-java-1.0.0-beta05\res
+com.guardian.safety.app-core-1.12.0-35 C:\Users\Sahaj\.gradle\caches\8.12\transforms\8f8d9cca5ff6238679125c70f9a85759\transformed\core-1.12.0\res
+com.guardian.safety.app-material3-release-36 C:\Users\Sahaj\.gradle\caches\8.12\transforms\91c40835e53466c560370b19327c2213\transformed\material3-release\res
+com.guardian.safety.app-material-icons-extended-release-37 C:\Users\Sahaj\.gradle\caches\8.12\transforms\950b4109c5fca34631340b20014e7bb2\transformed\material-icons-extended-release\res
+com.guardian.safety.app-runtime-saveable-release-38 C:\Users\Sahaj\.gradle\caches\8.12\transforms\9e8e1a05e2164a8c04f3f0c07c454630\transformed\runtime-saveable-release\res
+com.guardian.safety.app-play-services-base-18.1.0-39 C:\Users\Sahaj\.gradle\caches\8.12\transforms\a226e355c896ab761764622a7131f906\transformed\play-services-base-18.1.0\res
+com.guardian.safety.app-lottie-6.1.0-40 C:\Users\Sahaj\.gradle\caches\8.12\transforms\a73c9f3c46263e1cae3da94081cca752\transformed\lottie-6.1.0\res
+com.guardian.safety.app-emoji2-1.3.0-41 C:\Users\Sahaj\.gradle\caches\8.12\transforms\a7c0941995cefedc93e7c8d120409de4\transformed\emoji2-1.3.0\res
+com.guardian.safety.app-lifecycle-viewmodel-ktx-2.7.0-42 C:\Users\Sahaj\.gradle\caches\8.12\transforms\a8945274abcce2c1785aee3b9d01bbd1\transformed\lifecycle-viewmodel-ktx-2.7.0\res
+com.guardian.safety.app-activity-1.8.2-43 C:\Users\Sahaj\.gradle\caches\8.12\transforms\a9b5838f540835b76873e5b91f515932\transformed\activity-1.8.2\res
+com.guardian.safety.app-appcompat-1.6.1-44 C:\Users\Sahaj\.gradle\caches\8.12\transforms\aa3f701a7bfce30b38cc19d971a59d13\transformed\appcompat-1.6.1\res
+com.guardian.safety.app-ui-tooling-preview-release-45 C:\Users\Sahaj\.gradle\caches\8.12\transforms\ab47c1b8a7312b3e608f3adccbe0363d\transformed\ui-tooling-preview-release\res
+com.guardian.safety.app-ui-release-46 C:\Users\Sahaj\.gradle\caches\8.12\transforms\ab71568c32f0799ac87c718c83c2b99d\transformed\ui-release\res
+com.guardian.safety.app-core-ktx-1.12.0-47 C:\Users\Sahaj\.gradle\caches\8.12\transforms\ab9c7b1ef320c68766970d27f5ef1bf5\transformed\core-ktx-1.12.0\res
+com.guardian.safety.app-ui-tooling-data-release-48 C:\Users\Sahaj\.gradle\caches\8.12\transforms\acedf9e01f4e2dd3d4b931e680a7672a\transformed\ui-tooling-data-release\res
+com.guardian.safety.app-firebase-messaging-23.3.1-49 C:\Users\Sahaj\.gradle\caches\8.12\transforms\b2780587ea09be212a68e105af6726ad\transformed\firebase-messaging-23.3.1\res
+com.guardian.safety.app-play-services-measurement-api-21.5.0-50 C:\Users\Sahaj\.gradle\caches\8.12\transforms\b32f5c2a9ba34000c93ceba3356f73ca\transformed\play-services-measurement-api-21.5.0\res
+com.guardian.safety.app-navigation-common-ktx-2.7.5-51 C:\Users\Sahaj\.gradle\caches\8.12\transforms\bcdf3e2c37b0004b7b17ea81f1fee319\transformed\navigation-common-ktx-2.7.5\res
+com.guardian.safety.app-ui-text-release-52 C:\Users\Sahaj\.gradle\caches\8.12\transforms\c9094f2ed3c1da9f5ad46f0862a4e7ba\transformed\ui-text-release\res
+com.guardian.safety.app-coil-base-2.5.0-53 C:\Users\Sahaj\.gradle\caches\8.12\transforms\caa20ee8e9358f6eb54752cb62176011\transformed\coil-base-2.5.0\res
+com.guardian.safety.app-lifecycle-runtime-ktx-2.7.0-54 C:\Users\Sahaj\.gradle\caches\8.12\transforms\ccf381b306eb6359619d21e1eb84dbaf\transformed\lifecycle-runtime-ktx-2.7.0\res
+com.guardian.safety.app-ui-graphics-release-55 C:\Users\Sahaj\.gradle\caches\8.12\transforms\cee9c12f04f2a09a15345e7e319e2d50\transformed\ui-graphics-release\res
+com.guardian.safety.app-navigation-compose-2.7.5-56 C:\Users\Sahaj\.gradle\caches\8.12\transforms\cf5fc281e3911a7386a61c494c89c88c\transformed\navigation-compose-2.7.5\res
+com.guardian.safety.app-navigation-runtime-2.7.5-57 C:\Users\Sahaj\.gradle\caches\8.12\transforms\d742a5cfec04eb82ef0676987264190c\transformed\navigation-runtime-2.7.5\res
+com.guardian.safety.app-datastore-1.0.0-58 C:\Users\Sahaj\.gradle\caches\8.12\transforms\d7e24df24e1589386e72a33705924ca1\transformed\datastore-1.0.0\res
+com.guardian.safety.app-animation-release-59 C:\Users\Sahaj\.gradle\caches\8.12\transforms\d8798aa5f3a47ea74870994eccec7fcb\transformed\animation-release\res
+com.guardian.safety.app-play-services-maps-18.2.0-60 C:\Users\Sahaj\.gradle\caches\8.12\transforms\ddc934ac1d2f8b6a4952bc8fc9fa4b80\transformed\play-services-maps-18.2.0\res
+com.guardian.safety.app-lifecycle-viewmodel-2.7.0-61 C:\Users\Sahaj\.gradle\caches\8.12\transforms\e3bea29cfe3431a5ffbbef58c2eae113\transformed\lifecycle-viewmodel-2.7.0\res
+com.guardian.safety.app-material-release-62 C:\Users\Sahaj\.gradle\caches\8.12\transforms\e93d24da382941d16a9b4f4cefe112fa\transformed\material-release\res
+com.guardian.safety.app-emoji2-views-helper-1.3.0-63 C:\Users\Sahaj\.gradle\caches\8.12\transforms\ea3379f8ec126183ef04ffb589bca93e\transformed\emoji2-views-helper-1.3.0\res
+com.guardian.safety.app-customview-poolingcontainer-1.0.0-64 C:\Users\Sahaj\.gradle\caches\8.12\transforms\eec0d7dc947a0c445c729b3142c26d29\transformed\customview-poolingcontainer-1.0.0\res
+com.guardian.safety.app-activity-ktx-1.8.2-65 C:\Users\Sahaj\.gradle\caches\8.12\transforms\f1711285f397242309f69e44ca54f179\transformed\activity-ktx-1.8.2\res
+com.guardian.safety.app-ui-unit-release-66 C:\Users\Sahaj\.gradle\caches\8.12\transforms\f397e943470855e6d989dae69b376eea\transformed\ui-unit-release\res
+com.guardian.safety.app-hilt-navigation-compose-1.1.0-67 C:\Users\Sahaj\.gradle\caches\8.12\transforms\f3ed1bbb9a31d17879d9e253027a40f8\transformed\hilt-navigation-compose-1.1.0\res
+com.guardian.safety.app-foundation-release-68 C:\Users\Sahaj\.gradle\caches\8.12\transforms\fb3d5a46c1657bc2533b66f4df83f9c2\transformed\foundation-release\res
+com.guardian.safety.app-fragment-1.5.1-69 C:\Users\Sahaj\.gradle\caches\8.12\transforms\fd511179fe54cc56bc65dc544e523949\transformed\fragment-1.5.1\res
+com.guardian.safety.app-res-70 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\generated\res\processDebugGoogleServices
+com.guardian.safety.app-resValues-71 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\generated\res\resValues\debug
+com.guardian.safety.app-packageDebugResources-72 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.guardian.safety.app-packageDebugResources-73 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.guardian.safety.app-merged_res-74 C:\Users\Sahaj\Desktop\Guardian App\android\app\build\intermediates\merged_res\debug
+com.guardian.safety.app-debug-75 C:\Users\Sahaj\Desktop\Guardian App\android\app\src\debug\res
+com.guardian.safety.app-main-76 C:\Users\Sahaj\Desktop\Guardian App\android\app\src\main\res

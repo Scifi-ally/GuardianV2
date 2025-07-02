@@ -20,6 +20,7 @@ import com.guardian.safety.ui.components.BottomNavigation
 import com.guardian.safety.ui.components.RealGoogleMap
 import com.guardian.safety.ui.components.SlideUpPanel
 import com.guardian.safety.ui.components.RouteSearchSection
+import com.guardian.safety.ui.components.EnhancedSOSButton
 import com.guardian.safety.ui.viewmodel.IndexViewModel
 import com.guardian.safety.services.EmergencyType
 import com.guardian.safety.ui.theme.*
@@ -75,14 +76,110 @@ fun IndexScreen(
             )
         }
 
-        // Slide Up Panel - matching web app tabs
+        // Slide Up Panel - exactly matching web app
         SlideUpPanel(
             modifier = Modifier.align(Alignment.BottomCenter),
-            selectedTab = uiState.selectedTab,
-            onTabSelected = viewModel::setSelectedTab,
-            isNavigating = uiState.isNavigating,
-            onEndNavigation = viewModel::clearRoute
-        )
+            bottomOffset = 120f // Account for bottom navigation
+        ) {
+            // Panel content matching web app structure
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Enhanced SOS Button in panel like web app
+                Box(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    EnhancedSOSButton(
+                        onEmergencyTrigger = { alertId ->
+                            viewModel.triggerSOS(EmergencyType.GENERAL)
+                        },
+                        size = "md"
+                    )
+                }
+
+                // Route information if navigating
+                if (uiState.isNavigating) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = "Turn-by-Turn Navigation",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (uiState.fromLocation.isNotEmpty() && uiState.toLocation.isNotEmpty()) {
+                                Text(
+                                    text = "${uiState.fromLocation} → ${uiState.toLocation}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Quick actions matching web app
+                Text(
+                    text = "Quick Actions",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        onClick = { /* Share location */ }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = "Share Location",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Share Location",
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    }
+
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        onClick = { /* Call emergency */ }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = "Emergency Call",
+                                tint = GuardianRed
+                            )
+                            Text(
+                                text = "Emergency Call",
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         // Bottom Navigation - matching MagicNavbar
         Box(
