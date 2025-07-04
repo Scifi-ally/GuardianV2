@@ -188,7 +188,6 @@ export function MockMap({
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
           maximumAge: 60000,
         },
       );

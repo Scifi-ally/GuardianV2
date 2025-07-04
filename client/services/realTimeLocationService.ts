@@ -80,7 +80,6 @@ export class RealTimeLocationService {
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
           maximumAge: trackingOptions.interval / 2, // Half the interval
         },
       ) || null;
@@ -294,8 +293,6 @@ export class RealTimeLocationService {
         return "Location access denied. Please enable location permissions.";
       case error.POSITION_UNAVAILABLE:
         return "Location information unavailable. Check your GPS and network connection.";
-      case error.TIMEOUT:
-        return "Location request timed out. Please try again.";
       default:
         return "Unable to retrieve location.";
     }

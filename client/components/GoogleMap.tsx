@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Shield, Locate, Layers, AlertTriangle } from "lucide-react";
 import { MockMap } from "@/components/MockMap";
-import IrregularSafetyAreas from "@/components/IrregularSafetyAreas";
+import RoadBasedSafetyAreas from "@/components/RoadBasedSafetyAreas";
 import { useNotifications } from "@/components/NotificationSystem";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
@@ -850,112 +850,227 @@ function MapComponent({
     }
   }, [map, mapTheme, mapType]);
 
-  // Update user location marker
+  // Enhanced user location marker with better visibility
   useEffect(() => {
-    if (!map || !location) return;
-
-    // Remove existing marker
-    if (userMarker) {
-      userMarker.setMap(null);
+    if (!map || !location) {
+      console.log("🗺️ Map or location not available yet");
+      return;
     }
 
-    // Create blue dot marker for current location
+    console.log("📍 Creating location marker for:", {
+      lat: location.latitude.toFixed(6),
+      lng: location.longitude.toFixed(6),
+      accuracy: Math.round(location.accuracy || 0) + "m",
+    });
+
+    // Remove existing marker and its elements
+    if (userMarker) {
+      userMarker.setMap(null);
+      if ((userMarker as any).pulseCircle) {
+        (userMarker as any).pulseCircle.setMap(null);
+      }
+      if ((userMarker as any).accuracyCircle) {
+        (userMarker as any).accuracyCircle.setMap(null);
+      }
+      if ((userMarker as any).pulseInterval) {
+        clearInterval((userMarker as any).pulseInterval);
+      }
+    }
+
+    // Enhanced location marker icon
     const customIcon = {
       url: `data:image/svg+xml,${encodeURIComponent(`
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="10" cy="10" r="8" fill="#3b82f6" stroke="white" stroke-width="2"/>
-          <circle cx="10" cy="10" r="4" fill="white"/>
-          <circle cx="10" cy="10" r="2" fill="#3b82f6"/>
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer ring -->
+          <circle cx="16" cy="16" r="15" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" stroke-width="2"/>
+          <!-- Main blue dot -->
+          <circle cx="16" cy="16" r="10" fill="#3b82f6" stroke="white" stroke-width="3"/>
+          <!-- Inner white dot -->
+          <circle cx="16" cy="16" r="5" fill="white"/>
+          <!-- Center blue dot -->
+          <circle cx="16" cy="16" r="3" fill="#3b82f6"/>
+          <!-- Directional indicator (if heading available) -->
+          ${
+            location.heading !== undefined
+              ? `
+            <path d="M16 6 L20 14 L16 12 L12 14 Z" fill="#3b82f6" transform="rotate(${location.heading} 16 16)"/>
+          `
+              : ""
+          }
         </svg>
       `)}`,
-      scaledSize: new google.maps.Size(20, 20),
-      anchor: new google.maps.Point(10, 10),
+      scaledSize: new google.maps.Size(32, 32),
+      anchor: new google.maps.Point(16, 16),
     };
 
-    // Create new marker with enhanced styling
+    // Create new enhanced marker
     const marker = new google.maps.Marker({
       position: { lat: location.latitude, lng: location.longitude },
       map,
-      title: `Your Location (±${Math.round(location.accuracy || 0)}m accuracy)`,
+      title: `📍 Your Location\nAccuracy: ±${Math.round(location.accuracy || 0)}m\nTimestamp: ${new Date(location.timestamp).toLocaleTimeString()}`,
       icon: customIcon,
       animation: google.maps.Animation.DROP,
-      zIndex: 1000, // Ensure marker appears above other elements
+      zIndex: 10000, // Highest priority
+      optimized: false, // Better for custom SVG
     });
 
-    // Add accuracy circle with better styling
-    if (location.accuracy) {
-      new google.maps.Circle({
+    // Add accuracy circle if available
+    let accuracyCircle: google.maps.Circle | null = null;
+    if (location.accuracy && location.accuracy < 1000) {
+      // Only show if accuracy is reasonable
+      accuracyCircle = new google.maps.Circle({
         strokeColor: "#3b82f6",
-        strokeOpacity: 0.4,
+        strokeOpacity: 0.6,
         strokeWeight: 2,
         fillColor: "#3b82f6",
-        fillOpacity: 0.1,
+        fillOpacity: 0.15,
         map,
         center: { lat: location.latitude, lng: location.longitude },
         radius: location.accuracy,
-        zIndex: 999,
+        zIndex: 9999,
       });
     }
 
-    // Add pulsing animation circle for current location
+    // Enhanced pulsing animation
     const pulseCircle = new google.maps.Circle({
       strokeColor: "#3b82f6",
-      strokeOpacity: 0.6,
-      strokeWeight: 2,
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
       fillColor: "#3b82f6",
-      fillOpacity: 0.2,
+      fillOpacity: 0.3,
       map,
       center: { lat: location.latitude, lng: location.longitude },
-      radius: 50, // Fixed radius for pulse effect
-      zIndex: 998,
+      radius: 30,
+      zIndex: 9998,
     });
 
-    // Animate the pulse circle
+    // Smooth pulsing animation
     let pulseRadius = 20;
     let growing = true;
     const pulseInterval = setInterval(() => {
       if (growing) {
-        pulseRadius += 2;
-        if (pulseRadius >= 80) growing = false;
+        pulseRadius += 1.5;
+        if (pulseRadius >= 60) growing = false;
       } else {
-        pulseRadius -= 2;
+        pulseRadius -= 1.5;
         if (pulseRadius <= 20) growing = true;
       }
 
       pulseCircle.setRadius(pulseRadius);
+      const opacity = 0.4 - ((pulseRadius - 20) / 40) * 0.3;
       pulseCircle.setOptions({
-        fillOpacity: 0.3 - (pulseRadius - 20) / 200, // Fade as it grows
-        strokeOpacity: 0.7 - (pulseRadius - 20) / 200,
+        fillOpacity: Math.max(0.1, opacity),
+        strokeOpacity: Math.max(0.3, opacity * 2),
       });
-    }, 100);
+    }, 50); // Smoother animation
 
-    // Store references for cleanup
-    const markerWithPulse = Object.assign(marker, {
-      pulseCircle,
-      pulseInterval,
-      accuracyCircle: location.accuracy
-        ? new google.maps.Circle({
-            strokeColor: "#3b82f6",
-            strokeOpacity: 0.4,
-            strokeWeight: 2,
-            fillColor: "#3b82f6",
-            fillOpacity: 0.1,
-            map,
-            center: { lat: location.latitude, lng: location.longitude },
-            radius: location.accuracy,
-          })
-        : null,
+    // Add click listener for location details
+    marker.addListener("click", () => {
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="padding: 12px; font-family: system-ui; min-width: 250px;">
+            <h3 style="margin: 0 0 10px 0; color: #3b82f6; font-size: 16px;">
+              📍 Your Current Location
+            </h3>
+            <div style="margin-bottom: 8px;">
+              <strong>Coordinates:</strong><br/>
+              <span style="font-family: monospace; font-size: 12px;">
+                ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}
+              </span>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong>Accuracy:</strong> ±${Math.round(location.accuracy || 0)}m
+            </div>
+            ${
+              location.speed !== undefined && location.speed > 0
+                ? `
+              <div style="margin-bottom: 8px;">
+                <strong>Speed:</strong> ${Math.round(location.speed * 3.6)} km/h
+              </div>
+            `
+                : ""
+            }
+            ${
+              location.heading !== undefined
+                ? `
+              <div style="margin-bottom: 8px;">
+                <strong>Heading:</strong> ${Math.round(location.heading)}°
+              </div>
+            `
+                : ""
+            }
+            <div style="margin-bottom: 8px;">
+              <strong>Last Updated:</strong><br/>
+              <span style="font-size: 12px;">
+                ${new Date(location.timestamp).toLocaleString()}
+              </span>
+            </div>
+            <div style="margin-top: 10px; padding: 8px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #3b82f6;">
+              <small style="color: #1e40af;">
+                ✅ Real-time location tracking active
+              </small>
+            </div>
+          </div>
+        `,
+        position: { lat: location.latitude, lng: location.longitude },
+      });
+      infoWindow.open(map);
     });
 
-    setUserMarker(markerWithPulse);
+    // Store all references for cleanup
+    const enhancedMarker = Object.assign(marker, {
+      pulseCircle,
+      pulseInterval,
+      accuracyCircle,
+    });
 
-    // Smooth pan to location without changing zoom dramatically
-    map.panTo({ lat: location.latitude, lng: location.longitude });
+    setUserMarker(enhancedMarker);
+
+    // Smart map centering - only pan if location changed significantly
+    const currentCenter = map.getCenter();
+    if (currentCenter) {
+      // Simple distance calculation without geometry library
+      const lat1 = location.latitude;
+      const lng1 = location.longitude;
+      const lat2 = currentCenter.lat();
+      const lng2 = currentCenter.lng();
+
+      const R = 6371e3; // Earth's radius in meters
+      const φ1 = (lat1 * Math.PI) / 180;
+      const φ2 = (lat2 * Math.PI) / 180;
+      const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+      const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+
+      const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c; // Distance in meters
+
+      // Only pan if moved more than 100m or this is the first location
+      if (distance > 100 || !currentCenter) {
+        console.log("🎯 Centering map on current location");
+        map.panTo({ lat: location.latitude, lng: location.longitude });
+
+        // Ensure appropriate zoom level
+        const currentZoom = map.getZoom() || 15;
+        if (currentZoom < 14) {
+          map.setZoom(15);
+        }
+      }
+    }
 
     // Cleanup function
     return () => {
-      clearInterval(pulseInterval);
-      pulseCircle.setMap(null);
+      if (pulseInterval) {
+        clearInterval(pulseInterval);
+      }
+      if (pulseCircle) {
+        pulseCircle.setMap(null);
+      }
+      if (accuracyCircle) {
+        accuracyCircle.setMap(null);
+      }
     };
   }, [map, location]);
 
@@ -1020,9 +1135,7 @@ function MapComponent({
               errorMessage =
                 "Location information unavailable. Please check your GPS/network.";
               break;
-            case error.TIMEOUT:
-              errorMessage = "Location request timed out. Please try again.";
-              break;
+
             default:
               errorMessage = `Location error: ${error.message}`;
               break;
@@ -1039,7 +1152,6 @@ function MapComponent({
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000, // Increased timeout to 10 seconds
           maximumAge: 30000, // Allow cached location up to 30 seconds old
         },
       );
@@ -1295,8 +1407,8 @@ function MapComponent({
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-full" />
 
-      {/* Irregular Safety Areas */}
-      <IrregularSafetyAreas
+      {/* Road-Based Safety Areas with Dynamic Shapes */}
+      <RoadBasedSafetyAreas
         map={map}
         userLocation={
           location
@@ -1305,16 +1417,10 @@ function MapComponent({
         }
         showSafeAreaCircles={showSafeAreaCircles}
         onAreaUpdate={(areas) => {
-          // Notify about safety changes
-          const highRiskAreas = areas.filter((area) => area.safetyScore < 50);
-          if (highRiskAreas.length > 0) {
-            addNotification({
-              type: "warning",
-              title: "Safety Alert",
-              message: `${highRiskAreas.length} area(s) with lower safety scores detected nearby`,
-              duration: 5000,
-            });
-          }
+          // Real-time road-based safety monitoring
+          console.log(
+            `Updated ${areas.length} road-based safety areas with real-time data`,
+          );
         }}
       />
 

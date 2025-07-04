@@ -85,117 +85,156 @@ export function useGeolocation() {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isTracking, setIsTracking] = useState(false);
-  const watchId = useRef<number | null>(null);
+  const [permissionStatus, setPermissionStatus] = useState<string>("unknown");
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const errorUnsubscribeRef = useRef<(() => void) | null>(null);
 
-  const startTracking = useCallback(() => {
-    if (!navigator.geolocation) {
-      setError("Geolocation not supported");
-      return;
-    }
-
-    setIsTracking(true);
-    setError(null);
-
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 60000,
-    };
-
-    watchId.current = navigator.geolocation.watchPosition(
-      (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          timestamp: position.timestamp,
-        });
-      },
-      (err) => {
-        setError(err.message);
-        setIsTracking(false);
-      },
-      options,
+  // Import the enhanced location service
+  const getEnhancedLocationService = async () => {
+    const { enhancedLocationService } = await import(
+      "@/services/enhancedLocationService"
     );
-  }, []);
+    return enhancedLocationService;
+  };
 
-  const stopTracking = useCallback(() => {
-    if (watchId.current !== null) {
-      navigator.geolocation.clearWatch(watchId.current);
-      watchId.current = null;
-    }
-    setIsTracking(false);
-  }, []);
-
-  const getCurrentLocation = useCallback(() => {
-    return new Promise<LocationData>((resolve, reject) => {
-      if (!navigator.geolocation) {
-        const error = new Error("Geolocation not supported by this browser");
-        setError(error.message);
-        reject(error);
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const locationData = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            timestamp: position.timestamp,
-          };
-          setLocation(locationData);
-          setError(null); // Clear any previous errors
-          resolve(locationData);
-        },
-        (err) => {
-          let errorMessage = "Unknown location error";
-
-          switch (err.code) {
-            case err.PERMISSION_DENIED:
-              errorMessage =
-                "Location access denied. Please enable location permissions in your browser settings.";
-              break;
-            case err.POSITION_UNAVAILABLE:
-              errorMessage =
-                "Location information unavailable. Please check your GPS and network connection.";
-              break;
-            case err.TIMEOUT:
-              errorMessage = "Location request timed out. Please try again.";
-              break;
-            default:
-              errorMessage = err.message || "Failed to get current location";
-              break;
-          }
-
-          console.warn("Geolocation error:", errorMessage);
-          setError(errorMessage);
-          reject(new Error(errorMessage));
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000, // Increased timeout
-          maximumAge: 60000, // Allow cached location up to 1 minute old
-        },
-      );
-    });
-  }, []);
-
+  // Initialize location tracking on mount
   useEffect(() => {
+    const initializeLocation = async () => {
+      try {
+        const locationService = await getEnhancedLocationService();
+
+        // Check permission status
+        const permission = await locationService.getPermissionStatus();
+        setPermissionStatus(permission);
+
+        // Subscribe to location updates
+        unsubscribeRef.current = locationService.subscribe((locationData) => {
+          setLocation(locationData);
+          setError(null);
+          console.log("📍 Location updated:", {
+            lat: locationData.latitude.toFixed(6),
+            lng: locationData.longitude.toFixed(6),
+            accuracy: Math.round(locationData.accuracy) + "m",
+          });
+          // Removed automatic notifications for location updates
+        });
+
+        // Subscribe to errors
+        errorUnsubscribeRef.current = locationService.subscribeToErrors(
+          (locationError) => {
+            setError(locationError.message);
+            setIsTracking(false);
+
+            // Use notification system for errors
+            import("@/components/SlideDownNotifications").then(
+              ({ notificationManager }) => {
+                notificationManager.addNotification({
+                  type: "error",
+                  title: "Location Error",
+                  message: locationError.message,
+                  persistent: locationError.code === 1, // Permission denied
+                });
+              },
+            );
+          },
+        );
+
+        // Get current location immediately
+        try {
+          await locationService.getCurrentLocation();
+        } catch (err) {
+          console.warn("Initial location request failed:", err);
+        }
+
+        // Start tracking
+        await locationService.startTracking();
+        setIsTracking(true);
+      } catch (err: any) {
+        console.error("Failed to initialize location service:", err);
+        setError(err.message || "Failed to initialize location service");
+      }
+    };
+
+    initializeLocation();
+
+    // Cleanup
     return () => {
-      if (watchId.current !== null) {
-        navigator.geolocation.clearWatch(watchId.current);
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+      if (errorUnsubscribeRef.current) {
+        errorUnsubscribeRef.current();
       }
     };
   }, []);
+
+  const startTracking = useCallback(async () => {
+    try {
+      const locationService = await getEnhancedLocationService();
+      await locationService.startTracking();
+      setIsTracking(true);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Failed to start tracking");
+      setIsTracking(false);
+    }
+  }, []);
+
+  const stopTracking = useCallback(async () => {
+    try {
+      const locationService = await getEnhancedLocationService();
+      locationService.stopTracking();
+      setIsTracking(false);
+    } catch (err: any) {
+      console.warn("Failed to stop tracking:", err);
+    }
+  }, []);
+
+  const getCurrentLocation = useCallback(async () => {
+    try {
+      const locationService = await getEnhancedLocationService();
+      const locationData = await locationService.getCurrentLocation();
+      setLocation(locationData);
+      setError(null);
+      return locationData;
+    } catch (err: any) {
+      const errorMessage = err.message || "Failed to get current location";
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
+
+  const requestPermission = useCallback(async () => {
+    try {
+      const locationService = await getEnhancedLocationService();
+      const permission = await locationService.getPermissionStatus();
+      setPermissionStatus(permission);
+
+      if (permission === "granted") {
+        await getCurrentLocation();
+        return true;
+      } else if (permission === "prompt" || permission === "unknown") {
+        // Try to get location which will prompt for permission
+        await getCurrentLocation();
+        return true;
+      } else {
+        throw new Error("Location permission denied");
+      }
+    } catch (err: any) {
+      setError(err.message || "Permission request failed");
+      return false;
+    }
+  }, [getCurrentLocation]);
 
   return {
     location,
     error,
     isTracking,
+    permissionStatus,
     startTracking,
     stopTracking,
     getCurrentLocation,
+    requestPermission,
   };
 }
 

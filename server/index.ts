@@ -1,6 +1,10 @@
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import {
+  handleNewsAnalysis,
+  handleNewsMonitoring,
+} from "./routes/news-analysis";
 
 export function createServer() {
   const app = express();
@@ -16,6 +20,10 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // News analysis routes for AI-powered safety scoring
+  app.post("/api/news-analysis", handleNewsAnalysis);
+  app.get("/api/news-monitoring", handleNewsMonitoring);
 
   return app;
 }

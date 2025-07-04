@@ -15,6 +15,7 @@ import {
   Bike,
   Footprints,
   Users,
+  RefreshCw,
 } from "lucide-react";
 import { GoogleMap } from "@/components/GoogleMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
@@ -32,15 +33,16 @@ import { motion } from "framer-motion";
 import { RealTimeSafetyFeatures } from "@/components/RealTimeSafetyFeatures";
 import { RealTimeLocationShare } from "@/components/RealTimeLocationShare";
 import { CustomCheckbox } from "@/components/ui/custom-checkbox";
+
+import { LocationIndicator } from "@/components/LocationStatus";
 import {
-  LocationStatusToast,
-  useNotifications,
-} from "@/components/NotificationSystem";
-import { LocationIndicator } from "@/components/LocationIndicator";
+  SlideDownNotifications,
+  useSlideDownNotifications,
+} from "@/components/SlideDownNotifications";
 import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 
 export default function Index() {
-  const { addNotification } = useNotifications();
+  const { addNotification } = useSlideDownNotifications();
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
@@ -64,10 +66,6 @@ export default function Index() {
     "WALKING" | "DRIVING" | "BICYCLING"
   >("WALKING");
   const [routeSettings, setRouteSettings] = useState({
-    avoidTolls: false,
-    avoidHighways: false,
-    preferWellLit: true,
-    avoidIsolated: true,
     showTraffic: true,
     satelliteView: false,
     showSafeZones: true,
@@ -76,7 +74,7 @@ export default function Index() {
     zoomLevel: 15,
   });
 
-  const { location, getCurrentLocation } = useGeolocation();
+  const { location, error, getCurrentLocation } = useGeolocation();
   const { mapTheme, mapType, toggleTheme, toggleMapType } = useMapTheme();
   const { userProfile } = useAuth();
 
@@ -163,22 +161,19 @@ export default function Index() {
         type: "warning",
         title: "Location Not Found",
         message: `Could not find "${toLocation}". Using default location.`,
-        duration: 4000,
       });
     }
 
-    // Generate route instructions based on settings
+    // Generate route instructions based on travel mode
     const mockInstructions = [
       `Starting from ${fromLocation}`,
-      routeSettings.preferWellLit
-        ? "Taking well-lit route via Main Street (recommended)"
-        : "Head north on Main Street toward Oak Avenue",
-      routeSettings.avoidHighways
-        ? "Avoiding highways - using local roads"
-        : "Continue on highway for fastest route",
-      routeSettings.avoidIsolated
-        ? "Route optimized to stay in populated areas"
-        : "Turn right onto Oak Avenue",
+      travelMode === "WALKING"
+        ? "Taking pedestrian-friendly route via Main Street"
+        : travelMode === "BICYCLING"
+          ? "Following bike-friendly route with dedicated lanes"
+          : "Using optimal driving route via major roads",
+      "Continue straight for 0.8 miles",
+      "Turn right at the traffic light",
       `Arriving at ${toLocation}`,
     ];
 
@@ -188,7 +183,7 @@ export default function Index() {
     }
 
     setRouteInstructions(mockInstructions);
-  }, [fromLocation, toLocation, routeSettings]);
+  }, [fromLocation, toLocation, travelMode]);
 
   const handleUseCurrentLocation = useCallback(async () => {
     try {
@@ -196,6 +191,7 @@ export default function Index() {
       setFromLocation(
         `${currentLoc.latitude.toFixed(4)}, ${currentLoc.longitude.toFixed(4)}`,
       );
+      // Removed notification - silent location usage
     } catch (error: any) {
       console.error("Error getting current location:", error);
 
@@ -207,13 +203,13 @@ export default function Index() {
         title: "Location Error",
         message: errorMessage,
         action: {
-          label: "Enable Location",
+          label: "Try Again",
           onClick: handleUseCurrentLocation,
         },
-        duration: 6000,
+        persistent: true,
       });
     }
-  }, [getCurrentLocation]);
+  }, [getCurrentLocation, addNotification]);
 
   // Refresh route when travel mode changes
   useEffect(() => {
@@ -357,8 +353,8 @@ export default function Index() {
         </div>
       </div>
 
-      {/* Location Status Toast */}
-      <LocationStatusToast />
+      {/* Unified Slidedown Notifications */}
+      <SlideDownNotifications />
 
       {/* Google Map */}
       <div className="absolute inset-0 top-0 z-10 pt-16">
@@ -405,7 +401,7 @@ export default function Index() {
           defaultValue={isNavigating ? "navigation" : "safety"}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3 h-8">
+          <TabsList className="grid w-full grid-cols-4 h-8">
             <TabsTrigger value="navigation" className="text-xs h-7">
               <Navigation className="h-3 w-3 mr-1" />
               Routes
@@ -417,6 +413,10 @@ export default function Index() {
             <TabsTrigger value="settings" className="text-xs h-7">
               <Settings className="h-3 w-3 mr-1" />
               Settings
+            </TabsTrigger>
+            <TabsTrigger value="debug" className="text-xs h-7">
+              <MapPin className="h-3 w-3 mr-1" />
+              Debug
             </TabsTrigger>
           </TabsList>
 
@@ -790,104 +790,109 @@ export default function Index() {
                   </motion.div>
                 </div>
               </div>
+            </div>
+          </TabsContent>
 
-              {/* Route Preferences */}
+          <TabsContent
+            value="debug"
+            className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-left"
+          >
+            <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-medium mb-2">Route Preferences</h4>
-                <div className="space-y-2">
-                  <motion.div
-                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <div>
-                      <p className="text-sm font-medium">Well-lit paths</p>
-                      <p className="text-xs text-muted-foreground">
-                        Better lighting
-                      </p>
-                    </div>
-                    <CustomCheckbox
-                      checked={routeSettings.preferWellLit}
-                      onChange={(checked) =>
-                        setRouteSettings((prev) => ({
-                          ...prev,
-                          preferWellLit: checked,
-                        }))
-                      }
-                      size="sm"
-                    />
-                  </motion.div>
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Location Debug
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Location status and troubleshooting
+                </p>
 
-                  <motion.div
-                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
+                {/* Location Status */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
                     <div>
-                      <p className="text-sm font-medium">
-                        Avoid isolated areas
-                      </p>
+                      <p className="text-sm font-medium">Location Status</p>
                       <p className="text-xs text-muted-foreground">
-                        Stay populated
+                        {location
+                          ? `Found at ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`
+                          : error
+                            ? "Error getting location"
+                            : "Searching for location..."}
                       </p>
                     </div>
-                    <CustomCheckbox
-                      checked={routeSettings.avoidIsolated}
-                      onChange={(checked) =>
-                        setRouteSettings((prev) => ({
-                          ...prev,
-                          avoidIsolated: checked,
-                        }))
-                      }
-                      size="sm"
-                    />
-                  </motion.div>
+                    <div className="flex items-center gap-2">
+                      {location && (
+                        <Badge
+                          variant="outline"
+                          className="bg-green-50 text-green-700 border-green-200"
+                        >
+                          ±{Math.round(location.accuracy)}m
+                        </Badge>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={getCurrentLocation}
+                        className="h-7 text-xs"
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Refresh
+                      </Button>
+                    </div>
+                  </div>
 
-                  <motion.div
-                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <div>
-                      <p className="text-sm font-medium">Avoid highways</p>
-                      <p className="text-xs text-muted-foreground">
-                        Local roads
-                      </p>
+                  {location && (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 bg-muted/20 rounded">
+                        <span className="font-medium">Accuracy</span>
+                        <div>±{Math.round(location.accuracy)}m</div>
+                      </div>
+                      <div className="p-2 bg-muted/20 rounded">
+                        <span className="font-medium">Timestamp</span>
+                        <div>
+                          {new Date(location.timestamp).toLocaleTimeString()}
+                        </div>
+                      </div>
+                      {location.speed !== undefined && location.speed > 0 && (
+                        <div className="p-2 bg-muted/20 rounded">
+                          <span className="font-medium">Speed</span>
+                          <div>{Math.round(location.speed * 3.6)} km/h</div>
+                        </div>
+                      )}
+                      {location.heading !== undefined && (
+                        <div className="p-2 bg-muted/20 rounded">
+                          <span className="font-medium">Heading</span>
+                          <div>{Math.round(location.heading)}°</div>
+                        </div>
+                      )}
                     </div>
-                    <CustomCheckbox
-                      checked={routeSettings.avoidHighways}
-                      onChange={(checked) =>
-                        setRouteSettings((prev) => ({
-                          ...prev,
-                          avoidHighways: checked,
-                        }))
-                      }
-                      size="sm"
-                    />
-                  </motion.div>
+                  )}
 
-                  <motion.div
-                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <div>
-                      <p className="text-sm font-medium">Avoid tolls</p>
-                      <p className="text-xs text-muted-foreground">
-                        Toll-free routes
-                      </p>
+                  <div className="p-3 bg-muted/20 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Browser Info</span>
                     </div>
-                    <CustomCheckbox
-                      checked={routeSettings.avoidTolls}
-                      onChange={(checked) =>
-                        setRouteSettings((prev) => ({
-                          ...prev,
-                          avoidTolls: checked,
-                        }))
-                      }
-                      size="sm"
-                    />
-                  </motion.div>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <div>
+                        Geolocation:{" "}
+                        {navigator.geolocation
+                          ? "✅ Supported"
+                          : "❌ Not supported"}
+                      </div>
+                      <div>
+                        Permissions API:{" "}
+                        {"permissions" in navigator
+                          ? "✅ Available"
+                          : "❌ Not available"}
+                      </div>
+                      <div>
+                        HTTPS:{" "}
+                        {window.location.protocol === "https:"
+                          ? "✅ Secure"
+                          : "⚠️ Insecure"}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

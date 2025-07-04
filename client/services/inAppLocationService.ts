@@ -116,7 +116,6 @@ class InAppLocationService {
           },
           {
             enableHighAccuracy: true,
-            timeout: 10000,
             maximumAge: 30000,
           },
         );
@@ -230,7 +229,6 @@ class InAppLocationService {
           },
           {
             enableHighAccuracy: true,
-            timeout: 10000,
             maximumAge: 60000,
           },
         );
