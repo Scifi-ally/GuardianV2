@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Guardian Safety</string>
-    <string name="sos_notification_title">Emergency Alert</string>
-    <string name="sos_notification_text">SOS alert has been sent to your emergency contacts</string>
-    <string name="location_tracking_title">Guardian Location Tracking</string>
-    <string name="location_tracking_text">Sharing your location for emergency response</string>
-</resources>

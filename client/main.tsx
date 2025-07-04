@@ -14,6 +14,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SOSSettingsProvider } from "@/contexts/SOSSettingsContext";
+import { NotificationProvider } from "@/components/NotificationSystem";
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Guardian from "./pages/Guardian";
@@ -49,26 +50,26 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return currentUser ? <Navigate to="/" /> : <>{children}</>;
 }
 
-// Animation variants for page transitions
-const fadeVariants = {
+// Simple page transition variants
+const pageVariants = {
   enter: {
     opacity: 0,
-    scale: 0.98,
+    x: 20,
   },
   center: {
     opacity: 1,
-    scale: 1,
+    x: 0,
   },
   exit: {
     opacity: 0,
-    scale: 1.02,
+    x: -20,
   },
 };
 
 const transition = {
   type: "tween",
-  duration: 0.2,
   ease: "easeInOut",
+  duration: 0.3,
 };
 
 function AnimatedRoutes() {
@@ -82,7 +83,7 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <motion.div
-                variants={fadeVariants}
+                variants={pageVariants}
                 initial="enter"
                 animate="center"
                 exit="exit"
@@ -98,7 +99,16 @@ function AnimatedRoutes() {
           path="/guardian"
           element={
             <ProtectedRoute>
-              <Guardian />
+              <motion.div
+                variants={pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+                className="w-full min-h-screen"
+              >
+                <Guardian />
+              </motion.div>
             </ProtectedRoute>
           }
         />
@@ -106,7 +116,16 @@ function AnimatedRoutes() {
           path="/contacts"
           element={
             <ProtectedRoute>
-              <Contacts />
+              <motion.div
+                variants={pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+                className="w-full min-h-screen"
+              >
+                <Contacts />
+              </motion.div>
             </ProtectedRoute>
           }
         />
@@ -114,7 +133,16 @@ function AnimatedRoutes() {
           path="/navigation"
           element={
             <ProtectedRoute>
-              <NavigationPage />
+              <motion.div
+                variants={pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+                className="w-full min-h-screen"
+              >
+                <NavigationPage />
+              </motion.div>
             </ProtectedRoute>
           }
         />
@@ -123,7 +151,7 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <motion.div
-                variants={fadeVariants}
+                variants={pageVariants}
                 initial="enter"
                 animate="center"
                 exit="exit"
@@ -139,7 +167,16 @@ function AnimatedRoutes() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <Settings />
+              <motion.div
+                variants={pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+                className="w-full min-h-screen"
+              >
+                <Settings />
+              </motion.div>
             </ProtectedRoute>
           }
         />
@@ -147,7 +184,16 @@ function AnimatedRoutes() {
           path="/signin"
           element={
             <PublicRoute>
-              <SignIn />
+              <motion.div
+                variants={pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+                className="w-full min-h-screen"
+              >
+                <SignIn />
+              </motion.div>
             </PublicRoute>
           }
         />
@@ -155,7 +201,16 @@ function AnimatedRoutes() {
           path="/signup"
           element={
             <PublicRoute>
-              <SignUp />
+              <motion.div
+                variants={pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+                className="w-full min-h-screen"
+              >
+                <SignUp />
+              </motion.div>
             </PublicRoute>
           }
         />
@@ -170,15 +225,17 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <SOSSettingsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <div className="relative w-full min-h-screen">
-              <AnimatedRoutes />
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
+        <NotificationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <div className="relative w-full min-h-screen bg-background">
+                <AnimatedRoutes />
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </NotificationProvider>
       </SOSSettingsProvider>
     </AuthProvider>
   </QueryClientProvider>

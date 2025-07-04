@@ -14,6 +14,7 @@ import {
   Car,
   Bike,
   Footprints,
+  Users,
 } from "lucide-react";
 import { GoogleMap } from "@/components/GoogleMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
@@ -28,8 +29,18 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { RealTimeSafetyFeatures } from "@/components/RealTimeSafetyFeatures";
+import { RealTimeLocationShare } from "@/components/RealTimeLocationShare";
+import { CustomCheckbox } from "@/components/ui/custom-checkbox";
+import {
+  LocationStatusToast,
+  useNotifications,
+} from "@/components/NotificationSystem";
+import { LocationIndicator } from "@/components/LocationIndicator";
+import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 
 export default function Index() {
+  const { addNotification } = useNotifications();
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
@@ -61,6 +72,7 @@ export default function Index() {
     satelliteView: false,
     showSafeZones: true,
     showEmergencyServices: true,
+    showSafeAreaCircles: true,
     zoomLevel: 15,
   });
 
@@ -147,36 +159,12 @@ export default function Index() {
         lng: -122.4194,
       });
 
-      // Show error notification
-      if (typeof window !== "undefined") {
-        const notification = document.createElement("div");
-        notification.innerHTML = `
-          <div style="
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #f59e0b;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 9999;
-            font-size: 14px;
-            max-width: 90vw;
-            text-align: center;
-          ">
-            Could not find "${toLocation}". Using default location.
-          </div>
-        `;
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-          if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-          }
-        }, 4000);
-      }
+      addNotification({
+        type: "warning",
+        title: "Location Not Found",
+        message: `Could not find "${toLocation}". Using default location.`,
+        duration: 4000,
+      });
     }
 
     // Generate route instructions based on settings
@@ -211,44 +199,19 @@ export default function Index() {
     } catch (error: any) {
       console.error("Error getting current location:", error);
 
-      // Show user-friendly error message
       const errorMessage = error?.message || "Unable to get your location";
-
-      // Set a placeholder that indicates location failed
       setFromLocation("📍 Location unavailable - tap to retry");
 
-      // Optional: Show toast notification if available
-      // This could be replaced with a proper toast notification system
-      if (typeof window !== "undefined") {
-        const notification = document.createElement("div");
-        notification.innerHTML = `
-          <div style="
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #ef4444;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 9999;
-            font-size: 14px;
-            max-width: 90vw;
-            text-align: center;
-          ">
-            ${errorMessage}
-          </div>
-        `;
-        document.body.appendChild(notification);
-
-        // Remove notification after 4 seconds
-        setTimeout(() => {
-          if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-          }
-        }, 4000);
-      }
+      addNotification({
+        type: "error",
+        title: "Location Error",
+        message: errorMessage,
+        action: {
+          label: "Enable Location",
+          onClick: handleUseCurrentLocation,
+        },
+        duration: 6000,
+      });
     }
   }, [getCurrentLocation]);
 
@@ -394,15 +357,20 @@ export default function Index() {
         </div>
       </div>
 
+      {/* Location Status Toast */}
+      <LocationStatusToast />
+
       {/* Google Map */}
       <div className="absolute inset-0 top-0 z-10 pt-16">
         <GoogleMap
+          key={`${routeSettings.showTraffic}-${routeSettings.showSafeZones}-${routeSettings.showEmergencyServices}-${routeSettings.showSafeAreaCircles}-${routeSettings.zoomLevel}-${mapTheme}-${mapType}`}
           location={location}
           mapTheme={mapTheme}
           mapType={mapType}
           showTraffic={routeSettings.showTraffic}
           showSafeZones={routeSettings.showSafeZones}
           showEmergencyServices={routeSettings.showEmergencyServices}
+          showSafeAreaCircles={routeSettings.showSafeAreaCircles}
           enableSatelliteView={routeSettings.satelliteView}
           zoomLevel={routeSettings.zoomLevel}
           destination={destination}
@@ -434,23 +402,53 @@ export default function Index() {
         onTouchOutside={() => console.log("Panel closed by touch outside")}
       >
         <Tabs
-          defaultValue={isNavigating ? "navigation" : "settings"}
+          defaultValue={isNavigating ? "navigation" : "safety"}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="navigation" className="text-xs">
-              <Navigation className="h-4 w-4 mr-1" />
+          <TabsList className="grid w-full grid-cols-3 h-8">
+            <TabsTrigger value="navigation" className="text-xs h-7">
+              <Navigation className="h-3 w-3 mr-1" />
               Routes
             </TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs">
-              <Settings className="h-4 w-4 mr-1" />
+            <TabsTrigger value="safety" className="text-xs h-7">
+              <Navigation2 className="h-3 w-3 mr-1" />
+              Safety
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs h-7">
+              <Settings className="h-3 w-3 mr-1" />
               Settings
             </TabsTrigger>
           </TabsList>
 
           <TabsContent
+            value="safety"
+            className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-up"
+          >
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Navigation2 className="h-5 w-5 text-primary" />
+                  Real-Time Safety
+                </h3>
+                <RealTimeSafetyFeatures />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Location Sharing
+                  <LocationSharingInfoButton />
+                </h3>
+                <div className="mt-4">
+                  <RealTimeLocationShare />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent
             value="navigation"
-            className="mt-4 space-y-4 transform transition-all duration-300 ease-out animate-in slide-in-from-right-1"
+            className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-right"
           >
             {isNavigating && turnByTurnInstructions.length > 0 ? (
               // Navigation Instructions
@@ -624,121 +622,156 @@ export default function Index() {
 
           <TabsContent
             value="settings"
-            className="mt-4 space-y-4 transform transition-all duration-300 ease-out animate-in slide-in-from-left-1"
+            className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-left"
           >
             <div className="space-y-4">
               {/* Map Style Settings */}
               <div>
                 <h4 className="text-sm font-medium mb-3">Map Display</h4>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <motion.div
-                    className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:shadow-sm"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                   >
                     <div>
                       <p className="text-sm font-medium">Map Theme</p>
                       <p className="text-xs text-muted-foreground">
-                        Light or dark appearance
+                        Light or dark
                       </p>
                     </div>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleTheme}
+                      className="h-7 px-2 text-xs"
                     >
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={toggleTheme}
-                        className="h-8 px-3 text-xs"
-                      >
-                        {mapTheme === "light" ? "🌞 Light" : "🌙 Dark"}
-                      </Button>
-                    </motion.div>
+                      {mapTheme === "light" ? "🌞" : "🌙"}
+                    </Button>
                   </motion.div>
 
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
                     <div>
                       <p className="text-sm font-medium">Map Type</p>
                       <p className="text-xs text-muted-foreground">
-                        Standard or satellite view
+                        Standard or satellite
                       </p>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={toggleMapType}
-                      className="h-8 px-3 text-xs"
+                      className="h-7 px-2 text-xs"
                     >
-                      {mapType === "normal" ? "🗺️ Map" : "🛰️ Satellite"}
+                      {mapType === "normal" ? "🗺️" : "🛰️"}
                     </Button>
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
                     <div>
-                      <p className="text-sm font-medium">Show Traffic</p>
+                      <p className="text-sm font-medium">Traffic</p>
                       <p className="text-xs text-muted-foreground">
-                        Display real-time traffic conditions
+                        Real-time conditions
                       </p>
                     </div>
-                    <input
-                      type="checkbox"
+                    <CustomCheckbox
                       checked={routeSettings.showTraffic}
-                      onChange={(e) =>
+                      onChange={(checked) =>
                         setRouteSettings((prev) => ({
                           ...prev,
-                          showTraffic: e.target.checked,
+                          showTraffic: checked,
                         }))
                       }
-                      className="h-4 w-4"
+                      size="sm"
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
                     <div>
-                      <p className="text-sm font-medium">Show Safe Zones</p>
+                      <p className="text-sm font-medium">Safe Zones</p>
                       <p className="text-xs text-muted-foreground">
-                        Display nearby safe areas and police stations
+                        Police & safe areas
                       </p>
                     </div>
-                    <input
-                      type="checkbox"
+                    <CustomCheckbox
                       checked={routeSettings.showSafeZones}
-                      onChange={(e) =>
+                      onChange={(checked) =>
                         setRouteSettings((prev) => ({
                           ...prev,
-                          showSafeZones: e.target.checked,
+                          showSafeZones: checked,
                         }))
                       }
-                      className="h-4 w-4"
+                      size="sm"
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
                     <div>
                       <p className="text-sm font-medium">Emergency Services</p>
                       <p className="text-xs text-muted-foreground">
-                        Show hospitals and emergency services
+                        Hospitals & services
                       </p>
                     </div>
-                    <input
-                      type="checkbox"
+                    <CustomCheckbox
                       checked={routeSettings.showEmergencyServices}
-                      onChange={(e) =>
+                      onChange={(checked) =>
                         setRouteSettings((prev) => ({
                           ...prev,
-                          showEmergencyServices: e.target.checked,
+                          showEmergencyServices: checked,
                         }))
                       }
-                      className="h-4 w-4"
+                      size="sm"
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <div>
+                      <p className="text-sm font-medium">Safety Areas</p>
+                      <p className="text-xs text-muted-foreground">
+                        Color-coded zones
+                      </p>
+                    </div>
+                    <CustomCheckbox
+                      checked={routeSettings.showSafeAreaCircles}
+                      onChange={(checked) =>
+                        setRouteSettings((prev) => ({
+                          ...prev,
+                          showSafeAreaCircles: checked,
+                        }))
+                      }
+                      size="sm"
+                    />
+                  </motion.div>
+
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
                     <div>
                       <p className="text-sm font-medium">Zoom Level</p>
                       <p className="text-xs text-muted-foreground">
-                        Adjust map zoom level (10-20)
+                        {routeSettings.zoomLevel}
                       </p>
                     </div>
                     <input
@@ -752,99 +785,109 @@ export default function Index() {
                           zoomLevel: parseInt(e.target.value),
                         }))
                       }
-                      className="w-20"
+                      className="w-16 h-2"
                     />
-                  </div>
+                  </motion.div>
                 </div>
               </div>
 
               {/* Route Preferences */}
               <div>
-                <h4 className="text-sm font-medium mb-3">Route Preferences</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
+                <h4 className="text-sm font-medium mb-2">Route Preferences</h4>
+                <div className="space-y-2">
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
                     <div>
-                      <p className="text-sm font-medium">
-                        Prefer well-lit paths
-                      </p>
+                      <p className="text-sm font-medium">Well-lit paths</p>
                       <p className="text-xs text-muted-foreground">
-                        Choose routes with better lighting
+                        Better lighting
                       </p>
                     </div>
-                    <input
-                      type="checkbox"
+                    <CustomCheckbox
                       checked={routeSettings.preferWellLit}
-                      onChange={(e) =>
+                      onChange={(checked) =>
                         setRouteSettings((prev) => ({
                           ...prev,
-                          preferWellLit: e.target.checked,
+                          preferWellLit: checked,
                         }))
                       }
-                      className="h-4 w-4"
+                      size="sm"
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
                     <div>
                       <p className="text-sm font-medium">
                         Avoid isolated areas
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Stay in populated areas when possible
+                        Stay populated
                       </p>
                     </div>
-                    <input
-                      type="checkbox"
+                    <CustomCheckbox
                       checked={routeSettings.avoidIsolated}
-                      onChange={(e) =>
+                      onChange={(checked) =>
                         setRouteSettings((prev) => ({
                           ...prev,
-                          avoidIsolated: e.target.checked,
+                          avoidIsolated: checked,
                         }))
                       }
-                      className="h-4 w-4"
+                      size="sm"
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
                     <div>
                       <p className="text-sm font-medium">Avoid highways</p>
                       <p className="text-xs text-muted-foreground">
-                        Use local roads instead
+                        Local roads
                       </p>
                     </div>
-                    <input
-                      type="checkbox"
+                    <CustomCheckbox
                       checked={routeSettings.avoidHighways}
-                      onChange={(e) =>
+                      onChange={(checked) =>
                         setRouteSettings((prev) => ({
                           ...prev,
-                          avoidHighways: e.target.checked,
+                          avoidHighways: checked,
                         }))
                       }
-                      className="h-4 w-4"
+                      size="sm"
                     />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.02] hover:shadow-sm">
+                  <motion.div
+                    className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
                     <div>
                       <p className="text-sm font-medium">Avoid tolls</p>
                       <p className="text-xs text-muted-foreground">
-                        Choose toll-free routes
+                        Toll-free routes
                       </p>
                     </div>
-                    <input
-                      type="checkbox"
+                    <CustomCheckbox
                       checked={routeSettings.avoidTolls}
-                      onChange={(e) =>
+                      onChange={(checked) =>
                         setRouteSettings((prev) => ({
                           ...prev,
-                          avoidTolls: e.target.checked,
+                          avoidTolls: checked,
                         }))
                       }
-                      className="h-4 w-4"
+                      size="sm"
                     />
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </div>

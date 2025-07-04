@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Home,
   MapPin,
@@ -289,16 +290,27 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
               }
 
               return (
-                <button
+                <motion.button
                   key={item.id}
                   onClick={() => handleNavClick(item, index)}
                   disabled={sending}
                   className={cn(
                     "relative flex flex-col items-center p-3 transition-all duration-300",
-                    "hover:scale-110 active:scale-95",
-                    isSpecial && "transform hover:scale-125",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
                   )}
+                  whileHover={{
+                    scale: isSpecial ? 1.15 : 1.1,
+                    y: -2,
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: index * 0.1,
+                    type: "spring",
+                    damping: 20,
+                    stiffness: 300,
+                  }}
                 >
                   {/* Background circle for active/special items */}
                   <div
@@ -345,9 +357,20 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
 
                   {/* Special item glow effect */}
                   {isSpecial && (
-                    <div className="absolute inset-0 rounded-2xl bg-emergency/20 animate-pulse opacity-50" />
+                    <motion.div
+                      className="absolute inset-0 rounded-2xl bg-emergency/20 opacity-50"
+                      animate={{
+                        opacity: [0.2, 0.5, 0.2],
+                        scale: [1, 1.05, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </div>

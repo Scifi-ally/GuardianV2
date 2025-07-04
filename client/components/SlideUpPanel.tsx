@@ -1,4 +1,10 @@
 import { useState, useRef, useEffect } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface SlideUpPanelProps {
@@ -45,6 +51,11 @@ export function SlideUpPanel({
   };
 
   const handleHandleClick = () => {
+    // Add haptic feedback
+    if ("vibrate" in navigator) {
+      navigator.vibrate(10);
+    }
+
     if (isCollapsed) {
       setHeight(initialHeight);
       setIsCollapsed(false);
@@ -127,13 +138,15 @@ export function SlideUpPanel({
     };
   }, [isDragging, startY, startHeight, height, minHeight, maxHeight]);
 
-  // Handle touch outside to close panel
+  // Handle touch outside to close panel with animation
   useEffect(() => {
     const handleTouchOutsideClick = (e: MouseEvent | TouchEvent) => {
       if (!panelRef.current || isCollapsed || !onTouchOutside) return;
 
       const target = e.target as Node;
       if (!panelRef.current.contains(target)) {
+        // Animate slide down
+        setIsDragging(false);
         setHeight(collapsedHeight);
         setIsCollapsed(true);
         onTouchOutside();
@@ -152,22 +165,33 @@ export function SlideUpPanel({
   }, [isCollapsed, onTouchOutside, collapsedHeight]);
 
   return (
-    <div
+    <motion.div
       ref={panelRef}
       className={cn(
-        "fixed left-0 right-0 z-40 bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl transition-all duration-200 overflow-hidden",
+        "fixed left-0 right-0 z-40 bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl overflow-hidden",
         "border-t border-border/30",
-        isDragging ? "transition-none" : "",
+        "before:absolute before:inset-0 before:bg-gradient-to-t before:from-transparent before:via-transparent before:to-white/5 before:pointer-events-none",
         className,
       )}
       style={{
         bottom: bottomOffset,
         height: height,
-        transform: isDragging ? "scale(1.01)" : "scale(1)",
+      }}
+      animate={{
+        scale: isDragging ? 1.01 : 1,
+        boxShadow: isDragging
+          ? "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+          : "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      }}
+      transition={{
+        type: "spring",
+        damping: 25,
+        stiffness: 300,
+        duration: isDragging ? 0 : 0.2,
       }}
     >
       {/* Drag Handle */}
-      <div
+      <motion.div
         ref={handleRef}
         className={cn(
           "flex flex-col items-center cursor-grab active:cursor-grabbing transition-all duration-200",
@@ -177,34 +201,54 @@ export function SlideUpPanel({
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onClick={handleHandleClick}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        <div
-          className={cn(
-            "bg-muted rounded-full transition-all duration-200",
-            isDragging ? "bg-black w-16 h-1.5" : "w-12 h-1",
-            isCollapsed && "bg-black/60 w-16 h-1.5",
-          )}
+        <motion.div
+          className="bg-muted rounded-full"
+          animate={{
+            backgroundColor: isDragging ? "#000000" : "hsl(var(--muted))",
+            width: isDragging || isCollapsed ? 64 : 48,
+            height: isDragging || isCollapsed ? 6 : 4,
+          }}
+          transition={{ type: "spring", damping: 20, stiffness: 300 }}
         />
-        {isCollapsed && (
-          <div className="mt-2 text-xs text-muted-foreground animate-pulse">
-            Tap to expand
-          </div>
-        )}
-      </div>
+        <AnimatePresence>
+          {isCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-2 text-xs text-muted-foreground pulse-gentle"
+            >
+              Tap to expand
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       {/* Panel Content */}
-      <div
-        className={cn(
-          "px-6 pb-6 h-full transition-opacity duration-200 custom-scrollbar",
-          isCollapsed
-            ? "opacity-0 pointer-events-none overflow-hidden"
-            : "opacity-100 overflow-y-auto",
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="px-6 pb-6 h-full overflow-y-auto custom-scrollbar"
+          >
+            <motion.div
+              className="space-y-4"
+              style={{ paddingBottom: "2rem" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              {children}
+            </motion.div>
+          </motion.div>
         )}
-      >
-        <div className="space-y-4" style={{ paddingBottom: "2rem" }}>
-          {children}
-        </div>
-      </div>
+      </AnimatePresence>
 
       {/* Resize Indicator */}
       {isDragging && (
@@ -212,7 +256,7 @@ export function SlideUpPanel({
           {Math.round(height)}px
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

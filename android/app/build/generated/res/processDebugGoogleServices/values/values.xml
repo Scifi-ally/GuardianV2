@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="gcm_defaultSenderId" translatable="false">426043954292</string>
-    <string name="google_api_key" translatable="false">AIzaSyCuUgXpSXprRmwdSPVzi7_6eOhHm5DsGMo</string>
-    <string name="google_app_id" translatable="false">1:426043954292:android:daeb76287cd6da4a476d21</string>
-    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCuUgXpSXprRmwdSPVzi7_6eOhHm5DsGMo</string>
-    <string name="google_storage_bucket" translatable="false">guardian-e8427.firebasestorage.app</string>
-    <string name="project_id" translatable="false">guardian-e8427</string>
-</resources>

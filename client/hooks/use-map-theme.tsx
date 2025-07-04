@@ -11,11 +11,8 @@ export function useMapTheme() {
         return saved;
       }
 
-      // Auto-detect based on system preference
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)",
-      ).matches;
-      return prefersDark ? "dark" : "light";
+      // Default to light theme instead of auto-detecting
+      return "light";
     }
     return "light";
   });
@@ -44,23 +41,7 @@ export function useMapTheme() {
     }
   }, [mapType]);
 
-  // Listen for system theme changes
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-      const handleChange = (e: MediaQueryListEvent) => {
-        // Only auto-switch if user hasn't explicitly set a preference
-        const savedTheme = localStorage.getItem("guardian-map-theme");
-        if (!savedTheme) {
-          setMapTheme(e.matches ? "dark" : "light");
-        }
-      };
-
-      mediaQuery.addEventListener("change", handleChange);
-      return () => mediaQuery.removeEventListener("change", handleChange);
-    }
-  }, []);
+  // Removed system theme auto-detection - now defaults to light theme
 
   const toggleTheme = () => {
     setMapTheme((current) => (current === "light" ? "dark" : "light"));

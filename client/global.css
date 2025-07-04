@@ -129,8 +129,13 @@
 
   body {
     @apply bg-background text-foreground;
-    font-size: 16px; /* Increased from default 14px */
+    font-family:
+      "Geist Mono", "JetBrains Mono", "Fira Code", Consolas, "Courier New",
+      monospace;
+    font-size: 15px; /* Optimized for monospace readability */
     line-height: 1.6; /* Better line spacing for readability */
+    font-weight: 400;
+    letter-spacing: -0.02em; /* Slight letter spacing for better readability */
   }
 
   /* Improve readability across common text elements */
@@ -389,7 +394,7 @@
   }
 }
 
-/* Android-matching loading animation keyframes */
+/* Enhanced animations for better user experience */
 @keyframes loading-dot-scale {
   0% {
     transform: scale(0.3);
@@ -397,4 +402,152 @@
   100% {
     transform: scale(1);
   }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-gentle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes bounce-gentle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Emergency pulse animation */
+@keyframes emergency-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: fade-in 0.3s ease-out;
+}
+
+.slide-up {
+  animation: slide-in-up 0.4s ease-out;
+}
+
+.slide-down {
+  animation: slide-in-down 0.4s ease-out;
+}
+
+.slide-left {
+  animation: slide-in-left 0.4s ease-out;
+}
+
+.slide-right {
+  animation: slide-in-right 0.4s ease-out;
+}
+
+.scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+.pulse-gentle {
+  animation: pulse-gentle 2s ease-in-out infinite;
+}
+
+.bounce-gentle {
+  animation: bounce-gentle 1s ease-in-out infinite;
+}
+
+.emergency-pulse {
+  animation: emergency-pulse 1.5s ease-in-out infinite;
+}
+
+/* Enhanced button hover effects */
+.btn-enhanced:hover {
+  transform: translateY(-2px);
+  transition: all 0.2s ease-out;
+}
+
+.btn-enhanced:active {
+  transform: translateY(0);
+  transition: all 0.1s ease-out;
 }

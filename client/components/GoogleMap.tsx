@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Shield, Locate, Layers, AlertTriangle } from "lucide-react";
 import { MockMap } from "@/components/MockMap";
+import IrregularSafetyAreas from "@/components/IrregularSafetyAreas";
+import { useNotifications } from "@/components/NotificationSystem";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
 
@@ -60,6 +62,7 @@ interface GoogleMapProps {
   showTraffic?: boolean;
   showSafeZones?: boolean;
   showEmergencyServices?: boolean;
+  showSafeAreaCircles?: boolean;
   enableSatelliteView?: boolean;
   zoomLevel?: number;
   routePath?: Array<{ lat: number; lng: number }>;
@@ -79,6 +82,7 @@ function MapComponent({
   showTraffic = true,
   showSafeZones = true,
   showEmergencyServices = true,
+  showSafeAreaCircles = true,
   enableSatelliteView = false,
   zoomLevel = 15,
   routePath = [],
@@ -86,6 +90,7 @@ function MapComponent({
   trackUserLocation = true,
   travelMode = "WALKING",
 }: GoogleMapProps) {
+  const { addNotification } = useNotifications();
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null);
@@ -146,7 +151,7 @@ function MapComponent({
     const getMapStyles = (theme: "light" | "dark") => {
       if (theme === "light") {
         return [
-          { elementType: "geometry", stylers: [{ color: "#F5F5F5" }] },
+          { elementType: "geometry", stylers: [{ color: "#F8F9FA" }] },
           { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
           { elementType: "labels.text.fill", stylers: [{ color: "#333333" }] },
           {
@@ -161,7 +166,7 @@ function MapComponent({
           {
             featureType: "poi",
             elementType: "geometry",
-            stylers: [{ color: "#E0E0E0" }],
+            stylers: [{ color: "#F1F3F4" }],
           },
           {
             featureType: "poi",
@@ -171,7 +176,7 @@ function MapComponent({
           {
             featureType: "poi.park",
             elementType: "geometry",
-            stylers: [{ color: "#CCCCCC" }],
+            stylers: [{ color: "#E8F5E8" }],
           },
           {
             featureType: "poi.park",
@@ -181,32 +186,38 @@ function MapComponent({
           {
             featureType: "landscape.natural",
             elementType: "geometry",
-            stylers: [{ color: "#F5F5F5" }],
+            stylers: [{ color: "#F8F9FA" }],
           },
           {
             featureType: "landscape.natural.landcover",
             elementType: "geometry",
-            stylers: [{ color: "#F5F5F5" }],
+            stylers: [{ color: "#F8F9FA" }],
           },
           {
             featureType: "landscape.natural.terrain",
             elementType: "geometry",
-            stylers: [{ color: "#F5F5F5" }],
+            stylers: [{ color: "#F8F9FA" }],
           },
           {
             featureType: "landscape.man_made",
             elementType: "geometry",
-            stylers: [{ color: "#E0E0E0" }],
+            stylers: [{ color: "#F1F3F4" }],
           },
+          // Gray roads
           {
             featureType: "road",
             elementType: "geometry",
-            stylers: [{ color: "#FFFFFF" }],
+            stylers: [{ color: "#9CA3AF" }],
           },
           {
             featureType: "road",
             elementType: "geometry.stroke",
-            stylers: [{ color: "#E0E0E0" }],
+            stylers: [{ color: "#6B7280" }],
+          },
+          {
+            featureType: "road.arterial",
+            elementType: "geometry",
+            stylers: [{ color: "#9CA3AF" }],
           },
           {
             featureType: "road.arterial",
@@ -216,17 +227,22 @@ function MapComponent({
           {
             featureType: "road.highway",
             elementType: "geometry",
-            stylers: [{ color: "#E0E0E0" }],
+            stylers: [{ color: "#9CA3AF" }],
           },
           {
             featureType: "road.highway",
             elementType: "geometry.stroke",
-            stylers: [{ color: "#CCCCCC" }],
+            stylers: [{ color: "#6B7280" }],
           },
           {
             featureType: "road.highway",
             elementType: "labels.text.fill",
             stylers: [{ color: "#1A1A1A" }],
+          },
+          {
+            featureType: "road.local",
+            elementType: "geometry",
+            stylers: [{ color: "#9CA3AF" }],
           },
           {
             featureType: "road.local",
@@ -843,38 +859,104 @@ function MapComponent({
       userMarker.setMap(null);
     }
 
-    // Create new marker with custom styling (no green)
+    // Create blue dot marker for current location
+    const customIcon = {
+      url: `data:image/svg+xml,${encodeURIComponent(`
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="10" r="8" fill="#3b82f6" stroke="white" stroke-width="2"/>
+          <circle cx="10" cy="10" r="4" fill="white"/>
+          <circle cx="10" cy="10" r="2" fill="#3b82f6"/>
+        </svg>
+      `)}`,
+      scaledSize: new google.maps.Size(20, 20),
+      anchor: new google.maps.Point(10, 10),
+    };
+
+    // Create new marker with enhanced styling
     const marker = new google.maps.Marker({
       position: { lat: location.latitude, lng: location.longitude },
       map,
-      title: "Your Location",
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: "#3b82f6", // Blue instead of green
-        fillOpacity: 1,
-        strokeColor: "#1e40af",
-        strokeWeight: 2,
-      },
+      title: `Your Location (±${Math.round(location.accuracy || 0)}m accuracy)`,
+      icon: customIcon,
       animation: google.maps.Animation.DROP,
+      zIndex: 1000, // Ensure marker appears above other elements
     });
 
-    // Add accuracy circle (if available) - blue instead of green
+    // Add accuracy circle with better styling
     if (location.accuracy) {
       new google.maps.Circle({
-        strokeColor: "#3b82f6", // Blue stroke
-        strokeOpacity: 0.3,
-        strokeWeight: 1,
-        fillColor: "#3b82f6", // Blue fill
+        strokeColor: "#3b82f6",
+        strokeOpacity: 0.4,
+        strokeWeight: 2,
+        fillColor: "#3b82f6",
         fillOpacity: 0.1,
         map,
         center: { lat: location.latitude, lng: location.longitude },
         radius: location.accuracy,
+        zIndex: 999,
       });
     }
 
-    setUserMarker(marker);
+    // Add pulsing animation circle for current location
+    const pulseCircle = new google.maps.Circle({
+      strokeColor: "#3b82f6",
+      strokeOpacity: 0.6,
+      strokeWeight: 2,
+      fillColor: "#3b82f6",
+      fillOpacity: 0.2,
+      map,
+      center: { lat: location.latitude, lng: location.longitude },
+      radius: 50, // Fixed radius for pulse effect
+      zIndex: 998,
+    });
+
+    // Animate the pulse circle
+    let pulseRadius = 20;
+    let growing = true;
+    const pulseInterval = setInterval(() => {
+      if (growing) {
+        pulseRadius += 2;
+        if (pulseRadius >= 80) growing = false;
+      } else {
+        pulseRadius -= 2;
+        if (pulseRadius <= 20) growing = true;
+      }
+
+      pulseCircle.setRadius(pulseRadius);
+      pulseCircle.setOptions({
+        fillOpacity: 0.3 - (pulseRadius - 20) / 200, // Fade as it grows
+        strokeOpacity: 0.7 - (pulseRadius - 20) / 200,
+      });
+    }, 100);
+
+    // Store references for cleanup
+    const markerWithPulse = Object.assign(marker, {
+      pulseCircle,
+      pulseInterval,
+      accuracyCircle: location.accuracy
+        ? new google.maps.Circle({
+            strokeColor: "#3b82f6",
+            strokeOpacity: 0.4,
+            strokeWeight: 2,
+            fillColor: "#3b82f6",
+            fillOpacity: 0.1,
+            map,
+            center: { lat: location.latitude, lng: location.longitude },
+            radius: location.accuracy,
+          })
+        : null,
+    });
+
+    setUserMarker(markerWithPulse);
+
+    // Smooth pan to location without changing zoom dramatically
     map.panTo({ lat: location.latitude, lng: location.longitude });
+
+    // Cleanup function
+    return () => {
+      clearInterval(pulseInterval);
+      pulseCircle.setMap(null);
+    };
   }, [map, location]);
 
   // Continuous location tracking
@@ -1212,6 +1294,29 @@ function MapComponent({
   return (
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-full" />
+
+      {/* Irregular Safety Areas */}
+      <IrregularSafetyAreas
+        map={map}
+        userLocation={
+          location
+            ? { latitude: location.latitude, longitude: location.longitude }
+            : undefined
+        }
+        showSafeAreaCircles={showSafeAreaCircles}
+        onAreaUpdate={(areas) => {
+          // Notify about safety changes
+          const highRiskAreas = areas.filter((area) => area.safetyScore < 50);
+          if (highRiskAreas.length > 0) {
+            addNotification({
+              type: "warning",
+              title: "Safety Alert",
+              message: `${highRiskAreas.length} area(s) with lower safety scores detected nearby`,
+              duration: 5000,
+            });
+          }
+        }}
+      />
 
       {/* Location error notification */}
       {locationError && (
