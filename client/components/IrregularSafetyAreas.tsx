@@ -74,7 +74,7 @@ export function IrregularSafetyAreas({
 
       return areas;
     },
-    [],
+    [], // Empty dependency array since this function doesn't depend on props/state
   );
 
   // Update areas when map bounds change
@@ -86,27 +86,40 @@ export function IrregularSafetyAreas({
       return;
     }
 
+    let isInitialized = false;
+    let timeoutId: NodeJS.Timeout;
+
     const updateAreas = () => {
       const bounds = map.getBounds();
       if (!bounds) return;
 
       const newAreas = generateAreasForBounds(bounds);
       setSafeAreas(newAreas);
-      onAreaUpdate?.(newAreas);
+      if (onAreaUpdate) onAreaUpdate(newAreas);
+    };
+
+    const debouncedUpdateAreas = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateAreas, 500); // Longer debounce
     };
 
     // Initial load
-    updateAreas();
+    if (!isInitialized) {
+      updateAreas();
+      isInitialized = true;
+    }
 
-    // Update when map moves or zooms
-    const boundsChangedListener = map.addListener("bounds_changed", () => {
-      setTimeout(updateAreas, 100); // Debounce
-    });
+    // Update when map moves or zooms (debounced)
+    const boundsChangedListener = map.addListener(
+      "bounds_changed",
+      debouncedUpdateAreas,
+    );
 
     return () => {
       google.maps.event.removeListener(boundsChangedListener);
+      clearTimeout(timeoutId);
     };
-  }, [map, showSafeAreaCircles, generateAreasForBounds, onAreaUpdate]);
+  }, [map, showSafeAreaCircles]); // Removed generateAreasForBounds and onAreaUpdate from deps
 
   // Add map click listener for safety scoring
   useEffect(() => {
@@ -121,36 +134,38 @@ export function IrregularSafetyAreas({
           const safetyScore = calculateAreaSafety(lat, lng);
 
           // Close previous info window
-          if (activeInfoWindow) {
-            activeInfoWindow.close();
-          }
+          setActiveInfoWindow((prev) => {
+            if (prev) {
+              prev.close();
+            }
 
-          // Create new info window
-          const infoWindow = new google.maps.InfoWindow({
-            content: `
-            <div style="padding: 8px; min-width: 180px;">
-              <h3 style="margin: 0 0 8px 0; font-weight: bold; color: ${getSafetyColor(safetyScore)};">
-                Location Safety Check
-              </h3>
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                <div style="width: 12px; height: 12px; border-radius: 2px; background: ${getSafetyColor(safetyScore)};"></div>
-                <span style="font-weight: 500;">Safety Score: ${safetyScore}/100</span>
+            // Create new info window
+            const infoWindow = new google.maps.InfoWindow({
+              content: `
+              <div style="padding: 8px; min-width: 180px;">
+                <h3 style="margin: 0 0 8px 0; font-weight: bold; color: ${getSafetyColor(safetyScore)};">
+                  Location Safety Check
+                </h3>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                  <div style="width: 12px; height: 12px; border-radius: 2px; background: ${getSafetyColor(safetyScore)};"></div>
+                  <span style="font-weight: 500;">Safety Score: ${safetyScore}/100</span>
+                </div>
+                <p style="margin: 4px 0; color: #666; font-size: 12px;">
+                  Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+                </p>
+                <div style="margin-top: 8px; padding: 4px 8px; background: ${getSafetyColor(safetyScore)}20; border-radius: 4px;">
+                  <small style="color: #666;">
+                    ${getSafetyDescription(safetyScore)}
+                  </small>
+                </div>
               </div>
-              <p style="margin: 4px 0; color: #666; font-size: 12px;">
-                Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}
-              </p>
-              <div style="margin-top: 8px; padding: 4px 8px; background: ${getSafetyColor(safetyScore)}20; border-radius: 4px;">
-                <small style="color: #666;">
-                  ${getSafetyDescription(safetyScore)}
-                </small>
-              </div>
-            </div>
-          `,
-            position: event.latLng,
+            `,
+              position: event.latLng,
+            });
+
+            infoWindow.open(map);
+            return infoWindow;
           });
-
-          infoWindow.open(map);
-          setActiveInfoWindow(infoWindow);
         }
       },
     );
@@ -158,7 +173,7 @@ export function IrregularSafetyAreas({
     return () => {
       google.maps.event.removeListener(clickListener);
     };
-  }, [map, activeInfoWindow]);
+  }, [map]); // Removed activeInfoWindow from deps to prevent loop
 
   // Create polygons on map
   useEffect(() => {
@@ -185,34 +200,36 @@ export function IrregularSafetyAreas({
 
       // Add click listener for area info with single window management
       polygon.addListener("click", (event: google.maps.PolyMouseEvent) => {
-        // Close previous info window
-        if (activeInfoWindow) {
-          activeInfoWindow.close();
-        }
+        setActiveInfoWindow((prev) => {
+          // Close previous info window
+          if (prev) {
+            prev.close();
+          }
 
-        const infoWindow = new google.maps.InfoWindow({
-          content: `
-            <div style="padding: 8px; min-width: 200px;">
-              <h3 style="margin: 0 0 8px 0; font-weight: bold; color: ${color};">${area.name}</h3>
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                <div style="width: 12px; height: 12px; border-radius: 2px; background: ${color};"></div>
-                <span style="font-weight: 500;">Safety Score: ${Math.round(area.safetyScore)}/100</span>
+          const infoWindow = new google.maps.InfoWindow({
+            content: `
+              <div style="padding: 8px; min-width: 200px;">
+                <h3 style="margin: 0 0 8px 0; font-weight: bold; color: ${color};">${area.name}</h3>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                  <div style="width: 12px; height: 12px; border-radius: 2px; background: ${color};"></div>
+                  <span style="font-weight: 500;">Safety Score: ${Math.round(area.safetyScore)}/100</span>
+                </div>
+                <p style="margin: 4px 0; color: #666; text-transform: capitalize;">
+                  Type: ${area.type.replace(/([A-Z])/g, " $1")}
+                </p>
+                <div style="margin-top: 8px; padding: 4px 8px; background: ${color}20; border-radius: 4px;">
+                  <small style="color: #666;">
+                    ${getSafetyDescription(area.safetyScore)}
+                  </small>
+                </div>
               </div>
-              <p style="margin: 4px 0; color: #666; text-transform: capitalize;">
-                Type: ${area.type.replace(/([A-Z])/g, " $1")}
-              </p>
-              <div style="margin-top: 8px; padding: 4px 8px; background: ${color}20; border-radius: 4px;">
-                <small style="color: #666;">
-                  ${getSafetyDescription(area.safetyScore)}
-                </small>
-              </div>
-            </div>
-          `,
-          position: event.latLng,
+            `,
+            position: event.latLng,
+          });
+
+          infoWindow.open(map);
+          return infoWindow;
         });
-
-        infoWindow.open(map);
-        setActiveInfoWindow(infoWindow);
       });
 
       return polygon;
