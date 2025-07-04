@@ -237,8 +237,8 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         <div className="absolute inset-0 bg-background/80 backdrop-blur-lg border-t border-border" />
 
         {/* Navigation items */}
-        <div className="relative px-4 py-3 pb-6">
-          <div className="flex items-center justify-around max-w-md mx-auto">
+        <div className="relative px-6 py-4">
+          <div className="flex items-center justify-between max-w-sm mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = activeIndex === index;
@@ -295,7 +295,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   onClick={() => handleNavClick(item, index)}
                   disabled={sending}
                   className={cn(
-                    "relative flex flex-col items-center p-3 transition-all duration-300",
+                    "relative flex flex-col items-center px-4 py-3 transition-all duration-300",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
                   )}
                   whileHover={{
