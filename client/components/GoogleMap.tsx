@@ -7,7 +7,9 @@ import { MockMap } from "@/components/MockMap";
 import RoadBasedSafetyAreas from "@/components/RoadBasedSafetyAreas";
 import { useNotifications } from "@/components/NotificationSystem";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
+const GOOGLE_MAPS_API_KEY =
+  import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
+  "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
 
 // Safe zones data - in a real app, this would come from an API
 const SAFE_ZONES = [

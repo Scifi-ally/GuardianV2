@@ -9,7 +9,9 @@ import { useNotifications } from "@/components/NotificationSystem";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { geminiNewsAnalysisService } from "@/services/geminiNewsAnalysisService";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
+const GOOGLE_MAPS_API_KEY =
+  import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
+  "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
 
 console.log("🗺️ EnhancedGoogleMap - API Key available:", !!GOOGLE_MAPS_API_KEY);
 

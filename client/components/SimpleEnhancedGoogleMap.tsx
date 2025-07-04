@@ -9,7 +9,9 @@ import {
   type RealTimeMapData,
 } from "@/services/realTimeMapData";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
+const GOOGLE_MAPS_API_KEY =
+  import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
+  "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
 
 interface GoogleMapProps {
   location?: { latitude: number; longitude: number; accuracy?: number };
@@ -650,9 +652,17 @@ export function GoogleMap({
       <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mb-3">
             Google Maps API key not configured
           </p>
+          <Button
+            onClick={() => window.location.reload()}
+            size="sm"
+            variant="outline"
+            className="text-xs"
+          >
+            Retry
+          </Button>
         </div>
       </div>
     );

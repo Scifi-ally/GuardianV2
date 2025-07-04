@@ -155,41 +155,65 @@ export default function Index() {
 
         setDestination(destinationCoords);
 
-        // Start AI-enhanced navigation automatically when search is performed
+        // Start safety-aware navigation automatically when search is performed
         if (location) {
-          console.log("🧭 Starting AI-Enhanced Navigation automatically...");
+          console.log("🛡️ Starting Safety-Aware Navigation...");
 
-          const { aiEnhancedNavigation } = await import(
-            "@/services/aiEnhancedNavigation"
-          );
+          try {
+            // Use the new safety-aware navigation service
+            const { safetyAwareNavigation } = await import(
+              "@/services/safetyAwareNavigation"
+            );
 
-          const enhancedRoute = await aiEnhancedNavigation.startNavigation(
-            { lat: location.latitude, lng: location.longitude },
-            destinationCoords,
-          );
+            const safeRoute = await safetyAwareNavigation.calculateSafeRoute(
+              { lat: location.latitude, lng: location.longitude },
+              destinationCoords,
+              {
+                avoidDangerZones: true,
+                minimumSafetyScore: 40, // Avoid areas with safety score below 40
+                preferSafeRoutes: true,
+                travelMode: travelMode,
+              },
+            );
 
-          console.log("🚀 AI-Enhanced Route generated:", enhancedRoute);
+            console.log("🚀 Safety-optimized route generated:", {
+              averageSafety: safeRoute.averageSafetyScore,
+              avoidedDangerZones: safeRoute.avoidedDangerZones,
+              distance: `${(safeRoute.totalDistance / 1000).toFixed(1)}km`,
+              duration: `${Math.round(safeRoute.totalDuration / 60)}min`,
+            });
 
-          // Show AI Navigation Panel
-          setShowAIPanel(true);
+            // Update route instructions with safety-aware data
+            setTurnByTurnInstructions(safeRoute.instructions);
+            setRouteSummary({
+              distance: `${(safeRoute.totalDistance / 1000).toFixed(1)} km`,
+              duration: `${Math.round(safeRoute.totalDuration / 60)} min`,
+            });
 
-          // Subscribe to navigation updates
-          aiEnhancedNavigation.subscribe((navigationState) => {
-            console.log("📍 Navigation state update:", navigationState);
+            // Show notification about safety features
+            addNotification({
+              type: "success",
+              title: "Safety-Optimized Route",
+              message: `Route calculated with ${safeRoute.averageSafetyScore}/100 average safety score. ${safeRoute.avoidedDangerZones > 0 ? `Avoided ${safeRoute.avoidedDangerZones} danger zones.` : "Path is clear of danger zones."}`,
+            });
 
-            // Show alerts if any
-            if (navigationState.nextAlert) {
-              const { message, severity, distance } = navigationState.nextAlert;
-              console.log(`🚨 Alert in ${Math.round(distance)}m: ${message}`);
-            }
+            setIsNavigating(true);
+          } catch (safetyNavError) {
+            console.warn(
+              "Safety-aware navigation failed, using fallback:",
+              safetyNavError,
+            );
 
-            // Log dynamic alerts
-            if (navigationState.route?.dynamicAlerts.length) {
-              navigationState.route.dynamicAlerts.forEach((alert) => {
-                console.log("🔔 Dynamic alert:", alert);
-              });
-            }
-          });
+            // Fallback to basic navigation
+            setIsNavigating(true);
+
+            addNotification({
+              type: "warning",
+              title: "Basic Navigation",
+              message:
+                "Using standard navigation. Safety features temporarily unavailable.",
+            });
+          }
         }
       } else {
         throw new Error("No results found for the destination");
@@ -274,140 +298,98 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Guardian Navigation Form */}
+      {/* Compact Black & White Navigation Form */}
       <motion.div
-        className="relative z-20 bg-background/95 backdrop-blur-md border-b border-border/20 shadow-lg"
-        initial={{ y: -100, opacity: 0 }}
+        className="relative z-20 bg-white border-b border-black/10"
+        initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={{ type: "spring", stiffness: 400, damping: 35 }}
       >
-        <div className="container mx-auto px-4 py-3">
-          {/* Guardian Branding with AI Toggle */}
+        <div className="container mx-auto px-3 py-2">
+          {/* Simple Branding */}
           <motion.div
-            className="flex items-center justify-between mb-3"
+            className="flex items-center justify-center mb-2"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
+            transition={{ delay: 0.1, type: "spring", stiffness: 500 }}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-black font-bold text-sm tracking-wide">
-                GUARDIAN
-              </span>
-            </div>
-            <motion.button
-              onClick={() => setShowAIFeaturesPanel(!showAIFeaturesPanel)}
-              className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all duration-200"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Brain className="h-3 w-3 text-blue-600" />
-              <span className="text-xs font-medium text-blue-700">
-                {showAIFeaturesPanel ? "Hide AI" : "Show AI"}
-              </span>
-            </motion.button>
+            <span className="text-black font-bold text-xs tracking-wider">
+              GUARDIAN
+            </span>
           </motion.div>
 
-          {/* Enhanced Navigation Container - Compact Design */}
+          {/* Minimal Navigation Container */}
           <motion.div
-            className="bg-white/95 rounded-xl p-3 shadow-xl border border-gray-200/50"
-            initial={{ scale: 0.9, opacity: 0 }}
+            className="bg-white rounded-lg p-2 border border-black/20"
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{
-              delay: 0.3,
+              delay: 0.2,
               type: "spring",
-              stiffness: 300,
-              damping: 25,
+              stiffness: 400,
+              damping: 30,
             }}
           >
             <div className="flex items-center gap-2">
-              {/* Visual Connection Line - Smaller */}
+              {/* Simple Connection Line */}
               <div className="flex flex-col items-center">
-                <motion.div
-                  className="w-2 h-2 bg-green-500 rounded-full shadow-sm"
-                  animate={{ scale: [1, 1.3, 1] }}
-                  transition={{ repeat: Infinity, duration: 2 }}
+                <div className="w-1.5 h-1.5 bg-black rounded-full"></div>
+                <div className="w-0.5 h-6 bg-black/40 my-0.5"></div>
+                <div className="w-1.5 h-1.5 bg-black rounded-full"></div>
+              </div>
+
+              <div className="flex-1 space-y-1.5">
+                {/* From Input */}
+                <LocationAutocomplete
+                  value={fromLocation}
+                  onChange={setFromLocation}
+                  placeholder="From"
+                  showCurrentLocationButton={true}
+                  onCurrentLocation={() => {
+                    if (location) {
+                      setFromLocation(
+                        `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`,
+                      );
+                    } else {
+                      handleUseCurrentLocation();
+                    }
+                  }}
+                  className="w-full h-7 text-xs bg-white border-black/30 text-black placeholder:text-black/60"
                 />
-                <div className="w-0.5 h-8 bg-gradient-to-b from-green-500 to-blue-500 my-0.5"></div>
-                <motion.div
-                  className="w-2 h-2 bg-blue-500 rounded-full shadow-sm"
-                  animate={{ scale: [1, 1.3, 1] }}
-                  transition={{ repeat: Infinity, duration: 2, delay: 1 }}
+
+                {/* To Input */}
+                <LocationAutocomplete
+                  value={toLocation}
+                  onChange={setToLocation}
+                  placeholder="To"
+                  onPlaceSelect={(place) => {
+                    console.log("🎯 Destination selected:", place);
+                  }}
+                  className="w-full h-7 text-xs bg-white border-black/30 text-black placeholder:text-black/60"
                 />
               </div>
 
-              <div className="flex-1 space-y-2">
-                {/* From Input - Compact */}
-                <motion.div
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <LocationAutocomplete
-                    value={fromLocation}
-                    onChange={setFromLocation}
-                    placeholder="📍 From"
-                    showCurrentLocationButton={true}
-                    onCurrentLocation={() => {
-                      console.log("📍 Using current location for FROM");
-                      if (location) {
-                        setFromLocation(
-                          `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`,
-                        );
-                      } else {
-                        handleUseCurrentLocation();
-                      }
-                    }}
-                    className="w-full h-9 text-sm"
-                  />
-                </motion.div>
-
-                {/* To Input - Compact */}
-                <motion.div
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <LocationAutocomplete
-                    value={toLocation}
-                    onChange={setToLocation}
-                    placeholder="🎯 To"
-                    onPlaceSelect={(place) => {
-                      console.log("🎯 Destination selected:", place);
-                    }}
-                    className="w-full h-9 text-sm"
-                  />
-                </motion.div>
-              </div>
-
-              {/* Search Button - Compact */}
-              <motion.div
-                whileHover={{ scale: 1.05, rotate: [0, -2, 2, 0] }}
-                whileTap={{ scale: 0.95 }}
-                className="flex-shrink-0"
-                transition={{ duration: 0.2 }}
+              {/* Simple Search Button */}
+              <Button
+                onClick={handleSearch}
+                className="h-8 px-2 bg-black hover:bg-black/80 text-white rounded-md text-xs"
+                disabled={!fromLocation || !toLocation}
               >
-                <Button
-                  onClick={handleSearch}
-                  className="h-10 px-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl shadow-lg font-medium transition-all duration-300"
-                  disabled={!fromLocation || !toLocation}
-                >
-                  <Route className="h-4 w-4 mr-1" />
-                  <span className="text-sm">Go</span>
-                </Button>
-              </motion.div>
+                <Route className="h-3 w-3 mr-1" />
+                Go
+              </Button>
             </div>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Clear Route Button */}
+      {/* Clear Route Button - Black/White Theme */}
       {destination && (
         <motion.div
-          className="container mx-auto px-4 py-2"
-          initial={{ opacity: 0, y: -20 }}
+          className="container mx-auto px-3 py-1"
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
+          exit={{ opacity: 0, y: -10 }}
         >
           <Button
             onClick={() => {
@@ -419,64 +401,58 @@ export default function Index() {
             }}
             size="sm"
             variant="outline"
-            className="w-full h-9 text-xs bg-white/90 hover:bg-white border border-gray-300"
+            className="w-full h-6 text-xs bg-white hover:bg-black/10 border border-black/30 text-black"
           >
             Clear Route
           </Button>
         </motion.div>
       )}
 
-      {/* Vehicle Selection */}
-      <div className="container mx-auto px-3 pb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Travel by:</span>
-          <div className="flex items-center gap-1">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Button
-                size="sm"
-                variant={travelMode === "WALKING" ? "default" : "outline"}
-                onClick={() => setTravelMode("WALKING")}
-                className="h-7 px-2 text-xs transition-all duration-200 hover:shadow-md"
-              >
-                <Footprints className="h-3 w-3 mr-1" />
-                Walk
-              </Button>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Button
-                size="sm"
-                variant={travelMode === "DRIVING" ? "default" : "outline"}
-                onClick={() => setTravelMode("DRIVING")}
-                className="h-7 px-2 text-xs transition-all duration-200 hover:shadow-md"
-              >
-                <Car className="h-3 w-3 mr-1" />
-                Car
-              </Button>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Button
-                size="sm"
-                variant={travelMode === "BICYCLING" ? "default" : "outline"}
-                onClick={() => setTravelMode("BICYCLING")}
-                className="h-7 px-2 text-xs transition-all duration-200 hover:shadow-md"
-              >
-                <Bike className="h-3 w-3 mr-1" />
-                Bike
-              </Button>
-            </motion.div>
-          </div>
+      {/* Vehicle Selection - Black/White Theme */}
+      <div className="container mx-auto px-3 pb-1">
+        <div className="flex items-center justify-center gap-1">
+          <Button
+            size="sm"
+            variant={travelMode === "WALKING" ? "default" : "outline"}
+            onClick={() => setTravelMode("WALKING")}
+            className={cn(
+              "h-6 px-2 text-xs border-black/30",
+              travelMode === "WALKING"
+                ? "bg-black text-white hover:bg-black/80"
+                : "bg-white text-black hover:bg-black/10",
+            )}
+          >
+            <Footprints className="h-2 w-2 mr-1" />
+            Walk
+          </Button>
+          <Button
+            size="sm"
+            variant={travelMode === "DRIVING" ? "default" : "outline"}
+            onClick={() => setTravelMode("DRIVING")}
+            className={cn(
+              "h-6 px-2 text-xs border-black/30",
+              travelMode === "DRIVING"
+                ? "bg-black text-white hover:bg-black/80"
+                : "bg-white text-black hover:bg-black/10",
+            )}
+          >
+            <Car className="h-2 w-2 mr-1" />
+            Car
+          </Button>
+          <Button
+            size="sm"
+            variant={travelMode === "BICYCLING" ? "default" : "outline"}
+            onClick={() => setTravelMode("BICYCLING")}
+            className={cn(
+              "h-6 px-2 text-xs border-black/30",
+              travelMode === "BICYCLING"
+                ? "bg-black text-white hover:bg-black/80"
+                : "bg-white text-black hover:bg-black/10",
+            )}
+          >
+            <Bike className="h-2 w-2 mr-1" />
+            Bike
+          </Button>
         </div>
       </div>
       {/* Unified Slidedown Notifications */}
@@ -488,27 +464,19 @@ export default function Index() {
         onClose={() => setShowAIPanel(false)}
       />
 
-      {/* AI Features Panel */}
-      <AIFeaturesPanel
-        isVisible={showAIFeaturesPanel}
-        location={location}
-        isNavigating={isNavigating}
-        onClose={() => setShowAIFeaturesPanel(false)}
-      />
-
-      {/* Enhanced Google Map */}
-      <div className="absolute inset-0 top-0 z-10 pt-16">
+      {/* Enhanced Google Map with Safety Score Coloring */}
+      <div className="absolute inset-0 top-0 z-10 pt-20">
         <EnhancedGoogleMap
           key={`${routeSettings.showTraffic}-${routeSettings.showSafeZones}-${routeSettings.showEmergencyServices}-${routeSettings.showSafeAreaCircles}-${routeSettings.zoomLevel}-${mapTheme}-${mapType}`}
           location={location}
-          mapTheme={mapTheme}
-          mapType={mapType}
+          mapTheme="light"
+          mapType="normal"
           showTraffic={routeSettings.showTraffic}
-          showSafeZones={routeSettings.showSafeZones}
+          showSafeZones={true}
           showEmergencyServices={routeSettings.showEmergencyServices}
-          showSafeAreaCircles={routeSettings.showSafeAreaCircles}
-          showDebug={routeSettings.showDebug}
-          enableSatelliteView={routeSettings.satelliteView}
+          showSafeAreaCircles={true}
+          showDebug={false}
+          enableSatelliteView={false}
           zoomLevel={routeSettings.zoomLevel}
           destination={destination}
           trackUserLocation={true}
@@ -551,13 +519,13 @@ export default function Index() {
               <Navigation2 className="h-3 w-3 mr-1" />
               Safety
             </TabsTrigger>
+            <TabsTrigger value="ai" className="text-xs h-7">
+              <Brain className="h-3 w-3 mr-1" />
+              AI Guardian
+            </TabsTrigger>
             <TabsTrigger value="settings" className="text-xs h-7">
               <Settings className="h-3 w-3 mr-1" />
               Settings
-            </TabsTrigger>
-            <TabsTrigger value="debug" className="text-xs h-7">
-              <MapPin className="h-3 w-3 mr-1" />
-              Debug
             </TabsTrigger>
           </TabsList>
 
@@ -766,6 +734,36 @@ export default function Index() {
             className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-left"
           >
             <div className="space-y-4">
+              {/* Current Area Safety Score */}
+              {location && (
+                <div className="bg-white border border-black/10 rounded-lg p-3">
+                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                    <Navigation2 className="h-4 w-4" />
+                    Current Area Safety
+                  </h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Safety Score</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-black transition-all duration-500"
+                          style={{ width: "75%" }}
+                          initial={{ width: "0%" }}
+                          animate={{ width: "75%" }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-black">
+                        75/100
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    📍 {location.latitude.toFixed(4)},{" "}
+                    {location.longitude.toFixed(4)}
+                  </p>
+                </div>
+              )}
+
               {/* Map Style Settings */}
               <div>
                 <h4 className="text-sm font-medium mb-3">Map Display</h4>
@@ -958,106 +956,18 @@ export default function Index() {
           </TabsContent>
 
           <TabsContent
-            value="debug"
+            value="ai"
             className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-left"
           >
             <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  Location Debug
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Location status and troubleshooting
-                </p>
-
-                {/* Location Status */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
-                    <div>
-                      <p className="text-sm font-medium">Location Status</p>
-                      <p className="text-xs text-muted-foreground">
-                        {location
-                          ? `Found at ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`
-                          : error
-                            ? "Error getting location"
-                            : "Searching for location..."}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {location && (
-                        <Badge
-                          variant="outline"
-                          className="bg-green-50 text-green-700 border-green-200"
-                        >
-                          ±{Math.round(location.accuracy)}m
-                        </Badge>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={getCurrentLocation}
-                        className="h-7 text-xs"
-                      >
-                        <RefreshCw className="w-3 h-3 mr-1" />
-                        Refresh
-                      </Button>
-                    </div>
-                  </div>
-
-                  {location && (
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-2 bg-muted/20 rounded">
-                        <span className="font-medium">Accuracy</span>
-                        <div>±{Math.round(location.accuracy)}m</div>
-                      </div>
-                      <div className="p-2 bg-muted/20 rounded">
-                        <span className="font-medium">Timestamp</span>
-                        <div>
-                          {new Date(location.timestamp).toLocaleTimeString()}
-                        </div>
-                      </div>
-                      {location.speed !== undefined && location.speed > 0 && (
-                        <div className="p-2 bg-muted/20 rounded">
-                          <span className="font-medium">Speed</span>
-                          <div>{Math.round(location.speed * 3.6)} km/h</div>
-                        </div>
-                      )}
-                      {location.heading !== undefined && (
-                        <div className="p-2 bg-muted/20 rounded">
-                          <span className="font-medium">Heading</span>
-                          <div>{Math.round(location.heading)}°</div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="p-3 bg-muted/20 rounded-lg border">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Browser Info</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <div>
-                        Geolocation:{" "}
-                        {navigator.geolocation
-                          ? "✅ Supported"
-                          : "❌ Not supported"}
-                      </div>
-                      <div>
-                        Permissions API:{" "}
-                        {"permissions" in navigator
-                          ? "✅ Available"
-                          : "❌ Not available"}
-                      </div>
-                      <div>
-                        HTTPS:{" "}
-                        {window.location.protocol === "https:"
-                          ? "✅ Secure"
-                          : "⚠️ Insecure"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* AI Features Panel Embedded */}
+              <div className="bg-white rounded-lg border border-black/10 p-4">
+                <AIFeaturesPanel
+                  isVisible={true}
+                  location={location}
+                  isNavigating={isNavigating}
+                  onClose={undefined}
+                />
               </div>
             </div>
           </TabsContent>
