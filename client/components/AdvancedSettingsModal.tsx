@@ -393,12 +393,6 @@ export function AdvancedSettingsModal({
           >
             <SettingItem
               icon={Lock}
-              title="Two-Factor Authentication"
-              description="Add an extra layer of security to your account"
-              settingKey="twoFactorAuth"
-            />
-            <SettingItem
-              icon={Lock}
               title="Session Timeout"
               description="Automatically log out after period of inactivity"
               settingKey="sessionTimeout"
@@ -413,12 +407,19 @@ export function AdvancedSettingsModal({
               description="Automatically lock the app when not in use"
               settingKey="autoLock"
             />
-            <SettingItem
-              icon={Lock}
-              title="Biometric Authentication"
-              description="Use fingerprint or face recognition"
-              settingKey="biometricAuth"
-            />
+            <div className="p-3 border rounded-lg bg-yellow-50 border-yellow-200">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <span className="text-sm font-medium text-yellow-800">
+                  Security Note
+                </span>
+              </div>
+              <p className="text-xs text-yellow-700">
+                Advanced security features like 2FA and biometric authentication
+                require additional setup and will be available in future
+                updates.
+              </p>
+            </div>
           </motion.div>
         );
 

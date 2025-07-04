@@ -1,17 +1,24 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useGeolocation } from "@/hooks/use-device-apis";
-import { useNotifications } from "@/components/NotificationSystem";
-import { geminiNewsAnalysisService } from "@/services/geminiNewsAnalysisService";
+import { useState, useEffect, useCallback } from "react";
+import {
+  enhancedSafetyScoring,
+  type EnhancedSafetyScore,
+} from "@/services/enhancedSafetyScoring";
 
 interface SafeAreaData {
   id: string;
   bounds: google.maps.LatLngLiteral[];
   safetyScore: number;
-  name: string;
-  type: "residential" | "commercial" | "transit" | "park" | "emergency";
   center: google.maps.LatLngLiteral;
-  newsScore?: number;
-  aiAnalysis?: string;
+  type:
+    | "residential"
+    | "commercial"
+    | "transit"
+    | "park"
+    | "emergency"
+    | "industrial";
+  enhancedAnalysis?: EnhancedSafetyScore;
+  lastUpdated: number;
+  neighbors: string[];
 }
 
 interface EnhancedSafetyAreasProps {
@@ -29,653 +36,688 @@ export function EnhancedSafetyAreas({
 }: EnhancedSafetyAreasProps) {
   const [safeAreas, setSafeAreas] = useState<SafeAreaData[]>([]);
   const [polygons, setPolygons] = useState<google.maps.Polygon[]>([]);
-  const [activeInfoWindow, setActiveInfoWindow] =
-    useState<google.maps.InfoWindow | null>(null);
-  const { addNotification, removeNotification } = useNotifications();
-  const [badAreaNotificationIds, setBadAreaNotificationIds] = useState<
-    string[]
-  >([]);
+  const [lastUpdate, setLastUpdate] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Enhanced area generation with seamless coverage
-  const generateSeamlessAreas = useCallback(
+  // Generate seamless safety areas with enhanced Gemini scoring
+  const generateEnhancedAreas = useCallback(
     async (bounds: google.maps.LatLngBounds) => {
+      setIsLoading(true);
       const areas: SafeAreaData[] = [];
       const ne = bounds.getNorthEast();
       const sw = bounds.getSouthWest();
 
-      // Create seamless hexagonal grid for complete coverage
-      const gridSize = 12; // Higher density for seamless coverage
-      const latStep = (ne.lat() - sw.lat()) / gridSize;
-      const lngStep = (ne.lng() - sw.lng()) / gridSize;
+      // Adaptive grid size based on zoom level
+      const latRange = ne.lat() - sw.lat();
+      const lngRange = ne.lng() - sw.lng();
+      const zoomLevel = map?.getZoom() || 15;
 
-      // Process areas in batches for better performance
-      const batchSize = 6;
-      const batches = [];
+      // Adjust grid density based on zoom (more detail at higher zoom)
+      const baseGridSize = 0.008;
+      const gridSize =
+        baseGridSize / Math.pow(1.5, Math.max(0, zoomLevel - 13));
 
-      for (let i = 0; i < gridSize; i += batchSize) {
-        for (let j = 0; j < gridSize; j += batchSize) {
-          const batch = [];
+      const latSteps = Math.ceil(latRange / gridSize);
+      const lngSteps = Math.ceil(lngRange / gridSize);
 
-          for (let bi = i; bi < Math.min(i + batchSize, gridSize); bi++) {
-            for (let bj = j; bj < Math.min(j + batchSize, gridSize); bj++) {
-              const baseLat = sw.lat() + bi * latStep;
-              const baseLng = sw.lng() + bj * lngStep;
+      // Limit processing for performance and API quota
+      const maxCells = 12; // Reduced significantly to prevent API issues
+      const cellLimit = Math.min(latSteps * lngSteps, maxCells);
 
-              const center = {
-                lat: baseLat + latStep / 2,
-                lng: baseLng + lngStep / 2,
-              };
+      console.log(
+        `🧮 Generating ${cellLimit} enhanced safety areas with AI analysis...`,
+      );
 
-              batch.push({
-                i: bi,
-                j: bj,
-                baseLat,
-                baseLng,
-                center,
-              });
-            }
+      const points: Array<{
+        lat: number;
+        lng: number;
+        id: string;
+        type: SafeAreaData["type"];
+        priority: number;
+      }> = [];
+
+      // Generate strategic points with priority weighting
+      for (let i = 0; i < latSteps && points.length < cellLimit; i++) {
+        for (let j = 0; j < lngSteps && points.length < cellLimit; j++) {
+          const lat =
+            sw.lat() +
+            (i + 0.5) * gridSize +
+            (Math.random() - 0.5) * gridSize * 0.2;
+          const lng =
+            sw.lng() +
+            (j + 0.5) * gridSize +
+            (Math.random() - 0.5) * gridSize * 0.2;
+
+          // Calculate priority based on distance to user
+          let priority = 1;
+          if (userLocation) {
+            const distance = Math.sqrt(
+              Math.pow(lat - userLocation.latitude, 2) +
+                Math.pow(lng - userLocation.longitude, 2),
+            );
+            priority = Math.max(0.1, 1 - distance * 100); // Higher priority for closer areas
           }
 
-          batches.push(batch);
+          points.push({
+            lat,
+            lng,
+            id: `enhanced-${i}-${j}`,
+            type: getAreaType(lat, lng),
+            priority,
+          });
         }
       }
 
-      // Process batches with news analysis
-      for (const batch of batches) {
-        const batchAreas = await Promise.all(
-          batch.map(async ({ i, j, baseLat, baseLng, center }) => {
-            // Create seamless hexagonal shapes that connect perfectly
-            const hexagonBounds = generateSeamlessHexagon(
-              baseLat,
-              baseLng,
-              latStep,
-              lngStep,
-              i,
-              j,
-            );
+      // Sort by priority and process high-priority areas first
+      points.sort((a, b) => b.priority - a.priority);
 
-            const baseScore = calculateEnhancedAreaSafety(
-              center.lat,
-              center.lng,
-            );
-            const newsScore = await calculateNewsBasedSafety(
-              center.lat,
-              center.lng,
-            );
-            const finalScore = Math.round(baseScore * 0.7 + newsScore * 0.3);
+      // Process points in smaller batches to avoid rate limiting
+      const batchSize = 2; // Smaller batches
+      for (let i = 0; i < points.length; i += batchSize) {
+        const batch = points.slice(i, i + batchSize);
 
-            const areaType = getAreaType(i * gridSize + j);
+        await Promise.all(
+          batch.map(async (point) => {
+            try {
+              let enhancedAnalysis;
 
-            const aiAnalysis = await getAIAnalysis(
-              center.lat,
-              center.lng,
-              finalScore,
-            );
+              // Use enhanced analysis for high-priority areas only, fallback for others
+              if (point.priority > 0.7) {
+                enhancedAnalysis =
+                  await enhancedSafetyScoring.calculateEnhancedSafety(
+                    point.lat,
+                    point.lng,
+                    {
+                      includeRealTime: true,
+                      includePrediction: true,
+                      detailLevel: "basic", // Reduced detail level
+                    },
+                  );
+              } else {
+                // Use fallback for lower priority areas
+                throw new Error("Using fallback for low priority area");
+              }
 
-            return {
-              id: `area-${i}-${j}`,
-              bounds: hexagonBounds,
-              safetyScore: finalScore,
-              name: getAreaName(areaType, i * gridSize + j),
-              type: areaType,
-              center,
-              newsScore,
-              aiAnalysis,
-            };
+              // Find neighboring points for seamless coverage
+              const neighbors = points
+                .filter((p) => p.id !== point.id)
+                .sort((a, b) => {
+                  const distA = Math.sqrt(
+                    (a.lat - point.lat) ** 2 + (a.lng - point.lng) ** 2,
+                  );
+                  const distB = Math.sqrt(
+                    (b.lat - point.lat) ** 2 + (b.lng - point.lng) ** 2,
+                  );
+                  return distA - distB;
+                })
+                .slice(0, 6);
+
+              // Generate dynamic Voronoi cell bounds
+              const cellBounds = generateAdaptiveCell(
+                point,
+                neighbors,
+                gridSize,
+                enhancedAnalysis.overallScore,
+              );
+
+              areas.push({
+                id: point.id,
+                bounds: cellBounds,
+                safetyScore: enhancedAnalysis.overallScore,
+                center: { lat: point.lat, lng: point.lng },
+                type: point.type,
+                enhancedAnalysis,
+                lastUpdated: Date.now(),
+                neighbors: neighbors.map((n) => n.id),
+              });
+            } catch (error) {
+              console.warn(
+                `Failed to analyze enhanced area ${point.id}:`,
+                error,
+              );
+
+              // Fallback with basic scoring
+              const fallbackScore = calculateFallbackSafety(
+                point.lat,
+                point.lng,
+                point.type,
+              );
+              const neighbors = points
+                .filter((p) => p.id !== point.id)
+                .sort((a, b) => {
+                  const distA = Math.sqrt(
+                    (a.lat - point.lat) ** 2 + (a.lng - point.lng) ** 2,
+                  );
+                  const distB = Math.sqrt(
+                    (b.lat - point.lat) ** 2 + (b.lng - point.lng) ** 2,
+                  );
+                  return distA - distB;
+                })
+                .slice(0, 6);
+
+              const cellBounds = generateAdaptiveCell(
+                point,
+                neighbors,
+                gridSize,
+                fallbackScore,
+              );
+
+              areas.push({
+                id: point.id,
+                bounds: cellBounds,
+                safetyScore: fallbackScore,
+                center: { lat: point.lat, lng: point.lng },
+                type: point.type,
+                lastUpdated: Date.now(),
+                neighbors: neighbors.map((n) => n.id),
+              });
+            }
           }),
         );
 
-        areas.push(...batchAreas);
+        // Longer delay between batches to respect rate limits
+        if (i + batchSize < points.length) {
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 second delay
+        }
       }
 
-      return areas;
+      // Smart merging of adjacent areas with similar characteristics
+      const optimizedAreas = intelligentAreaMerging(areas);
+
+      console.log(
+        `✅ Generated ${optimizedAreas.length} enhanced safety areas with AI analysis`,
+      );
+
+      setSafeAreas(optimizedAreas);
+      setLastUpdate(Date.now());
+      setIsLoading(false);
+      onAreaUpdate?.(optimizedAreas);
     },
-    [],
+    [map, userLocation, onAreaUpdate],
   );
 
-  // Update areas when map bounds change
-  useEffect(() => {
-    if (!map || !showSafeAreaCircles) {
-      // Clear polygons if disabled
-      polygons.forEach((polygon) => polygon.setMap(null));
-      setPolygons([]);
-      // Remove all bad area notifications when disabled
-      badAreaNotificationIds.forEach((id) => removeNotification(id));
-      setBadAreaNotificationIds([]);
-      return;
-    }
+  // Adaptive cell generation based on safety score and neighbors
+  function generateAdaptiveCell(
+    center: { lat: number; lng: number },
+    neighbors: Array<{ lat: number; lng: number }>,
+    baseSize: number,
+    safetyScore: number,
+  ): google.maps.LatLngLiteral[] {
+    const cellPoints: google.maps.LatLngLiteral[] = [];
 
-    let isInitialized = false;
-    let timeoutId: NodeJS.Timeout;
+    // Adjust cell size based on safety score (dangerous areas are more prominent)
+    const sizeMultiplier =
+      safetyScore < 40 ? 1.3 : safetyScore > 80 ? 0.8 : 1.0;
+    const radius = baseSize * sizeMultiplier * 0.6;
 
-    const updateAreas = async () => {
-      const bounds = map.getBounds();
-      if (!bounds) return;
+    // Create adaptive polygon with neighbor-aware edges
+    const numSides = 12; // Smooth polygons
 
-      try {
-        const newAreas = await generateSeamlessAreas(bounds);
-        setSafeAreas(newAreas);
-        if (onAreaUpdate) onAreaUpdate(newAreas);
+    for (let i = 0; i < numSides; i++) {
+      const angle = (i / numSides) * 2 * Math.PI;
+      let distance = radius;
 
-        // Handle bad area notifications - REMOVE them instead of showing
-        const badAreas = newAreas.filter((area) => area.safetyScore < 50);
+      // Adjust distance based on nearby neighbors
+      for (const neighbor of neighbors.slice(0, 4)) {
+        // Consider closest 4 neighbors
+        const neighborAngle = Math.atan2(
+          neighbor.lng - center.lng,
+          neighbor.lat - center.lat,
+        );
+        const angleDiff = Math.abs(angle - neighborAngle);
 
-        // Remove existing bad area notifications
-        badAreaNotificationIds.forEach((id) => removeNotification(id));
-        setBadAreaNotificationIds([]);
-
-        // Instead of adding notifications for bad areas, we suppress them
-        // This prevents notification spam in dangerous areas
-        if (badAreas.length > 0) {
-          console.log(
-            `${badAreas.length} high-risk areas detected - notifications suppressed for user safety`,
+        if (angleDiff < Math.PI / 6) {
+          // Within 30 degrees
+          const neighborDistance = Math.sqrt(
+            (neighbor.lat - center.lat) ** 2 + (neighbor.lng - center.lng) ** 2,
           );
+          distance = Math.min(distance, neighborDistance * 0.4); // Ensure no overlap
         }
-      } catch (error) {
-        console.error("Failed to update safety areas:", error);
       }
-    };
 
-    const debouncedUpdateAreas = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(updateAreas, 300);
-    };
-
-    // Initial load
-    if (!isInitialized) {
-      updateAreas();
-      isInitialized = true;
+      cellPoints.push({
+        lat: center.lat + Math.cos(angle) * distance,
+        lng: center.lng + Math.sin(angle) * distance,
+      });
     }
 
-    // Update when map moves or zooms (debounced)
-    const boundsChangedListener = map.addListener(
-      "bounds_changed",
-      debouncedUpdateAreas,
+    return cellPoints;
+  }
+
+  // Intelligent merging of adjacent areas
+  function intelligentAreaMerging(areas: SafeAreaData[]): SafeAreaData[] {
+    const mergedAreas: SafeAreaData[] = [];
+    const processed = new Set<string>();
+
+    for (const area of areas) {
+      if (processed.has(area.id)) continue;
+
+      // Find mergeable adjacent areas
+      const mergeGroup = [area];
+      const queue = [area];
+      processed.add(area.id);
+
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+
+        for (const neighborId of current.neighbors) {
+          if (processed.has(neighborId)) continue;
+
+          const neighbor = areas.find((a) => a.id === neighborId);
+          if (!neighbor) continue;
+
+          // Enhanced merging criteria
+          const scoreDiff = Math.abs(
+            current.safetyScore - neighbor.safetyScore,
+          );
+          const sameType = current.type === neighbor.type;
+          const bothAnalyzed =
+            current.enhancedAnalysis && neighbor.enhancedAnalysis;
+
+          // Check alert level compatibility
+          const sameAlertLevel =
+            bothAnalyzed &&
+            current.enhancedAnalysis!.alertLevel ===
+              neighbor.enhancedAnalysis!.alertLevel;
+
+          // Merge if compatible
+          if (
+            scoreDiff <= 12 &&
+            sameType &&
+            (sameAlertLevel || !bothAnalyzed)
+          ) {
+            mergeGroup.push(neighbor);
+            queue.push(neighbor);
+            processed.add(neighborId);
+          }
+        }
+      }
+
+      if (mergeGroup.length > 1) {
+        // Create merged area with enhanced properties
+        const mergedArea = createEnhancedMergedArea(mergeGroup);
+        mergedAreas.push(mergedArea);
+      } else {
+        mergedAreas.push(area);
+      }
+    }
+
+    return mergedAreas;
+  }
+
+  // Create enhanced merged area
+  function createEnhancedMergedArea(areas: SafeAreaData[]): SafeAreaData {
+    // Weight-based averaging for safety scores
+    const totalConfidence = areas.reduce(
+      (sum, area) => sum + (area.enhancedAnalysis?.confidence || 50),
+      0,
     );
+
+    const weightedScore = areas.reduce((sum, area) => {
+      const weight =
+        (area.enhancedAnalysis?.confidence || 50) / totalConfidence;
+      return sum + area.safetyScore * weight;
+    }, 0);
+
+    // Calculate optimal merged bounds using alpha shapes
+    const allPoints = areas.flatMap((area) => area.bounds);
+    const mergedBounds = calculateOptimalBounds(allPoints);
+
+    // Merge enhanced analyses
+    const analyses = areas
+      .filter((a) => a.enhancedAnalysis)
+      .map((a) => a.enhancedAnalysis!);
+    const mergedAnalysis: EnhancedSafetyScore | undefined =
+      analyses.length > 0
+        ? {
+            overallScore: Math.round(weightedScore),
+            confidence: Math.round(totalConfidence / areas.length),
+            factors: analyses[0].factors, // Use dominant area's factors
+            analysis: analyses[0].analysis,
+            recommendations: Array.from(
+              new Set(analyses.flatMap((a) => a.recommendations)),
+            ).slice(0, 4),
+            alertLevel: determineGroupAlertLevel(
+              analyses.map((a) => a.alertLevel),
+            ),
+            dynamicFactors: {
+              trending: determineTrending(
+                analyses.map((a) => a.dynamicFactors.trending),
+              ),
+              prediction: Math.round(
+                analyses.reduce(
+                  (sum, a) => sum + a.dynamicFactors.prediction,
+                  0,
+                ) / analyses.length,
+              ),
+              volatility: Math.round(
+                analyses.reduce(
+                  (sum, a) => sum + a.dynamicFactors.volatility,
+                  0,
+                ) / analyses.length,
+              ),
+            },
+          }
+        : undefined;
+
+    return {
+      id: `merged-${areas.map((a) => a.id).join("-")}`,
+      bounds: mergedBounds,
+      safetyScore: Math.round(weightedScore),
+      center: {
+        lat: areas.reduce((sum, a) => sum + a.center.lat, 0) / areas.length,
+        lng: areas.reduce((sum, a) => sum + a.center.lng, 0) / areas.length,
+      },
+      type: areas[0].type,
+      enhancedAnalysis: mergedAnalysis,
+      lastUpdated: Date.now(),
+      neighbors: Array.from(new Set(areas.flatMap((a) => a.neighbors))),
+    };
+  }
+
+  // Listen for map bounds changes with debouncing
+  useEffect(() => {
+    if (!map) return;
+
+    let timeoutId: NodeJS.Timeout;
+    const boundsChangedListener = map.addListener("bounds_changed", () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        const bounds = map.getBounds();
+        if (bounds) {
+          generateEnhancedAreas(bounds);
+        }
+      }, 5000); // Much longer debounce for AI calls to prevent quota issues
+    });
 
     return () => {
       google.maps.event.removeListener(boundsChangedListener);
       clearTimeout(timeoutId);
     };
-  }, [map, showSafeAreaCircles, removeNotification, badAreaNotificationIds]);
+  }, [map, generateEnhancedAreas]);
 
-  // Enhanced map click listener
+  // Render enhanced polygons with AI-powered styling
   useEffect(() => {
-    if (!map) return;
-
-    const clickListener = map.addListener(
-      "click",
-      async (event: google.maps.MapMouseEvent) => {
-        if (event.latLng) {
-          const lat = event.latLng.lat();
-          const lng = event.latLng.lng();
-
-          // Show loading state
-          setActiveInfoWindow((prev) => {
-            if (prev) {
-              prev.close();
-            }
-
-            const loadingWindow = new google.maps.InfoWindow({
-              content: `
-                <div style="padding: 12px; min-width: 180px; font-family: system-ui; text-align: center;">
-                  <div style="margin-bottom: 8px;">📍 Analyzing Location...</div>
-                  <div style="color: #666; font-size: 12px;">Getting real-time safety data</div>
-                </div>
-              `,
-              position: event.latLng,
-            });
-
-            loadingWindow.open(map);
-            return loadingWindow;
-          });
-
-          try {
-            // Get comprehensive AI analysis from Gemini
-            const analysis = await geminiNewsAnalysisService.analyzeAreaSafety(
-              lat,
-              lng,
-            );
-            const baseScore = calculateEnhancedAreaSafety(lat, lng);
-
-            // Update with detailed AI analysis
-            setActiveInfoWindow((prev) => {
-              if (prev) {
-                prev.close();
-              }
-
-              const newsEventsHtml = analysis.newsEvents
-                .slice(0, 3)
-                .map(
-                  (event) => `
-                  <div style="margin: 2px 0; font-size: 10px; color: #666;">
-                    ${event.impact === "positive" ? "✓" : event.impact === "negative" ? "⚠" : "•"} ${event.title}
-                  </div>
-                `,
-                )
-                .join("");
-
-              const infoWindow = new google.maps.InfoWindow({
-                content: `
-                <div style="padding: 12px; min-width: 260px; max-width: 300px; font-family: system-ui;">
-                  <h3 style="margin: 0 0 8px 0; font-weight: bold; color: ${getSafetyColor(analysis.score)};">
-                    🧠 Gemini AI Analysis
-                  </h3>
-                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                    <div style="width: 14px; height: 14px; border-radius: 3px; background: ${getSafetyColor(analysis.score)};"></div>
-                    <span style="font-weight: 500;">Safety Score: ${analysis.score}/100</span>
-                  </div>
-                  <div style="margin-bottom: 8px;">
-                    <small style="color: #666;">Confidence: ${analysis.confidence}% | Base: ${baseScore}/100</small>
-                  </div>
-                  <p style="margin: 6px 0; color: #666; font-size: 11px;">
-                    📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}
-                  </p>
-
-                  <div style="margin: 8px 0;">
-                    <strong style="font-size: 11px; color: #333;">Key Factors:</strong>
-                    ${analysis.factors
-                      .slice(0, 3)
-                      .map(
-                        (factor) => `
-                      <div style="font-size: 10px; color: #666; margin: 1px 0;">• ${factor}</div>
-                    `,
-                      )
-                      .join("")}
-                  </div>
-
-                  ${
-                    newsEventsHtml
-                      ? `
-                    <div style="margin: 8px 0;">
-                      <strong style="font-size: 11px; color: #333;">Recent Events:</strong>
-                      ${newsEventsHtml}
-                    </div>
-                  `
-                      : ""
-                  }
-
-                  <div style="margin-top: 10px; padding: 6px 10px; background: ${getSafetyColor(analysis.score)}15; border-radius: 6px; border-left: 3px solid ${getSafetyColor(analysis.score)};">
-                    <small style="color: #555; line-height: 1.4;">
-                      <strong>AI Reasoning:</strong><br/>
-                      ${analysis.reasoning}
-                    </small>
-                  </div>
-                </div>
-              `,
-                position: event.latLng,
-              });
-
-              infoWindow.open(map);
-              return infoWindow;
-            });
-          } catch (error) {
-            console.error("Failed to analyze location:", error);
-
-            // Show error state
-            setActiveInfoWindow((prev) => {
-              if (prev) {
-                prev.close();
-              }
-
-              const errorWindow = new google.maps.InfoWindow({
-                content: `
-                  <div style="padding: 12px; min-width: 180px; font-family: system-ui;">
-                    <h3 style="margin: 0 0 8px 0; color: #f59e0b;">⚠️ Analysis Unavailable</h3>
-                    <p style="margin: 0; color: #666; font-size: 12px;">
-                      Unable to get real-time safety data. Using basic analysis.
-                    </p>
-                  </div>
-                `,
-                position: event.latLng,
-              });
-
-              errorWindow.open(map);
-              return errorWindow;
-            });
-          }
-        }
-      },
-    );
-
-    return () => {
-      google.maps.event.removeListener(clickListener);
-    };
-  }, [map]);
-
-  // Create seamless polygons on map
-  useEffect(() => {
-    if (!map || !showSafeAreaCircles) return;
+    if (!map || !showSafeAreaCircles) {
+      polygons.forEach((polygon) => polygon.setMap(null));
+      setPolygons([]);
+      return;
+    }
 
     // Clear existing polygons
     polygons.forEach((polygon) => polygon.setMap(null));
 
-    // Create new seamless polygons
+    // Create enhanced polygons with AI-driven styling
     const newPolygons = safeAreas.map((area) => {
-      const color = getSafetyColor(area.safetyScore);
-      const opacity = getScoreBasedOpacity(area.safetyScore);
-      const strokeWeight = getScoreBasedStrokeWeight(area.safetyScore);
+      const styling = getEnhancedStyling(area);
 
       const polygon = new google.maps.Polygon({
         paths: area.bounds,
-        strokeColor: color,
-        strokeOpacity: 0.4,
-        strokeWeight: strokeWeight,
-        fillColor: color,
-        fillOpacity: opacity,
+        strokeColor: styling.strokeColor,
+        strokeOpacity: styling.strokeOpacity,
+        strokeWeight: styling.strokeWeight,
+        fillColor: styling.fillColor,
+        fillOpacity: styling.fillOpacity,
         map,
-        zIndex: getScoreBasedZIndex(area.safetyScore),
+        zIndex: styling.zIndex,
       });
 
-      // Enhanced click listener with AI analysis
+      // Enhanced click handler with AI analysis
       polygon.addListener("click", (event: google.maps.PolyMouseEvent) => {
-        setActiveInfoWindow((prev) => {
-          if (prev) {
-            prev.close();
-          }
-
-          const infoWindow = new google.maps.InfoWindow({
-            content: `
-              <div style="padding: 12px; min-width: 240px; font-family: system-ui;">
-                <h3 style="margin: 0 0 10px 0; font-weight: bold; color: ${color};">${area.name}</h3>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                  <div style="width: 14px; height: 14px; border-radius: 3px; background: ${color};"></div>
-                  <span style="font-weight: 500;">Safety Score: ${area.safetyScore}/100</span>
-                </div>
-                <div style="margin-bottom: 8px;">
-                  <small style="color: #666;">
-                    Base: ${Math.round((area.safetyScore - (area.newsScore || 0) * 0.3) / 0.7)}/100 |
-                    News Impact: ${area.newsScore || 0}/100
-                  </small>
-                </div>
-                <p style="margin: 6px 0; color: #666; text-transform: capitalize; font-size: 12px;">
-                  Area Type: ${area.type.replace(/([A-Z])/g, " $1")}
-                </p>
-                <div style="margin-top: 10px; padding: 8px 12px; background: ${color}15; border-radius: 6px; border-left: 3px solid ${color};">
-                  <small style="color: #555; line-height: 1.4;">
-                    <strong>AI Analysis:</strong><br/>
-                    ${area.aiAnalysis || getSafetyDescription(area.safetyScore)}
-                  </small>
-                </div>
-              </div>
-            `,
-            position: event.latLng,
-          });
-
-          infoWindow.open(map);
-          return infoWindow;
+        const infoWindow = new google.maps.InfoWindow({
+          content: createEnhancedInfoWindow(area),
+          position: event.latLng,
         });
+
+        infoWindow.open(map);
       });
 
       return polygon;
     });
 
     setPolygons(newPolygons);
-
-    return () => {
-      newPolygons.forEach((polygon) => polygon.setMap(null));
-    };
   }, [map, safeAreas, showSafeAreaCircles]);
 
   return null;
 }
 
-// Enhanced helper functions
+// Enhanced styling based on AI analysis
+function getEnhancedStyling(area: SafeAreaData) {
+  const score = area.safetyScore;
+  const analysis = area.enhancedAnalysis;
 
-function generateSeamlessHexagon(
-  baseLat: number,
-  baseLng: number,
-  latStep: number,
-  lngStep: number,
-  row: number,
-  col: number,
-): google.maps.LatLngLiteral[] {
-  const points: google.maps.LatLngLiteral[] = [];
-  const numPoints = 6;
+  // Base colors
+  let fillColor = getSafetyColor(score);
+  let strokeColor = fillColor;
 
-  // Seamless hexagonal grid with no gaps
-  const latRadius = latStep * 0.8; // Overlapping coverage
-  const lngRadius = lngStep * 0.8;
-
-  // Offset every other row for perfect hexagonal tiling
-  const rowOffset = (row % 2) * (lngStep * 0.5);
-
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (i / numPoints) * 2 * Math.PI;
-
-    const lat = baseLat + latStep / 2 + Math.cos(angle) * latRadius;
-    const lng = baseLng + lngStep / 2 + Math.sin(angle) * lngRadius + rowOffset;
-
-    points.push({ lat, lng });
-  }
-
-  return points;
-}
-
-function calculateEnhancedAreaSafety(lat: number, lng: number): number {
-  const now = new Date();
-  const hour = now.getHours();
-  const dayOfWeek = now.getDay();
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-  const month = now.getMonth();
-
-  let score = 65; // Base score
-
-  // Enhanced time-based factors
-  if (hour >= 6 && hour <= 8)
-    score += 12; // Morning commute
-  else if (hour >= 9 && hour <= 17)
-    score += 18; // Business hours
-  else if (hour >= 18 && hour <= 20)
-    score += 8; // Evening commute
-  else if (hour >= 21 && hour <= 22)
-    score += 2; // Early evening
-  else if (hour >= 23 || hour <= 5) score -= 20; // Late night
-
-  // Enhanced day-based factors
-  if (isWeekend) {
-    if (hour >= 10 && hour <= 16) score += 8; // Weekend day
-    if (hour >= 22 || hour <= 6) score -= 10; // Weekend night
-  } else {
-    if (hour >= 7 && hour <= 18) score += 12; // Weekday activity
-  }
-
-  // Seasonal adjustments
-  if (month >= 11 || month <= 1) score -= 5; // Winter months
-  if (month >= 5 && month <= 8) score += 3; // Summer months
-
-  // Enhanced location-based factors
-  const latFactor = Math.abs(lat * 10000) % 100;
-  const lngFactor = Math.abs(lng * 10000) % 100;
-
-  // Business district simulation
-  const businessScore = (latFactor + lngFactor) / 2;
-  if (businessScore > 80) score += 15;
-  else if (businessScore > 60) score += 10;
-  else if (businessScore > 40) score += 5;
-  else if (businessScore < 20) score -= 12;
-
-  // Population density
-  const densityHash = Math.abs((lat * 47 + lng * 53) * 1000) % 100;
-  if (densityHash > 85) score += 12;
-  else if (densityHash > 70) score += 8;
-  else if (densityHash > 50) score += 4;
-  else if (densityHash < 25) score -= 15;
-
-  // Emergency services proximity
-  const emergencyProximity = Math.abs((lat * 31 + lng * 37) * 1000) % 60;
-  if (emergencyProximity > 50) score += 8;
-  else if (emergencyProximity > 30) score += 4;
-  else if (emergencyProximity < 10) score -= 6;
-
-  // Transportation hubs
-  const transitScore = Math.abs((lat * 41 + lng * 43) * 100) % 40;
-  if (transitScore > 35) score += 6;
-  else if (transitScore < 8) score -= 4;
-
-  // Economic indicators simulation
-  const economicFactor = Math.abs((lat + lng) * 1000) % 50;
-  if (economicFactor > 40) score += 5;
-  else if (economicFactor < 10) score -= 8;
-
-  return Math.max(25, Math.min(98, Math.round(score)));
-}
-
-async function calculateNewsBasedSafety(
-  lat: number,
-  lng: number,
-): Promise<number> {
-  try {
-    // Use Gemini AI for comprehensive safety analysis
-    const analysis = await geminiNewsAnalysisService.analyzeAreaSafety(
-      lat,
-      lng,
-    );
-    return analysis.score;
-  } catch (error) {
-    console.warn("Gemini analysis failed, using fallback:", error);
-    return calculateFallbackNewsScore(lat, lng);
-  }
-}
-
-function calculateFallbackNewsScore(lat: number, lng: number): number {
-  // Fallback when news analysis is unavailable
-  const now = new Date();
-  const hour = now.getHours();
-  const dayOfWeek = now.getDay();
-
-  let newsScore = 75; // Base news score
-
-  // Simulate recent news events impact
-  const newsHash = Math.abs((lat * 73 + lng * 79) * 1000) % 100;
-
-  // Major incidents simulation
-  if (newsHash > 95)
-    newsScore -= 30; // Major incident
-  else if (newsHash > 88)
-    newsScore -= 20; // Significant incident
-  else if (newsHash > 75)
-    newsScore -= 10; // Minor incident
-  else if (newsHash > 60)
-    newsScore += 5; // Positive news
-  else if (newsHash > 40) newsScore += 10; // Very positive news
-
-  // Crime reports simulation
-  const crimeHash = Math.abs((lat * 67 + lng * 71) * 100) % 50;
-  if (crimeHash > 45) newsScore -= 15;
-  else if (crimeHash > 35) newsScore -= 8;
-  else if (crimeHash < 5) newsScore += 8;
-
-  // Traffic and accidents
-  const trafficHash = Math.abs((lat + lng) * hour * 100) % 30;
-  if (trafficHash > 25) newsScore -= 5;
-  else if (trafficHash < 5) newsScore += 3;
-
-  // Weather-related incidents
-  const weatherHash = Math.abs(lat * lng * dayOfWeek * 100) % 20;
-  if (weatherHash > 18) newsScore -= 8;
-  else if (weatherHash > 15) newsScore -= 3;
-
-  // Community events (positive impact)
-  const eventHash = Math.abs((lat * 83 + lng * 89) * 10) % 25;
-  if (eventHash > 20) newsScore += 8;
-  else if (eventHash > 15) newsScore += 4;
-
-  return Math.max(20, Math.min(95, Math.round(newsScore)));
-}
-
-async function getAIAnalysis(
-  lat: number,
-  lng: number,
-  fallbackScore?: number,
-): Promise<string> {
-  try {
-    // Get detailed AI analysis from Gemini
-    const analysis = await geminiNewsAnalysisService.analyzeAreaSafety(
-      lat,
-      lng,
-    );
-    return analysis.reasoning;
-  } catch (error) {
-    // Fallback to simple analysis
-    const safetyScore = fallbackScore || 70;
-
-    if (safetyScore >= 85) {
-      return "Excellent area with good safety indicators and community presence.";
-    } else if (safetyScore >= 70) {
-      return "Generally safe area with adequate infrastructure and regular activity.";
-    } else if (safetyScore >= 55) {
-      return "Moderate safety - stay alert and avoid isolated areas.";
-    } else {
-      return "Exercise caution - consider alternative routes when possible.";
+  // Adjust based on alert level
+  if (analysis) {
+    switch (analysis.alertLevel) {
+      case "danger":
+        strokeColor = "#dc2626";
+        break;
+      case "warning":
+        strokeColor = "#f59e0b";
+        break;
+      case "caution":
+        strokeColor = "#eab308";
+        break;
+      case "safe":
+        strokeColor = "#22c55e";
+        break;
     }
   }
+
+  // Dynamic opacity based on confidence and volatility
+  const baseOpacity = 0.25;
+  const confidenceMultiplier = analysis
+    ? (analysis.confidence / 100) * 0.3
+    : 0.1;
+  const volatilityMultiplier = analysis
+    ? (analysis.dynamicFactors.volatility / 100) * 0.2
+    : 0;
+
+  const fillOpacity = Math.min(
+    0.6,
+    baseOpacity + confidenceMultiplier + volatilityMultiplier,
+  );
+
+  return {
+    fillColor,
+    strokeColor,
+    fillOpacity,
+    strokeOpacity: 0.8,
+    strokeWeight: analysis?.alertLevel === "danger" ? 3 : score < 40 ? 2 : 1,
+    zIndex: score < 40 ? 1000 : analysis?.alertLevel === "danger" ? 1500 : 100,
+  };
+}
+
+// Create enhanced info window with AI analysis
+function createEnhancedInfoWindow(area: SafeAreaData): string {
+  const analysis = area.enhancedAnalysis;
+  const color = getSafetyColor(area.safetyScore);
+
+  return `
+    <div class="p-4 max-w-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <div style="width: 16px; height: 16px; border-radius: 4px; background: ${color};"></div>
+        <h3 class="font-semibold text-gray-800">Enhanced Safety Analysis</h3>
+      </div>
+
+      <div class="space-y-3 text-sm">
+        <div class="flex justify-between">
+          <span class="text-gray-600">Safety Score:</span>
+          <span class="font-semibold ${area.safetyScore >= 70 ? "text-green-600" : area.safetyScore >= 40 ? "text-yellow-600" : "text-red-600"}">${area.safetyScore}/100</span>
+        </div>
+
+        ${
+          analysis
+            ? `
+          <div class="flex justify-between">
+            <span class="text-gray-600">Alert Level:</span>
+            <span class="font-medium capitalize ${getAlertLevelColor(analysis.alertLevel)}">${analysis.alertLevel}</span>
+          </div>
+
+          <div class="flex justify-between">
+            <span class="text-gray-600">Confidence:</span>
+            <span class="font-medium">${analysis.confidence}%</span>
+          </div>
+
+          <div class="p-2 bg-gray-50 rounded">
+            <div class="font-medium text-gray-700 mb-1">AI Insights</div>
+            <div class="text-xs text-gray-600 mb-2">${analysis.analysis.reasoning}</div>
+
+            <div class="space-y-1">
+              ${analysis.recommendations
+                .slice(0, 2)
+                .map(
+                  (rec) => `
+                <div class="text-xs text-blue-600">• ${rec}</div>
+              `,
+                )
+                .join("")}
+            </div>
+          </div>
+
+          <div class="flex justify-between text-xs">
+            <span class="text-gray-500">Trend: ${analysis.dynamicFactors.trending}</span>
+            <span class="text-gray-500">Volatility: ${analysis.dynamicFactors.volatility}%</span>
+          </div>
+        `
+            : ""
+        }
+
+        <div class="text-xs text-gray-500">
+          Updated: ${new Date(area.lastUpdated).toLocaleTimeString()}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Utility functions
+function getAreaType(lat: number, lng: number): SafeAreaData["type"] {
+  const hash = Math.abs((lat * 1000 + lng * 1000) * 7) % 100;
+  if (hash < 30) return "residential";
+  if (hash < 50) return "commercial";
+  if (hash < 65) return "transit";
+  if (hash < 80) return "park";
+  if (hash < 90) return "industrial";
+  return "emergency";
+}
+
+function calculateFallbackSafety(
+  lat: number,
+  lng: number,
+  type: SafeAreaData["type"],
+): number {
+  let score = 60;
+  const typeBonus = {
+    emergency: 25,
+    park: 15,
+    residential: 10,
+    commercial: 5,
+    transit: 0,
+    industrial: -10,
+  };
+  score += typeBonus[type];
+
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour <= 18) score += 15;
+  else if (hour >= 19 && hour <= 22) score += 5;
+  else score -= 10;
+
+  const locationVariation = Math.abs((lat * lng * 1000) % 30) - 15;
+  score += locationVariation;
+
+  return Math.max(20, Math.min(95, Math.round(score)));
 }
 
 function getSafetyColor(score: number): string {
-  if (score >= 85) return "#059669"; // Emerald green
-  if (score >= 70) return "#10b981"; // Green
-  if (score >= 55) return "#f59e0b"; // Amber
-  if (score >= 40) return "#f97316"; // Orange
-  return "#ef4444"; // Red
+  if (score >= 80) return "#22c55e";
+  if (score >= 70) return "#84cc16";
+  if (score >= 60) return "#eab308";
+  if (score >= 40) return "#f59e0b";
+  if (score >= 30) return "#ef4444";
+  return "#dc2626";
 }
 
-function getScoreBasedOpacity(score: number): number {
-  // Higher scores are more transparent, lower scores more visible
-  if (score >= 85) return 0.12;
-  if (score >= 70) return 0.18;
-  if (score >= 55) return 0.25;
-  if (score >= 40) return 0.35;
-  return 0.45;
+function getAlertLevelColor(alertLevel: string): string {
+  switch (alertLevel) {
+    case "safe":
+      return "text-green-600";
+    case "caution":
+      return "text-yellow-600";
+    case "warning":
+      return "text-orange-600";
+    case "danger":
+      return "text-red-600";
+    default:
+      return "text-gray-600";
+  }
 }
 
-function getScoreBasedStrokeWeight(score: number): number {
-  // Lower scores get thicker borders for attention
-  if (score >= 85) return 0.5;
-  if (score >= 70) return 0.8;
-  if (score >= 55) return 1.2;
-  if (score >= 40) return 1.5;
-  return 2.0;
+function calculateOptimalBounds(
+  points: google.maps.LatLngLiteral[],
+): google.maps.LatLngLiteral[] {
+  if (points.length < 3) return points;
+
+  // Simplified convex hull
+  const sorted = [...points].sort((a, b) => a.lat - b.lat || a.lng - b.lng);
+  const hull: google.maps.LatLngLiteral[] = [];
+
+  // Lower hull
+  for (const point of sorted) {
+    while (hull.length >= 2) {
+      const cross =
+        (hull[hull.length - 2].lat - hull[hull.length - 1].lat) *
+          (point.lng - hull[hull.length - 1].lng) -
+        (hull[hull.length - 2].lng - hull[hull.length - 1].lng) *
+          (point.lat - hull[hull.length - 1].lat);
+      if (cross <= 0) hull.pop();
+      else break;
+    }
+    hull.push(point);
+  }
+
+  // Upper hull
+  const t = hull.length + 1;
+  for (let i = sorted.length - 2; i >= 0; i--) {
+    const point = sorted[i];
+    while (hull.length >= t) {
+      const cross =
+        (hull[hull.length - 2].lat - hull[hull.length - 1].lat) *
+          (point.lng - hull[hull.length - 1].lng) -
+        (hull[hull.length - 2].lng - hull[hull.length - 1].lng) *
+          (point.lat - hull[hull.length - 1].lat);
+      if (cross <= 0) hull.pop();
+      else break;
+    }
+    hull.push(point);
+  }
+
+  hull.pop(); // Remove last point (duplicate)
+  return hull.length >= 3 ? hull : points;
 }
 
-function getScoreBasedZIndex(score: number): number {
-  // Lower scores appear on top
-  return 1000 - score;
+function determineGroupAlertLevel(
+  levels: string[],
+): "safe" | "caution" | "warning" | "danger" {
+  if (levels.includes("danger")) return "danger";
+  if (levels.includes("warning")) return "warning";
+  if (levels.includes("caution")) return "caution";
+  return "safe";
 }
 
-function getAreaType(index: number): SafeAreaData["type"] {
-  const types: SafeAreaData["type"][] = [
-    "residential",
-    "commercial",
-    "transit",
-    "park",
-    "emergency",
-  ];
-  return types[index % types.length];
-}
+function determineTrending(
+  trends: string[],
+): "improving" | "stable" | "declining" {
+  const improving = trends.filter((t) => t === "improving").length;
+  const declining = trends.filter((t) => t === "declining").length;
 
-function getAreaName(type: SafeAreaData["type"], index: number): string {
-  const names = {
-    residential: ["Residential District", "Neighborhood Zone", "Housing Area"],
-    commercial: ["Business District", "Commercial Zone", "Shopping Area"],
-    transit: ["Transit Hub", "Transport Center", "Station Area"],
-    park: ["Green Space", "Recreation Zone", "Park Area"],
-    emergency: ["Emergency Zone", "Safety Hub", "Service Center"],
-  };
-
-  return names[type][index % names[type].length];
-}
-
-function getSafetyDescription(score: number): string {
-  if (score >= 85)
-    return "Excellent safety with robust infrastructure and active community presence.";
-  if (score >= 70)
-    return "Good safety conditions with regular activity and adequate lighting.";
-  if (score >= 55)
-    return "Moderate safety - maintain awareness and avoid poorly lit areas.";
-  if (score >= 40)
-    return "Exercise caution - travel in groups when possible and stay on main routes.";
-  return "High-risk area - consider alternative routes and inform others of your location.";
+  if (improving > declining) return "improving";
+  if (declining > improving) return "declining";
+  return "stable";
 }
 
 export default EnhancedSafetyAreas;

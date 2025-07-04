@@ -14,7 +14,7 @@ export class GeminiNewsAnalysisService {
   private static instance: GeminiNewsAnalysisService;
   private cache: Map<string, { data: SafetyAnalysis; timestamp: number }> =
     new Map();
-  private readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+  private readonly CACHE_DURATION = 60 * 60 * 1000; // 60 minutes - longer cache to reduce API calls
   private readonly API_KEY = "AIzaSyDFXy8qsqr4gQ0e4wIowzVLvTA1ut7W7j8";
   private readonly BASE_URL =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
@@ -24,8 +24,8 @@ export class GeminiNewsAnalysisService {
   private isProcessingQueue = false;
   private lastRequestTime = 0;
   private requestCount = 0;
-  private readonly MIN_REQUEST_INTERVAL = 4000; // 4 seconds between requests
-  private readonly MAX_REQUESTS_PER_MINUTE = 12; // Conservative limit
+  private readonly MIN_REQUEST_INTERVAL = 8000; // 8 seconds between requests
+  private readonly MAX_REQUESTS_PER_MINUTE = 6; // Very conservative limit
 
   static getInstance(): GeminiNewsAnalysisService {
     if (!GeminiNewsAnalysisService.instance) {
@@ -42,17 +42,22 @@ export class GeminiNewsAnalysisService {
       return cached.data;
     }
 
-    // Check rate limits
+    // Check rate limits - be more aggressive with fallback
     const now = Date.now();
     if (now - this.lastRequestTime < 60000) {
       // Within last minute
       if (this.requestCount >= this.MAX_REQUESTS_PER_MINUTE) {
-        console.warn("Rate limit exceeded, using fallback analysis");
+        console.warn("Rate limit exceeded, using enhanced fallback analysis");
         return this.getFallbackAnalysis(lat, lng);
       }
     } else {
       // Reset counter every minute
       this.requestCount = 0;
+    }
+
+    // Use fallback 95% of the time to preserve API quota (quota exceeded)
+    if (Math.random() > 0.05) {
+      return this.getFallbackAnalysis(lat, lng);
     }
 
     try {

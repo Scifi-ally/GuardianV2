@@ -396,26 +396,6 @@ export default function Profile() {
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
-                onClick={handleAdvancedSettings}
-                variant="outline"
-                className="w-full justify-start h-14 text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Settings className="h-4 w-4 text-black" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-black">
-                      Advanced Settings
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      Privacy & security
-                    </div>
-                  </div>
-                </div>
-              </Button>
-
-              <Button
                 onClick={() => setShowSafetyTutorial(true)}
                 variant="outline"
                 className="w-full justify-start h-14 text-left"

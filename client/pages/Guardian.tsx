@@ -27,7 +27,7 @@ import {
 } from "@/components/SlidingPanel";
 import { EmergencyDetection } from "@/components/EmergencyDetection";
 import { SafetyMap } from "@/components/SafetyMap";
-import { GoogleMap } from "@/components/GoogleMap";
+import { GoogleMap as EnhancedGoogleMap } from "@/components/SimpleEnhancedGoogleMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { RealTimeSOSTracker } from "@/components/RealTimeSOSTracker";
@@ -231,9 +231,9 @@ export default function Guardian() {
                 activeTab === "map" ? "blur-0" : "blur-sm",
               )}
             >
-              {/* Interactive Google Map Full Screen */}
+              {/* Interactive Enhanced Google Map Full Screen */}
               <div className="absolute inset-0">
-                <GoogleMap
+                <EnhancedGoogleMap
                   location={location}
                   mapTheme={mapTheme}
                   mapType={mapType}
