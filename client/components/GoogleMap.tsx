@@ -894,9 +894,9 @@ function MapComponent({
           <circle cx="16" cy="16" r="3" fill="#3b82f6"/>
           <!-- Directional indicator (if heading available) -->
           ${
-            location.heading !== undefined
+            (location as any).heading !== undefined
               ? `
-            <path d="M16 6 L20 14 L16 12 L12 14 Z" fill="#3b82f6" transform="rotate(${location.heading} 16 16)"/>
+            <path d="M16 6 L20 14 L16 12 L12 14 Z" fill="#3b82f6" transform="rotate(${(location as any).heading} 16 16)"/>
           `
               : ""
           }
@@ -910,7 +910,7 @@ function MapComponent({
     const marker = new google.maps.Marker({
       position: { lat: location.latitude, lng: location.longitude },
       map,
-      title: `📍 Your Location\nAccuracy: ±${Math.round(location.accuracy || 0)}m\nTimestamp: ${new Date(location.timestamp).toLocaleTimeString()}`,
+      title: `📍 Your Location\nAccuracy: ±${Math.round(location.accuracy || 0)}m\nTimestamp: ${new Date((location as any).timestamp || Date.now()).toLocaleTimeString()}`,
       icon: customIcon,
       animation: google.maps.Animation.DROP,
       zIndex: 10000, // Highest priority
@@ -985,19 +985,20 @@ function MapComponent({
               <strong>Accuracy:</strong> ±${Math.round(location.accuracy || 0)}m
             </div>
             ${
-              location.speed !== undefined && location.speed > 0
+              (location as any).speed !== undefined &&
+              (location as any).speed > 0
                 ? `
               <div style="margin-bottom: 8px;">
-                <strong>Speed:</strong> ${Math.round(location.speed * 3.6)} km/h
+                <strong>Speed:</strong> ${Math.round((location as any).speed * 3.6)} km/h
               </div>
             `
                 : ""
             }
             ${
-              location.heading !== undefined
+              (location as any).heading !== undefined
                 ? `
               <div style="margin-bottom: 8px;">
-                <strong>Heading:</strong> ${Math.round(location.heading)}°
+                <strong>Heading:</strong> ${Math.round((location as any).heading)}°
               </div>
             `
                 : ""
@@ -1005,7 +1006,7 @@ function MapComponent({
             <div style="margin-bottom: 8px;">
               <strong>Last Updated:</strong><br/>
               <span style="font-size: 12px;">
-                ${new Date(location.timestamp).toLocaleString()}
+                ${new Date((location as any).timestamp || Date.now()).toLocaleString()}
               </span>
             </div>
             <div style="margin-top: 10px; padding: 8px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #3b82f6;">

@@ -516,7 +516,11 @@ export function GoogleMap({
     }, 3000); // Update every 3 seconds for better accuracy
 
     setTrackingInterval(interval);
-    addNotification("Automatic live tracking active");
+    addNotification({
+      type: "info",
+      title: "Live Tracking",
+      message: "Automatic live tracking active",
+    });
   }, [onLocationChange, addNotification]);
 
   const getMapStyles = (theme: string): google.maps.MapTypeStyle[] => {

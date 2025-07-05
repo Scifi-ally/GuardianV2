@@ -15,7 +15,7 @@ export class GeminiNewsAnalysisService {
   private cache: Map<string, { data: SafetyAnalysis; timestamp: number }> =
     new Map();
   private readonly CACHE_DURATION = 60 * 60 * 1000; // 60 minutes - longer cache to reduce API calls
-  private readonly API_KEY = "AIzaSyDFXy8qsqr4gQ0e4wIowzVLvTA1ut7W7j8";
+  private readonly API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
   private readonly BASE_URL =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
 

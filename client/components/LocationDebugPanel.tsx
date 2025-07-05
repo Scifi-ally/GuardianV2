@@ -212,16 +212,19 @@ export function LocationDebugPanel({
                     <span className="font-medium">Updates</span>
                     <div>{updateCount}</div>
                   </div>
-                  {location.speed !== undefined && location.speed > 0 && (
-                    <div>
-                      <span className="font-medium">Speed</span>
-                      <div>{Math.round(location.speed * 3.6)} km/h</div>
-                    </div>
-                  )}
-                  {location.heading !== undefined && (
+                  {(location as any).speed !== undefined &&
+                    (location as any).speed > 0 && (
+                      <div>
+                        <span className="font-medium">Speed</span>
+                        <div>
+                          {Math.round((location as any).speed * 3.6)} km/h
+                        </div>
+                      </div>
+                    )}
+                  {(location as any).heading !== undefined && (
                     <div>
                       <span className="font-medium">Heading</span>
-                      <div>{Math.round(location.heading)}°</div>
+                      <div>{Math.round((location as any).heading)}°</div>
                     </div>
                   )}
                 </div>

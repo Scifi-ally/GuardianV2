@@ -60,7 +60,10 @@ export function RoadBasedSafetyAreas({
       const sw = bounds.getSouthWest();
 
       // Use Google Roads API or simulate road detection
-      const roadPoints = await detectNearbyRoads(ne, sw);
+      const roadPoints = await detectNearbyRoads(
+        { lat: ne.lat(), lng: ne.lng() },
+        { lat: sw.lat(), lng: sw.lng() },
+      );
       setRoadPoints(roadPoints);
       return roadPoints;
     },
@@ -262,11 +265,11 @@ export function RoadBasedSafetyAreas({
                 <div style="width: 16px; height: 16px; background: ${area.color}; clip-path: ${getShapeClipPath(area.shape)};"></div>
                 <span style="font-weight: 500;">Safety Score: ${area.safetyScore}/100</span>
               </div>
-              
+
               <div style="margin: 8px 0;">
                 <strong style="font-size: 11px;">Real-Time Data:</strong>
                 <div style="font-size: 10px; color: #666; margin: 2px 0;">
-                  🚗 Traffic: ${area.realTimeData.trafficDensity}% | 
+                  🚗 Traffic: ${area.realTimeData.trafficDensity}% |
                   ⚠️ Incidents: ${area.realTimeData.incidentCount} |
                   🚑 Response: ${area.realTimeData.emergencyResponseTime}min
                 </div>

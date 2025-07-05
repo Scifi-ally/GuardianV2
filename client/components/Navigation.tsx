@@ -17,7 +17,6 @@ export function Navigation() {
           <div className="p-2 rounded-lg bg-primary/10">
             <Shield className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">Guardian</h1>
         </Link>
 
         <div className="flex items-center gap-2 ml-auto">

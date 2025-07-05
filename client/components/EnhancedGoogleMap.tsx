@@ -99,20 +99,32 @@ export function EnhancedGoogleMap({
         timeout: 15000,
       });
 
-      addNotification("Live location tracking started", "info");
+      addNotification({
+        type: "info",
+        title: "Location Tracking",
+        message: "Live location tracking started",
+      });
 
       return unsubscribe;
     } catch (error) {
       console.error("Failed to start live tracking:", error);
       setIsTracking(false);
-      addNotification("Failed to start location tracking", "error");
+      addNotification({
+        type: "error",
+        title: "Location Error",
+        message: "Failed to start location tracking",
+      });
     }
   }, [userMarker, map, onLocationChange, addNotification]);
 
   const stopLiveTracking = useCallback(() => {
     enhancedLocationService.stopTracking();
     setIsTracking(false);
-    addNotification("Live location tracking stopped", "info");
+    addNotification({
+      type: "info",
+      title: "Location Tracking",
+      message: "Live location tracking stopped",
+    });
   }, [addNotification]);
 
   // Smooth marker movement animation

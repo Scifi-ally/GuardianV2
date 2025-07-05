@@ -58,49 +58,51 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-muted/10 to-primary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/10 to-primary/5 flex items-center justify-center p-4 md:p-6">
+      <div className="w-full max-w-sm sm:max-w-md space-y-6">
         {/* Header - matching Android structure exactly */}
         <div className="text-center space-y-4 mb-6">
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <Shield className="h-12 w-12 text-primary" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">Welcome Back</h1>
-            <p className="text-muted-foreground text-base">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+              Welcome Back
+            </h1>
+            <p className="text-black text-base font-medium">
               Sign in to your Guardian account
             </p>
           </div>
         </div>
 
         {/* Sign In Card - matching Android styling exactly */}
-        <Card className="border-0 shadow-xl bg-background/50 backdrop-blur rounded-2xl mx-2">
-          <CardHeader className="pb-6">
-            <CardTitle className="text-center text-xl font-bold">
+        <Card className="border-0 shadow-xl bg-background/50 backdrop-blur rounded-2xl mx-1 sm:mx-2">
+          <CardHeader className="pb-4 sm:pb-6">
+            <CardTitle className="text-center text-lg sm:text-xl font-bold">
               Sign In
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6 px-6 pb-6">
+          <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 pb-6">
             {error && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
                 <p className="text-destructive text-sm">{error}</p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
                   Email
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 border border-input rounded-lg"
+                    className="pl-10 h-12 sm:h-14 border border-input rounded-lg text-base"
                     disabled={loading}
                   />
                 </div>
@@ -111,14 +113,14 @@ export default function SignIn() {
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 border border-input rounded-lg"
+                    className="pl-10 h-12 sm:h-14 border border-input rounded-lg text-base"
                     disabled={loading}
                   />
                 </div>
@@ -127,7 +129,7 @@ export default function SignIn() {
               <Button
                 type="submit"
                 className={cn(
-                  "w-full h-12 text-base font-medium transition-all duration-100 rounded-lg",
+                  "w-full h-12 sm:h-14 text-base sm:text-lg font-medium transition-all duration-100 rounded-lg mt-6",
                   "bg-primary hover:bg-primary/90 text-primary-foreground",
                   isPressed && "scale-[0.96]",
                 )}
@@ -155,8 +157,8 @@ export default function SignIn() {
         </Card>
 
         {/* Sign Up Link - matching Android */}
-        <div className="text-center pt-6">
-          <div className="flex items-center justify-center gap-1">
+        <div className="text-center pt-4 sm:pt-6 pb-4">
+          <div className="flex items-center justify-center gap-1 flex-wrap">
             <span className="text-muted-foreground text-sm">
               Don't have an account?
             </span>

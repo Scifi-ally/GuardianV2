@@ -70,7 +70,7 @@ export function ComprehensiveSafetySystem() {
       // Update system health with real battery and signal data
       setSystemHealth((prev) => ({
         ...prev,
-        battery: navigator.getBattery
+        battery: (navigator as any).getBattery
           ? Math.max(0, prev.battery - Math.random() * 0.1) // Slower drain
           : prev.battery,
         signal: 70 + Math.random() * 30, // Real signal would come from navigator.connection

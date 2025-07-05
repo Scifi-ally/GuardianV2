@@ -47,7 +47,7 @@ import {
 import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import AINavigationPanel from "@/components/AINavigationPanel";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
-import GuardianNavigation from "@/components/GuardianNavigation";
+import GoogleMapsStyleSearch from "@/components/GoogleMapsStyleSearch";
 import AIFeaturesPanel from "@/components/AIFeaturesPanel";
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 
@@ -317,79 +317,16 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       <PerformanceOptimizer />
       {/* Compact Navigation Header - Reduced Height */}
-      {/* Minimal Guardian Navigation Header */}
-      <motion.div
-        className="relative z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      >
-        <div className="px-3 py-1.5">
-          {/* Inline Guardian Branding + Navigation */}
-          <div className="flex items-center justify-between">
-            {/* Guardian Logo + Title */}
-            <div className="flex items-center gap-1.5">
-              <div className="w-4 h-4 bg-gradient-to-br from-purple-600 to-pink-600 rounded-md flex items-center justify-center">
-                <span className="text-white text-xs font-bold">G</span>
-              </div>
-              <h1 className="text-sm font-bold font-mono bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                GUARDIAN
-              </h1>
-            </div>
-
-            {/* Compact From/To Inputs */}
-            <div className="flex items-center gap-1 flex-1 max-w-sm mx-2">
-              {/* From */}
-              <div className="flex items-center bg-emerald-50 rounded-lg px-2 py-1 flex-1 min-w-0">
-                <Locate className="h-3 w-3 text-emerald-600 mr-1 flex-shrink-0" />
-                <LocationAutocomplete
-                  value={fromLocation}
-                  onChange={setFromLocation}
-                  placeholder="From"
-                  showCurrentLocationButton={true}
-                  onCurrentLocation={() => {
-                    if (location) {
-                      setFromLocation(`Current Location`);
-                    } else {
-                      handleUseCurrentLocation();
-                    }
-                  }}
-                  className="w-full border-0 bg-transparent p-0 text-xs font-mono placeholder:text-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              {/* To */}
-              <div className="flex items-center bg-rose-50 rounded-lg px-2 py-1 flex-1 min-w-0">
-                <MapPin className="h-3 w-3 text-rose-600 mr-1 flex-shrink-0" />
-                <LocationAutocomplete
-                  value={toLocation}
-                  onChange={setToLocation}
-                  placeholder="To"
-                  onPlaceSelect={(place) => {
-                    console.log("🎯 Destination selected:", place);
-                    if (place.geometry) {
-                      setDestination({
-                        lat: place.geometry.location!.lat(),
-                        lng: place.geometry.location!.lng(),
-                      });
-                    }
-                  }}
-                  className="w-full border-0 bg-transparent p-0 text-xs font-mono placeholder:text-rose-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Mini Search Button */}
-            <Button
-              onClick={handleSearch}
-              className="h-6 px-2 bg-slate-800 hover:bg-slate-700 text-white rounded-md text-xs font-mono"
-              disabled={!fromLocation || !toLocation}
-            >
-              <Route className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-      </motion.div>
+      {/* Google Maps Style Search */}
+      <GoogleMapsStyleSearch
+        fromLocation={fromLocation}
+        setFromLocation={setFromLocation}
+        toLocation={toLocation}
+        setToLocation={setToLocation}
+        onSearch={handleSearch}
+        onUseCurrentLocation={handleUseCurrentLocation}
+        location={location}
+      />
 
       {/* Clear Route Button */}
       {destination && (
@@ -425,7 +362,7 @@ export default function Index() {
       />
 
       {/* Enhanced Google Map with Safety Score Coloring */}
-      <div className="absolute inset-0 top-0 z-10 pt-16">
+      <div className="absolute inset-0 top-0 z-10">
         <EnhancedGoogleMap
           key={`${routeSettings.showTraffic}-${routeSettings.showSafeZones}-${routeSettings.showEmergencyServices}-${routeSettings.showSafeAreaCircles}-${routeSettings.zoomLevel}-${mapTheme}-${mapType}`}
           location={location}

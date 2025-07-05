@@ -170,15 +170,15 @@ export function LocationAutocomplete({
 
   return (
     <div className={`relative ${className}`}>
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+      <div className="flex gap-1.5 sm:gap-2">
+        <div className="relative flex-1 min-w-0">
+          <MapPin className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <Input
             ref={inputRef}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className="pl-10 pr-4 text-sm"
+            className="pl-8 sm:pl-10 pr-3 sm:pr-4 text-sm sm:text-base h-10 sm:h-11 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             autoComplete="off"
             autoFocus={autoFocus}
             spellCheck={false}
@@ -189,16 +189,16 @@ export function LocationAutocomplete({
           <Button
             type="button"
             variant="outline"
-            size="icon"
+            size="sm"
             onClick={handleCurrentLocation}
             disabled={isLoading}
-            className="flex-shrink-0"
+            className="flex-shrink-0 h-10 w-10 sm:h-11 sm:w-11 p-0 rounded-lg border-gray-300"
             title="Use current location"
           >
             {isLoading ? (
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
             ) : (
-              <Locate className="h-4 w-4" />
+              <Locate className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             )}
           </Button>
         )}
