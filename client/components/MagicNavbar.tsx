@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
   MapPin,
@@ -50,6 +50,9 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
   const [sending, setSending] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [activeAlertId, setActiveAlertId] = useState<string | null>(null);
+  const [mapLongPressTimer, setMapLongPressTimer] =
+    useState<NodeJS.Timeout | null>(null);
+  const [showEnhancedMapHint, setShowEnhancedMapHint] = useState(false);
 
   useEffect(() => {
     const currentIndex = navItems.findIndex(
@@ -67,6 +70,30 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       setActiveIndex(index);
       navigate(item.path);
     }
+  };
+
+  const handleMapLongPress = () => {
+    navigate("/enhanced-navigation");
+    toast.success("Enhanced Navigation activated!");
+    setShowEnhancedMapHint(false);
+  };
+
+  const handleMapMouseDown = (item: NavItem, index: number) => {
+    if (item.id === "map") {
+      const timer = setTimeout(() => {
+        setShowEnhancedMapHint(true);
+        handleMapLongPress();
+      }, 800); // 800ms long press
+      setMapLongPressTimer(timer);
+    }
+  };
+
+  const handleMapMouseUp = () => {
+    if (mapLongPressTimer) {
+      clearTimeout(mapLongPressTimer);
+      setMapLongPressTimer(null);
+    }
+    setShowEnhancedMapHint(false);
   };
 
   const sendSOSAlert = async () => {
@@ -338,10 +365,18 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                 <motion.button
                   key={item.id}
                   onClick={() => handleNavClick(item, index)}
+                  onMouseDown={() => handleMapMouseDown(item, index)}
+                  onMouseUp={handleMapMouseUp}
+                  onMouseLeave={handleMapMouseUp}
+                  onTouchStart={() => handleMapMouseDown(item, index)}
+                  onTouchEnd={handleMapMouseUp}
                   disabled={sending}
                   className={cn(
                     "relative flex flex-col items-center px-3 py-2 transition-all duration-300",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
+                    item.id === "map" &&
+                      showEnhancedMapHint &&
+                      "bg-blue-100 rounded-lg",
                   )}
                   whileHover={{
                     scale: isSpecial ? 1.15 : 1.1,
@@ -420,6 +455,21 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
             })}
           </div>
         </div>
+
+        {/* Enhanced Navigation Hint */}
+        <AnimatePresence>
+          {showEnhancedMapHint && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-blue-600 text-white text-xs rounded-lg whitespace-nowrap"
+            >
+              🚀 Enhanced Navigation
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-600" />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </>
   );

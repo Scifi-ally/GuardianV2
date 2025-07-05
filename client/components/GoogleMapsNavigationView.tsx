@@ -160,22 +160,22 @@ export function GoogleMapsNavigationView({
         map: newMap,
         suppressMarkers: true, // We'll handle markers manually
         polylineOptions: {
-          strokeColor: "#000000", // Black for high contrast as requested
-          strokeWeight: 10, // Thicker for better visibility
-          strokeOpacity: 0.9,
+          strokeColor: "#1E40AF", // Blue color for better visibility
+          strokeWeight: 8, // Good thickness for visibility
+          strokeOpacity: 0.8,
           geodesic: true,
           icons: [
             {
               icon: {
                 path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                fillColor: "#000000",
+                fillColor: "#1E40AF",
                 fillOpacity: 1,
-                scale: 5,
+                scale: 4,
                 strokeColor: "#ffffff",
                 strokeWeight: 2,
               },
               offset: "0%",
-              repeat: "40px", // More frequent arrows
+              repeat: "60px", // Arrows every 60px
             },
           ],
         },
@@ -356,7 +356,7 @@ export function GoogleMapsNavigationView({
           console.log("🗺️ Map bounds fitted to route");
         }
 
-        console.log("✅ Route calculated and displayed with black color");
+        console.log("✅ Route calculated and displayed with blue color");
       } else {
         console.error("❌ Directions request failed:", {
           status,

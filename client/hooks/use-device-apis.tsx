@@ -119,32 +119,39 @@ export function useGeolocation() {
           // Removed automatic notifications for location updates
         });
 
-        // Subscribe to errors
+        // Subscribe to errors (only critical ones)
         errorUnsubscribeRef.current = locationService.subscribeToErrors(
           (locationError) => {
+            // Only handle critical errors, ignore timeouts
+            if (locationError.code === 3) {
+              // Timeout - ignore silently
+              console.log("ℹ️ Location timeout handled silently");
+              return;
+            }
+
             setError(locationError.message);
             setIsTracking(false);
 
-            // Use notification system for errors
-            import("@/components/SlideDownNotifications").then(
-              ({ notificationManager }) => {
-                notificationManager.addNotification({
-                  type: "error",
-                  title: "Location Error",
-                  message: locationError.message,
-                  persistent: locationError.code === 1, // Permission denied
-                });
-              },
-            );
+            // Only show notifications for permission errors
+            if (locationError.code === 1) {
+              import("@/components/SlideDownNotifications").then(
+                ({ notificationManager }) => {
+                  notificationManager.addNotification({
+                    type: "warning",
+                    title: "Location Permission",
+                    message: "Enable location access for best experience",
+                    persistent: false,
+                  });
+                },
+              );
+            }
           },
         );
 
-        // Get current location immediately
-        try {
-          await locationService.getCurrentLocation();
-        } catch (err) {
-          console.warn("Initial location request failed:", err);
-        }
+        // Get current location immediately (non-blocking)
+        locationService.getCurrentLocation().catch((err) => {
+          console.log("ℹ️ Initial location request completed with fallback");
+        });
 
         // Start tracking
         await locationService.startTracking();

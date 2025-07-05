@@ -36,174 +36,114 @@ export function LocationAutocompleteInput({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const [inputRect, setInputRect] = useState<DOMRect | null>(null);
+  const [autocompleteService, setAutocompleteService] =
+    useState<google.maps.places.AutocompleteService | null>(null);
+  const [placesService, setPlacesService] =
+    useState<google.maps.places.PlacesService | null>(null);
 
-  // Mock autocomplete service (replace with actual Google Places API)
-  const getMockSuggestions = (query: string): LocationSuggestion[] => {
+  // Initialize Google Places services
+  useEffect(() => {
+    if (window.google?.maps?.places) {
+      const service = new google.maps.places.AutocompleteService();
+      setAutocompleteService(service);
+
+      // Create a dummy map for PlacesService (required)
+      const map = new google.maps.Map(document.createElement("div"));
+      const placesServiceInstance = new google.maps.places.PlacesService(map);
+      setPlacesService(placesServiceInstance);
+
+      console.log("✅ Google Places services initialized");
+    } else {
+      console.warn("⚠️ Google Places API not available, using fallback");
+    }
+  }, []);
+
+  // Get real Google Places suggestions
+  const getGooglePlacesSuggestions = async (
+    query: string,
+  ): Promise<LocationSuggestion[]> => {
+    if (!autocompleteService || query.length < 2) {
+      return [];
+    }
+
+    return new Promise((resolve) => {
+      const request = {
+        input: query,
+        types: ["establishment", "geocode"],
+        fields: ["place_id", "description", "structured_formatting"],
+      };
+
+      autocompleteService.getPlacePredictions(
+        request,
+        (predictions, status) => {
+          if (
+            status === google.maps.places.PlacesServiceStatus.OK &&
+            predictions
+          ) {
+            const suggestions = predictions.map((prediction) => ({
+              place_id: prediction.place_id,
+              description: prediction.description,
+              main_text: prediction.structured_formatting.main_text,
+              secondary_text:
+                prediction.structured_formatting.secondary_text || "",
+              types: prediction.types || [],
+            }));
+            resolve(suggestions);
+          } else {
+            console.warn("Places API error:", status);
+            resolve(getFallbackSuggestions(query));
+          }
+        },
+      );
+    });
+  };
+
+  // Fallback suggestions when Google Places API fails
+  const getFallbackSuggestions = (query: string): LocationSuggestion[] => {
     if (query.length < 2) return [];
 
-    const recentSearches = [
-      {
-        place_id: "recent_1",
-        description: "Home",
-        main_text: "Home",
-        secondary_text: "123 Main Street, Anytown",
-        types: ["premise"],
-      },
-      {
-        place_id: "recent_2",
-        description: "Work",
-        main_text: "Work",
-        secondary_text: "456 Business Ave, Downtown",
-        types: ["establishment"],
-      },
-    ];
-
     const mockPlaces = [
-      // Coffee shops
       {
-        place_id: "1",
+        place_id: "fallback_1",
         description: "Starbucks Coffee",
         main_text: "Starbucks",
-        secondary_text: "Coffee shop • 0.3 miles away",
+        secondary_text: "Coffee shop nearby",
         types: ["cafe", "food", "establishment"],
       },
       {
-        place_id: "coffee2",
-        description: "Blue Bottle Coffee",
-        main_text: "Blue Bottle Coffee",
-        secondary_text: "Coffee shop • 0.5 miles away",
-        types: ["cafe", "food", "establishment"],
-      },
-      // Restaurants
-      {
-        place_id: "rest1",
-        description: "McDonald's",
-        main_text: "McDonald's",
-        secondary_text: "Fast food • 0.2 miles away",
-        types: ["restaurant", "food", "establishment"],
-      },
-      {
-        place_id: "rest2",
-        description: "Chipotle Mexican Grill",
-        main_text: "Chipotle",
-        secondary_text: "Mexican restaurant • 0.7 miles away",
-        types: ["restaurant", "food", "establishment"],
-      },
-      // Shopping
-      {
-        place_id: "3",
+        place_id: "fallback_2",
         description: "City Mall",
         main_text: "City Mall",
-        secondary_text: "Shopping center • 1.2 miles away",
+        secondary_text: "Shopping center",
         types: ["shopping_mall", "establishment"],
       },
       {
-        place_id: "shop1",
-        description: "Target",
-        main_text: "Target",
-        secondary_text: "Department store • 0.9 miles away",
-        types: ["store", "establishment"],
-      },
-      {
-        place_id: "shop2",
-        description: "Whole Foods Market",
-        main_text: "Whole Foods",
-        secondary_text: "Grocery store • 0.6 miles away",
-        types: ["grocery_or_supermarket", "establishment"],
-      },
-      // Public places
-      {
-        place_id: "2",
+        place_id: "fallback_3",
         description: "Central Library",
         main_text: "Central Library",
-        secondary_text: "Public library • 0.8 miles away",
+        secondary_text: "Public library",
         types: ["library", "establishment"],
       },
       {
-        place_id: "4",
-        description: "University Campus",
-        main_text: "University Campus",
-        secondary_text: "Educational institution • 2.1 miles away",
-        types: ["university", "establishment"],
-      },
-      {
-        place_id: "5",
-        description: "Downtown Hospital",
-        main_text: "Downtown Hospital",
-        secondary_text: "Medical center • 1.5 miles away",
-        types: ["hospital", "establishment"],
-      },
-      {
-        place_id: "6",
-        description: "City Park",
-        main_text: "City Park",
-        secondary_text: "Public park • 0.6 miles away",
-        types: ["park", "establishment"],
-      },
-      // Transport
-      {
-        place_id: "7",
-        description: "Train Station",
-        main_text: "Main Train Station",
-        secondary_text: "Transit station • 1.8 miles away",
+        place_id: "fallback_4",
+        description: "Main Train Station",
+        main_text: "Train Station",
+        secondary_text: "Transit station",
         types: ["transit_station", "establishment"],
-      },
-      {
-        place_id: "airport1",
-        description: "San Francisco International Airport",
-        main_text: "SFO Airport",
-        secondary_text: "Airport • 12 miles away",
-        types: ["airport", "establishment"],
-      },
-      // Services
-      {
-        place_id: "8",
-        description: "Gas Station",
-        main_text: "Shell Gas Station",
-        secondary_text: "Fuel station • 0.4 miles away",
-        types: ["gas_station", "establishment"],
-      },
-      {
-        place_id: "bank1",
-        description: "Bank of America",
-        main_text: "Bank of America",
-        secondary_text: "Bank • 0.3 miles away",
-        types: ["bank", "establishment"],
-      },
-      {
-        place_id: "gym1",
-        description: "24 Hour Fitness",
-        main_text: "24 Hour Fitness",
-        secondary_text: "Gym • 0.8 miles away",
-        types: ["gym", "establishment"],
       },
     ];
 
-    // Combine recent searches and places
-    const allSuggestions = [...recentSearches, ...mockPlaces];
-
-    // Filter based on query with fuzzy matching
     const queryLower = query.toLowerCase();
-    const filtered = allSuggestions.filter((place) => {
-      const mainMatch = place.main_text.toLowerCase().includes(queryLower);
-      const descMatch = place.description.toLowerCase().includes(queryLower);
-      const wordMatch = place.main_text
-        .toLowerCase()
-        .split(" ")
-        .some((word) => word.startsWith(queryLower));
-      return mainMatch || descMatch || wordMatch;
-    });
+    const filtered = mockPlaces.filter(
+      (place) =>
+        place.main_text.toLowerCase().includes(queryLower) ||
+        place.description.toLowerCase().includes(queryLower),
+    );
 
-    // If no matches, show some default suggestions
-    if (filtered.length === 0) {
-      return allSuggestions.slice(0, 4);
-    }
-
-    // Prioritize exact matches and recent searches
-    return filtered.slice(0, 6);
+    return filtered.length > 0 ? filtered : mockPlaces.slice(0, 3);
   };
 
-  // Handle input changes with immediate suggestions
+  // Handle input changes with debounced search
   useEffect(() => {
     console.log(`🔍 Input value changed: "${value}"`);
 
@@ -220,20 +160,41 @@ export function LocationAutocompleteInput({
       return;
     }
 
-    // Show suggestions immediately for any input
-    const results = getMockSuggestions(value);
-    console.log(
-      `🔍 Immediate search for "${value}": ${results.length} results found`,
-    );
-    console.log(
-      "📍 Suggestions:",
-      results.map((r) => r.main_text),
-    );
+    if (value.length < 2) {
+      return;
+    }
 
-    setSuggestions(results);
-    setShowSuggestions(true);
-    setIsLoading(false);
-  }, [value]);
+    setIsLoading(true);
+
+    // Debounce search requests
+    const searchTimeout = setTimeout(async () => {
+      try {
+        const results = autocompleteService
+          ? await getGooglePlacesSuggestions(value)
+          : getFallbackSuggestions(value);
+
+        console.log(
+          `🔍 Search for "${value}": ${results.length} results found`,
+        );
+        console.log(
+          "📍 Suggestions:",
+          results.map((r) => r.main_text),
+        );
+
+        setSuggestions(results);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error("Search error:", error);
+        const fallbackResults = getFallbackSuggestions(value);
+        setSuggestions(fallbackResults);
+        setShowSuggestions(true);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(searchTimeout);
+  }, [value, autocompleteService]);
 
   // Update input position on scroll/resize
   useEffect(() => {
@@ -284,13 +245,69 @@ export function LocationAutocompleteInput({
   };
 
   // Handle suggestion selection
-  const handleSelectSuggestion = (suggestion: LocationSuggestion) => {
-    onChange(suggestion.main_text);
+  const handleSelectSuggestion = async (suggestion: LocationSuggestion) => {
+    // Immediately hide suggestions and clear state to prevent double-trigger
     setShowSuggestions(false);
     setSelectedIndex(-1);
+    setSuggestions([]);
 
-    // Mock place details (replace with actual Google Places API)
-    const mockPlace = {
+    onChange(suggestion.main_text);
+    setIsLoading(true);
+
+    try {
+      if (
+        placesService &&
+        suggestion.place_id &&
+        !suggestion.place_id.startsWith("fallback_")
+      ) {
+        // Get detailed place information from Google Places API
+        const request = {
+          placeId: suggestion.place_id,
+          fields: [
+            "place_id",
+            "name",
+            "formatted_address",
+            "geometry",
+            "types",
+          ],
+        };
+
+        placesService.getDetails(request, (place, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+            console.log("✅ Place details retrieved:", place);
+            onPlaceSelect({
+              place_id: place.place_id,
+              name: place.name,
+              formatted_address: place.formatted_address,
+              geometry: {
+                location: {
+                  lat: place.geometry?.location?.lat() || 37.7749,
+                  lng: place.geometry?.location?.lng() || -122.4194,
+                },
+              },
+              types: place.types || [],
+            });
+          } else {
+            console.warn("Failed to get place details, using fallback");
+            useFallbackPlace(suggestion);
+          }
+          setIsLoading(false);
+        });
+      } else {
+        // Use fallback for non-Google places or when service unavailable
+        useFallbackPlace(suggestion);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error getting place details:", error);
+      useFallbackPlace(suggestion);
+      setIsLoading(false);
+    }
+  };
+
+  // Fallback place creation
+  const useFallbackPlace = (suggestion: LocationSuggestion) => {
+    const fallbackPlace = {
       place_id: suggestion.place_id,
       name: suggestion.main_text,
       formatted_address: suggestion.description,
@@ -300,9 +317,10 @@ export function LocationAutocompleteInput({
           lng: -122.4194 + (Math.random() - 0.5) * 0.1,
         },
       },
+      types: suggestion.types,
     };
 
-    onPlaceSelect(mockPlace);
+    onPlaceSelect(fallbackPlace);
   };
 
   // Get icon for place type
@@ -356,24 +374,39 @@ export function LocationAutocompleteInput({
                 place_id: "recent_1",
                 description: "Home",
                 main_text: "Home",
-                secondary_text: "123 Main Street, Anytown",
+                secondary_text: "Saved location",
                 types: ["premise"],
               },
               {
                 place_id: "recent_2",
                 description: "Work",
                 main_text: "Work",
-                secondary_text: "456 Business Ave, Downtown",
+                secondary_text: "Saved location",
                 types: ["establishment"],
+              },
+              {
+                place_id: "recent_3",
+                description: "Starbucks",
+                main_text: "Starbucks",
+                secondary_text: "Recent search",
+                types: ["cafe"],
               },
             ];
             setSuggestions(recentSearches);
             setShowSuggestions(true);
           }
         }}
-        onBlur={() => {
+        onBlur={(e) => {
+          // Don't hide if clicking on suggestions
+          const relatedTarget = e.relatedTarget as HTMLElement;
+          if (
+            relatedTarget &&
+            relatedTarget.closest("[data-suggestion-dropdown]")
+          ) {
+            return;
+          }
           // Delay hiding to allow click on suggestions
-          setTimeout(() => setShowSuggestions(false), 150);
+          setTimeout(() => setShowSuggestions(false), 200);
         }}
         placeholder={placeholder}
         className={cn("pr-10", isLoading && "animate-pulse", className)}
@@ -406,6 +439,7 @@ export function LocationAutocompleteInput({
         );
         return createPortal(
           <Card
+            data-suggestion-dropdown="true"
             className="fixed z-[9999] max-h-60 overflow-y-auto bg-white border border-gray-200 shadow-lg"
             style={{
               top: inputRect.bottom + window.scrollY + 4,

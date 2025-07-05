@@ -25,7 +25,8 @@ import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal";
 import { UserStatsManager } from "@/components/UserStatsManager";
 import { ProfileErrorBoundary } from "@/components/ProfileErrorBoundary";
 import { InteractiveSafetyTutorial } from "@/components/InteractiveSafetyTutorial";
-import { useAuth } from "@/contexts/AuthContext";
+import { AuthModeSwitcher } from "@/components/AuthModeSwitcher";
+import { useAuth } from "@/contexts/UnifiedAuthContext";
 import { EmergencyKeyService } from "@/services/emergencyKeyService";
 import { SOSService } from "@/services/sosService";
 import { Button } from "@/components/ui/button";
@@ -83,13 +84,24 @@ const buttonVariants = {
 };
 
 export default function Profile() {
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, logout, loading: authLoading } = useAuth();
   const [guardianKey, setGuardianKey] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
   const [showSafetyTutorial, setShowSafetyTutorial] = useState(false);
   const [activeAlertsCount, setActiveAlertsCount] = useState(0);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("🔍 Profile Debug:", {
+      currentUser,
+      userProfile,
+      hasLogout: typeof logout === "function",
+      guardianKey,
+      loading,
+    });
+  }, [currentUser, userProfile, logout, guardianKey, loading]);
 
   useEffect(() => {
     loadGuardianKey();
@@ -181,14 +193,93 @@ export default function Profile() {
   };
 
   const handleLogout = async () => {
+    console.log("🔄 Attempting logout...");
     try {
+      if (typeof logout !== "function") {
+        console.error("❌ Logout is not a function:", logout);
+        toast.error("Logout function not available");
+        return;
+      }
+
+      console.log("✅ Calling logout function...");
       await logout();
+      console.log("✅ Logout completed");
+      toast.success("Logged out successfully");
     } catch (error) {
-      console.error("Failed to logout:", error);
+      console.error("❌ Failed to logout:", error);
+      toast.error("Failed to logout");
     }
   };
 
   const emergencyContacts = userProfile?.emergencyContacts || [];
+
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-600">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle missing user data
+  if (!currentUser || !userProfile) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto px-4">
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Account Not Found
+            </h2>
+            <p className="text-gray-600">Unable to load your profile data.</p>
+            <p className="text-sm text-gray-500">
+              This might be due to authentication issues or missing profile
+              data.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <Button
+              onClick={() => window.location.reload()}
+              className="w-full bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Reload Page
+            </Button>
+
+            <Button
+              onClick={async () => {
+                try {
+                  await logout();
+                  window.location.href = "/auth";
+                } catch (error) {
+                  console.error("Logout error:", error);
+                  // Force navigation even if logout fails
+                  window.location.href = "/auth";
+                }
+              }}
+              variant="outline"
+              className="w-full border-gray-300 hover:bg-gray-50"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out & Go to Login
+            </Button>
+
+            <Button
+              onClick={() => (window.location.href = "/auth")}
+              variant="outline"
+              className="w-full border-gray-300 hover:bg-gray-50"
+            >
+              <User className="h-4 w-4 mr-2" />
+              Go to Sign In/Sign Up
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white pb-24">
@@ -415,6 +506,11 @@ export default function Profile() {
                 </div>
               </Button>
             </div>
+
+            <Separator />
+
+            {/* Auth Mode Switcher */}
+            <AuthModeSwitcher />
 
             <Separator />
 

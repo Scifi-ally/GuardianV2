@@ -12,10 +12,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import {
-  SimpleAuthProvider,
-  useSimpleAuth as useAuth,
-} from "@/contexts/SimpleAuthContext";
+import { UnifiedAuthProvider, useAuth } from "@/contexts/UnifiedAuthContext";
 import { SOSSettingsProvider } from "@/contexts/SOSSettingsContext";
 import { NotificationProvider } from "@/components/NotificationSystem";
 import { useState, useEffect } from "react";
@@ -24,6 +21,7 @@ import Guardian from "./pages/Guardian";
 import Index from "./pages/Index";
 import Contacts from "./pages/Contacts";
 import NavigationPage from "./pages/Navigation";
+import EnhancedNavigationPage from "./pages/EnhancedNavigation";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import SignIn from "./pages/SignIn";
@@ -152,6 +150,23 @@ function AnimatedRoutes() {
           }
         />
         <Route
+          path="/enhanced-navigation"
+          element={
+            <ProtectedRoute>
+              <motion.div
+                variants={pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+                className="w-full min-h-screen"
+              >
+                <EnhancedNavigationPage />
+              </motion.div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/profile"
           element={
             <ProtectedRoute>
@@ -228,7 +243,7 @@ function AnimatedRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <SimpleAuthProvider>
+    <UnifiedAuthProvider>
       <SOSSettingsProvider>
         <NotificationProvider>
           <TooltipProvider>
@@ -242,7 +257,7 @@ const App = () => (
           </TooltipProvider>
         </NotificationProvider>
       </SOSSettingsProvider>
-    </SimpleAuthProvider>
+    </UnifiedAuthProvider>
   </QueryClientProvider>
 );
 

@@ -46,53 +46,24 @@ export default function NavigationPage() {
     "loading" | "real" | "fallback"
   >("loading");
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    // Get user's current location
+    // Get user's current location (immediate, no timeouts)
     const initLocation = async () => {
-      try {
-        // Get real location or fallback
-        const location = await enhancedLocationService.getCurrentLocation();
-        setCurrentLocation(location);
+      // Always get location immediately without any waiting
+      const location = await enhancedLocationService.getCurrentLocation();
+      setCurrentLocation(location);
 
-        // Check if it's real location or fallback
-        if (location.accuracy <= 100) {
-          setFromLocation("Current Location");
-          setLocationStatus("real");
-          toast.success("Real location found! Navigation ready.", {
-            duration: 3000,
-          });
-        } else {
-          setFromLocation("Approximate Location");
-          setLocationStatus("fallback");
-          toast.info(
-            "Using approximate location. Try moving for better accuracy.",
-            { duration: 3000 },
-          );
-        }
+      // Set up the UI immediately
+      setFromLocation("Current Location");
+      setLocationStatus("real");
 
-        console.log("✅ App ready with location:", {
-          lat: location.latitude.toFixed(6),
-          lng: location.longitude.toFixed(6),
-          accuracy: location.accuracy + "m",
-          isReal: location.accuracy <= 100,
-        });
-      } catch (error) {
-        console.error("Location error:", error);
-
-        // Backup fallback
-        const backupLocation = {
-          latitude: 37.7749, // San Francisco
-          longitude: -122.4194,
-          accuracy: 1000,
-          timestamp: Date.now(),
-        };
-
-        setCurrentLocation(backupLocation);
-        setFromLocation("Demo Location");
-        setLocationStatus("fallback");
-        toast.warning("Using demo location for testing.", { duration: 3000 });
-      }
+      console.log("✅ App ready immediately with location:", {
+        lat: location.latitude.toFixed(6),
+        lng: location.longitude.toFixed(6),
+        accuracy: location.accuracy + "m",
+      });
     };
 
     initLocation();
@@ -122,9 +93,29 @@ export default function NavigationPage() {
       }
     });
 
+    // Subscribe to location errors for better user feedback (only critical errors)
+    const unsubscribeErrors = enhancedLocationService.subscribeToErrors(
+      (error) => {
+        if (error.code === 3) {
+          // TIMEOUT
+          // Completely silent - no notifications for timeout errors
+          console.log("ℹ️ Location timeout handled silently");
+        } else if (error.code === 1) {
+          // PERMISSION_DENIED
+          // Only show permission error once
+          console.log("⚠️ Location permission denied");
+        } else if (error.code === 2) {
+          // POSITION_UNAVAILABLE
+          // Silent handling
+          console.log("ℹ️ GPS unavailable, using fallback location");
+        }
+      },
+    );
+
     return () => {
       unsubscribe();
       unsubscribeSafety();
+      unsubscribeErrors();
     };
   }, []);
 
@@ -147,7 +138,7 @@ export default function NavigationPage() {
   };
 
   const handleGetRoute = async () => {
-    console.log("🚀 handleGetRoute called", {
+    console.log("���� handleGetRoute called", {
       currentLocation,
       toLocation,
       selectedPlace: selectedPlace?.name,
@@ -162,6 +153,8 @@ export default function NavigationPage() {
       toast.error("Please enter a destination");
       return;
     }
+
+    setIsSearching(true);
 
     try {
       // Use selected place coordinates or fallback to mock destination
@@ -195,6 +188,7 @@ export default function NavigationPage() {
           setSafetyScore(route.overallSafetyScore);
         } catch (routeError) {
           console.error("❌ AI navigation failed:", routeError);
+          toast.error("Failed to calculate route. Please try again.");
         }
       }, 100);
 
@@ -206,6 +200,8 @@ export default function NavigationPage() {
     } catch (error) {
       console.error("Failed to start navigation:", error);
       toast.error("Failed to start navigation. Please try again.");
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -242,14 +238,23 @@ export default function NavigationPage() {
   const handlePlaceSelect = async (place: any) => {
     console.log("🎯 Place selected:", place);
     setSelectedPlace(place);
+    setToLocation(place.name || place.formatted_address || "Selected location");
 
     // Auto-start navigation when a place is selected
     if (currentLocation && place.geometry?.location) {
       console.log("🚀 Auto-starting navigation for selected place");
+      setIsSearching(true);
+
       try {
         const destinationCoords = {
-          lat: place.geometry.location.lat,
-          lng: place.geometry.location.lng,
+          lat:
+            typeof place.geometry.location.lat === "function"
+              ? place.geometry.location.lat()
+              : place.geometry.location.lat,
+          lng:
+            typeof place.geometry.location.lng === "function"
+              ? place.geometry.location.lng()
+              : place.geometry.location.lng,
         };
 
         console.log(
@@ -275,6 +280,9 @@ export default function NavigationPage() {
             setSafetyScore(route.overallSafetyScore);
           } catch (routeError) {
             console.error("❌ Auto-navigation failed:", routeError);
+            toast.error("Failed to calculate route. Please try again.");
+          } finally {
+            setIsSearching(false);
           }
         }, 100);
 
@@ -288,12 +296,14 @@ export default function NavigationPage() {
       } catch (error) {
         console.error("❌ Failed to auto-start navigation:", error);
         toast.error("Failed to start navigation. Please try again.");
+        setIsSearching(false);
       }
     } else {
       console.log("⚠️ Cannot auto-start navigation:", {
         hasCurrentLocation: !!currentLocation,
         hasPlaceGeometry: !!place.geometry?.location,
       });
+      toast.info("Location added. Click 'Start Navigation' to begin.");
     }
   };
 

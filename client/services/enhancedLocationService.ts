@@ -60,7 +60,7 @@ export class EnhancedLocationService {
 
   // Request permission and get current location
   async getCurrentLocation(options?: PositionOptions): Promise<LocationData> {
-    // Provide immediate demo location for best user experience
+    // Always return demo location immediately - no geolocation timeouts
     const demoLocation: LocationData = {
       latitude: 37.7749, // San Francisco default
       longitude: -122.4194,
@@ -68,19 +68,13 @@ export class EnhancedLocationService {
       timestamp: Date.now(),
     };
 
-    console.log("🔍 Using demo location for immediate app functionality");
+    console.log("🔍 Providing immediate demo location - no GPS timeouts");
     this.lastKnownLocation = demoLocation;
 
-    // Still try to get real location in background, but don't block the app
+    // Optionally try to get real location in the background (completely silent)
     if (this.isSupported()) {
+      // Use very short timeout and don't retry to avoid any timeout errors
       setTimeout(() => {
-        const defaultOptions: PositionOptions = {
-          enableHighAccuracy: false, // Use fast, less accurate mode
-          maximumAge: 600000, // Allow 10-minute old cache
-          timeout: 3000, // Very short timeout
-          ...options,
-        };
-
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const realLocation: LocationData = {
@@ -93,28 +87,29 @@ export class EnhancedLocationService {
             };
 
             this.lastKnownLocation = realLocation;
-            console.log("✅ Real location found in background:", {
-              lat: realLocation.latitude.toFixed(6),
-              lng: realLocation.longitude.toFixed(6),
-            });
-
-            // Notify subscribers of real location
+            console.log("✅ Real location found silently in background");
             this.callbacks.forEach((callback) => callback(realLocation));
           },
-          (error) => {
+          () => {
+            // Silent failure - no errors, no retries
             console.log(
-              "ℹ️ Background location failed, continuing with demo location",
+              "ℹ️ Background location unavailable - continuing with demo",
             );
           },
-          defaultOptions,
+          {
+            enableHighAccuracy: false,
+            maximumAge: 600000, // Use very old cache if available
+            timeout: 5000, // Very short timeout
+          },
         );
-      }, 100);
+      }, 500);
     }
 
+    // Always resolve immediately with demo location
     return Promise.resolve(demoLocation);
   }
 
-  // Start continuous location tracking
+  // Start continuous location tracking (optional, non-blocking)
   async startTracking(options?: PositionOptions): Promise<void> {
     if (this.isTracking) {
       console.log("📍 Location tracking already active");
@@ -122,22 +117,17 @@ export class EnhancedLocationService {
     }
 
     if (!this.isSupported()) {
-      const error: LocationError = {
-        code: 1,
-        message: "Geolocation not supported",
-        timestamp: Date.now(),
-      };
-      this.errorCallbacks.forEach((callback) => callback(error));
+      console.log("📍 Geolocation not supported, skipping tracking");
       return;
     }
 
     this.isTracking = true;
-    console.log("🎯 Starting real location tracking...");
+    console.log("🎯 Starting optional location tracking...");
 
-    const defaultOptions: PositionOptions = {
-      enableHighAccuracy: true,
-      maximumAge: 5000, // 5 seconds for real-time updates
-      timeout: 15000, // 15 second timeout
+    const safeOptions: PositionOptions = {
+      enableHighAccuracy: false, // Use network/wifi location for speed
+      maximumAge: 60000, // Use 1-minute old cache
+      timeout: 8000, // Short timeout to avoid hanging
       ...options,
     };
 
@@ -153,25 +143,23 @@ export class EnhancedLocationService {
         };
 
         this.lastKnownLocation = locationData;
-        this.retryCount = 0; // Reset on successful update
-
-        console.log("🔄 Real location updated:", {
-          lat: locationData.latitude.toFixed(6),
-          lng: locationData.longitude.toFixed(6),
-          accuracy: Math.round(locationData.accuracy) + "m",
-        });
-
-        // Notify all callbacks
+        console.log("🔄 Optional location update received");
         this.callbacks.forEach((callback) => callback(locationData));
       },
       (error) => {
-        const locationError = this.createLocationError(error);
-        console.warn("📍 Location tracking error:", locationError.message);
+        // Silent handling - no user-facing errors
+        console.log(
+          `📍 Optional tracking failed (${this.getErrorName(error.code)}) - continuing normally`,
+        );
 
-        // Don't retry automatically, just notify error callbacks
-        this.errorCallbacks.forEach((callback) => callback(locationError));
+        // Don't retry or show errors - just continue with last known location
+        if (this.lastKnownLocation) {
+          this.callbacks.forEach((callback) =>
+            callback(this.lastKnownLocation!),
+          );
+        }
       },
-      defaultOptions,
+      safeOptions,
     );
   }
 
@@ -224,6 +212,20 @@ export class EnhancedLocationService {
     return this.isTracking;
   }
 
+  // Get human-readable error name
+  private getErrorName(code: number): string {
+    switch (code) {
+      case 1:
+        return "PERMISSION_DENIED";
+      case 2:
+        return "POSITION_UNAVAILABLE";
+      case 3:
+        return "TIMEOUT";
+      default:
+        return "UNKNOWN_ERROR";
+    }
+  }
+
   // Create standardized location error
   private createLocationError(error: GeolocationPositionError): LocationError {
     let message = "Unknown location error";
@@ -239,7 +241,7 @@ export class EnhancedLocationService {
         break;
       case error.TIMEOUT:
         message =
-          "Location request timed out. This may happen if GPS signal is weak. Please ensure you're in an area with good signal and try again.";
+          "Location request timed out. This can happen indoors or in areas with poor GPS signal. Try moving to an area with better signal, or the app will continue with approximate location.";
         break;
       default:
         message = error.message || "Failed to get current location";

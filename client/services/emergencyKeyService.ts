@@ -35,29 +35,30 @@ export class EmergencyKeyService {
    * Check if a guardian key already exists
    */
   static async isKeyUnique(guardianKey: string): Promise<boolean> {
+    // Always check localStorage first (works for both demo and regular users)
+    const localKeyData = localStorage.getItem(
+      `guardian_key_data_${guardianKey}`,
+    );
+    if (localKeyData) {
+      console.log(`🔑 Guardian key ${guardianKey} exists in localStorage`);
+      return false; // Key exists in localStorage
+    }
+
+    // For additional safety, try Firebase if available
     try {
       const keyQuery = query(
         collection(db, "guardianKeys"),
         where("guardianKey", "==", guardianKey),
       );
       const querySnapshot = await getDocs(keyQuery);
-      return querySnapshot.empty;
+      const isUnique = querySnapshot.empty;
+      console.log(`🔥 Firebase uniqueness check for ${guardianKey}:`, isUnique);
+      return isUnique;
     } catch (error) {
-      console.warn(
-        "Error checking key uniqueness (Firebase unavailable), assuming unique:",
-        error,
+      console.log(
+        `📱 Firebase unavailable for uniqueness check, localStorage says ${guardianKey} is unique`,
       );
-
-      // When Firebase is unavailable, check localStorage for existing keys
-      const localKeyData = localStorage.getItem(
-        `guardian_key_data_${guardianKey}`,
-      );
-      if (localKeyData) {
-        return false; // Key exists in localStorage
-      }
-
-      // If no local data and Firebase is unavailable, assume key is unique
-      // This is safe because localStorage acts as our fallback database
+      // If Firebase is unavailable but localStorage doesn't have the key, it's unique
       return true;
     }
   }
@@ -107,11 +108,13 @@ export class EmergencyKeyService {
       // Check if user already has a guardian key
       const existingKey = await this.getUserGuardianKey(userId);
       if (existingKey) {
+        console.log(`✅ User ${userId} already has guardian key:`, existingKey);
         return { success: true, guardianKey: existingKey };
       }
 
       // Generate new unique key
       const guardianKey = await this.generateUniqueGuardianKey();
+      console.log(`🔑 Generated new guardian key for ${userId}:`, guardianKey);
 
       const keyData: EmergencyKeyData = {
         guardianKey,
@@ -122,8 +125,19 @@ export class EmergencyKeyService {
         isActive: true,
       };
 
+      // For demo users, use localStorage directly to avoid Firebase
+      if (userId.startsWith("demo-")) {
+        localStorage.setItem(`guardian_key_${userId}`, guardianKey);
+        localStorage.setItem(
+          `guardian_key_data_${guardianKey}`,
+          JSON.stringify(keyData),
+        );
+        console.log(`📱 Stored demo user guardian key in localStorage`);
+        return { success: true, guardianKey };
+      }
+
       try {
-        // Store in guardianKeys collection
+        // Store in guardianKeys collection for real users
         await setDoc(doc(db, "guardianKeys", guardianKey), keyData);
 
         // Also store in user document for easy access
@@ -138,10 +152,11 @@ export class EmergencyKeyService {
           },
           { merge: true },
         );
+        console.log(`✅ Stored guardian key in Firebase for user ${userId}`);
       } catch (firestoreError) {
         console.warn(
-          "Firestore write failed for guardian key, using localStorage fallback:",
-          firestoreError,
+          "Firestore write failed, using localStorage fallback:",
+          firestoreError.message,
         );
 
         // Fallback: Store in localStorage
@@ -157,6 +172,7 @@ export class EmergencyKeyService {
       console.error("Error creating guardian key:", error);
 
       // Last resort: generate a local-only unique key
+      console.log(`🔄 Generating fallback guardian key for ${userId}`);
       let fallbackKey;
       let attempts = 0;
       do {
@@ -167,19 +183,22 @@ export class EmergencyKeyService {
         attempts < 10
       );
 
+      const fallbackKeyData = {
+        guardianKey: fallbackKey,
+        userId,
+        displayName,
+        email,
+        createdAt: new Date(),
+        isActive: true,
+      };
+
       localStorage.setItem(`guardian_key_${userId}`, fallbackKey);
       localStorage.setItem(
         `guardian_key_data_${fallbackKey}`,
-        JSON.stringify({
-          guardianKey: fallbackKey,
-          userId,
-          displayName,
-          email,
-          createdAt: new Date(),
-          isActive: true,
-        }),
+        JSON.stringify(fallbackKeyData),
       );
 
+      console.log(`✅ Generated fallback guardian key:`, fallbackKey);
       return { success: true, guardianKey: fallbackKey };
     }
   }
@@ -188,6 +207,16 @@ export class EmergencyKeyService {
    * Get guardian key for a user
    */
   static async getUserGuardianKey(userId: string): Promise<string | null> {
+    // For demo users, use localStorage directly to avoid Firebase permissions
+    if (userId.startsWith("demo-")) {
+      const localKey = localStorage.getItem(`guardian_key_${userId}`);
+      console.log(
+        `📱 Demo user ${userId} guardian key from localStorage:`,
+        localKey,
+      );
+      return localKey || null;
+    }
+
     try {
       const userDoc = await getDoc(doc(db, "users", userId));
       if (userDoc.exists()) {
@@ -198,9 +227,9 @@ export class EmergencyKeyService {
       const localKey = localStorage.getItem(`guardian_key_${userId}`);
       return localKey || null;
     } catch (error) {
-      console.error(
-        "Error getting user guardian key, checking localStorage:",
-        error,
+      console.warn(
+        "Firebase unavailable, using localStorage fallback:",
+        error.message,
       );
 
       // Fallback: Check localStorage
@@ -215,40 +244,39 @@ export class EmergencyKeyService {
   static async findUserByGuardianKey(
     guardianKey: string,
   ): Promise<EmergencyKeyData | null> {
-    try {
-      const keyDoc = await getDoc(doc(db, "guardianKeys", guardianKey));
-      if (keyDoc.exists()) {
-        return keyDoc.data() as EmergencyKeyData;
-      }
-
-      // Fallback: Check localStorage
-      const localKeyData = localStorage.getItem(
-        `guardian_key_data_${guardianKey}`,
-      );
-      if (localKeyData) {
+    // Check localStorage first (works for both demo and regular users)
+    const localKeyData = localStorage.getItem(
+      `guardian_key_data_${guardianKey}`,
+    );
+    if (localKeyData) {
+      try {
         const keyData = JSON.parse(localKeyData) as EmergencyKeyData;
         // Convert date string back to Date object
         keyData.createdAt = new Date(keyData.createdAt);
+        console.log(`📱 Found guardian key data in localStorage:`, keyData);
+        return keyData;
+      } catch (parseError) {
+        console.warn(
+          "Error parsing localStorage guardian key data:",
+          parseError,
+        );
+      }
+    }
+
+    // If not in localStorage, try Firebase for real users
+    try {
+      const keyDoc = await getDoc(doc(db, "guardianKeys", guardianKey));
+      if (keyDoc.exists()) {
+        const keyData = keyDoc.data() as EmergencyKeyData;
+        console.log(`🔥 Found guardian key data in Firebase:`, keyData);
         return keyData;
       }
-
       return null;
     } catch (error) {
-      console.error(
-        "Error finding user by guardian key, checking localStorage:",
-        error,
+      console.warn(
+        "Firebase unavailable, localStorage was already checked:",
+        error.message,
       );
-
-      // Fallback: Check localStorage
-      const localKeyData = localStorage.getItem(
-        `guardian_key_data_${guardianKey}`,
-      );
-      if (localKeyData) {
-        const keyData = JSON.parse(localKeyData) as EmergencyKeyData;
-        keyData.createdAt = new Date(keyData.createdAt);
-        return keyData;
-      }
-
       return null;
     }
   }

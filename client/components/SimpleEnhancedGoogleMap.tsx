@@ -67,6 +67,12 @@ export function GoogleMap({
   const [trafficLayers, setTrafficLayers] = useState<google.maps.Polyline[]>(
     [],
   );
+  const [directionsService, setDirectionsService] =
+    useState<google.maps.DirectionsService | null>(null);
+  const [directionsRenderer, setDirectionsRenderer] =
+    useState<google.maps.DirectionsRenderer | null>(null);
+  const [destinationMarker, setDestinationMarker] =
+    useState<google.maps.Marker | null>(null);
   // Safety polygons removed - no map coloring
   const { addNotification } = useNotifications();
 
@@ -111,7 +117,39 @@ export function GoogleMap({
         backgroundColor: "#f5f5f5",
       });
 
-      console.log("🗺️ Google Map created successfully");
+      // Initialize directions services
+      const directionsServiceInstance = new google.maps.DirectionsService();
+      const directionsRendererInstance = new google.maps.DirectionsRenderer({
+        map: newMap,
+        suppressMarkers: true, // We'll handle markers manually
+        polylineOptions: {
+          strokeColor: "#1E40AF", // Blue color for visibility
+          strokeWeight: 8,
+          strokeOpacity: 0.8,
+          geodesic: true,
+          icons: [
+            {
+              icon: {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                fillColor: "#1E40AF",
+                fillOpacity: 1,
+                scale: 4,
+                strokeColor: "#FFFFFF",
+                strokeWeight: 2,
+              },
+              offset: "0%",
+              repeat: "100px",
+            },
+          ],
+        },
+        panel: null,
+        draggable: false,
+      });
+
+      setDirectionsService(directionsServiceInstance);
+      setDirectionsRenderer(directionsRendererInstance);
+
+      console.log("🗺️ Google Map created successfully with directions service");
       setMap(newMap);
 
       // Auto-center on current location when available
@@ -476,6 +514,102 @@ export function GoogleMap({
       }
     };
   }, []);
+
+  // Handle destination and calculate directions
+  useEffect(() => {
+    console.log("🗺️ Directions effect triggered:", {
+      hasMap: !!map,
+      hasDestination: !!destination,
+      hasLocation: !!location,
+      hasDirectionsService: !!directionsService,
+      hasDirectionsRenderer: !!directionsRenderer,
+      destination,
+      location,
+    });
+
+    if (
+      !map ||
+      !destination ||
+      !location ||
+      !directionsService ||
+      !directionsRenderer
+    ) {
+      console.log("🗺️ Skipping directions - missing requirements");
+      return;
+    }
+
+    console.log("🗺️ Calculating route to destination:", destination);
+
+    // Remove existing destination marker
+    if (destinationMarker) {
+      destinationMarker.setMap(null);
+    }
+
+    // Create destination marker
+    const destMarker = new google.maps.Marker({
+      position: { lat: destination.lat, lng: destination.lng },
+      map,
+      title: "Destination",
+      icon: {
+        url: `data:image/svg+xml,${encodeURIComponent(`
+          <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 0C7.16 0 0 7.16 0 16C0 28 16 40 16 40S32 28 32 16C32 7.16 24.84 0 16 0Z" fill="#ea4335"/>
+            <circle cx="16" cy="16" r="6" fill="white"/>
+          </svg>
+        `)}`,
+        scaledSize: new google.maps.Size(32, 40),
+        anchor: new google.maps.Point(16, 40),
+      },
+      zIndex: 9999,
+    });
+
+    setDestinationMarker(destMarker);
+
+    // Calculate route
+    const request: google.maps.DirectionsRequest = {
+      origin: { lat: location.latitude, lng: location.longitude },
+      destination: { lat: destination.lat, lng: destination.lng },
+      travelMode: travelMode as google.maps.TravelMode,
+      unitSystem: google.maps.UnitSystem.METRIC,
+      optimizeWaypoints: true,
+    };
+
+    console.log("🗺️ Requesting directions:", request);
+
+    directionsService.route(request, (result, status) => {
+      console.log("🗺️ Directions response:", { status, result });
+
+      if (status === google.maps.DirectionsStatus.OK && result) {
+        console.log("✅ Setting directions on renderer");
+        directionsRenderer.setDirections(result);
+        onDirectionsChange?.(result);
+
+        // Fit map to route
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend({ lat: location.latitude, lng: location.longitude });
+        bounds.extend({ lat: destination.lat, lng: destination.lng });
+        map.fitBounds(bounds, { top: 80, right: 40, bottom: 200, left: 40 });
+
+        console.log("✅ Route calculated and displayed in blue");
+      } else {
+        console.error("❌ Directions request failed:", { status, result });
+        addNotification({
+          type: "error",
+          title: "Navigation Error",
+          message: "Could not calculate route. Please try again.",
+        });
+      }
+    });
+  }, [
+    map,
+    destination,
+    location,
+    directionsService,
+    directionsRenderer,
+    travelMode,
+    onDirectionsChange,
+    addNotification,
+  ]);
 
   // Detect navigation state
   useEffect(() => {

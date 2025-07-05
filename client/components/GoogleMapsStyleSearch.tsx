@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, Navigation, MapPin, X, Route } from "lucide-react";
+import { Search, Navigation, MapPin, X, Route, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
+import { LocationAutocompleteInput } from "@/components/LocationAutocompleteInput";
 
 interface GoogleMapsStyleSearchProps {
   fromLocation: string;
@@ -11,7 +12,9 @@ interface GoogleMapsStyleSearchProps {
   setToLocation: (value: string) => void;
   onSearch: () => void;
   onUseCurrentLocation: () => void;
+  onPlaceSelect?: (place: any) => void;
   location: { latitude: number; longitude: number } | null;
+  isSearching?: boolean;
 }
 
 export function GoogleMapsStyleSearch({
@@ -21,12 +24,14 @@ export function GoogleMapsStyleSearch({
   setToLocation,
   onSearch,
   onUseCurrentLocation,
+  onPlaceSelect,
   location,
+  isSearching = false,
 }: GoogleMapsStyleSearchProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeInput, setActiveInput] = useState<"from" | "to" | null>(null);
   const fromInputRef = useRef<HTMLInputElement>(null);
-  const toInputRef = useRef<HTMLInputElement>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   // Auto-expand when user starts typing
   useEffect(() => {
@@ -44,12 +49,22 @@ export function GoogleMapsStyleSearch({
     }
   };
 
-  const handleCurrentLocation = () => {
-    onUseCurrentLocation();
-    if (location) {
-      setFromLocation(
-        `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`,
-      );
+  const handleCurrentLocation = async () => {
+    setIsLoadingLocation(true);
+    try {
+      await onUseCurrentLocation();
+      if (location) {
+        setFromLocation("Current Location");
+      }
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const handlePlaceSelect = (place: any) => {
+    console.log("🎯 Place selected in search:", place);
+    if (onPlaceSelect) {
+      onPlaceSelect(place);
     }
   };
 
@@ -102,16 +117,23 @@ export function GoogleMapsStyleSearch({
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full flex-shrink-0" />
                   <div className="flex-1 relative">
-                    <Input
-                      ref={fromInputRef}
+                    <LocationAutocompleteInput
                       value={fromLocation}
-                      onChange={(e) => setFromLocation(e.target.value)}
+                      onChange={setFromLocation}
+                      onPlaceSelect={(place) => {
+                        setFromLocation(
+                          place.name ||
+                            place.formatted_address ||
+                            "Selected location",
+                        );
+                        if (onPlaceSelect) {
+                          onPlaceSelect(place);
+                        }
+                      }}
                       placeholder="Choose starting point"
                       className={`pl-3 pr-10 h-11 border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
                         activeInput === "from" ? "ring-1 ring-blue-500" : ""
                       }`}
-                      onFocus={() => setActiveInput("from")}
-                      onBlur={() => setActiveInput(null)}
                     />
                     {!fromLocation && (
                       <Button
@@ -120,9 +142,14 @@ export function GoogleMapsStyleSearch({
                         size="sm"
                         className="absolute right-1 top-1 h-9 w-9 p-0 text-blue-500 hover:bg-blue-50 z-10"
                         onClick={handleCurrentLocation}
+                        disabled={isLoadingLocation}
                         title="Use current location"
                       >
-                        <MapPin className="h-4 w-4" />
+                        {isLoadingLocation ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <MapPin className="h-4 w-4" />
+                        )}
                       </Button>
                     )}
                   </div>
@@ -132,16 +159,14 @@ export function GoogleMapsStyleSearch({
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full flex-shrink-0" />
                   <div className="flex-1">
-                    <Input
-                      ref={toInputRef}
+                    <LocationAutocompleteInput
                       value={toLocation}
-                      onChange={(e) => setToLocation(e.target.value)}
-                      placeholder="Choose destination"
+                      onChange={setToLocation}
+                      onPlaceSelect={handlePlaceSelect}
+                      placeholder="Search for destination..."
                       className={`pl-3 h-11 border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
                         activeInput === "to" ? "ring-1 ring-blue-500" : ""
                       }`}
-                      onFocus={() => setActiveInput("to")}
-                      onBlur={() => setActiveInput(null)}
                     />
                   </div>
                 </div>
@@ -160,12 +185,21 @@ export function GoogleMapsStyleSearch({
 
                   <Button
                     onClick={handleSearchClick}
-                    disabled={!fromLocation || !toLocation}
+                    disabled={!fromLocation || !toLocation || isSearching}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-6"
                     size="sm"
                   >
-                    <Route className="h-4 w-4 mr-2" />
-                    Directions
+                    {isSearching ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Searching...
+                      </>
+                    ) : (
+                      <>
+                        <Route className="h-4 w-4 mr-2" />
+                        Directions
+                      </>
+                    )}
                   </Button>
                 </div>
               </motion.div>

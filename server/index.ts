@@ -5,6 +5,11 @@ import {
   handleNewsAnalysis,
   handleNewsMonitoring,
 } from "./routes/news-analysis";
+import {
+  handleRouteAnalysis,
+  handleLocationSafety,
+  handleRealTimeMonitoring,
+} from "./routes/enhanced-navigation";
 
 export function createServer() {
   const app = express();
@@ -24,6 +29,11 @@ export function createServer() {
   // News analysis routes for AI-powered safety scoring
   app.post("/api/news-analysis", handleNewsAnalysis);
   app.get("/api/news-monitoring", handleNewsMonitoring);
+
+  // Enhanced navigation routes for smart navigation features
+  app.post("/api/route-analysis", handleRouteAnalysis);
+  app.post("/api/location-safety", handleLocationSafety);
+  app.post("/api/real-time-monitoring", handleRealTimeMonitoring);
 
   return app;
 }

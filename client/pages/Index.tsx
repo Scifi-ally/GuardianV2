@@ -259,12 +259,7 @@ export default function Index() {
         }
       }
 
-      // Simple success notification
-      addNotification({
-        type: "success",
-        title: "Route Found",
-        message: "Walking directions calculated successfully.",
-      });
+      // Route calculated - no notification needed
 
       setIsNavigating(true);
     } catch (error) {
@@ -364,7 +359,7 @@ export default function Index() {
       {/* Enhanced Google Map with Safety Score Coloring */}
       <div className="absolute inset-0 top-0 z-10">
         <EnhancedGoogleMap
-          key={`${routeSettings.showTraffic}-${routeSettings.showSafeZones}-${routeSettings.showEmergencyServices}-${routeSettings.showSafeAreaCircles}-${routeSettings.zoomLevel}-${mapTheme}-${mapType}`}
+          key="main-map"
           location={location}
           mapTheme="light"
           mapType="normal"

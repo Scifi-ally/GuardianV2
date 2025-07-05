@@ -56,10 +56,20 @@ export function useSimpleAuth() {
 export function SimpleAuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as loading
+
+  // Debug logging
+  useEffect(() => {
+    console.log("🔍 SimpleAuth State:", {
+      currentUser: currentUser?.displayName,
+      userProfile: userProfile?.displayName,
+      loading,
+    });
+  }, [currentUser, userProfile, loading]);
 
   const setDemoUser = () => {
     console.log("🎭 Setting demo user for offline functionality");
+    setLoading(true);
 
     const demoUser: User = {
       uid: "demo-user-123",
@@ -106,6 +116,9 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
     // Store in localStorage for persistence
     localStorage.setItem("demo_user", JSON.stringify(demoUser));
     localStorage.setItem("demo_profile", JSON.stringify(demoProfile));
+
+    setLoading(false);
+    console.log("✅ Demo user set and loading completed");
   };
 
   const logout = () => {
@@ -117,6 +130,7 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
 
   // Load demo user from localStorage on startup
   useEffect(() => {
+    console.log("🔄 Initializing SimpleAuth...");
     try {
       const savedUser = localStorage.getItem("demo_user");
       const savedProfile = localStorage.getItem("demo_profile");
@@ -124,9 +138,11 @@ export function SimpleAuthProvider({ children }: { children: ReactNode }) {
       if (savedUser && savedProfile) {
         setCurrentUser(JSON.parse(savedUser));
         setUserProfile(JSON.parse(savedProfile));
+        setLoading(false);
         console.log("✅ Loaded demo user from localStorage");
       } else {
         // Auto-set demo user for immediate functionality
+        console.log("🔄 No saved user, creating demo user...");
         setDemoUser();
       }
     } catch (error) {
