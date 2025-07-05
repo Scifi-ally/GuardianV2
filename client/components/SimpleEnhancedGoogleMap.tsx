@@ -67,9 +67,7 @@ export function GoogleMap({
   const [trafficLayers, setTrafficLayers] = useState<google.maps.Polyline[]>(
     [],
   );
-  const [safetyPolygons, setSafetyPolygons] = useState<google.maps.Polygon[]>(
-    [],
-  );
+  // Safety polygons removed - no map coloring
   const { addNotification } = useNotifications();
 
   console.log(
@@ -103,8 +101,8 @@ export function GoogleMap({
           ? "roadmap"
           : mapType) as google.maps.MapTypeId,
         styles: getMapStyles(mapTheme),
-        disableDefaultUI: false,
-        zoomControl: true,
+        disableDefaultUI: true,
+        zoomControl: false,
         streetViewControl: false,
         fullscreenControl: false,
         mapTypeControl: false,
@@ -283,7 +281,7 @@ export function GoogleMap({
             <div>��� ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}</div>
             <div>🎯 Accuracy: ±${Math.round(location.accuracy || 0)}m</div>
             <div>⏰ Updated: ${new Date().toLocaleTimeString()}</div>
-            ${isTracking ? '<div class="text-green-600 font-medium">🔴 Live tracking active</div>' : ""}
+            ${isTracking ? '<div class="text-green-600 font-medium">�� Live tracking active</div>' : ""}
           </div>
         </div>
       `,
@@ -464,102 +462,7 @@ export function GoogleMap({
     console.log(`🚦 Rendered ${newLayers.length} traffic segments`);
   }, [map, showTraffic, realTimeData]);
 
-  // Render colored safety areas based on AI scores
-  useEffect(() => {
-    if (!map || !showSafeAreaCircles || !realTimeData) return;
-
-    // Clear existing polygons
-    safetyPolygons.forEach((polygon) => polygon.setMap(null));
-
-    const newPolygons = realTimeData.safetyAreas.map((area) => {
-      const color = getSafetyColor(area.safetyScore);
-      const opacity =
-        area.safetyScore < 40 ? 0.6 : area.safetyScore < 60 ? 0.4 : 0.25;
-
-      const polygon = new google.maps.Polygon({
-        paths: area.bounds,
-        strokeColor: color,
-        strokeOpacity: 0.8,
-        strokeWeight: area.aiAnalysis?.alertLevel === "danger" ? 3 : 1,
-        fillColor: color,
-        fillOpacity: opacity,
-        map,
-        zIndex: area.safetyScore < 40 ? 1000 : 100,
-      });
-
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div class="p-4 max-w-sm">
-            <h3 class="font-semibold mb-3 flex items-center gap-2">
-              <div style="width: 16px; height: 16px; background: ${color}; border-radius: 4px;"></div>
-              Safety Analysis
-            </h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span>Safety Score:</span>
-                <span class="font-semibold" style="color: ${color}">${area.safetyScore}/100</span>
-              </div>
-              ${
-                area.aiAnalysis
-                  ? `
-                <div class="flex justify-between">
-                  <span>Alert Level:</span>
-                  <span class="font-medium capitalize">${area.aiAnalysis.alertLevel}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>AI Confidence:</span>
-                  <span class="font-medium">${area.aiAnalysis.confidence}%</span>
-                </div>
-              `
-                  : ""
-              }
-
-              <div class="mt-3 p-2 bg-gray-50 rounded">
-                <div class="font-medium mb-1">Real-time Factors:</div>
-                <div class="text-xs space-y-1">
-                  <div>Crowd Density: ${area.realTimeFactors.crowdDensity}%</div>
-                  <div>Lighting: ${area.realTimeFactors.lightingLevel}%</div>
-                  <div>Police Presence: ${area.realTimeFactors.policePresence ? "Yes" : "No"}</div>
-                  <div>Recent Incidents: ${area.realTimeFactors.recentIncidents}</div>
-                </div>
-              </div>
-
-              ${
-                area.aiAnalysis?.recommendations.length
-                  ? `
-                <div class="mt-2">
-                  <div class="font-medium text-blue-700 mb-1">AI Recommendations:</div>
-                  ${area.aiAnalysis.recommendations
-                    .map(
-                      (rec) => `
-                    <div class="text-xs text-blue-600">• ${rec}</div>
-                  `,
-                    )
-                    .join("")}
-                </div>
-              `
-                  : ""
-              }
-
-              <div class="text-xs text-gray-500 mt-3">
-                Last Update: ${new Date(area.lastUpdate).toLocaleTimeString()}
-              </div>
-            </div>
-          </div>
-        `,
-      });
-
-      polygon.addListener("click", (event: google.maps.PolyMouseEvent) => {
-        infoWindow.setPosition(event.latLng);
-        infoWindow.open(map);
-      });
-
-      return polygon;
-    });
-
-    setSafetyPolygons(newPolygons);
-    console.log(`🛡️ Rendered ${newPolygons.length} colored safety areas`);
-  }, [map, showSafeAreaCircles, realTimeData]);
+  // Safety area rendering completely removed per user request
 
   // Auto-start live tracking when component mounts
   useEffect(() => {
@@ -639,13 +542,6 @@ export function GoogleMap({
     };
     return styles[theme as keyof typeof styles] || [];
   };
-
-  function getSafetyColor(score: number): string {
-    if (score >= 80) return "#22c55e";
-    if (score >= 60) return "#eab308";
-    if (score >= 40) return "#f59e0b";
-    return "#ef4444";
-  }
 
   if (!GOOGLE_MAPS_API_KEY) {
     return (

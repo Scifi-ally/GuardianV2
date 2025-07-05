@@ -1,4 +1,13 @@
-import { Navigation as Nav, MapPin, Clock, Route, Mic } from "lucide-react";
+import {
+  Navigation as Nav,
+  MapPin,
+  Clock,
+  Route,
+  Mic,
+  Car,
+  Bike,
+  Footprints,
+} from "lucide-react";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,15 +38,51 @@ export default function NavigationPage() {
               <h3 className="font-medium text-black">Plan Route</h3>
             </div>
 
-            <div className="flex gap-2 mb-3">
-              <Input
-                placeholder="From"
-                className="flex-1 text-sm bg-white border-gray-300 text-black placeholder:text-gray-500"
-              />
-              <Input
-                placeholder="To"
-                className="flex-1 text-sm bg-white border-gray-300 text-black placeholder:text-gray-500"
-              />
+            <div className="space-y-2 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                <Input
+                  placeholder="From location"
+                  className="flex-1 text-sm bg-white border-gray-300 text-black placeholder:text-gray-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
+                <Input
+                  placeholder="To destination"
+                  className="flex-1 text-sm bg-white border-gray-300 text-black placeholder:text-gray-500"
+                />
+              </div>
+            </div>
+
+            {/* Transportation Mode Selection */}
+            <div className="bg-gray-50 rounded-lg p-2 mb-3">
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3 text-xs bg-white hover:bg-black hover:text-white border-gray-300"
+                >
+                  <Footprints className="h-3 w-3 mr-1" />
+                  Walk
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3 text-xs bg-white hover:bg-black hover:text-white border-gray-300"
+                >
+                  <Car className="h-3 w-3 mr-1" />
+                  Car
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3 text-xs bg-white hover:bg-black hover:text-white border-gray-300"
+                >
+                  <Bike className="h-3 w-3 mr-1" />
+                  Bike
+                </Button>
+              </div>
             </div>
 
             <Button className="w-full bg-black hover:bg-gray-800 text-white border-0">

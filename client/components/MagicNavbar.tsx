@@ -96,55 +96,94 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         return;
       }
 
-      // Send SOS alert
-      const result = await SOSService.sendSOSAlert(
-        currentUser.uid,
-        userProfile.displayName || "Emergency User",
-        userProfile.guardianKey || "UNKNOWN",
-        emergencyContacts,
-        currentLocation
-          ? {
-              latitude: currentLocation.latitude,
-              longitude: currentLocation.longitude,
-              accuracy: currentLocation.accuracy,
+      // Enhanced SOS with immediate location sharing
+      const locationUrl = currentLocation
+        ? `https://maps.google.com/?q=${currentLocation.latitude},${currentLocation.longitude}`
+        : "Location unavailable";
+
+      const emergencyMessage = `🚨 EMERGENCY ALERT: ${userProfile.displayName || "Emergency User"} needs immediate help! Location: ${locationUrl} - Time: ${new Date().toLocaleString()} - Please respond immediately or call emergency services!`;
+
+      // Send to all emergency contacts via multiple channels
+      const notificationPromises = emergencyContacts.map(async (contact) => {
+        // Try native sharing first
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "🚨 EMERGENCY ALERT",
+              text: emergencyMessage,
+            });
+          } catch (shareError) {
+            // Fallback to SMS
+            window.open(
+              `sms:${contact.phone}?body=${encodeURIComponent(emergencyMessage)}`,
+              "_blank",
+            );
+          }
+        } else {
+          // Direct SMS fallback
+          window.open(
+            `sms:${contact.phone}?body=${encodeURIComponent(emergencyMessage)}`,
+            "_blank",
+          );
+        }
+      });
+
+      await Promise.allSettled(notificationPromises);
+
+      // Also use the original SOS service for tracking
+      try {
+        const result = await SOSService.sendSOSAlert(
+          currentUser.uid,
+          userProfile.displayName || "Emergency User",
+          userProfile.guardianKey || "UNKNOWN",
+          emergencyContacts,
+          currentLocation
+            ? {
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                accuracy: currentLocation.accuracy,
+              }
+            : undefined,
+          "manual",
+          "Emergency SOS alert! Please respond immediately.",
+        );
+
+        if (result.success && result.alertId) {
+          setActiveAlertId(result.alertId);
+
+          // Start continuous location sharing every 30 seconds
+          const sosInterval = setInterval(async () => {
+            try {
+              const updatedLocation = await getCurrentLocation();
+              const updateMessage = `🚨 SOS LOCATION UPDATE: ${locationUrl} - Time: ${new Date().toLocaleString()}`;
+
+              emergencyContacts.forEach((contact) => {
+                window.open(
+                  `sms:${contact.phone}?body=${encodeURIComponent(updateMessage)}`,
+                  "_blank",
+                );
+              });
+            } catch (error) {
+              console.warn("Location update failed:", error);
             }
-          : undefined,
-        "manual",
-        "Emergency SOS alert! Please respond immediately.",
+          }, 30000);
+
+          // Store interval for cleanup
+          (window as any).sosLocationInterval = sosInterval;
+        }
+      } catch (sosError) {
+        console.warn(
+          "SOS service failed, but emergency contacts were notified:",
+          sosError,
+        );
+      }
+
+      toast.success(
+        `🚨 Emergency alert sent to ${emergencyContacts.length} contact${emergencyContacts.length > 1 ? "s" : ""}! Continuous location sharing activated.`,
+        { duration: 10000 },
       );
 
-      if (result.success && result.alertId) {
-        setActiveAlertId(result.alertId);
-
-        // Start real-time location tracking for this alert
-        RealTimeLocationService.startTracking(
-          currentUser.uid,
-          async (location) => {
-            // Update the alert location silently every 30 seconds
-            await SOSService.updateSOSLocation(result.alertId!, {
-              latitude: location.latitude,
-              longitude: location.longitude,
-              accuracy: location.accuracy,
-              timestamp: new Date(location.timestamp),
-            });
-          },
-          (error) => {
-            console.warn("Real-time tracking error:", error);
-          },
-          {
-            interval: 30000, // 30 seconds
-            silentUpdates: true,
-            emergencyMode: true,
-          },
-        );
-
-        toast.success(
-          `Emergency alert sent to ${emergencyContacts.length} contact${emergencyContacts.length > 1 ? "s" : ""}! Location tracking started.`,
-        );
-        onSOSPress?.();
-      } else {
-        toast.error(result.error || "Failed to send emergency alert");
-      }
+      onSOSPress?.();
     } catch (error) {
       console.error("Error sending SOS alert:", error);
       toast.error("Failed to send emergency alert");
@@ -191,7 +230,13 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       setActiveAlertId(null);
     }
 
-    toast.info("Emergency alert cancelled");
+    // Clear continuous location sharing interval
+    if ((window as any).sosLocationInterval) {
+      clearInterval((window as any).sosLocationInterval);
+      (window as any).sosLocationInterval = null;
+    }
+
+    toast.info("Emergency alert cancelled - location sharing stopped");
   };
 
   const handlePasswordVerification = (password: string) => {
@@ -237,8 +282,8 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         <div className="absolute inset-0 bg-background/80 backdrop-blur-lg border-t border-border" />
 
         {/* Navigation items */}
-        <div className="relative px-6 py-4">
-          <div className="flex items-center justify-between max-w-sm mx-auto">
+        <div className="relative px-6 py-3">
+          <div className="flex items-center justify-between max-w-xs mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = activeIndex === index;
@@ -295,7 +340,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   onClick={() => handleNavClick(item, index)}
                   disabled={sending}
                   className={cn(
-                    "relative flex flex-col items-center px-4 py-3 transition-all duration-300",
+                    "relative flex flex-col items-center px-3 py-2 transition-all duration-300",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
                   )}
                   whileHover={{
@@ -324,7 +369,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   {/* Icon container */}
                   <div
                     className={cn(
-                      "relative z-10 p-2 rounded-xl transition-all duration-300",
+                      "relative z-10 p-1.5 rounded-xl transition-all duration-300",
                       isSpecial &&
                         "bg-emergency text-emergency-foreground shadow-lg",
                       isActive && !isSpecial && "bg-primary/20",
@@ -333,7 +378,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                     <Icon
                       className={cn(
                         "transition-all duration-300",
-                        isSpecial ? "h-7 w-7" : "h-5 w-5",
+                        isSpecial ? "h-6 w-6" : "h-4 w-4",
                         isActive && !isSpecial
                           ? "text-primary"
                           : "text-foreground",

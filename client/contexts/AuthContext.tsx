@@ -68,80 +68,98 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [authAction, setAuthAction] = useState<string>("");
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   async function signup(email: string, password: string, name: string) {
-    setAuthAction("Creating your account...");
-
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password,
-    );
-    const user = userCredential.user;
-
-    setAuthAction("Setting up your profile...");
-
-    // Update the user's display name
-    await updateFirebaseProfile(user, { displayName: name });
-
-    setAuthAction("Generating your Guardian key...");
-
-    // Generate unique guardian key using EmergencyKeyService
-    const keyResult = await EmergencyKeyService.createGuardianKey(
-      user.uid,
-      name,
-      user.email!,
-    );
-
-    const guardianKey = keyResult.guardianKey || "TEMP-KEY";
-
-    setAuthAction("Finalizing setup...");
-
-    // Create user profile in Firestore with error handling
-    const userProfile: UserProfile = {
-      uid: user.uid,
-      email: user.email!,
-      displayName: name,
-      guardianKey,
-      emergencyContacts: [],
-      createdAt: new Date(),
-      lastActive: new Date(),
-    };
-
     try {
-      await setDoc(doc(db, "users", user.uid), userProfile);
-      setUserProfile(userProfile);
-    } catch (firestoreError) {
-      console.warn(
-        "Firestore write failed, using local profile:",
-        firestoreError,
-      );
-      // Fallback: Set profile locally even if Firestore write fails
-      // This allows the user to continue using the app
-      setUserProfile(userProfile);
+      setAuthAction("Creating your account...");
 
-      // Store profile in localStorage as backup
-      localStorage.setItem(
-        `guardian_profile_${user.uid}`,
-        JSON.stringify(userProfile),
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
       );
+      const user = userCredential.user;
+
+      setAuthAction("Setting up your profile...");
+
+      // Update the user's display name
+      await updateFirebaseProfile(user, { displayName: name });
+
+      setAuthAction("Generating your Guardian key...");
+
+      // Generate unique guardian key using EmergencyKeyService
+      const keyResult = await EmergencyKeyService.createGuardianKey(
+        user.uid,
+        name,
+        user.email!,
+      );
+
+      const guardianKey = keyResult.guardianKey || "TEMP-KEY";
+
+      setAuthAction("Finalizing setup...");
+
+      // Create user profile in Firestore with error handling
+      const userProfile: UserProfile = {
+        uid: user.uid,
+        email: user.email!,
+        displayName: name,
+        guardianKey,
+        emergencyContacts: [],
+        createdAt: new Date(),
+        lastActive: new Date(),
+      };
+
+      try {
+        await setDoc(doc(db, "users", user.uid), userProfile);
+        setUserProfile(userProfile);
+      } catch (firestoreError) {
+        console.warn(
+          "Firestore write failed, using local profile:",
+          firestoreError,
+        );
+        // Fallback: Set profile locally even if Firestore write fails
+        // This allows the user to continue using the app
+        setUserProfile(userProfile);
+
+        // Store profile in localStorage as backup
+        localStorage.setItem(
+          `guardian_profile_${user.uid}`,
+          JSON.stringify(userProfile),
+        );
+      }
+
+      setAuthAction("");
+    } catch (signupError) {
+      console.error("Signup error:", signupError);
+      setAuthAction("");
+      throw signupError;
     }
-
-    setAuthAction("");
   }
 
   async function login(email: string, password: string) {
-    setAuthAction("Signing you in...");
+    try {
+      setAuthAction("Signing you in...");
 
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password,
-    );
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
 
-    setAuthAction("Loading your profile...");
-    await loadUserProfile(userCredential.user.uid);
-    setAuthAction("");
+      setAuthAction("Loading your profile...");
+      try {
+        await loadUserProfile(userCredential.user.uid);
+      } catch (profileError) {
+        console.warn("Failed to load profile during login:", profileError);
+        // Continue with login even if profile loading fails
+      }
+      setAuthAction("");
+    } catch (loginError) {
+      console.error("Login error:", loginError);
+      setAuthAction("");
+      throw loginError;
+    }
   }
 
   async function logout() {
@@ -181,8 +199,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function loadUserProfile(uid: string) {
+    // Skip Firebase calls if offline
+    if (!isOnline) {
+      console.log("Offline mode: Loading profile from localStorage only");
+      const localProfile = localStorage.getItem(`guardian_profile_${uid}`);
+      if (localProfile) {
+        const profile = JSON.parse(localProfile) as UserProfile;
+        profile.createdAt = new Date(profile.createdAt);
+        profile.lastActive = new Date(profile.lastActive);
+        setUserProfile(profile);
+      }
+      return;
+    }
+
     try {
-      const userDoc = await getDoc(doc(db, "users", uid));
+      // Add timeout and better error handling for Firebase calls
+      const userDoc = (await Promise.race([
+        getDoc(doc(db, "users", uid)),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Firebase timeout")), 8000),
+        ),
+      ])) as any;
       if (userDoc.exists()) {
         const profile = userDoc.data() as UserProfile;
         // Convert Firestore timestamps to Date objects
@@ -283,17 +320,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Monitor online status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const guardianUser = user as GuardianUser;
-        setCurrentUser(guardianUser);
-        await loadUserProfile(user.uid);
-      } else {
+      try {
+        if (user) {
+          const guardianUser = user as GuardianUser;
+          setCurrentUser(guardianUser);
+          try {
+            await loadUserProfile(user.uid);
+          } catch (profileError) {
+            console.warn(
+              "Failed to load user profile, continuing with auth:",
+              profileError,
+            );
+            // Continue with basic auth even if profile loading fails
+          }
+        } else {
+          setCurrentUser(null);
+          setUserProfile(null);
+        }
+      } catch (authError) {
+        console.warn("Auth state change error:", authError);
+        // Continue with default state
         setCurrentUser(null);
         setUserProfile(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return unsubscribe;

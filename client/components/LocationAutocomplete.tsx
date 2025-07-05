@@ -11,6 +11,7 @@ interface LocationAutocompleteProps {
   onCurrentLocation?: () => void;
   showCurrentLocationButton?: boolean;
   className?: string;
+  autoFocus?: boolean;
 }
 
 export function LocationAutocomplete({
@@ -21,6 +22,7 @@ export function LocationAutocomplete({
   onCurrentLocation,
   showCurrentLocationButton = false,
   className = "",
+  autoFocus = false,
 }: LocationAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -28,48 +30,62 @@ export function LocationAutocomplete({
 
   // Initialize Google Places Autocomplete
   useEffect(() => {
-    if (!inputRef.current || !window.google?.maps?.places) {
+    if (!inputRef.current) {
       return;
     }
 
-    try {
-      // Create autocomplete with enhanced options
-      autocompleteRef.current = new google.maps.places.Autocomplete(
-        inputRef.current,
-        {
-          types: ["establishment", "geocode"],
-          componentRestrictions: { country: ["us", "ca", "gb", "au"] }, // Major English-speaking countries
-          fields: [
-            "place_id",
-            "formatted_address",
-            "name",
-            "geometry",
-            "types",
-            "vicinity",
-          ],
-        },
-      );
+    // Wait for Google Maps to load
+    const initializeAutocomplete = () => {
+      if (!window.google?.maps?.places) {
+        setTimeout(initializeAutocomplete, 100);
+        return;
+      }
 
-      // Set up place selection listener
-      const listener = autocompleteRef.current.addListener(
-        "place_changed",
-        () => {
-          const place = autocompleteRef.current?.getPlace();
-          if (place) {
-            console.log("📍 Place selected:", place);
-            handlePlaceSelect(place);
+      try {
+        // Create autocomplete with enhanced options for better suggestions
+        autocompleteRef.current = new google.maps.places.Autocomplete(
+          inputRef.current!,
+          {
+            types: ["establishment", "geocode", "address"], // More comprehensive types
+            fields: [
+              "place_id",
+              "formatted_address",
+              "name",
+              "geometry",
+              "types",
+              "vicinity",
+              "address_components",
+            ],
+            // Remove country restrictions for global search
+          },
+        );
+
+        // Set up place selection listener
+        const listener = autocompleteRef.current.addListener(
+          "place_changed",
+          () => {
+            const place = autocompleteRef.current?.getPlace();
+            if (place && place.geometry) {
+              console.log(
+                "📍 Place selected:",
+                place.name || place.formatted_address,
+              );
+              handlePlaceSelect(place);
+            }
+          },
+        );
+
+        return () => {
+          if (listener) {
+            google.maps.event.removeListener(listener);
           }
-        },
-      );
+        };
+      } catch (error) {
+        console.error("Failed to initialize autocomplete:", error);
+      }
+    };
 
-      return () => {
-        if (listener) {
-          google.maps.event.removeListener(listener);
-        }
-      };
-    } catch (error) {
-      console.error("Failed to initialize autocomplete:", error);
-    }
+    initializeAutocomplete();
   }, []);
 
   const handlePlaceSelect = useCallback(
@@ -162,8 +178,10 @@ export function LocationAutocomplete({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className="pl-10 pr-4"
+            className="pl-10 pr-4 text-sm"
             autoComplete="off"
+            autoFocus={autoFocus}
+            spellCheck={false}
           />
         </div>
 

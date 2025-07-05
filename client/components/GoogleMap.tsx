@@ -388,10 +388,11 @@ function MapComponent({
     const mapInstance = new google.maps.Map(mapRef.current, {
       center: initialLocation,
       zoom: zoomLevel,
+      disableDefaultUI: true,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
-      zoomControl: false, // Disable default zoom controls for better touch experience
+      zoomControl: false,
       scaleControl: false,
       rotateControl: false,
       // Enable gesture handling for mobile
