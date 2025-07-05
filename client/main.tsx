@@ -12,7 +12,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { UnifiedAuthProvider, useAuth } from "@/contexts/UnifiedAuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SOSSettingsProvider } from "@/contexts/SOSSettingsContext";
 import { NotificationProvider } from "@/components/NotificationSystem";
 import { useState, useEffect } from "react";
@@ -38,7 +38,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <FullPageLoading text="Loading..." />;
   }
 
-  // Always allow access for demo/testing
+  if (!currentUser) {
+    return <Navigate to="/signin" replace />;
+  }
+
   return <>{children}</>;
 }
 
@@ -49,7 +52,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     return <FullPageLoading text="Loading..." />;
   }
 
-  // Allow access to both signed in and out users for demo
+  if (currentUser) {
+    return <Navigate to="/" replace />;
+  }
+
   return <>{children}</>;
 }
 
@@ -243,7 +249,7 @@ function AnimatedRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <UnifiedAuthProvider>
+    <AuthProvider>
       <SOSSettingsProvider>
         <NotificationProvider>
           <TooltipProvider>
@@ -257,7 +263,7 @@ const App = () => (
           </TooltipProvider>
         </NotificationProvider>
       </SOSSettingsProvider>
-    </UnifiedAuthProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

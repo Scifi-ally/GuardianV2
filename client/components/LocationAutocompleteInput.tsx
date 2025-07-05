@@ -416,7 +416,7 @@ export function LocationAutocompleteInput({
 
       {isLoading && (
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+          <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
         </div>
       )}
 
@@ -440,49 +440,99 @@ export function LocationAutocompleteInput({
         return createPortal(
           <Card
             data-suggestion-dropdown="true"
-            className="fixed z-[9999] max-h-60 overflow-y-auto bg-white border border-gray-200 shadow-lg"
+            className="fixed z-[9999] max-h-64 overflow-y-auto bg-white border border-gray-100 shadow-2xl rounded-xl backdrop-blur-sm"
             style={{
-              top: inputRect.bottom + window.scrollY + 4,
+              top: inputRect.bottom + window.scrollY + 8,
               left: inputRect.left + window.scrollX,
               width: inputRect.width,
+              background: "rgba(255, 255, 255, 0.98)",
+              borderWidth: "1px",
             }}
           >
-            <div className="py-1">
+            <div className="py-2">
               {suggestions.map((suggestion, index) => (
                 <button
                   key={suggestion.place_id}
                   onClick={() => handleSelectSuggestion(suggestion)}
                   className={cn(
-                    "w-full px-3 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors",
-                    selectedIndex === index && "bg-gray-50",
+                    "w-full px-4 py-3 text-left transition-all duration-150 mx-1 rounded-lg group",
+                    selectedIndex === index
+                      ? "bg-blue-50 border-l-4 border-l-blue-500 shadow-sm"
+                      : "hover:bg-gray-50 hover:shadow-sm",
                   )}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-0.5">
-                      {typeof getPlaceIcon(
-                        suggestion.types,
-                        suggestion.place_id,
-                      ) === "string" ? (
-                        <span className="text-lg">
-                          {getPlaceIcon(suggestion.types, suggestion.place_id)}
-                        </span>
-                      ) : (
-                        getPlaceIcon(suggestion.types, suggestion.place_id)
-                      )}
+                    <div className="flex-shrink-0 mt-1">
+                      <div
+                        className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                          selectedIndex === index
+                            ? "bg-blue-100"
+                            : "bg-gray-100 group-hover:bg-gray-200",
+                        )}
+                      >
+                        {typeof getPlaceIcon(
+                          suggestion.types,
+                          suggestion.place_id,
+                        ) === "string" ? (
+                          <span className="text-sm">
+                            {getPlaceIcon(
+                              suggestion.types,
+                              suggestion.place_id,
+                            )}
+                          </span>
+                        ) : (
+                          getPlaceIcon(suggestion.types, suggestion.place_id)
+                        )}
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">
+                      <div
+                        className={cn(
+                          "text-sm font-semibold truncate transition-colors",
+                          selectedIndex === index
+                            ? "text-blue-900"
+                            : "text-gray-900",
+                        )}
+                      >
                         {suggestion.main_text}
                       </div>
-                      <div className="text-xs text-gray-500 truncate">
+                      <div
+                        className={cn(
+                          "text-xs truncate transition-colors mt-0.5",
+                          selectedIndex === index
+                            ? "text-blue-600"
+                            : "text-gray-500",
+                        )}
+                      >
                         {suggestion.secondary_text}
                       </div>
                     </div>
-                    {suggestion.place_id.startsWith("recent_") ? (
-                      <Star className="h-4 w-4 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    ) : (
-                      <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                    )}
+                    <div className="flex-shrink-0 mt-1">
+                      {suggestion.place_id.startsWith("recent_") ? (
+                        <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                          <Star className="h-3 w-3 text-yellow-600" />
+                        </div>
+                      ) : (
+                        <div
+                          className={cn(
+                            "w-6 h-6 rounded-full flex items-center justify-center transition-colors",
+                            selectedIndex === index
+                              ? "bg-blue-100"
+                              : "bg-gray-100",
+                          )}
+                        >
+                          <MapPin
+                            className={cn(
+                              "h-3 w-3 transition-colors",
+                              selectedIndex === index
+                                ? "text-blue-600"
+                                : "text-gray-400",
+                            )}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -500,15 +550,24 @@ export function LocationAutocompleteInput({
         inputRect &&
         createPortal(
           <Card
-            className="fixed z-[9999] bg-white border border-gray-200 shadow-lg"
+            className="fixed z-[9999] bg-white border border-gray-100 shadow-2xl rounded-xl backdrop-blur-sm"
             style={{
-              top: inputRect.bottom + window.scrollY + 4,
+              top: inputRect.bottom + window.scrollY + 8,
               left: inputRect.left + window.scrollX,
               width: inputRect.width,
+              background: "rgba(255, 255, 255, 0.98)",
             }}
           >
-            <div className="px-3 py-4 text-center text-sm text-gray-500">
-              No places found for "{value}"
+            <div className="px-4 py-6 text-center">
+              <div className="mb-2">
+                <Search className="h-8 w-8 text-gray-300 mx-auto" />
+              </div>
+              <div className="text-sm font-medium text-gray-600 mb-1">
+                No places found
+              </div>
+              <div className="text-xs text-gray-400">
+                Try searching for "{value}" with different keywords
+              </div>
             </div>
           </Card>,
           document.body,

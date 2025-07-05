@@ -12,6 +12,7 @@ import {
   Target,
   Navigation2,
   StopCircle,
+  Zap,
 } from "lucide-react";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { Button } from "@/components/ui/button";
@@ -25,8 +26,11 @@ import { NavigationInstructions } from "@/components/NavigationInstructions";
 import { LocationAutocompleteInput } from "@/components/LocationAutocompleteInput";
 import { RealTimeMapFeatures } from "@/components/RealTimeMapFeatures";
 import { DebugPanel } from "@/components/DebugPanel";
+import { RealTimeNavigationUI } from "@/components/RealTimeNavigationUI";
+import { NavigationModeSelector } from "@/components/NavigationModeSelector";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { aiEnhancedNavigation } from "@/services/aiEnhancedNavigation";
+import NavigationIntegrationService from "@/services/navigationIntegrationService";
 import { realTimeSafetyMonitor } from "@/services/realTimeSafetyMonitor";
 import { toast } from "sonner";
 
@@ -47,6 +51,19 @@ export default function NavigationPage() {
   >("loading");
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [showRealTimeNavigation, setShowRealTimeNavigation] = useState(false);
+  const [navigationOrigin, setNavigationOrigin] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [navigationDestination, setNavigationDestination] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [showModeSelector, setShowModeSelector] = useState(false);
+  const [activeNavigationMode, setActiveNavigationMode] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     // Get user's current location (immediate, no timeouts)
@@ -58,6 +75,7 @@ export default function NavigationPage() {
       // Set up the UI immediately
       setFromLocation("Current Location");
       setLocationStatus("real");
+      setNavigationOrigin({ lat: location.latitude, lng: location.longitude });
 
       console.log("✅ App ready immediately with location:", {
         lat: location.latitude.toFixed(6),
@@ -135,6 +153,39 @@ export default function NavigationPage() {
 
   const handleSOSPress = () => {
     console.log("SOS triggered from navigation");
+  };
+
+  const startRealTimeNavigation = () => {
+    if (navigationOrigin && navigationDestination) {
+      setShowRealTimeNavigation(true);
+    } else {
+      toast.error("Please select a destination first");
+    }
+  };
+
+  const stopRealTimeNavigation = () => {
+    setShowRealTimeNavigation(false);
+  };
+
+  const openModeSelector = () => {
+    if (navigationOrigin && navigationDestination) {
+      setShowModeSelector(true);
+    } else {
+      toast.error("Please select both origin and destination first");
+    }
+  };
+
+  const handleModeSelect = (mode: string) => {
+    setActiveNavigationMode(mode);
+    if (mode === "realtime") {
+      setShowRealTimeNavigation(true);
+    }
+  };
+
+  const stopAllNavigation = () => {
+    NavigationIntegrationService.getInstance().stopNavigation();
+    setShowRealTimeNavigation(false);
+    setActiveNavigationMode(null);
   };
 
   const handleGetRoute = async () => {
@@ -239,6 +290,20 @@ export default function NavigationPage() {
     console.log("🎯 Place selected:", place);
     setSelectedPlace(place);
     setToLocation(place.name || place.formatted_address || "Selected location");
+
+    // Set navigation destination coordinates
+    if (place.geometry?.location) {
+      const lat =
+        typeof place.geometry.location.lat === "function"
+          ? place.geometry.location.lat()
+          : place.geometry.location.lat;
+      const lng =
+        typeof place.geometry.location.lng === "function"
+          ? place.geometry.location.lng()
+          : place.geometry.location.lng;
+
+      setNavigationDestination({ lat, lng });
+    }
 
     // Auto-start navigation when a place is selected
     if (currentLocation && place.geometry?.location) {
@@ -438,14 +503,26 @@ export default function NavigationPage() {
                 </div>
               </div>
 
-              <Button
-                onClick={handleGetRoute}
-                disabled={isNavigating}
-                className="w-full bg-black hover:bg-gray-800 text-white border-0 h-8 text-sm"
-              >
-                <Navigation2 className="h-4 w-4 mr-2" />
-                {isNavigating ? "Navigating..." : "Start Navigation"}
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={openModeSelector}
+                  disabled={!navigationOrigin || !navigationDestination}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-9 text-sm font-medium"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  Choose Navigation Mode
+                </Button>
+
+                {activeNavigationMode && (
+                  <Button
+                    onClick={stopAllNavigation}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white border-0 h-8 text-sm"
+                  >
+                    <StopCircle className="h-4 w-4 mr-2" />
+                    Stop Navigation
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -528,6 +605,26 @@ export default function NavigationPage() {
       </SlideUpPanel>
 
       <MagicNavbar onSOSPress={handleSOSPress} />
+
+      {/* Navigation Mode Selector */}
+      <NavigationModeSelector
+        isOpen={showModeSelector}
+        onClose={() => setShowModeSelector(false)}
+        onModeSelect={handleModeSelect}
+        origin={navigationOrigin}
+        destination={navigationDestination}
+      />
+
+      {/* Real-Time Navigation UI */}
+      {showRealTimeNavigation && navigationOrigin && navigationDestination && (
+        <RealTimeNavigationUI
+          isVisible={showRealTimeNavigation}
+          onClose={stopRealTimeNavigation}
+          origin={navigationOrigin}
+          destination={navigationDestination}
+          map={mapInstance}
+        />
+      )}
 
       {/* Debug Panel for development */}
       <DebugPanel

@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import { handleDemo } from "./routes/demo";
 import {
   handleNewsAnalysis,
   handleNewsMonitoring,
@@ -23,8 +22,6 @@ export function createServer() {
   app.get("/api/ping", (_req, res) => {
     res.json({ message: "Hello from Express server v2!" });
   });
-
-  app.get("/api/demo", handleDemo);
 
   // News analysis routes for AI-powered safety scoring
   app.post("/api/news-analysis", handleNewsAnalysis);

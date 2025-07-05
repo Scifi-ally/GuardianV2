@@ -25,8 +25,8 @@ import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal";
 import { UserStatsManager } from "@/components/UserStatsManager";
 import { ProfileErrorBoundary } from "@/components/ProfileErrorBoundary";
 import { InteractiveSafetyTutorial } from "@/components/InteractiveSafetyTutorial";
-import { AuthModeSwitcher } from "@/components/AuthModeSwitcher";
-import { useAuth } from "@/contexts/UnifiedAuthContext";
+
+import { useAuth } from "@/contexts/AuthContext";
 import { EmergencyKeyService } from "@/services/emergencyKeyService";
 import { SOSService } from "@/services/sosService";
 import { Button } from "@/components/ui/button";
@@ -253,11 +253,11 @@ export default function Profile() {
               onClick={async () => {
                 try {
                   await logout();
-                  window.location.href = "/auth";
+                  window.location.href = "/signin";
                 } catch (error) {
                   console.error("Logout error:", error);
                   // Force navigation even if logout fails
-                  window.location.href = "/auth";
+                  window.location.href = "/signin";
                 }
               }}
               variant="outline"
@@ -268,12 +268,12 @@ export default function Profile() {
             </Button>
 
             <Button
-              onClick={() => (window.location.href = "/auth")}
+              onClick={() => (window.location.href = "/signin")}
               variant="outline"
               className="w-full border-gray-300 hover:bg-gray-50"
             >
               <User className="h-4 w-4 mr-2" />
-              Go to Sign In/Sign Up
+              Go to Sign In
             </Button>
           </div>
         </div>
@@ -506,11 +506,6 @@ export default function Profile() {
                 </div>
               </Button>
             </div>
-
-            <Separator />
-
-            {/* Auth Mode Switcher */}
-            <AuthModeSwitcher />
 
             <Separator />
 

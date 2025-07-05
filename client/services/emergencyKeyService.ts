@@ -35,7 +35,7 @@ export class EmergencyKeyService {
    * Check if a guardian key already exists
    */
   static async isKeyUnique(guardianKey: string): Promise<boolean> {
-    // Always check localStorage first (works for both demo and regular users)
+    // Check localStorage first for cached keys
     const localKeyData = localStorage.getItem(
       `guardian_key_data_${guardianKey}`,
     );
@@ -125,17 +125,6 @@ export class EmergencyKeyService {
         isActive: true,
       };
 
-      // For demo users, use localStorage directly to avoid Firebase
-      if (userId.startsWith("demo-")) {
-        localStorage.setItem(`guardian_key_${userId}`, guardianKey);
-        localStorage.setItem(
-          `guardian_key_data_${guardianKey}`,
-          JSON.stringify(keyData),
-        );
-        console.log(`📱 Stored demo user guardian key in localStorage`);
-        return { success: true, guardianKey };
-      }
-
       try {
         // Store in guardianKeys collection for real users
         await setDoc(doc(db, "guardianKeys", guardianKey), keyData);
@@ -207,16 +196,6 @@ export class EmergencyKeyService {
    * Get guardian key for a user
    */
   static async getUserGuardianKey(userId: string): Promise<string | null> {
-    // For demo users, use localStorage directly to avoid Firebase permissions
-    if (userId.startsWith("demo-")) {
-      const localKey = localStorage.getItem(`guardian_key_${userId}`);
-      console.log(
-        `📱 Demo user ${userId} guardian key from localStorage:`,
-        localKey,
-      );
-      return localKey || null;
-    }
-
     try {
       const userDoc = await getDoc(doc(db, "users", userId));
       if (userDoc.exists()) {
@@ -244,7 +223,7 @@ export class EmergencyKeyService {
   static async findUserByGuardianKey(
     guardianKey: string,
   ): Promise<EmergencyKeyData | null> {
-    // Check localStorage first (works for both demo and regular users)
+    // Check localStorage first for cached data
     const localKeyData = localStorage.getItem(
       `guardian_key_data_${guardianKey}`,
     );

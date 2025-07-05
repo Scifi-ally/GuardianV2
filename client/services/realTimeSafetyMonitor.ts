@@ -87,76 +87,76 @@ export class RealTimeSafetyMonitor {
     }
   }
 
-  // Calculate comprehensive safety score using real API data
+  // Calculate comprehensive safety score using advanced AI engine
   private async calculateSafetyScore(location: {
     lat: number;
     lng: number;
   }): Promise<SafetyDataPoint> {
     try {
-      // Use real server API for news analysis with timeout
-      console.log("🔍 Fetching real-time safety data from server...");
+      console.log("🧠 Computing advanced AI safety score...");
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      // Import and use advanced AI safety engine
+      const { advancedAISafetyEngine } = await import(
+        "./advancedAISafetyEngine"
+      );
 
-      const response = await fetch("/api/news-analysis", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // Get comprehensive AI analysis
+      const aiScore = await advancedAISafetyEngine.calculateAdvancedSafety(
+        location.lat,
+        location.lng,
+        {
+          includeRealTime: true,
+          includePredictions: true,
+          personalizedWeights: true,
         },
-        body: JSON.stringify({
-          latitude: location.lat,
-          longitude: location.lng,
-          radius: 5, // 5km radius
-        }),
-        signal: controller.signal,
-      });
+      );
 
-      clearTimeout(timeoutId);
+      const alerts: string[] = [];
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("✅ Real-time safety data received:", data);
+      // Process AI recommendations into alerts
+      alerts.push(...aiScore.recommendations.immediate);
 
-        const alerts: string[] = [];
-
-        // Process news articles for alerts
-        data.articles?.forEach((article: any) => {
-          if (article.impact === "negative" && article.relevance > 70) {
-            alerts.push(`📰 ${article.title}`);
-          }
-        });
-
-        // Add time-based alerts
-        const now = new Date();
-        const hour = now.getHours();
-
-        if (hour >= 22 || hour <= 5) {
-          alerts.push("🌙 Late night - extra caution advised");
-        }
-
-        if (data.safetyScore < 40) {
-          alerts.push("🚨 High risk area - consider alternative route");
-        } else if (data.safetyScore < 60) {
-          alerts.push("⚠️ Moderate risk - stay aware of surroundings");
-        }
-
-        return {
-          timestamp: Date.now(),
-          location,
-          score: data.safetyScore,
-          factors: data.factors || ["Real-time analysis"],
-          alerts,
-        };
-      } else {
-        console.warn("⚠️ API call failed, using fallback analysis");
+      // Add urgent actions as alerts if in warning+ state
+      if (aiScore.alertLevel !== "safe" && aiScore.alertLevel !== "caution") {
+        alerts.push(...aiScore.urgentActions);
       }
-    } catch (error) {
-      console.error("❌ Real-time safety API error:", error);
-    }
 
-    // Fallback to local analysis if API fails
-    return this.calculateFallbackSafetyScore(location);
+      // Add risk factors as contextual alerts
+      if (aiScore.riskFactors.immediate.length > 0) {
+        alerts.push(
+          ...aiScore.riskFactors.immediate.map((risk) => `⚠️ ${risk}`),
+        );
+      }
+
+      // Add prediction-based alerts
+      if (aiScore.predictions.trend === "declining") {
+        alerts.push("📉 Safety conditions expected to deteriorate");
+      }
+
+      console.log(
+        `✅ Advanced AI score: ${aiScore.overallScore} (${aiScore.alertLevel})`,
+      );
+
+      return {
+        timestamp: Date.now(),
+        location,
+        score: aiScore.overallScore,
+        factors: [
+          `Environmental: ${aiScore.scores.environmental}`,
+          `Behavioral: ${aiScore.scores.behavioral}`,
+          `Temporal: ${aiScore.scores.temporal}`,
+          `Social: ${aiScore.scores.social}`,
+          `Infrastructure: ${aiScore.scores.infrastructure}`,
+          `Real-time: ${aiScore.scores.realTime}`,
+          `Confidence: ${aiScore.confidence}%`,
+          `Reliability: ${aiScore.reliability}%`,
+        ],
+        alerts: alerts.slice(0, 5), // Limit to top 5 alerts
+      };
+    } catch (error) {
+      console.error("❌ Advanced AI safety analysis failed:", error);
+      return this.calculateFallbackSafetyScore(location);
+    }
   }
 
   // Fallback safety calculation when API is unavailable
