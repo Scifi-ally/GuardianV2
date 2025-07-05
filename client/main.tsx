@@ -12,7 +12,10 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import {
+  SimpleAuthProvider,
+  useSimpleAuth as useAuth,
+} from "@/contexts/SimpleAuthContext";
 import { SOSSettingsProvider } from "@/contexts/SOSSettingsContext";
 import { NotificationProvider } from "@/components/NotificationSystem";
 import { useState, useEffect } from "react";
@@ -34,20 +37,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
 
   if (loading) {
-    return <FullPageLoading text="Authenticating..." />;
+    return <FullPageLoading text="Loading..." />;
   }
 
-  return currentUser ? <>{children}</> : <Navigate to="/signin" />;
+  // Always allow access for demo/testing
+  return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
 
   if (loading) {
-    return <FullPageLoading text="Preparing sign in..." />;
+    return <FullPageLoading text="Loading..." />;
   }
 
-  return currentUser ? <Navigate to="/" /> : <>{children}</>;
+  // Allow access to both signed in and out users for demo
+  return <>{children}</>;
 }
 
 // Simple page transition variants
@@ -223,7 +228,7 @@ function AnimatedRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
+    <SimpleAuthProvider>
       <SOSSettingsProvider>
         <NotificationProvider>
           <TooltipProvider>
@@ -237,7 +242,7 @@ const App = () => (
           </TooltipProvider>
         </NotificationProvider>
       </SOSSettingsProvider>
-    </AuthProvider>
+    </SimpleAuthProvider>
   </QueryClientProvider>
 );
 

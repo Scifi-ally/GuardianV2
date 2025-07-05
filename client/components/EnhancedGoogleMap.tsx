@@ -34,6 +34,9 @@ interface EnhancedGoogleMapProps {
   }) => void;
   onEmergencyServiceClick?: (service: any) => void;
   travelMode?: string;
+  isNavigating?: boolean;
+  route?: any;
+  safetyScore?: number;
 }
 
 export function EnhancedGoogleMap({
@@ -50,10 +53,19 @@ export function EnhancedGoogleMap({
   onLocationChange,
   onEmergencyServiceClick,
   travelMode = "WALKING",
+  isNavigating = false,
+  route,
+  safetyScore = 75,
 }: EnhancedGoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null);
+  const [destinationMarker, setDestinationMarker] =
+    useState<google.maps.Marker | null>(null);
+  const [directionsRenderer, setDirectionsRenderer] =
+    useState<google.maps.DirectionsRenderer | null>(null);
+  const [directionsService, setDirectionsService] =
+    useState<google.maps.DirectionsService | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(location);
   const { addNotification } = useNotifications();
@@ -185,11 +197,146 @@ export function EnhancedGoogleMap({
       gestureHandling: "greedy",
       clickableIcons: true,
       backgroundColor: "#f5f5f5",
+      // Performance and animation settings
+      animatedZoom: true,
+      tilt: 0,
+      maxZoom: 20,
+      minZoom: 8,
+      restriction: {
+        strictBounds: false,
+      },
+      // Google Maps-like animations
+      panControl: false,
+      scaleControl: false,
     });
 
     console.log("🗺️ Google Map created successfully");
     setMap(newMap);
+
+    // Initialize navigation services
+    const directionsServiceInstance = new google.maps.DirectionsService();
+    const directionsRendererInstance = new google.maps.DirectionsRenderer({
+      map: newMap,
+      suppressMarkers: true, // We'll use custom markers
+      polylineOptions: {
+        strokeColor: "#000000", // Black route color as requested
+        strokeWeight: 8, // Thicker for better visibility
+        strokeOpacity: 0.9,
+        geodesic: true,
+        icons: [
+          {
+            icon: {
+              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              fillColor: "#000000",
+              fillOpacity: 1,
+              scale: 4,
+              strokeColor: "#FFFFFF",
+              strokeWeight: 2,
+            },
+            offset: "0%",
+            repeat: "100px",
+          },
+        ],
+      },
+      panel: null,
+      draggable: false,
+    });
+
+    setDirectionsService(directionsServiceInstance);
+    setDirectionsRenderer(directionsRendererInstance);
   }, [mapRef.current, mapTheme, mapType, zoomLevel, currentLocation]);
+
+  // Handle destination and route calculation
+  useEffect(() => {
+    if (
+      !map ||
+      !destination ||
+      !currentLocation ||
+      !directionsService ||
+      !directionsRenderer
+    )
+      return;
+
+    // Remove existing destination marker
+    if (destinationMarker) {
+      destinationMarker.setMap(null);
+    }
+
+    // Create destination marker with animation
+    const destMarker = new google.maps.Marker({
+      position: { lat: destination.lat, lng: destination.lng },
+      map,
+      title: "Destination",
+      icon: {
+        url: `data:image/svg+xml,${encodeURIComponent(`
+          <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 0C7.16 0 0 7.16 0 16C0 28 16 40 16 40S32 28 32 16C32 7.16 24.84 0 16 0Z" fill="#DC2626"/>
+            <circle cx="16" cy="16" r="8" fill="white"/>
+            <circle cx="16" cy="16" r="4" fill="#DC2626"/>
+          </svg>
+        `)}`,
+        scaledSize: new google.maps.Size(32, 40),
+        anchor: new google.maps.Point(16, 40),
+      },
+      animation: google.maps.Animation.DROP,
+      zIndex: 9999,
+    });
+
+    setDestinationMarker(destMarker);
+
+    // Calculate and display route
+    const request: google.maps.DirectionsRequest = {
+      origin: { lat: currentLocation.latitude, lng: currentLocation.longitude },
+      destination: { lat: destination.lat, lng: destination.lng },
+      travelMode: travelMode as google.maps.TravelMode,
+      unitSystem: google.maps.UnitSystem.METRIC,
+      optimizeWaypoints: true,
+      avoidHighways: false,
+      avoidTolls: false,
+    };
+
+    directionsService.route(request, (result, status) => {
+      if (status === google.maps.DirectionsStatus.OK && result) {
+        directionsRenderer.setDirections(result);
+        onDirectionsChange?.(result);
+
+        // Smooth zoom and pan to route bounds with animation
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend({
+          lat: currentLocation.latitude,
+          lng: currentLocation.longitude,
+        });
+        bounds.extend({ lat: destination.lat, lng: destination.lng });
+
+        // Add padding for better view
+        const padding = { top: 120, right: 80, bottom: 250, left: 80 };
+        map.fitBounds(bounds, padding);
+
+        // Smooth zoom animation
+        setTimeout(() => {
+          map.panToBounds(bounds, padding);
+        }, 500);
+
+        console.log("🗺️ Route calculated and displayed in black");
+      } else {
+        console.error("🗺️ Directions request failed:", status);
+        addNotification({
+          type: "error",
+          title: "Navigation Error",
+          message: "Could not calculate route. Please try again.",
+        });
+      }
+    });
+  }, [
+    map,
+    destination,
+    currentLocation,
+    directionsService,
+    directionsRenderer,
+    travelMode,
+    onDirectionsChange,
+    addNotification,
+  ]);
 
   // Enhanced user location marker with live updates
   useEffect(() => {
@@ -386,28 +533,78 @@ export function EnhancedGoogleMap({
       <Wrapper apiKey={GOOGLE_MAPS_API_KEY} libraries={["geometry", "places"]}>
         <div ref={mapRef} className="w-full h-full" />
 
-        {/* Live tracking controls - positioned relative to map container */}
+        {/* Map Controls and Indicators */}
         {map && (
-          <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-            <Button
-              onClick={isTracking ? stopLiveTracking : startLiveTracking}
-              size="sm"
-              variant={isTracking ? "destructive" : "default"}
-              className={`shadow-lg bg-white text-black hover:bg-gray-100 border border-gray-300 ${isTracking ? "!bg-red-500 !text-white hover:!bg-red-600" : ""}`}
-            >
-              <Locate className="h-4 w-4 mr-2" />
-              {isTracking ? "Stop Live" : "Start Live"}
-            </Button>
+          <>
+            {/* Safety Score Indicator */}
+            <div className="absolute top-4 left-4 z-[1000]">
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-gray-200">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      safetyScore >= 80
+                        ? "bg-green-500"
+                        : safetyScore >= 60
+                          ? "bg-yellow-500"
+                          : safetyScore >= 40
+                            ? "bg-orange-500"
+                            : "bg-red-500"
+                    }`}
+                  />
+                  <div>
+                    <div className="text-xs text-gray-500 font-medium">
+                      Safety Score
+                    </div>
+                    <div
+                      className={`text-lg font-bold ${
+                        safetyScore >= 80
+                          ? "text-green-600"
+                          : safetyScore >= 60
+                            ? "text-yellow-600"
+                            : safetyScore >= 40
+                              ? "text-orange-600"
+                              : "text-red-600"
+                      }`}
+                    >
+                      {safetyScore}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {isTracking && (
-              <Badge
-                variant="default"
-                className="bg-green-500 text-white animate-pulse text-center"
+            {/* Live tracking controls */}
+            <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+              <Button
+                onClick={isTracking ? stopLiveTracking : startLiveTracking}
+                size="sm"
+                variant={isTracking ? "destructive" : "default"}
+                className={`shadow-lg bg-white text-black hover:bg-gray-100 border border-gray-300 ${isTracking ? "!bg-red-500 !text-white hover:!bg-red-600" : ""}`}
               >
-                🔴 Live
-              </Badge>
-            )}
-          </div>
+                <Locate className="h-4 w-4 mr-2" />
+                {isTracking ? "Stop Live" : "Start Live"}
+              </Button>
+
+              {isTracking && (
+                <Badge
+                  variant="default"
+                  className="bg-green-500 text-white animate-pulse text-center"
+                >
+                  🔴 Live
+                </Badge>
+              )}
+
+              {/* Navigation status indicator */}
+              {isNavigating && (
+                <Badge
+                  variant="default"
+                  className="bg-black text-white text-center"
+                >
+                  🧭 Navigating
+                </Badge>
+              )}
+            </div>
+          </>
         )}
 
         {/* Enhanced Safety Areas */}

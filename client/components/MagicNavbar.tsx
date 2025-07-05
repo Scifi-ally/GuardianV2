@@ -11,7 +11,7 @@ import {
   Navigation as NavigationIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSimpleAuth as useAuth } from "@/contexts/SimpleAuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useSOSSettings } from "@/contexts/SOSSettingsContext";
 import { SOSService } from "@/services/sosService";
