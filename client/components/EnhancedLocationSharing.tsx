@@ -75,12 +75,12 @@ export function EnhancedLocationSharing() {
     try {
       setIsSharing(true);
 
-      const locationUrl = `https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+      const coordinates = `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
       const message = sosStatus.isActive
-        ? `🚨 EMERGENCY: I need help! My current location: ${locationUrl} - Please respond immediately!`
-        : `📍 Location Update: I'm currently at ${locationUrl} - Shared at ${new Date().toLocaleTimeString()}`;
+        ? `🚨 EMERGENCY: I need help! My current location: ${coordinates} - Please respond immediately! Time: ${new Date().toLocaleString()}`
+        : `📍 Location Update: I'm currently at coordinates ${coordinates} - Shared at ${new Date().toLocaleTimeString()}`;
 
-      // Try native sharing first
+      // Try native sharing first (within app context)
       if (navigator.share) {
         try {
           await navigator.share({
@@ -95,16 +95,45 @@ export function EnhancedLocationSharing() {
           toast.success(`Location shared with ${share.recipientName}`);
           return;
         } catch (shareError) {
-          console.log("Native sharing failed, trying SMS fallback");
+          console.log("Native sharing failed, trying clipboard fallback");
         }
       }
 
-      // Fallback to SMS
-      const smsUrl = `sms:${share.recipientPhone}?body=${encodeURIComponent(message)}`;
-      window.open(smsUrl, "_blank");
+      // Fallback to clipboard copy (keeping everything in-app)
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(message);
+        } else {
+          // Fallback for non-secure contexts
+          const textArea = document.createElement("textarea");
+          textArea.value = message;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
+        }
 
-      updateShareStatus(share.id);
-      toast.success(`SMS prepared for ${share.recipientName}`);
+        updateShareStatus(share.id);
+        toast.success(
+          `Location message copied to clipboard for ${share.recipientName}. Paste and send manually.`,
+          {
+            description: `Contact: ${share.recipientPhone}`,
+            duration: 5000,
+          },
+        );
+      } catch (clipboardError) {
+        console.error("Clipboard failed:", clipboardError);
+        // Show the message in an alert as last resort
+        alert(
+          `Share this location with ${share.recipientName} (${share.recipientPhone}):\n\n${message}`,
+        );
+        updateShareStatus(share.id);
+        toast.info(`Location details shown for ${share.recipientName}`);
+      }
     } catch (error) {
       console.error("Failed to share location:", error);
       toast.error("Failed to share location");

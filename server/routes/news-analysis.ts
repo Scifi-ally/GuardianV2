@@ -39,7 +39,10 @@ export const handleNewsAnalysis: RequestHandler = async (req, res) => {
     console.error("Gemini analysis error:", error);
 
     // Provide fallback analysis when API fails
-    const fallbackAnalysis = await getFallbackAnalysis(latitude, longitude);
+    const fallbackAnalysis = await getFallbackAnalysis(
+      (req.body as NewsAnalysisRequest).latitude,
+      (req.body as NewsAnalysisRequest).longitude,
+    );
     res.json(fallbackAnalysis);
   }
 };

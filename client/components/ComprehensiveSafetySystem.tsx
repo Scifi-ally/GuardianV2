@@ -89,11 +89,19 @@ export function ComprehensiveSafetySystem() {
       userProfile.emergencyContacts.length > 0
     ) {
       const contact = userProfile.emergencyContacts[0];
-      window.location.href = `tel:${contact.phone}`;
-      toast.success(`Calling ${contact.name}`);
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(contact.phone);
+        toast.success(`${contact.name}'s number copied: ${contact.phone}`);
+      } else {
+        alert(`Call ${contact.name}: ${contact.phone}`);
+      }
     } else {
-      window.location.href = "tel:911";
-      toast.success("Calling emergency services");
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText("911");
+        toast.success("Emergency number copied: 911");
+      } else {
+        alert("Emergency number: 911");
+      }
     }
   };
 
@@ -103,7 +111,7 @@ export function ComprehensiveSafetySystem() {
       return;
     }
 
-    const message = `🚨 Safety Alert: I'm at https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+    const message = `🚨 Safety Alert: I'm at coordinates ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
 
     if (navigator.share) {
       try {

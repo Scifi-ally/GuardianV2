@@ -25,7 +25,7 @@ import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { NavigationInstructions } from "@/components/NavigationInstructions";
 import { LocationAutocompleteInput } from "@/components/LocationAutocompleteInput";
 import { RealTimeMapFeatures } from "@/components/RealTimeMapFeatures";
-import { DebugPanel } from "@/components/DebugPanel";
+
 import { RealTimeNavigationUI } from "@/components/RealTimeNavigationUI";
 import { NavigationModeSelector } from "@/components/NavigationModeSelector";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
@@ -625,18 +625,6 @@ export default function NavigationPage() {
           map={mapInstance}
         />
       )}
-
-      {/* Debug Panel for development */}
-      <DebugPanel
-        currentLocation={currentLocation}
-        destination={destination}
-        isNavigating={isNavigating}
-        selectedPlace={selectedPlace}
-        toLocation={toLocation}
-        safetyScore={safetyScore}
-        directionsResult={directionsResult}
-        mapInstance={mapInstance}
-      />
     </div>
   );
 }

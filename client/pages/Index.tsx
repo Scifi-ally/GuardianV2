@@ -13,11 +13,15 @@ import {
   Navigation2,
   Users,
   RefreshCw,
-  Brain,
   Locate,
   Footprints,
   Car,
   Bike,
+  Activity,
+  Target,
+  Wifi,
+  CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { GoogleMap as EnhancedGoogleMap } from "@/components/SimpleEnhancedGoogleMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
@@ -34,9 +38,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { RealTimeSafetyFeatures } from "@/components/RealTimeSafetyFeatures";
 import { EnhancedLocationSharing } from "@/components/EnhancedLocationSharing";
-import { AINewsFeed } from "@/components/AINewsFeed";
-import { SafetyColorLegend } from "@/components/SafetyColorLegend";
-import { SafetyScoreValidator } from "@/components/SafetyScoreValidator";
+
 import { CustomCheckbox } from "@/components/ui/custom-checkbox";
 
 import { LocationIndicator } from "@/components/LocationStatus";
@@ -48,7 +50,7 @@ import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import AINavigationPanel from "@/components/AINavigationPanel";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import GoogleMapsStyleSearch from "@/components/GoogleMapsStyleSearch";
-import AIFeaturesPanel from "@/components/AIFeaturesPanel";
+
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 
 import { EnhancedSafetyMonitor } from "@/components/EnhancedSafetyMonitor";
@@ -57,6 +59,178 @@ import { PerformanceOptimizer } from "@/components/PerformanceOptimizer";
 import { ComprehensiveSafetySystem } from "@/components/ComprehensiveSafetySystem";
 import { areaBasedSafety } from "@/services/areaBasedSafety";
 import { realTimeDataService } from "@/services/realTimeDataService";
+
+// Debug Content Component
+function DebugContent() {
+  const {
+    location,
+    error,
+    isTracking,
+    permissionStatus,
+    getCurrentLocation,
+    startTracking,
+    stopTracking,
+  } = useGeolocation();
+
+  const [lastUpdate, setLastUpdate] = useState<string>("");
+  const [updateCount, setUpdateCount] = useState(0);
+  const [systemInfo] = useState({
+    userAgent:
+      navigator.userAgent.slice(0, 100) +
+      (navigator.userAgent.length > 100 ? "..." : ""),
+    platform: navigator.platform,
+    language: navigator.language,
+    online: navigator.onLine,
+    screenSize: `${screen.width}x${screen.height}`,
+    viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+  });
+
+  useEffect(() => {
+    if (location) {
+      setLastUpdate(new Date(location.timestamp).toLocaleString());
+      setUpdateCount((prev) => prev + 1);
+    }
+  }, [location]);
+
+  const getLocationQuality = () => {
+    if (!location) return null;
+    const accuracy = location.accuracy;
+    if (accuracy <= 5) return { level: "excellent", color: "text-green-600" };
+    if (accuracy <= 20) return { level: "good", color: "text-blue-600" };
+    if (accuracy <= 100) return { level: "fair", color: "text-yellow-600" };
+    return { level: "poor", color: "text-red-600" };
+  };
+
+  const getPermissionColor = () => {
+    switch (permissionStatus) {
+      case "granted":
+        return "text-green-600";
+      case "denied":
+        return "text-red-600";
+      case "prompt":
+        return "text-yellow-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  const testLocation = async () => {
+    try {
+      await getCurrentLocation();
+      console.log("Location test successful");
+    } catch (error) {
+      console.error("Location test failed:", error);
+    }
+  };
+
+  const quality = getLocationQuality();
+
+  return (
+    <div className="space-y-4">
+      {/* Location Information */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-medium">Permission Status:</span>
+          <Badge className={`text-xs ${getPermissionColor()}`}>
+            {permissionStatus || "unknown"}
+          </Badge>
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-medium">Tracking Status:</span>
+          <Badge
+            className={`text-xs ${isTracking ? "text-green-600" : "text-red-600"}`}
+          >
+            {isTracking ? "Active" : "Stopped"}
+          </Badge>
+        </div>
+
+        {location && (
+          <>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span className="font-medium">Latitude:</span>{" "}
+                {location.latitude.toFixed(6)}
+              </div>
+              <div>
+                <span className="font-medium">Longitude:</span>{" "}
+                {location.longitude.toFixed(6)}
+              </div>
+              <div>
+                <span className="font-medium">Accuracy:</span>{" "}
+                <span className={quality?.color}>
+                  ±{Math.round(location.accuracy)}m
+                </span>
+              </div>
+              <div>
+                <span className="font-medium">Updates:</span> {updateCount}
+              </div>
+            </div>
+            <div className="text-xs">
+              <span className="font-medium">Last Update:</span> {lastUpdate}
+            </div>
+          </>
+        )}
+
+        {error && (
+          <div className="text-xs text-red-600 bg-red-50 p-2 rounded border">
+            <strong>Error:</strong> {error.message}
+          </div>
+        )}
+      </div>
+
+      {/* System Information */}
+      <div className="border-t pt-3 space-y-2">
+        <h5 className="text-xs font-semibold text-slate-700">System Info</h5>
+        <div className="space-y-1 text-xs text-slate-600">
+          <div>
+            <span className="font-medium">Platform:</span> {systemInfo.platform}
+          </div>
+          <div>
+            <span className="font-medium">Language:</span> {systemInfo.language}
+          </div>
+          <div>
+            <span className="font-medium">Screen:</span> {systemInfo.screenSize}
+          </div>
+          <div>
+            <span className="font-medium">Viewport:</span>{" "}
+            {systemInfo.viewportSize}
+          </div>
+          <div>
+            <span className="font-medium">Connection:</span>{" "}
+            <span
+              className={systemInfo.online ? "text-green-600" : "text-red-600"}
+            >
+              {systemInfo.online ? "Online" : "Offline"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="border-t pt-3">
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={testLocation}
+            className="flex-1 text-xs h-8"
+          >
+            <Target className="w-3 h-3 mr-1" />
+            Test Location
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={isTracking ? stopTracking : startTracking}
+            className="flex-1 text-xs h-8"
+          >
+            {isTracking ? "Stop Tracking" : "Start Tracking"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Index() {
   const { addNotification } = useSlideDownNotifications();
@@ -364,9 +538,9 @@ export default function Index() {
           mapTheme="light"
           mapType="normal"
           showTraffic={routeSettings.showTraffic}
-          showSafeZones={true}
+          showSafeZones={false}
           showEmergencyServices={routeSettings.showEmergencyServices}
-          showSafeAreaCircles={true}
+          showSafeAreaCircles={false}
           showDebug={false}
           enableSatelliteView={false}
           zoomLevel={routeSettings.zoomLevel}
@@ -407,7 +581,7 @@ export default function Index() {
             defaultValue={isNavigating ? "navigation" : "safety"}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-4 h-12 bg-slate-100/80 backdrop-blur-sm rounded-xl p-1 shadow-sm">
+            <TabsList className="grid w-full grid-cols-3 h-12 bg-slate-100/80 backdrop-blur-sm rounded-xl p-1 shadow-sm">
               <TabsTrigger
                 value="navigation"
                 className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
@@ -422,13 +596,7 @@ export default function Index() {
                 <Navigation2 className="h-4 w-4 mr-1.5" />
                 SAFETY
               </TabsTrigger>
-              <TabsTrigger
-                value="ai"
-                className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Brain className="h-4 w-4 mr-1.5" />
-                AI GUARDIAN
-              </TabsTrigger>
+
               <TabsTrigger
                 value="settings"
                 className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
@@ -587,7 +755,7 @@ export default function Index() {
                       className="h-12 flex-col gap-1 text-xs transition-all duration-200 hover:scale-105 hover:shadow-md"
                       onClick={() => {
                         if (location) {
-                          const message = `My current location: https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+                          const message = `My current location: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
                           if (navigator.share) {
                             navigator.share({
                               title: "My Location",
@@ -649,9 +817,6 @@ export default function Index() {
               className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-left"
             >
               <div className="space-y-4">
-                {/* Safety Color Legend */}
-                <SafetyColorLegend currentScore={location ? 75 : undefined} />
-
                 {/* Current Area Safety Score */}
                 {location && (
                   <div className="bg-white border border-black/10 rounded-lg p-3">
@@ -792,29 +957,6 @@ export default function Index() {
                       whileTap={{ scale: 0.99 }}
                     >
                       <div>
-                        <p className="text-sm font-medium">Safety Areas</p>
-                        <p className="text-xs text-muted-foreground">
-                          Color-coded zones
-                        </p>
-                      </div>
-                      <CustomCheckbox
-                        checked={routeSettings.showSafeAreaCircles}
-                        onChange={(checked) =>
-                          setRouteSettings((prev) => ({
-                            ...prev,
-                            showSafeAreaCircles: checked,
-                          }))
-                        }
-                        size="sm"
-                      />
-                    </motion.div>
-
-                    <motion.div
-                      className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      <div>
                         <p className="text-sm font-medium">Debug Console</p>
                         <p className="text-xs text-muted-foreground">
                           Developer info & logs
@@ -857,30 +999,24 @@ export default function Index() {
                         className="w-16 h-2"
                       />
                     </motion.div>
+
+                    {/* Debug Console Content */}
+                    {routeSettings.showDebug && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200"
+                      >
+                        <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                          <Activity className="h-4 w-4" />
+                          Debug Information
+                        </h4>
+                        <DebugContent />
+                      </motion.div>
+                    )}
                   </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent
-              value="ai"
-              className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-left"
-            >
-              <div className="space-y-4">
-                {/* Safety Score Validation */}
-                <SafetyScoreValidator />
-
-                {/* AI News Feed for Safety Analysis */}
-                <AINewsFeed />
-
-                {/* AI Features Panel Embedded */}
-                <div className="bg-white rounded-lg border border-black/10 p-4">
-                  <AIFeaturesPanel
-                    isVisible={true}
-                    location={location}
-                    isNavigating={isNavigating}
-                    onClose={undefined}
-                  />
                 </div>
               </div>
             </TabsContent>

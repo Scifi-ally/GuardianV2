@@ -127,8 +127,24 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
       const toLat = alert.location.latitude;
       const toLng = alert.location.longitude;
 
-      const url = `https://www.google.com/maps/dir/${fromLat},${fromLng}/${toLat},${toLng}`;
-      window.open(url, "_blank");
+      // Use internal navigation within the app
+      const routeInfo = `Route from ${fromLat.toFixed(6)}, ${fromLng.toFixed(6)} to ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`;
+
+      // Copy route info to clipboard for user to use with their preferred navigation app
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(
+            `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
+          );
+        }
+        alert(
+          `Navigation info copied to clipboard:\n${routeInfo}\n\nUse your preferred navigation app with the copied coordinates.`,
+        );
+      } catch (error) {
+        alert(
+          `Navigate to these coordinates:\n${toLat.toFixed(6)}, ${toLng.toFixed(6)}\n\nUse your preferred navigation app.`,
+        );
+      }
 
       // Respond that we're en route with our current location
       if (userProfile && alert.id) {
@@ -153,8 +169,22 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
 
       // Fallback: navigate without current location
       const { latitude, longitude } = alert.location;
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-      window.open(url, "_blank");
+
+      // Copy destination to clipboard
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(
+            `Navigate to: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+          );
+        }
+        alert(
+          `Destination copied to clipboard:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
+        );
+      } catch (error) {
+        alert(
+          `Navigate to:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
+        );
+      }
 
       // Still respond that we're en route
       if (userProfile && alert.id) {

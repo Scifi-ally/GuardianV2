@@ -67,7 +67,7 @@ export function EmergencyContactManager({
   const [showFloatingSuccess, setShowFloatingSuccess] = useState(false);
   const [confirmDeleteContact, setConfirmDeleteContact] =
     useState<EmergencyContact | null>(null);
-  const { userProfile, currentUser } = useAuth();
+  const { userProfile, currentUser, refreshProfile } = useAuth();
 
   const emergencyContacts = userProfile?.emergencyContacts || [];
 
@@ -134,6 +134,9 @@ export function EmergencyContactManager({
         setShowFloatingSuccess(true);
         setSuccess(`${contactName} added as emergency contact!`);
 
+        // Refresh profile to show new contact immediately
+        await refreshProfile();
+
         // Reset form with animation delay
         setTimeout(() => {
           setGuardianKey("");
@@ -180,6 +183,8 @@ export function EmergencyContactManager({
 
       if (result.success) {
         setSuccess(`${contact.name} removed from emergency contacts`);
+        // Refresh profile to update the list immediately
+        await refreshProfile();
         setTimeout(() => setSuccess(""), 2000);
       } else {
         setError(result.error || "Failed to remove contact");

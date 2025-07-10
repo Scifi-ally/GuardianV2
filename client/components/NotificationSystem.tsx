@@ -248,21 +248,26 @@ export function LocationStatusToast() {
       }
 
       // Also test geolocation directly
+      // Use enhanced location service for permission check
       if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          () => {
+        import("@/services/enhancedLocationService")
+          .then(({ enhancedLocationService }) => {
+            return enhancedLocationService.getPermissionStatus();
+          })
+          .then((permission) => {
             if (locationStatus === "unknown") {
-              setLocationStatus("granted");
+              if (permission === "granted") {
+                setLocationStatus("granted");
+              } else if (permission === "denied") {
+                setLocationStatus("denied");
+                setIsVisible(true);
+              }
             }
-          },
-          () => {
-            if (locationStatus === "unknown") {
-              setLocationStatus("denied");
-              setIsVisible(true);
-            }
-          },
-          { timeout: 1000 },
-        );
+          })
+          .catch(() => {
+            // Silent fallback
+            console.log("ℹ️ Location permission check completed");
+          });
       }
     };
 
@@ -271,14 +276,11 @@ export function LocationStatusToast() {
 
   const requestLocationPermission = async () => {
     try {
-      const position = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-          });
-        },
+      const { enhancedLocationService } = await import(
+        "@/services/enhancedLocationService"
       );
+
+      const location = await enhancedLocationService.getCurrentLocation();
 
       setLocationStatus("granted");
       setIsVisible(false);

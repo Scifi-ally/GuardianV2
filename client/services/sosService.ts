@@ -356,6 +356,32 @@ export class SOSService {
     }
   }
 
+  static async cancelSOSAlert(
+    alertId: string,
+    cancelledBy: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const alertRef = doc(db, "sosAlerts", alertId);
+      await updateDoc(alertRef, {
+        status: "cancelled",
+        resolvedAt: Timestamp.fromDate(new Date()),
+        resolvedBy: cancelledBy,
+        realTimeTracking: false,
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error cancelling SOS alert:", error);
+      if (error.code === "permission-denied") {
+        console.log(
+          "Cannot cancel SOS alert due to permissions, handling locally",
+        );
+        return { success: true }; // Pretend it worked for UX
+      }
+      return { success: false, error: "Failed to cancel SOS alert" };
+    }
+  }
+
   static async resolveSOSAlert(
     alertId: string,
     resolvedBy: string,

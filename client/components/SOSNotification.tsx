@@ -93,9 +93,22 @@ export function SOSNotification({
   const handleNavigate = () => {
     if (alert.location) {
       const { latitude, longitude } = alert.location;
-      window.open(
-        `https://maps.google.com/maps?q=${latitude},${longitude}&ll=${latitude},${longitude}&z=16`,
-      );
+
+      // Copy location coordinates to clipboard for use with preferred navigation app
+      const coordinates = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(coordinates);
+        }
+        alert(
+          `Location coordinates copied to clipboard:\n${coordinates}\n\nUse your preferred navigation app to navigate to these coordinates.`,
+        );
+      } catch (error) {
+        alert(
+          `Navigate to these coordinates:\n${coordinates}\n\nUse your preferred navigation app.`,
+        );
+      }
     }
   };
 
@@ -212,97 +225,23 @@ export function SOSNotification({
                   {alert.location.longitude.toFixed(6)}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNavigate}
-                className="gap-2"
-              >
-                <Navigation className="h-4 w-4" />
-                Navigate
-              </Button>
             </div>
           )}
 
           <Separator />
 
-          {/* Response Actions */}
-          {!userResponse ? (
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-center">
-                How would you like to respond?
+          {/* Emergency Alert Information */}
+          <div className="text-center space-y-3">
+            <div className="p-3 bg-emergency/10 rounded-lg">
+              <AlertTriangle className="h-5 w-5 text-emergency mx-auto mb-2" />
+              <p className="text-sm font-medium text-emergency">
+                Emergency alert received from {alert.senderName}
               </p>
-
-              {/* Primary Actions */}
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  onClick={() => handleResponse("acknowledged")}
-                  disabled={responding}
-                  className="bg-safe hover:bg-safe/90 text-safe-foreground"
-                >
-                  <Check className="h-4 w-4 mr-2" />
-                  Acknowledge
-                </Button>
-                <Button
-                  onClick={() => handleResponse("enroute")}
-                  disabled={responding}
-                  className="bg-warning hover:bg-warning/90 text-warning-foreground"
-                >
-                  <Car className="h-4 w-4 mr-2" />
-                  On My Way
-                </Button>
-              </div>
-
-              {/* Communication Actions */}
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleCall}
-                  className="border-emergency text-emergency hover:bg-emergency hover:text-emergency-foreground"
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Call Now
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleMessage}
-                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Message
-                </Button>
-              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Contact them through your preferred method if needed
+              </p>
             </div>
-          ) : (
-            <div className="text-center space-y-3">
-              <div className="flex items-center justify-center gap-2 p-3 bg-safe/10 rounded-lg">
-                {getResponseIcon(userResponse)}
-                <span className="font-medium text-safe">
-                  Response sent:{" "}
-                  {userResponse.charAt(0).toUpperCase() + userResponse.slice(1)}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleCall}
-                  className="border-emergency text-emergency hover:bg-emergency hover:text-emergency-foreground"
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Call
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleMessage}
-                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Message
-                </Button>
-              </div>
-            </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     </motion.div>

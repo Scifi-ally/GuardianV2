@@ -27,6 +27,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  refreshProfile: () => Promise<void>;
   loading: boolean;
   userProfile: UserProfile | null;
 }
@@ -366,12 +367,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
+  async function refreshProfile(): Promise<void> {
+    if (currentUser) {
+      await loadUserProfile(currentUser.uid);
+    }
+  }
+
   const value = {
     currentUser,
     signup,
     login,
     logout,
     updateProfile,
+    refreshProfile,
     loading,
     userProfile,
   };

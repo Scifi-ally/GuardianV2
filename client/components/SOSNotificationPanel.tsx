@@ -96,9 +96,24 @@ export function SOSNotificationPanel({
       const toLat = alert.location.latitude;
       const toLng = alert.location.longitude;
 
-      // Use Google Maps directions with current location as starting point
-      const url = `https://www.google.com/maps/dir/${fromLat},${fromLng}/${toLat},${toLng}`;
-      window.open(url, "_blank");
+      // Use internal navigation within the app
+      const routeInfo = `Route from ${fromLat.toFixed(6)}, ${fromLng.toFixed(6)} to ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`;
+
+      // Copy route info to clipboard
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(
+            `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
+          );
+        }
+        alert(
+          `Navigation info copied to clipboard:\n${routeInfo}\n\nUse your preferred navigation app.`,
+        );
+      } catch (error) {
+        alert(
+          `Navigate to:\n${toLat.toFixed(6)}, ${toLng.toFixed(6)}\n\nUse your preferred navigation app.`,
+        );
+      }
 
       // Also respond that we're navigating
       if (userProfile && alert.id) {
@@ -154,8 +169,22 @@ export function SOSNotificationPanel({
 
       // Fallback: just navigate to destination without current location
       const { latitude, longitude } = alert.location;
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-      window.open(url, "_blank");
+
+      // Copy destination to clipboard
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(
+            `Navigate to: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+          );
+        }
+        alert(
+          `Destination copied to clipboard:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
+        );
+      } catch (error) {
+        alert(
+          `Navigate to:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
+        );
+      }
     }
   };
 

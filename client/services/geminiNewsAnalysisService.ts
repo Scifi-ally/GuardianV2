@@ -16,6 +16,9 @@ export class GeminiNewsAnalysisService {
     new Map();
   private readonly CACHE_DURATION = 60 * 60 * 1000; // 60 minutes - longer cache to reduce API calls
   private readonly API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
+  private readonly hasValidApiKey = Boolean(
+    this.API_KEY && this.API_KEY.length > 10,
+  );
   private readonly BASE_URL =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
 
@@ -55,9 +58,9 @@ export class GeminiNewsAnalysisService {
       this.requestCount = 0;
     }
 
-    // Use enhanced fallback with smart local analysis to preserve API quota
-    if (Math.random() > 0.02) {
-      // 98% fallback rate
+    // Use enhanced fallback if no valid API key or to preserve API quota
+    if (!this.hasValidApiKey || Math.random() > 0.02) {
+      // 98% fallback rate or no API key
       return this.getEnhancedFallbackAnalysis(lat, lng);
     }
 
@@ -71,8 +74,8 @@ export class GeminiNewsAnalysisService {
 
       return analysis;
     } catch (error) {
-      console.warn("Gemini analysis failed, using fallback:", error);
-      return this.getFallbackAnalysis(lat, lng);
+      console.warn("Gemini analysis failed, using enhanced fallback:", error);
+      return this.getEnhancedFallbackAnalysis(lat, lng);
     }
   }
 

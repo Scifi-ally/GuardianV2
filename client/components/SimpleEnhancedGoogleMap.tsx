@@ -21,8 +21,8 @@ interface GoogleMapProps {
   showEmergencyServices?: boolean;
   showSafeAreaCircles?: boolean;
   showDebug?: boolean;
-  mapTheme?: "standard" | "silver" | "dark" | "retro" | "night" | "light";
-  mapType?: "roadmap" | "satellite" | "hybrid" | "terrain" | "normal";
+  mapTheme?: "light" | "dark" | "safety" | "night";
+  mapType?: "normal" | "satellite" | "terrain";
   zoomLevel?: number;
   onDirectionsChange?: (
     directions: google.maps.DirectionsResult | null,
@@ -43,8 +43,8 @@ export function GoogleMap({
   showEmergencyServices = false,
   showSafeAreaCircles = false,
   showDebug = false,
-  mapTheme = "standard",
-  mapType = "roadmap",
+  mapTheme = "light",
+  mapType = "normal",
   zoomLevel = 15,
   onDirectionsChange,
   onLocationChange,
@@ -105,7 +105,9 @@ export function GoogleMap({
           : { lat: 37.7749, lng: -122.4194 },
         mapTypeId: (mapType === "normal"
           ? "roadmap"
-          : mapType) as google.maps.MapTypeId,
+          : mapType === "terrain"
+            ? "terrain"
+            : mapType) as google.maps.MapTypeId,
         styles: getMapStyles(mapTheme),
         disableDefaultUI: true,
         zoomControl: false,
@@ -260,14 +262,21 @@ export function GoogleMap({
       return;
     }
 
-    console.log("📍 Creating location marker for:", location);
+    const newPosition = { lat: location.latitude, lng: location.longitude };
 
-    // Remove existing marker
+    // If marker already exists, just update its position smoothly
     if (userMarker) {
-      userMarker.setMap(null);
+      console.log("📍 Updating existing marker position:", location);
+      userMarker.setPosition(newPosition);
+      userMarker.setTitle(
+        `📍 ${isTracking ? "Live Location" : "Your Location"}\nAccuracy: ±${Math.round(location.accuracy || 0)}m`,
+      );
+      return;
     }
 
-    // Create enhanced marker
+    console.log("📍 Creating initial location marker for:", location);
+
+    // Create enhanced marker (only once)
     const customIcon = {
       url: `data:image/svg+xml,${encodeURIComponent(`
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -283,11 +292,11 @@ export function GoogleMap({
     };
 
     const marker = new google.maps.Marker({
-      position: { lat: location.latitude, lng: location.longitude },
+      position: newPosition,
       map,
       title: `📍 ${isTracking ? "Live Location" : "Your Location"}\nAccuracy: ±${Math.round(location.accuracy || 0)}m`,
       icon: customIcon,
-      animation: google.maps.Animation.DROP,
+      animation: google.maps.Animation.DROP, // Only animate on initial creation
       zIndex: 10000,
       optimized: false,
     });
@@ -659,26 +668,150 @@ export function GoogleMap({
 
   const getMapStyles = (theme: string): google.maps.MapTypeStyle[] => {
     const styles = {
-      standard: [],
-      light: [],
-      silver: [
-        { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
+      light: [
+        // Clean, bright theme for daytime use
+        { elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#333333" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }] },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#f8f8f8" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#e8e8e8" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#b3d9ff" }],
+        },
+        {
+          featureType: "landscape",
+          elementType: "geometry",
+          stylers: [{ color: "#f0f0f0" }],
+        },
       ],
       dark: [
-        { elementType: "geometry", stylers: [{ color: "#212121" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+        // Dark theme for low-light conditions
+        { elementType: "geometry", stylers: [{ color: "#1a1a1a" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#cccccc" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a1a" }] },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#2d2d2d" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#404040" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#0d47a1" }],
+        },
+        {
+          featureType: "landscape",
+          elementType: "geometry",
+          stylers: [{ color: "#262626" }],
+        },
       ],
-      retro: [
-        { elementType: "geometry", stylers: [{ color: "#ebe3cd" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#523735" }] },
+      safety: [
+        // High-contrast safety theme with emphasis on important features
+        { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#000000" }] },
+        {
+          elementType: "labels.text.stroke",
+          stylers: [{ color: "#ffffff", weight: 2 }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#ffffff" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#000000" }],
+        },
+        {
+          featureType: "road.arterial",
+          elementType: "geometry",
+          stylers: [{ color: "#666666" }],
+        },
+        {
+          featureType: "poi.medical",
+          elementType: "geometry",
+          stylers: [{ color: "#ff0000" }],
+        },
+        {
+          featureType: "poi.school",
+          elementType: "geometry",
+          stylers: [{ color: "#333333" }],
+        },
+        {
+          featureType: "transit.station",
+          elementType: "geometry",
+          stylers: [{ color: "#888888" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#000000" }],
+        },
+        {
+          featureType: "landscape",
+          elementType: "geometry",
+          stylers: [{ color: "#f0f0f0" }],
+        },
       ],
       night: [
-        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        // Optimized for nighttime navigation
+        { elementType: "geometry", stylers: [{ color: "#0a0a0a" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#ff6b6b" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#0a0a0a" }] },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#1a1a1a" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#333333" }],
+        },
+        {
+          featureType: "road.arterial",
+          elementType: "geometry",
+          stylers: [{ color: "#444444" }],
+        },
+        {
+          featureType: "poi.medical",
+          elementType: "geometry",
+          stylers: [{ color: "#ff0000" }],
+        },
+        {
+          featureType: "poi.school",
+          elementType: "geometry",
+          stylers: [{ color: "#666666" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#001122" }],
+        },
+        {
+          featureType: "landscape",
+          elementType: "geometry",
+          stylers: [{ color: "#111111" }],
+        },
       ],
     };
-    return styles[theme as keyof typeof styles] || [];
+    return styles[theme as keyof typeof styles] || styles.light;
   };
 
   if (!GOOGLE_MAPS_API_KEY) {

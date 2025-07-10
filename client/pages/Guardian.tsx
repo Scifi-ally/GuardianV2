@@ -19,7 +19,6 @@ import {
   LogOut,
   Key,
   Layers,
-  Brain,
 } from "lucide-react";
 import {
   SlidingPanel,
@@ -33,17 +32,22 @@ import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { RealTimeSOSTracker } from "@/components/RealTimeSOSTracker";
 import { EnhancedSOSButton } from "@/components/EnhancedSOSButton";
-import { GuardianKeyCard } from "@/components/GuardianKeyCard";
+
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { SOSAlertManager } from "@/components/SOSAlertManager";
 import { BackgroundSafetyMonitor } from "@/components/BackgroundSafetyMonitor";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MapServiceInfo } from "@/components/MapServiceInfo";
-import AIInsightsPanel from "@/components/AIInsightsPanel";
+
 import { useHapticFeedback, useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { SOSService } from "@/services/sosService";
 import { useMapTheme } from "@/hooks/use-map-theme";
+import {
+  routeCalculationService,
+  type RouteOption,
+  type RouteCalculationResult,
+} from "@/services/routeCalculationService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +69,14 @@ export default function Guardian() {
   const [currentSafetyScore, setCurrentSafetyScore] = useState(85);
   const [isNavigating, setIsNavigating] = useState(false);
   const [navigationRoute, setNavigationRoute] = useState<any>(null);
-  const [showAIInsights, setShowAIInsights] = useState(false);
+  const [routeOptions, setRouteOptions] =
+    useState<RouteCalculationResult | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<RouteOption | null>(null);
+  const [isCalculatingRoutes, setIsCalculatingRoutes] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+
+  const [showTraffic, setShowTraffic] = useState(false);
+  const [enableSatelliteView, setEnableSatelliteView] = useState(false);
 
   const { currentUser, userProfile, logout } = useAuth();
   const { successVibration, warningVibration, emergencyVibration } =
@@ -75,18 +86,14 @@ export default function Guardian() {
 
   const emergencyContacts = userProfile?.emergencyContacts || [];
 
-  // Real-time AI safety analysis with enhanced features
+  // Gemini API-based safety analysis
   useEffect(() => {
     if (location) {
-      const analyzeCurrentLocation = async () => {
+      const analyzeLocationSafety = async () => {
         try {
           const { geminiNewsAnalysisService } = await import(
             "@/services/geminiNewsAnalysisService"
           );
-          const { aiThreatDetection } = await import(
-            "@/services/aiThreatDetection"
-          );
-          const { aiCompanion } = await import("@/services/aiCompanionService");
 
           const analysis = await geminiNewsAnalysisService.analyzeAreaSafety(
             location.latitude,
@@ -95,74 +102,47 @@ export default function Guardian() {
 
           setCurrentSafetyScore(analysis.score);
 
-          // Update AI services with new location data
-          aiThreatDetection.addLocationData({
-            latitude: location.latitude,
-            longitude: location.longitude,
-            accuracy: location.accuracy,
-          });
-
-          aiCompanion.updateContext({
-            currentLocation: {
-              lat: location.latitude,
-              lng: location.longitude,
-            },
-            safetyScore: analysis.score,
-            isMoving: true,
-          });
-
-          // Update safety status based on score
-          if (analysis.score < 40) {
-            setSafetyStatus("alert");
-            warningVibration();
-
-            // Notify AI companion of safety concern
-            aiCompanion.processEvent({
-              type: "safety_score_change",
-              data: { oldScore: currentSafetyScore, newScore: analysis.score },
-            });
-          } else if (analysis.score >= 80) {
+          // Update safety status based on Gemini analysis
+          if (analysis.score >= 70) {
             setSafetyStatus("safe");
+          } else if (analysis.score >= 40) {
+            setSafetyStatus("alert");
+          } else {
+            setSafetyStatus("emergency");
+            warningVibration();
           }
 
-          console.log("🛡️ Current area safety analysis:", analysis);
+          console.log("🧠 Gemini safety analysis:", analysis);
         } catch (error) {
-          console.warn("Failed to analyze current location safety:", error);
+          console.warn("Gemini analysis failed, using fallback:", error);
+          // Fallback safety logic
+          const hour = new Date().getHours();
+          if (hour >= 6 && hour <= 20) {
+            setSafetyStatus("safe");
+            setCurrentSafetyScore(75);
+          } else {
+            setSafetyStatus("alert");
+            setCurrentSafetyScore(60);
+          }
         }
       };
 
-      // Analyze on location change with debounce
-      const timeout = setTimeout(analyzeCurrentLocation, 2000);
+      const timeout = setTimeout(analyzeLocationSafety, 2000);
       return () => clearTimeout(timeout);
     }
-  }, [location, warningVibration, currentSafetyScore]);
+  }, [location, warningVibration]);
 
-  // Monitor navigation state
+  // Basic navigation state monitoring
   useEffect(() => {
-    const checkNavigationState = async () => {
-      try {
-        const { aiEnhancedNavigation } = await import(
-          "@/services/aiEnhancedNavigation"
-        );
-        const navState = aiEnhancedNavigation.getNavigationState();
-
-        if (navState?.isNavigating && !isNavigating) {
-          setIsNavigating(true);
-          setNavigationRoute(navState.route);
-          console.log("🧭 Navigation state activated");
-        } else if (!navState?.isNavigating && isNavigating) {
-          setIsNavigating(false);
-          setNavigationRoute(null);
-          console.log("🛑 Navigation state deactivated");
-        }
-      } catch (error) {
-        console.warn("Failed to check navigation state:", error);
-      }
+    // Simple navigation state updates
+    const updateNavigationState = () => {
+      // Navigation state will be controlled by user actions
+      console.log("Navigation monitoring active");
     };
 
-    const interval = setInterval(checkNavigationState, 3000);
+    const interval = setInterval(updateNavigationState, 10000);
     return () => clearInterval(interval);
-  }, [isNavigating]);
+  }, []);
 
   const openPanel = useCallback(
     (panelId: string) => {
@@ -232,7 +212,7 @@ export default function Guardian() {
   const shareLocation = useCallback(async () => {
     try {
       const loc = await getCurrentLocation();
-      const message = `Guardian Alert: I'm at https://maps.google.com/?q=${loc.latitude},${loc.longitude}`;
+      const message = `Guardian Alert: I'm at coordinates ${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`;
 
       if (navigator.share) {
         await navigator.share({
@@ -270,15 +250,21 @@ export default function Guardian() {
 
   const quickCall = useCallback(
     (phone: string) => {
-      window.location.href = `tel:${phone}`;
+      // Internal call handling - copy number to clipboard
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(phone);
+        alert(`Phone number ${phone} copied to clipboard`);
+      } else {
+        alert(`Emergency number: ${phone}`);
+      }
       warningVibration();
     },
     [warningVibration],
   );
 
   const statusColors = {
-    safe: "bg-safe text-safe-foreground",
-    alert: "bg-warning text-warning-foreground",
+    safe: "bg-black text-white",
+    alert: "bg-black text-white",
     emergency: "bg-emergency text-emergency-foreground animate-pulse",
   };
 
@@ -313,27 +299,15 @@ export default function Guardian() {
                 )}
               </div>
             </div>
-            {/* Real-time AI Status Indicator */}
+            {/* Location Status */}
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-gray-600">AI Active</span>
-              </div>
               <Badge
                 variant="outline"
-                className="text-xs border-gray-300 text-black bg-gray-50"
+                className="text-xs border-black text-black bg-white"
               >
-                Score: {currentSafetyScore}
+                <MapPin className="h-3 w-3 mr-1" />
+                Location Active
               </Badge>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowAIInsights(!showAIInsights)}
-                className="h-7 px-2 text-xs border-gray-300 text-black hover:bg-gray-100"
-              >
-                <Brain className="h-3 w-3 mr-1" />
-                Insights
-              </Button>
             </div>
           </div>
         </div>
@@ -361,22 +335,10 @@ export default function Guardian() {
                   location={location}
                   mapTheme={mapTheme}
                   mapType={mapType}
-                  showTraffic={true}
-                  showSafeZones={true}
+                  showTraffic={showTraffic}
+                  showSafeZones={false}
                   showEmergencyServices={true}
                   zoomLevel={15}
-                  emergencyContacts={emergencyContacts.map((contact) => ({
-                    id: contact.id,
-                    name: contact.name,
-                    guardianKey: contact.guardianKey,
-                    location: {
-                      lat: 37.7749 + Math.random() * 0.01,
-                      lng: -122.4194 + Math.random() * 0.01,
-                    }, // Mock locations for demo
-                  }))}
-                  onLocationUpdate={(newLocation) => {
-                    console.log("Location updated:", newLocation);
-                  }}
                 />
               </div>
               {/* Map loading overlay */}
@@ -474,10 +436,10 @@ export default function Guardian() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setShowAIInsights(true)}
+                    onClick={() => openPanel("safety-overview")}
                     className="text-xs px-2 py-1 h-6 text-gray-600 hover:text-black"
                   >
-                    AI Details
+                    Details
                   </Button>
                 </h3>
                 <div className="grid grid-cols-3 gap-2">
@@ -487,8 +449,8 @@ export default function Guardian() {
                   >
                     <CardContent className="p-3 text-center">
                       <div className="flex flex-col items-center gap-1">
-                        <div className="p-2 rounded-full bg-gray-100 transition-all duration-200 group-hover:bg-gray-200 group-hover:scale-110">
-                          <Users className="h-4 w-4 text-black transition-all duration-200 group-hover:scale-110" />
+                        <div className="p-2 rounded-full bg-white border-2 border-black transition-all duration-200 group-hover:bg-black group-hover:scale-110">
+                          <Users className="h-4 w-4 text-black transition-all duration-200 group-hover:text-white group-hover:scale-110" />
                         </div>
                         <div className="text-lg font-bold text-black transition-all duration-200 group-hover:scale-110">
                           {emergencyContacts.length}
@@ -510,33 +472,33 @@ export default function Guardian() {
 
                   <Card
                     className="group border-gray-200 bg-white cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-gray-400 transform hover:scale-105 hover:-translate-y-1 active:scale-95"
-                    onClick={() => openPanel("ai-analysis")}
+                    onClick={() => openPanel("safety-overview")}
                   >
                     <CardContent className="p-3 text-center">
                       <div className="flex flex-col items-center gap-1">
-                        <div className="p-2 rounded-full bg-gray-100 transition-all duration-200 group-hover:bg-gray-200 group-hover:scale-110">
-                          <Brain className="h-4 w-4 text-black transition-all duration-200 group-hover:scale-110" />
+                        <div className="p-2 rounded-full bg-white border-2 border-black transition-all duration-200 group-hover:bg-black group-hover:scale-110">
+                          <Shield className="h-4 w-4 text-black transition-all duration-200 group-hover:text-white group-hover:scale-110" />
                         </div>
                         <div className="text-lg font-bold text-black transition-all duration-200 group-hover:scale-110">
-                          {currentSafetyScore}
+                          {safetyStatus.toUpperCase()}
                         </div>
                         <div className="text-xs text-gray-600 transition-all duration-200 group-hover:text-black">
-                          AI Safety Score
+                          Safety Status
                         </div>
                         <Badge
                           className={`text-xs mt-1 transition-all duration-200 group-hover:scale-105 ${
-                            currentSafetyScore >= 80
+                            safetyStatus === "safe"
                               ? "bg-black text-white"
-                              : currentSafetyScore >= 60
+                              : safetyStatus === "alert"
                                 ? "bg-gray-600 text-white"
                                 : "bg-gray-800 text-white"
                           }`}
                         >
-                          {currentSafetyScore >= 80
-                            ? "SAFE"
-                            : currentSafetyScore >= 60
+                          {safetyStatus === "safe"
+                            ? "SECURE"
+                            : safetyStatus === "alert"
                               ? "CAUTION"
-                              : "ALERT"}
+                              : "EMERGENCY"}
                         </Badge>
                       </div>
                     </CardContent>
@@ -548,14 +510,14 @@ export default function Guardian() {
                   >
                     <CardContent className="p-3 text-center">
                       <div className="flex flex-col items-center gap-1">
-                        <div className="p-2 rounded-full bg-gray-100 transition-all duration-200 group-hover:bg-gray-200 group-hover:scale-110">
-                          <NavIcon className="h-4 w-4 text-black transition-all duration-200 group-hover:scale-110" />
+                        <div className="p-2 rounded-full bg-white border-2 border-black transition-all duration-200 group-hover:bg-black group-hover:scale-110">
+                          <NavIcon className="h-4 w-4 text-black transition-all duration-200 group-hover:text-white group-hover:scale-110" />
                         </div>
                         <div className="text-lg font-bold text-black transition-all duration-200 group-hover:scale-110">
                           {isNavigating ? "ON" : "OFF"}
                         </div>
                         <div className="text-xs text-gray-600 transition-all duration-200 group-hover:text-black">
-                          AI Navigation
+                          Navigation
                         </div>
                         <Badge
                           className={`text-xs mt-1 transition-all duration-200 group-hover:scale-105 ${
@@ -661,13 +623,11 @@ export default function Guardian() {
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                {location
-                  ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-                  : "Getting precise location..."}
+                Location tracking is enabled
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-safe rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-black rounded-full animate-pulse" />
                   <span className="text-xs text-muted-foreground">
                     GPS Strong
                   </span>
@@ -687,7 +647,7 @@ export default function Guardian() {
               <Button
                 size="sm"
                 onClick={shareLocation}
-                className="h-8 bg-safe hover:bg-safe/90 text-xs px-3"
+                className="h-8 bg-black hover:bg-black/90 text-white text-xs px-3"
               >
                 <MapPin className="h-3 w-3 mr-1" />
                 Share
@@ -722,10 +682,10 @@ export default function Guardian() {
               </Button>
               <Button
                 variant="outline"
-                className="group h-12 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-black/10 hover:border-black/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
               >
-                <Shield className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-safe" />
-                <span className="transition-all duration-200 group-hover:text-safe group-hover:font-medium">
+                <Shield className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-black" />
+                <span className="transition-all duration-200 group-hover:text-black group-hover:font-medium">
                   Safe Zones
                 </span>
               </Button>
@@ -740,36 +700,94 @@ export default function Guardian() {
               </Button>
               <Button
                 variant="outline"
-                className="group h-12 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
+                className="group h-12 flex-col gap-1 text-xs hover:bg-black/10 hover:border-black/30 transition-all duration-300 transform hover:scale-105 hover:shadow-md active:scale-95"
               >
-                <Camera className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-protection" />
-                <span className="transition-all duration-200 group-hover:text-protection group-hover:font-medium">
+                <Camera className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-black" />
+                <span className="transition-all duration-200 group-hover:text-black group-hover:font-medium">
                   CCTV
                 </span>
               </Button>
             </div>
           </div>
 
-          {/* Map Theme Controls */}
+          {/* Enhanced Map Theme Controls */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Map Style</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant={mapTheme === "light" ? "default" : "outline"}
-                onClick={toggleTheme}
-                className="h-10 text-xs"
-              >
-                {mapTheme === "light" ? "🌞" : "🌙"}{" "}
-                {mapTheme === "light" ? "Light" : "Dark"}
-              </Button>
-              <Button
-                variant={mapType === "normal" ? "default" : "outline"}
-                onClick={toggleMapType}
-                className="h-10 text-xs"
-              >
-                {mapType === "normal" ? "🗺️" : "🛰️"}{" "}
-                {mapType === "normal" ? "Map" : "Satellite"}
-              </Button>
+            <h3 className="text-sm font-medium mb-3">Map Style & View</h3>
+            <div className="space-y-3">
+              {/* Theme Selector */}
+              <div>
+                <p className="text-xs text-gray-600 mb-2">Theme</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={toggleTheme}
+                    className="h-12 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 transform hover:scale-105"
+                  >
+                    <span className="text-base">
+                      {mapTheme === "light"
+                        ? "����"
+                        : mapTheme === "dark"
+                          ? "🌙"
+                          : mapTheme === "safety"
+                            ? "🛡️"
+                            : "🌌"}
+                    </span>
+                    <span className="text-xs font-medium">
+                      {mapTheme === "light"
+                        ? "Light"
+                        : mapTheme === "dark"
+                          ? "Dark"
+                          : mapTheme === "safety"
+                            ? "Safety"
+                            : "Night"}
+                    </span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={toggleMapType}
+                    className="h-12 flex-col gap-1 text-xs hover:bg-primary/10 hover:border-primary/30 transition-all duration-300 transform hover:scale-105"
+                  >
+                    <span className="text-base">
+                      {mapType === "normal"
+                        ? "🗺️"
+                        : mapType === "satellite"
+                          ? "🛰️"
+                          : "🏔️"}
+                    </span>
+                    <span className="text-xs font-medium">
+                      {mapType === "normal"
+                        ? "Standard"
+                        : mapType === "satellite"
+                          ? "Satellite"
+                          : "Terrain"}
+                    </span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Theme Description */}
+              <div className="p-2 bg-gray-50 rounded-lg border">
+                <div className="text-xs text-gray-600">
+                  <div className="font-medium mb-1">
+                    {mapTheme === "light"
+                      ? "Light Mode"
+                      : mapTheme === "dark"
+                        ? "Dark Mode"
+                        : mapTheme === "safety"
+                          ? "Safety Mode"
+                          : "Night Mode"}
+                  </div>
+                  <div>
+                    {mapTheme === "light"
+                      ? "Standard daylight view with clear details"
+                      : mapTheme === "dark"
+                        ? "Low-light display for evening use"
+                        : mapTheme === "safety"
+                          ? "High-contrast view highlighting safety features"
+                          : "Optimized for nighttime navigation"}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           {/* Quick Actions */}
@@ -791,8 +809,8 @@ export default function Guardian() {
                 variant="outline"
                 className="group h-16 flex-col gap-1 text-xs hover:bg-safe/10 hover:border-safe/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <Clock className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-safe" />
-                <span className="transition-all duration-200 group-hover:text-safe group-hover:font-medium">
+                <Clock className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-black" />
+                <span className="transition-all duration-200 group-hover:text-black group-hover:font-medium">
                   Check-in Timer
                 </span>
               </Button>
@@ -801,8 +819,8 @@ export default function Guardian() {
                 variant="outline"
                 className="group h-16 flex-col gap-1 text-xs hover:bg-protection/10 hover:border-protection/30 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:-translate-y-1 active:scale-95"
               >
-                <MapPin className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-protection" />
-                <span className="transition-all duration-200 group-hover:text-protection group-hover:font-medium">
+                <MapPin className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:text-black" />
+                <span className="transition-all duration-200 group-hover:text-black group-hover:font-medium">
                   Safe Places
                 </span>
               </Button>
@@ -818,14 +836,27 @@ export default function Guardian() {
                   <Activity className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Show Traffic</span>
                 </div>
-                <Switch defaultChecked />
+                <Switch
+                  checked={showTraffic}
+                  onCheckedChange={setShowTraffic}
+                />
               </div>
               <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">Satellite View</span>
                 </div>
-                <Switch />
+                <Switch
+                  checked={enableSatelliteView}
+                  onCheckedChange={(checked) => {
+                    setEnableSatelliteView(checked);
+                    if (checked && mapType !== "satellite") {
+                      toggleMapType();
+                    } else if (!checked && mapType === "satellite") {
+                      toggleMapType();
+                    }
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -843,14 +874,6 @@ export default function Guardian() {
         isVisible={showMapInfo}
         onClose={() => setShowMapInfo(false)}
         serviceStatus={mapServiceStatus}
-      />
-
-      {/* AI Insights Panel */}
-      <AIInsightsPanel
-        isVisible={showAIInsights}
-        onClose={() => setShowAIInsights(false)}
-        currentLocation={location}
-        safetyScore={currentSafetyScore}
       />
 
       {/* Sliding Panels */}
@@ -905,6 +928,83 @@ export default function Guardian() {
               </div>
             </div>
           </div>
+
+          <div className="space-y-4">
+            <h3 className="font-medium">Developer Settings</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Debug Console</p>
+                  <p className="text-xs text-muted-foreground">
+                    Show location and technical information
+                  </p>
+                </div>
+                <Switch checked={showDebug} onCheckedChange={setShowDebug} />
+              </div>
+
+              {/* Debug Content */}
+              {showDebug && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Debug Information
+                  </h4>
+
+                  {location ? (
+                    <div className="space-y-2 text-xs">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="font-medium">Lat:</span>{" "}
+                          {location.latitude.toFixed(6)}
+                        </div>
+                        <div>
+                          <span className="font-medium">Lng:</span>{" "}
+                          {location.longitude.toFixed(6)}
+                        </div>
+                        <div>
+                          <span className="font-medium">Accuracy:</span> ±
+                          {Math.round(location.accuracy || 0)}m
+                        </div>
+                        <div>
+                          <span className="font-medium">Status:</span>{" "}
+                          {safetyStatus.toUpperCase()}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium">Updated:</span>{" "}
+                        {new Date().toLocaleTimeString()}
+                      </div>
+                      <div>
+                        <span className="font-medium">Navigation:</span>{" "}
+                        {isNavigating ? "Active" : "Inactive"}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-gray-600">
+                      Location not available
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t">
+                    <div className="text-xs text-gray-600">
+                      <div>
+                        <span className="font-medium">Platform:</span>{" "}
+                        {navigator.platform}
+                      </div>
+                      <div>
+                        <span className="font-medium">Language:</span>{" "}
+                        {navigator.language}
+                      </div>
+                      <div>
+                        <span className="font-medium">Online:</span>{" "}
+                        {navigator.onLine ? "Yes" : "No"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </SlidingPanel>
 
@@ -929,7 +1029,7 @@ export default function Guardian() {
 
           <div className="space-y-3">
             <Button
-              className="w-full h-12 bg-warning hover:bg-warning/90 text-warning-foreground"
+              className="w-full h-12 bg-black hover:bg-black/90 text-white"
               onClick={() => {
                 successVibration();
               }}
@@ -951,7 +1051,7 @@ export default function Guardian() {
         size="md"
       >
         <div className="space-y-4">
-          <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+          <div className="p-4 bg-black/5 rounded-lg border border-black/20">
             <Activity className="h-8 w-8 text-primary mb-2" />
             <h3 className="font-medium mb-2">Live Location Tracking</h3>
             <p className="text-sm text-muted-foreground">
@@ -999,8 +1099,8 @@ export default function Guardian() {
         size="sm"
       >
         <div className="space-y-4">
-          <div className="p-4 bg-safe/5 rounded-lg border border-safe/20">
-            <Clock className="h-8 w-8 text-safe mb-2" />
+          <div className="p-4 bg-black/5 rounded-lg border border-black/20">
+            <Clock className="h-8 w-8 text-black mb-2" />
             <h3 className="font-medium mb-2">Safety Check-in</h3>
             <p className="text-sm text-muted-foreground">
               Set a timer to automatically alert contacts if you don't check in.
@@ -1026,7 +1126,7 @@ export default function Guardian() {
               </div>
             </div>
 
-            <Button className="w-full bg-safe hover:bg-safe/90 text-safe-foreground">
+            <Button className="w-full bg-black hover:bg-black/90 text-white">
               Start Check-in Timer
             </Button>
           </div>
@@ -1105,7 +1205,7 @@ export default function Guardian() {
           <div className="grid grid-cols-2 gap-4">
             <Card>
               <CardContent className="p-3 text-center">
-                <div className="text-2xl font-bold text-safe">
+                <div className="text-2xl font-bold text-black">
                   {Math.floor(Math.random() * 50) + 10}
                 </div>
                 <div className="text-xs text-muted-foreground">Safe Trips</div>
@@ -1127,7 +1227,7 @@ export default function Guardian() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Today's Safe Trips</span>
-                <span className="text-safe font-medium">
+                <span className="text-black font-medium">
                   +{Math.floor(Math.random() * 5) + 1}
                 </span>
               </div>
@@ -1139,7 +1239,7 @@ export default function Guardian() {
               </div>
               <div className="flex justify-between text-sm">
                 <span>Emergency Readiness</span>
-                <span className="text-protection font-medium">100%</span>
+                <span className="text-black font-medium">100%</span>
               </div>
             </div>
           </div>
@@ -1156,85 +1256,88 @@ export default function Guardian() {
         <div className="space-y-4">
           <div className="p-4 bg-white rounded-lg border border-gray-200">
             <NavIcon className="h-8 w-8 text-black mb-2" />
-            <h3 className="font-medium mb-2 text-black">
-              AI-Powered Safe Route Planning
-            </h3>
+            <h3 className="font-medium mb-2 text-black">Safe Route Planning</h3>
             <p className="text-sm text-gray-600">
-              Get AI-analyzed routes with real-time safety scoring, avoiding
-              high-risk areas and prioritizing well-lit, populated paths.
+              Plan safe routes prioritizing well-lit, populated paths and
+              avoiding high-risk areas based on time and location factors.
             </p>
           </div>
 
           <div className="space-y-3">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-black">Destination</p>
+              <p className="text-sm font-medium text-black">
+                Quick Route Planning
+              </p>
               <div className="flex gap-2">
                 <input
+                  id="quick-route-destination"
                   type="text"
                   placeholder="Enter destination..."
                   className="flex-1 p-2 text-sm border border-gray-300 rounded-lg bg-white text-black placeholder:text-gray-500"
-                  onChange={async (e) => {
-                    const destination = e.target.value;
-                    if (destination.length > 3) {
-                      console.log("🎯 Setting destination:", destination);
-                      // You could add geocoding here to convert address to coordinates
-                    }
-                  }}
                 />
                 <Button
                   size="sm"
                   className="px-3 bg-black hover:bg-gray-800 text-white border-0"
                   onClick={async () => {
-                    const destinationInput = document.querySelector(
-                      'input[placeholder="Enter destination..."]',
+                    const destinationInput = document.getElementById(
+                      "quick-route-destination",
                     ) as HTMLInputElement;
-                    if (destinationInput?.value) {
+                    if (!destinationInput?.value || !location) {
+                      alert(
+                        "Please enter a destination and ensure location is available",
+                      );
+                      return;
+                    }
+
+                    try {
+                      // Simulate destination coordinates (in real app, would use geocoding)
+                      const destination = {
+                        latitude:
+                          location.latitude + (Math.random() - 0.5) * 0.02,
+                        longitude:
+                          location.longitude + (Math.random() - 0.5) * 0.02,
+                      };
+
                       console.log(
-                        "🗺️ Starting AI navigation to:",
+                        "🎯 Calculating routes to:",
                         destinationInput.value,
                       );
-
-                      try {
-                        const location = await getCurrentLocation();
-                        // Mock destination coordinates (in real app, use geocoding)
-                        const mockDestination = {
-                          lat: location.latitude + 0.01,
-                          lng: location.longitude + 0.01,
-                        };
-
-                        // Import and use AI enhanced navigation
-                        const { aiEnhancedNavigation } = await import(
-                          "@/services/aiEnhancedNavigation"
+                      const routes =
+                        await routeCalculationService.calculateRoutes(
+                          location,
+                          destination,
                         );
-                        const route =
-                          await aiEnhancedNavigation.startNavigation(
-                            { lat: location.latitude, lng: location.longitude },
-                            mockDestination,
-                          );
+                      const recommended =
+                        routes.recommendedRoute === "safest"
+                          ? routes.safestRoute
+                          : routes.quickestRoute;
 
-                        console.log("✅ AI route created:", route);
-                        successVibration();
+                      setIsNavigating(true);
+                      setNavigationRoute(recommended);
+                      successVibration();
 
-                        // You could show a notification or update UI here
-                        alert(
-                          `AI Route planned! Safety score: ${route.overallSafetyScore}/100`,
-                        );
-                      } catch (error) {
-                        console.error("❌ Navigation failed:", error);
-                        warningVibration();
-                        alert("Failed to plan route. Please try again.");
-                      }
+                      alert(
+                        `Route planned to: ${destinationInput.value}\nUsing: ${recommended.title}\nDuration: ${recommended.duration}\nDistance: ${recommended.distance}\n\nFor more options, use the Routes panel.`,
+                      );
+                    } catch (error) {
+                      console.error("❌ Navigation failed:", error);
+                      warningVibration();
+                      alert("Failed to plan route. Please try again.");
                     }
                   }}
                 >
-                  Plan Route
+                  Quick Plan
                 </Button>
+              </div>
+              <div className="text-xs text-gray-600">
+                Uses intelligent route selection. For full options, tap “Routes”
+                below.
               </div>
             </div>
 
             <div className="space-y-2">
               <p className="text-sm font-medium text-black">
-                AI Safety Preferences
+                Safety Preferences
               </p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-white">
@@ -1257,7 +1360,7 @@ export default function Guardian() {
                 </div>
                 <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-white">
                   <span className="text-sm text-black">
-                    Real-time AI analysis
+                    Real-time monitoring
                   </span>
                   <Switch defaultChecked />
                 </div>
@@ -1269,44 +1372,30 @@ export default function Guardian() {
               onClick={async () => {
                 try {
                   const location = await getCurrentLocation();
-                  console.log(
-                    "🎯 Starting quick AI navigation from current location",
-                  );
+                  console.log("🎯 Starting navigation from current location");
 
-                  // Quick navigation to a nearby safe point
-                  const { aiEnhancedNavigation } = await import(
-                    "@/services/aiEnhancedNavigation"
-                  );
-                  const route = await aiEnhancedNavigation.startNavigation(
-                    { lat: location.latitude, lng: location.longitude },
-                    {
-                      lat: location.latitude + 0.005,
-                      lng: location.longitude + 0.005,
-                    },
-                  );
-
-                  console.log("✅ Quick AI route created:", route);
+                  // Start basic navigation
+                  setIsNavigating(true);
                   successVibration();
 
-                  const insights = route.aiInsights.join(". ");
                   alert(
-                    `AI Route ready! Safety: ${route.overallSafetyScore}/100\n\nAI Insights: ${insights}`,
+                    `Navigation started from: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`,
                   );
                 } catch (error) {
-                  console.error("❌ Quick navigation failed:", error);
+                  console.error("❌ Navigation failed:", error);
                   warningVibration();
                 }
               }}
             >
-              Start AI-Guided Navigation
+              Start Safe Navigation
             </Button>
           </div>
         </div>
       </SlidingPanel>
 
       <SlidingPanel
-        title="AI Safety Analysis"
-        isOpen={activePanel === "ai-analysis"}
+        title="Safety Overview"
+        isOpen={activePanel === "safety-overview"}
         onClose={closePanel}
         direction="right"
         size="md"
@@ -1314,68 +1403,42 @@ export default function Guardian() {
         <div className="space-y-4">
           <div className="p-4 bg-white rounded-lg border border-gray-200">
             <div className="flex items-center gap-2 mb-3">
-              <Brain className="h-6 w-6 text-black" />
+              <Shield className="h-6 w-6 text-black" />
               <h3 className="font-semibold text-black">
-                Current Location Analysis
+                Current Safety Status
               </h3>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">AI Safety Score</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-black transition-all duration-500"
-                      style={{ width: `${currentSafetyScore}%` }}
-                    />
-                  </div>
-                  <span className="font-bold text-black">
-                    {currentSafetyScore}/100
-                  </span>
-                </div>
+                <span className="text-sm text-gray-600">Status</span>
+                <Badge
+                  className={`text-xs ${
+                    safetyStatus === "safe"
+                      ? "bg-black text-white"
+                      : safetyStatus === "alert"
+                        ? "bg-gray-600 text-white"
+                        : "bg-red-500 text-white"
+                  }`}
+                >
+                  {safetyStatus.toUpperCase()}
+                </Badge>
               </div>
 
-              <div className="text-xs text-gray-600">
-                {currentSafetyScore >= 80
-                  ? "✅ Excellent safety conditions detected. Area shows high population density, good lighting, and low incident rates."
-                  : currentSafetyScore >= 60
-                    ? "⚠️ Moderate safety conditions. Standard precautions recommended. Stay aware of surroundings."
-                    : "🚨 Enhanced caution advised. Consider alternative routes or travel with others."}
+              <div className="text-xs text-gray-600 space-y-1">
+                <div>
+                  {safetyStatus === "safe"
+                    ? "✅ Area monitoring shows normal conditions. Standard precautions recommended."
+                    : safetyStatus === "alert"
+                      ? "⚠️ Elevated monitoring detected. Exercise additional caution."
+                      : "🚨 Safety concerns detected. Consider alternative routes or seek assistance."}
+                </div>
               </div>
             </div>
           </div>
 
-          {isNavigating && navigationRoute && (
-            <div className="p-4 bg-black rounded-lg text-white">
-              <div className="flex items-center gap-2 mb-3">
-                <NavIcon className="h-5 w-5" />
-                <h4 className="font-medium">Active AI Navigation</h4>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div>
-                  Route Safety: {navigationRoute.overallSafetyScore}/100
-                </div>
-                <div>
-                  Distance: {(navigationRoute.totalDistance / 1000).toFixed(1)}
-                  km
-                </div>
-                <div>
-                  Est. Time: {Math.round(navigationRoute.totalTime / 60)}min
-                </div>
-                {navigationRoute.aiInsights &&
-                  navigationRoute.aiInsights.length > 0 && (
-                    <div className="mt-2 text-xs">
-                      <div className="font-medium mb-1">AI Insights:</div>
-                      <div>{navigationRoute.aiInsights[0]}</div>
-                    </div>
-                  )}
-              </div>
-            </div>
-          )}
-
           <div className="space-y-2">
-            <h4 className="font-medium text-black">AI Features</h4>
+            <h4 className="font-medium text-black">Safety Features</h4>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
@@ -1393,15 +1456,28 @@ export default function Guardian() {
                           location.longitude,
                         );
                       setCurrentSafetyScore(analysis.score);
+
+                      // Update safety status based on analysis but don't show score
+                      if (analysis.score >= 70) {
+                        setSafetyStatus("safe");
+                      } else if (analysis.score >= 40) {
+                        setSafetyStatus("alert");
+                      } else {
+                        setSafetyStatus("emergency");
+                      }
+
                       successVibration();
-                      console.log("🔄 AI analysis refreshed:", analysis);
+                      alert(
+                        `Safety analysis updated!\nStatus: ${safetyStatus.toUpperCase()}\nKey factors: ${analysis.factors.slice(0, 2).join(", ")}`,
+                      );
                     } catch (error) {
-                      console.error("Failed to refresh analysis:", error);
+                      console.error("Failed to update analysis:", error);
+                      alert("Failed to update safety analysis");
                     }
                   }
                 }}
               >
-                Refresh Analysis
+                Update Status
               </Button>
               <Button
                 variant="outline"
@@ -1409,25 +1485,35 @@ export default function Guardian() {
                 className="text-xs border-gray-300 text-black hover:bg-gray-100"
                 onClick={() => openPanel("routes")}
               >
-                AI Routes
+                Safe Routes
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 className="text-xs border-gray-300 text-black hover:bg-gray-100"
-                onClick={() => {
-                  console.log("🎯 AI Insights:", {
-                    safetyScore: currentSafetyScore,
-                    isNavigating,
-                    location,
-                    timestamp: new Date().toISOString(),
-                  });
-                  alert(
-                    `AI Safety Insights:\n\nCurrent Score: ${currentSafetyScore}/100\nLocation: ${location ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : "Unknown"}\nNavigation: ${isNavigating ? "Active" : "Inactive"}`,
-                  );
+                onClick={async () => {
+                  if (location) {
+                    try {
+                      const { geminiNewsAnalysisService } = await import(
+                        "@/services/geminiNewsAnalysisService"
+                      );
+                      const analysis =
+                        await geminiNewsAnalysisService.analyzeAreaSafety(
+                          location.latitude,
+                          location.longitude,
+                        );
+
+                      const details = `Safety Analysis:\n\nStatus: ${safetyStatus.toUpperCase()}\nConfidence: ${analysis.confidence}%\n\nKey Factors:\n${analysis.factors.slice(0, 3).join("\n")}\n\nLocation: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}\nTime: ${new Date().toLocaleTimeString()}`;
+
+                      alert(details);
+                    } catch (error) {
+                      const fallbackDetails = `Safety Status: ${safetyStatus.toUpperCase()}\nLocation: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}\nTime: ${new Date().toLocaleTimeString()}`;
+                      alert(fallbackDetails);
+                    }
+                  }
                 }}
               >
-                View Insights
+                View Details
               </Button>
               <Button
                 variant="outline"
@@ -1437,6 +1523,297 @@ export default function Guardian() {
               >
                 Live Tracking
               </Button>
+            </div>
+          </div>
+        </div>
+      </SlidingPanel>
+
+      {/* Enhanced Routes Panel */}
+      <SlidingPanel
+        title="Route Planning"
+        isOpen={activePanel === "routes"}
+        onClose={closePanel}
+        direction="right"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-white rounded-lg border border-gray-200">
+            <div className="flex items-center gap-2 mb-3">
+              <NavIcon className="h-6 w-6 text-black" />
+              <h3 className="font-semibold text-black">Smart Route Planning</h3>
+            </div>
+            <p className="text-sm text-gray-600">
+              Get personalized route recommendations with real-time safety
+              analysis and optimization.
+            </p>
+          </div>
+
+          {/* Destination Input */}
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-black">Destination</p>
+              <div className="flex gap-2">
+                <input
+                  id="route-destination"
+                  type="text"
+                  placeholder="Enter destination address..."
+                  className="flex-1 p-3 text-sm border border-gray-300 rounded-lg bg-white text-black placeholder:text-gray-500 focus:border-black focus:outline-none"
+                />
+                <Button
+                  size="sm"
+                  disabled={isCalculatingRoutes}
+                  className="px-4 bg-black hover:bg-gray-800 text-white border-0 disabled:opacity-50"
+                  onClick={async () => {
+                    const destinationInput = document.getElementById(
+                      "route-destination",
+                    ) as HTMLInputElement;
+                    if (!destinationInput?.value || !location) {
+                      alert(
+                        "Please enter a destination and ensure location is available",
+                      );
+                      return;
+                    }
+
+                    setIsCalculatingRoutes(true);
+                    try {
+                      // Simulate destination coordinates (in real app, would use geocoding)
+                      const destination = {
+                        latitude:
+                          location.latitude + (Math.random() - 0.5) * 0.02,
+                        longitude:
+                          location.longitude + (Math.random() - 0.5) * 0.02,
+                      };
+
+                      console.log(
+                        "🎯 Calculating routes to:",
+                        destinationInput.value,
+                      );
+                      const routes =
+                        await routeCalculationService.calculateRoutes(
+                          location,
+                          destination,
+                        );
+                      setRouteOptions(routes);
+                      setSelectedRoute(
+                        routes.recommendedRoute === "safest"
+                          ? routes.safestRoute
+                          : routes.quickestRoute,
+                      );
+                      successVibration();
+                    } catch (error) {
+                      console.error("❌ Route calculation failed:", error);
+                      warningVibration();
+                      alert("Failed to calculate routes. Please try again.");
+                    } finally {
+                      setIsCalculatingRoutes(false);
+                    }
+                  }}
+                >
+                  {isCalculatingRoutes ? "Calculating..." : "Plan Routes"}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Route Options */}
+          {routeOptions && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-black">Route Options</h4>
+                <Badge className="bg-black text-white text-xs">
+                  Recommended:{" "}
+                  {routeOptions.recommendedRoute === "safest"
+                    ? "Safest"
+                    : "Quickest"}
+                </Badge>
+              </div>
+
+              <div className="space-y-3">
+                {/* Safest Route */}
+                <div
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    selectedRoute?.id === "safest"
+                      ? "border-black bg-black/5"
+                      : "border-gray-200 bg-white hover:border-gray-400"
+                  }`}
+                  onClick={() => setSelectedRoute(routeOptions.safestRoute)}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-black" />
+                      <h5 className="font-medium text-black">Safest Route</h5>
+                      {routeOptions.recommendedRoute === "safest" && (
+                        <Badge className="bg-black text-white text-xs">
+                          Recommended
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-black">
+                        {routeOptions.safestRoute.duration}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {routeOptions.safestRoute.distance}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-2">
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        routeOptions.safestRoute.safetyLevel === "high"
+                          ? "bg-green-500"
+                          : routeOptions.safestRoute.safetyLevel === "medium"
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                      }`}
+                    />
+                    <span className="text-xs text-gray-600 capitalize">
+                      {routeOptions.safestRoute.safetyLevel} Safety Level
+                    </span>
+                  </div>
+
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <div className="flex flex-wrap gap-1">
+                      {routeOptions.safestRoute.features
+                        .slice(0, 2)
+                        .map((feature, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-gray-100 px-2 py-1 rounded text-xs"
+                          >
+                            {feature}
+                          </span>
+                        ))}
+                    </div>
+                    {routeOptions.safestRoute.warnings &&
+                      routeOptions.safestRoute.warnings.length > 0 && (
+                        <div className="text-orange-600 mt-1">
+                          ⚠️ {routeOptions.safestRoute.warnings[0]}
+                        </div>
+                      )}
+                  </div>
+                </div>
+
+                {/* Quickest Route */}
+                <div
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    selectedRoute?.id === "quickest"
+                      ? "border-black bg-black/5"
+                      : "border-gray-200 bg-white hover:border-gray-400"
+                  }`}
+                  onClick={() => setSelectedRoute(routeOptions.quickestRoute)}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-black" />
+                      <h5 className="font-medium text-black">Quickest Route</h5>
+                      {routeOptions.recommendedRoute === "quickest" && (
+                        <Badge className="bg-black text-white text-xs">
+                          Recommended
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-black">
+                        {routeOptions.quickestRoute.duration}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {routeOptions.quickestRoute.distance}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-2">
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        routeOptions.quickestRoute.safetyLevel === "high"
+                          ? "bg-green-500"
+                          : routeOptions.quickestRoute.safetyLevel === "medium"
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                      }`}
+                    />
+                    <span className="text-xs text-gray-600 capitalize">
+                      {routeOptions.quickestRoute.safetyLevel} Safety Level
+                    </span>
+                  </div>
+
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <div className="flex flex-wrap gap-1">
+                      {routeOptions.quickestRoute.features
+                        .slice(0, 2)
+                        .map((feature, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-gray-100 px-2 py-1 rounded text-xs"
+                          >
+                            {feature}
+                          </span>
+                        ))}
+                    </div>
+                    {routeOptions.quickestRoute.warnings &&
+                      routeOptions.quickestRoute.warnings.length > 0 && (
+                        <div className="text-orange-600 mt-1">
+                          ⚠️ {routeOptions.quickestRoute.warnings[0]}
+                        </div>
+                      )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Start Navigation */}
+              <div className="space-y-2">
+                <Button
+                  className="w-full bg-black hover:bg-gray-800 text-white border-0 h-12"
+                  disabled={!selectedRoute}
+                  onClick={() => {
+                    if (selectedRoute) {
+                      setIsNavigating(true);
+                      setNavigationRoute(selectedRoute);
+                      successVibration();
+                      alert(
+                        `Navigation started using ${selectedRoute.title}\nDuration: ${selectedRoute.duration}\nDistance: ${selectedRoute.distance}`,
+                      );
+                      closePanel();
+                    }
+                  }}
+                >
+                  <NavIcon className="h-4 w-4 mr-2" />
+                  Start Navigation {selectedRoute && `(${selectedRoute.type})`}
+                </Button>
+
+                <div className="text-xs text-gray-600 text-center">
+                  {selectedRoute
+                    ? `Selected: ${selectedRoute.title} • ${selectedRoute.duration}`
+                    : "Select a route to begin navigation"}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Safety Preferences */}
+          <div className="space-y-2">
+            <h4 className="font-medium text-black">Safety Preferences</h4>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-white">
+                <span className="text-sm text-black">
+                  Avoid poorly lit areas
+                </span>
+                <Switch defaultChecked />
+              </div>
+              <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-white">
+                <span className="text-sm text-black">
+                  Prioritize busy streets
+                </span>
+                <Switch defaultChecked />
+              </div>
+              <div className="flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-white">
+                <span className="text-sm text-black">
+                  Real-time safety monitoring
+                </span>
+                <Switch defaultChecked />
+              </div>
             </div>
           </div>
         </div>
@@ -1496,7 +1873,7 @@ export default function Guardian() {
               className="h-16 flex-col gap-1 text-xs border-gray-300 text-black hover:bg-gray-100"
             >
               <NavIcon className="h-4 w-4" />
-              AI Routes
+              Routes
             </Button>
           </div>
         </div>

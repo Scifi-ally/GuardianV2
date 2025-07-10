@@ -125,7 +125,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
 
       // Enhanced SOS with immediate location sharing
       const locationUrl = currentLocation
-        ? `https://maps.google.com/?q=${currentLocation.latitude},${currentLocation.longitude}`
+        ? `coordinates ${currentLocation.latitude.toFixed(4)}, ${currentLocation.longitude.toFixed(4)}`
         : "Location unavailable";
 
       const emergencyMessage = `🚨 EMERGENCY ALERT: ${userProfile.displayName || "Emergency User"} needs immediate help! Location: ${locationUrl} - Time: ${new Date().toLocaleString()} - Please respond immediately or call emergency services!`;
@@ -140,18 +140,30 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
               text: emergencyMessage,
             });
           } catch (shareError) {
-            // Fallback to SMS
-            window.open(
-              `sms:${contact.phone}?body=${encodeURIComponent(emergencyMessage)}`,
-              "_blank",
-            );
+            // Fallback to clipboard copy
+            try {
+              if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(emergencyMessage);
+              }
+              console.log(
+                `Emergency message copied for ${contact.name}: ${contact.phone}`,
+              );
+            } catch (error) {
+              console.error("Failed to copy emergency message:", error);
+            }
           }
         } else {
-          // Direct SMS fallback
-          window.open(
-            `sms:${contact.phone}?body=${encodeURIComponent(emergencyMessage)}`,
-            "_blank",
-          );
+          // Direct clipboard fallback
+          try {
+            if (navigator.clipboard && window.isSecureContext) {
+              await navigator.clipboard.writeText(emergencyMessage);
+            }
+            console.log(
+              `Emergency message copied for ${contact.name}: ${contact.phone}`,
+            );
+          } catch (error) {
+            console.error("Failed to copy emergency message:", error);
+          }
         }
       });
 
@@ -184,11 +196,17 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
               const updatedLocation = await getCurrentLocation();
               const updateMessage = `🚨 SOS LOCATION UPDATE: ${locationUrl} - Time: ${new Date().toLocaleString()}`;
 
-              emergencyContacts.forEach((contact) => {
-                window.open(
-                  `sms:${contact.phone}?body=${encodeURIComponent(updateMessage)}`,
-                  "_blank",
-                );
+              emergencyContacts.forEach(async (contact) => {
+                try {
+                  if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(updateMessage);
+                  }
+                  console.log(
+                    `SOS update copied for ${contact.name}: ${contact.phone}`,
+                  );
+                } catch (error) {
+                  console.error("Failed to copy SOS update:", error);
+                }
               });
             } catch (error) {
               console.warn("Location update failed:", error);
@@ -243,6 +261,27 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       setShowPasswordModal(true);
     } else {
       cancelSOSAlert();
+    }
+  };
+
+  const stopActiveSOSAlert = async () => {
+    if (!activeAlertId || !currentUser) return;
+
+    try {
+      // Stop the location sharing interval
+      if ((window as any).sosLocationInterval) {
+        clearInterval((window as any).sosLocationInterval);
+        (window as any).sosLocationInterval = null;
+      }
+
+      // Cancel the SOS alert
+      await SOSService.cancelSOSAlert(activeAlertId, currentUser.uid);
+
+      setActiveAlertId(null);
+      toast.success("SOS alert cancelled");
+    } catch (error) {
+      console.error("Failed to stop SOS alert:", error);
+      toast.error("Failed to stop SOS alert");
     }
   };
 
@@ -316,25 +355,33 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
               const isActive = activeIndex === index;
               const isSpecial = item.isSpecial;
 
-              if (isSpecial && (sosPressed || sending)) {
+              if (isSpecial && (sosPressed || sending || activeAlertId)) {
                 return (
                   <button
                     key={item.id}
-                    onClick={sosPressed ? handleCancelSOS : undefined}
+                    onClick={
+                      sosPressed
+                        ? handleCancelSOS
+                        : activeAlertId
+                          ? stopActiveSOSAlert
+                          : undefined
+                    }
                     disabled={sending}
                     className={cn(
                       "relative flex flex-col items-center p-3 transition-all duration-300",
                       sosPressed
                         ? "bg-warning/20 rounded-2xl animate-pulse"
-                        : "bg-emergency/20 rounded-2xl",
+                        : activeAlertId
+                          ? "bg-red-500 text-white rounded-2xl animate-pulse"
+                          : "bg-emergency/20 rounded-2xl",
                       sending && "opacity-50 cursor-not-allowed",
                     )}
                   >
                     {sosPressed && (
                       <div className="absolute inset-0 rounded-2xl border-2 border-warning animate-ping" />
                     )}
-                    {sending && (
-                      <div className="absolute inset-0 rounded-2xl border-2 border-emergency animate-pulse" />
+                    {(sending || activeAlertId) && (
+                      <div className="absolute inset-0 rounded-2xl border-2 border-red-500 animate-pulse" />
                     )}
                     <div className="relative z-10 flex flex-col items-center">
                       {sosPressed ? (
@@ -344,6 +391,15 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                           </div>
                           <span className="text-xs text-warning font-medium">
                             Cancel
+                          </span>
+                        </>
+                      ) : activeAlertId ? (
+                        <>
+                          <div className="text-lg font-bold text-white mb-1">
+                            STOP
+                          </div>
+                          <span className="text-xs text-white font-medium">
+                            Active SOS
                           </span>
                         </>
                       ) : (

@@ -145,12 +145,28 @@ export function QuickSafetyActions() {
     }
 
     const primaryContact = userProfile.emergencyContacts[0];
-    const message = `🚨 URGENT: I need help! My location: ${location ? `https://maps.google.com/?q=${location.latitude},${location.longitude}` : "Location unavailable"} - Please respond immediately!`;
+    const locationText = location
+      ? `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`
+      : "Location unavailable";
+    const message = `🚨 URGENT: I need help! My location: ${locationText} - Please respond immediately! Time: ${new Date().toLocaleString()}`;
 
-    window.open(
-      `sms:${primaryContact.phone}?body=${encodeURIComponent(message)}`,
-    );
-    toast.success("Emergency SMS prepared");
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(message);
+      }
+      toast.success(
+        `Emergency message copied to clipboard for ${primaryContact.name} (${primaryContact.phone})`,
+        {
+          description: "Send this message manually",
+          duration: 5000,
+        },
+      );
+    } catch (error) {
+      alert(
+        `Send this emergency message to ${primaryContact.name} (${primaryContact.phone}):\n\n${message}`,
+      );
+      toast.success("Emergency message shown");
+    }
   };
 
   const callEmergencyContact = () => {
@@ -159,12 +175,30 @@ export function QuickSafetyActions() {
       userProfile.emergencyContacts.length === 0
     ) {
       // Fallback to 911
-      window.location.href = "tel:911";
-      toast.info("Calling emergency services");
+      // Copy emergency number instead of auto-calling
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText("911");
+        }
+        toast.info(
+          "Emergency number (911) copied to clipboard - Call manually",
+        );
+      } catch (error) {
+        toast.info("Call emergency services: 911");
+      }
     } else {
       const primaryContact = userProfile.emergencyContacts[0];
-      window.location.href = `tel:${primaryContact.phone}`;
-      toast.info(`Calling ${primaryContact.name}`);
+      // Copy contact number instead of auto-calling
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(primaryContact.phone);
+        }
+        toast.info(
+          `Contact number for ${primaryContact.name} copied to clipboard - Call manually`,
+        );
+      } catch (error) {
+        toast.info(`Call ${primaryContact.name}: ${primaryContact.phone}`);
+      }
     }
   };
 
