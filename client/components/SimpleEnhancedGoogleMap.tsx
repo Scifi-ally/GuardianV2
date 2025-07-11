@@ -67,13 +67,15 @@ export function GoogleMap({
   const [trafficLayers, setTrafficLayers] = useState<google.maps.Polyline[]>(
     [],
   );
+  const [safeZonePolygons, setSafeZonePolygons] = useState<
+    google.maps.Polygon[]
+  >([]);
   const [directionsService, setDirectionsService] =
     useState<google.maps.DirectionsService | null>(null);
   const [directionsRenderer, setDirectionsRenderer] =
     useState<google.maps.DirectionsRenderer | null>(null);
   const [destinationMarker, setDestinationMarker] =
     useState<google.maps.Marker | null>(null);
-  // Safety polygons removed - no map coloring
   const { addNotification } = useNotifications();
 
   console.log(
@@ -95,7 +97,7 @@ export function GoogleMap({
       return;
     }
 
-    console.log("🗺️ Initializing Simple Enhanced Google Map...");
+    console.log("🗺��� Initializing Simple Enhanced Google Map...");
 
     try {
       const newMap = new google.maps.Map(mapRef.current, {
@@ -170,6 +172,35 @@ export function GoogleMap({
       console.error("❌ Failed to create Google Map:", error);
     }
   }, [mapRef.current, mapTheme, mapType, zoomLevel]);
+
+  // Update map theme and type dynamically without recreating map
+  useEffect(() => {
+    if (!map) return;
+
+    // Update map type
+    const googleMapType =
+      mapType === "normal"
+        ? "roadmap"
+        : mapType === "terrain"
+          ? "terrain"
+          : mapType;
+
+    map.setMapTypeId(googleMapType as google.maps.MapTypeId);
+
+    // Update map styles for theme
+    map.setOptions({
+      styles: getMapStyles(mapTheme),
+    });
+
+    console.log(`🎨 Map updated - Theme: ${mapTheme}, Type: ${mapType}`);
+  }, [map, mapTheme, mapType]);
+
+  // Update zoom level dynamically
+  useEffect(() => {
+    if (!map) return;
+    map.setZoom(zoomLevel);
+    console.log(`🔍 Zoom updated to: ${zoomLevel}`);
+  }, [map, zoomLevel]);
 
   // Subscribe to real-time data updates
   useEffect(() => {
@@ -374,10 +405,16 @@ export function GoogleMap({
 
   // Render real-time emergency services
   useEffect(() => {
-    if (!map || !showEmergencyServices || !realTimeData) return;
+    if (!map) return;
 
     // Clear existing markers
     emergencyMarkers.forEach((marker) => marker.setMap(null));
+
+    // If emergency services are disabled or no data, just clear and return
+    if (!showEmergencyServices || !realTimeData) {
+      setEmergencyMarkers([]);
+      return;
+    }
 
     const newMarkers = realTimeData.emergencyServices.map((service) => {
       const iconColor =
@@ -434,82 +471,267 @@ export function GoogleMap({
     console.log(`🚨 Rendered ${newMarkers.length} emergency services`);
   }, [map, showEmergencyServices, realTimeData]);
 
-  // Render real-time traffic data
+  // Render Google Maps traffic layer
   useEffect(() => {
-    if (!map || !showTraffic || !realTimeData) return;
+    if (!map) return;
 
-    // Clear existing traffic layers
+    // Clear existing custom traffic layers
     trafficLayers.forEach((layer) => layer.setMap(null));
+    setTrafficLayers([]);
 
-    const newLayers = realTimeData.trafficData.map((traffic) => {
-      const getTrafficColor = (level: string) => {
-        switch (level) {
-          case "low":
-            return "#22c55e";
-          case "moderate":
-            return "#eab308";
-          case "high":
-            return "#f59e0b";
-          case "severe":
-            return "#ef4444";
-          default:
-            return "#6b7280";
+    // Handle Google Maps built-in traffic layer
+    if (!showTraffic) {
+      // Disable built-in traffic layer if it exists
+      const existingTrafficLayer = (map as any).trafficLayer;
+      if (existingTrafficLayer) {
+        existingTrafficLayer.setMap(null);
+      }
+      console.log("🚦 Traffic layer disabled");
+      return;
+    }
+
+    // Enable Google Maps built-in traffic layer
+    const trafficLayer = new google.maps.TrafficLayer();
+    trafficLayer.setMap(map);
+    console.log("🚦 Google Maps traffic layer enabled");
+
+    // Store reference to traffic layer for cleanup
+    (map as any).trafficLayer = trafficLayer;
+  }, [map, showTraffic]);
+
+  // Render continuous safety heat map overlay
+  useEffect(() => {
+    if (!map) return;
+
+    // Clear existing safe zone polygons
+    safeZonePolygons.forEach((polygon) => polygon.setMap(null));
+    setSafeZonePolygons([]);
+
+    // If safe zones are disabled, just clear and return
+    if (!showSafeZones) {
+      // Remove existing heat map overlay
+      const existingOverlay = (map as any).safetyHeatMapOverlay;
+      if (existingOverlay) {
+        existingOverlay.setMap(null);
+        (map as any).safetyHeatMapOverlay = null;
+      }
+      console.log("🛡️ Safety heat map disabled");
+      return;
+    }
+
+    // Create continuous safety heat map overlay
+    class SafetyHeatMapOverlay extends google.maps.OverlayView {
+      private canvas: HTMLCanvasElement;
+      private ctx: CanvasRenderingContext2D;
+
+      constructor() {
+        super();
+        this.canvas = document.createElement("canvas");
+        this.canvas.style.position = "absolute";
+        this.canvas.style.pointerEvents = "none";
+        this.canvas.style.top = "0";
+        this.canvas.style.left = "0";
+        this.ctx = this.canvas.getContext("2d")!;
+      }
+
+      onAdd() {
+        const panes = this.getPanes()!;
+        panes.overlayLayer.appendChild(this.canvas);
+      }
+
+      draw() {
+        const projection = this.getProjection();
+        if (!projection) return;
+
+        const bounds = map.getBounds();
+        if (!bounds) return;
+
+        // Get map container dimensions
+        const mapDiv = map.getDiv();
+        const rect = mapDiv.getBoundingClientRect();
+
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
+        this.canvas.style.width = rect.width + "px";
+        this.canvas.style.height = rect.height + "px";
+
+        // Clear canvas
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Create grid of safety scores with no gaps
+        const gridSize = 15; // pixels per grid cell (smaller = more detailed)
+        const cellsX = Math.ceil(this.canvas.width / gridSize) + 1;
+        const cellsY = Math.ceil(this.canvas.height / gridSize) + 1;
+
+        for (let x = 0; x < cellsX; x++) {
+          for (let y = 0; y < cellsY; y++) {
+            // Convert screen coordinates to lat/lng
+            const pixelX = x * gridSize;
+            const pixelY = y * gridSize;
+
+            const point = new google.maps.Point(pixelX, pixelY);
+            const latLng = projection.fromContainerPixelToLatLng(point);
+
+            if (latLng) {
+              // Calculate safety score for this point
+              const safetyScore = this.calculateSafetyScore(
+                latLng.lat(),
+                latLng.lng(),
+              );
+
+              // Get color based on safety score
+              const color = this.getSafetyColor(safetyScore);
+
+              // Draw filled rectangle for this grid cell (ensure no gaps)
+              this.ctx.fillStyle = color;
+              this.ctx.fillRect(pixelX, pixelY, gridSize + 1, gridSize + 1);
+            }
+          }
         }
-      };
+      }
 
-      const polyline = new google.maps.Polyline({
-        path: traffic.coords,
-        strokeColor: getTrafficColor(traffic.congestionLevel),
-        strokeOpacity: 0.8,
-        strokeWeight: 6,
-        map,
-        zIndex: 1500,
-      });
+      onRemove() {
+        if (this.canvas.parentNode) {
+          this.canvas.parentNode.removeChild(this.canvas);
+        }
+      }
 
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div class="p-3">
-            <h3 class="font-semibold mb-2">Traffic Info</h3>
-            <div class="space-y-1 text-sm">
-              <div>Congestion: <span class="font-medium capitalize">${traffic.congestionLevel}</span></div>
-              <div>Speed: <span class="font-medium">${Math.round(traffic.averageSpeed)} km/h</span></div>
-              ${
-                traffic.incidents.length > 0
-                  ? `
-                <div class="mt-2">
-                  <div class="text-red-600 font-medium">⚠️ Incidents:</div>
-                  ${traffic.incidents
-                    .map(
-                      (incident) => `
-                    <div class="text-xs">• ${incident.description}</div>
-                  `,
-                    )
-                    .join("")}
-                </div>
-              `
-                  : ""
-              }
-              <div class="text-xs text-gray-500 mt-2">
-                Updated: ${new Date(traffic.lastUpdate).toLocaleTimeString()}
-              </div>
-            </div>
-          </div>
-        `,
-      });
+      private calculateSafetyScore(lat: number, lng: number): number {
+        // Enhanced safety calculation based on multiple factors
+        let score = 65; // Base safety score
 
-      polyline.addListener("click", (event: google.maps.PolyMouseEvent) => {
-        infoWindow.setPosition(event.latLng);
-        infoWindow.open(map);
-      });
+        // Time of day factor
+        const hour = new Date().getHours();
+        if (hour >= 7 && hour <= 18) {
+          score += 20; // Daytime bonus
+        } else if (hour >= 22 || hour <= 5) {
+          score -= 25; // Late night penalty
+        } else {
+          score += 5; // Evening/early morning
+        }
 
-      return polyline;
+        // Distance from city center factor (assuming San Francisco)
+        const cityCenter = { lat: 37.7749, lng: -122.4194 };
+        const distance = this.getDistance(
+          lat,
+          lng,
+          cityCenter.lat,
+          cityCenter.lng,
+        );
+        if (distance < 2) {
+          score += 15; // Close to city center
+        } else if (distance < 10) {
+          score += 5; // Moderately close
+        } else if (distance > 25) {
+          score -= 20; // Far from city center
+        }
+
+        // Population density simulation (higher density = safer in urban areas)
+        const densityFactor = Math.sin(lat * 100) * Math.cos(lng * 100) * 12;
+        score += densityFactor;
+
+        // Neighborhood safety patterns
+        const neighborhoodFactor =
+          Math.sin(lat * 200) * Math.cos(lng * 200) * 10;
+        score += neighborhoodFactor;
+
+        // Crime hotspot simulation (some areas are less safe)
+        const crimeHotspots = [
+          { lat: 37.7849, lng: -122.4194, radius: 0.015, penalty: -35 },
+          { lat: 37.7649, lng: -122.4094, radius: 0.012, penalty: -25 },
+          { lat: 37.7549, lng: -122.4294, radius: 0.018, penalty: -40 },
+          { lat: 37.7949, lng: -122.4094, radius: 0.01, penalty: -20 },
+        ];
+
+        crimeHotspots.forEach((hotspot) => {
+          const dist = this.getDistance(lat, lng, hotspot.lat, hotspot.lng);
+          if (dist < hotspot.radius * 111) {
+            // Convert degrees to km approximately
+            const influence = Math.max(0, 1 - dist / (hotspot.radius * 111));
+            score += hotspot.penalty * influence;
+          }
+        });
+
+        // Safe zones (police stations, hospitals, schools)
+        const safeZones = [
+          { lat: 37.7749, lng: -122.4094, radius: 0.008, bonus: 25 },
+          { lat: 37.7649, lng: -122.4194, radius: 0.006, bonus: 20 },
+          { lat: 37.7849, lng: -122.4294, radius: 0.01, bonus: 30 },
+        ];
+
+        safeZones.forEach((zone) => {
+          const dist = this.getDistance(lat, lng, zone.lat, zone.lng);
+          if (dist < zone.radius * 111) {
+            const influence = Math.max(0, 1 - dist / (zone.radius * 111));
+            score += zone.bonus * influence;
+          }
+        });
+
+        // Ensure score stays within bounds
+        return Math.max(5, Math.min(95, score));
+      }
+
+      private getDistance(
+        lat1: number,
+        lng1: number,
+        lat2: number,
+        lng2: number,
+      ): number {
+        const R = 6371; // Earth's radius in km
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLng = ((lng2 - lng1) * Math.PI) / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      private getSafetyColor(score: number): string {
+        // Create smooth gradient from red (dangerous) to green (safe)
+        if (score >= 85) return `rgba(34, 197, 94, 0.35)`; // Very Safe - Bright Green
+        if (score >= 75) return `rgba(101, 163, 13, 0.35)`; // Safe - Green
+        if (score >= 65) return `rgba(132, 204, 22, 0.35)`; // Good - Light Green
+        if (score >= 55) return `rgba(234, 179, 8, 0.35)`; // Caution - Yellow
+        if (score >= 45) return `rgba(249, 115, 22, 0.35)`; // Warning - Orange
+        if (score >= 35) return `rgba(239, 68, 68, 0.35)`; // Danger - Red
+        if (score >= 25) return `rgba(220, 38, 38, 0.4)`; // High Danger - Dark Red
+        return `rgba(185, 28, 28, 0.45)`; // Very Dangerous - Very Dark Red
+      }
+    }
+
+    // Create and add the heat map overlay
+    const heatMapOverlay = new SafetyHeatMapOverlay();
+    heatMapOverlay.setMap(map);
+
+    // Store reference for cleanup
+    (map as any).safetyHeatMapOverlay = heatMapOverlay;
+
+    // Redraw when map bounds change
+    const boundsListener = map.addListener("bounds_changed", () => {
+      setTimeout(() => heatMapOverlay.draw(), 50);
     });
 
-    setTrafficLayers(newLayers);
-    console.log(`🚦 Rendered ${newLayers.length} traffic segments`);
-  }, [map, showTraffic, realTimeData]);
+    // Redraw when zoom changes
+    const zoomListener = map.addListener("zoom_changed", () => {
+      setTimeout(() => heatMapOverlay.draw(), 50);
+    });
 
-  // Safety area rendering completely removed per user request
+    // Store listeners for cleanup
+    (heatMapOverlay as any).boundsListener = boundsListener;
+    (heatMapOverlay as any).zoomListener = zoomListener;
+
+    console.log("🛡️ Continuous safety heat map overlay created");
+
+    // Cleanup function
+    return () => {
+      if (boundsListener) google.maps.event.removeListener(boundsListener);
+      if (zoomListener) google.maps.event.removeListener(zoomListener);
+    };
+  }, [map, showSafeZones]);
 
   // Auto-start live tracking when component mounts
   useEffect(() => {
@@ -855,6 +1077,37 @@ export function GoogleMap({
             >
               📍 Live Tracking
             </Badge>
+          </div>
+        )}
+
+        {/* Debug Overlay */}
+        {showDebug && map && (
+          <div className="absolute top-4 left-4 z-[1000] bg-black/90 text-white p-3 rounded-lg text-xs font-mono max-w-xs">
+            <div className="font-semibold mb-2">🔧 Debug Info</div>
+            <div className="space-y-1">
+              <div>Map Theme: {mapTheme}</div>
+              <div>Map Type: {mapType}</div>
+              <div>Zoom: {zoomLevel}</div>
+              <div>Show Traffic: {showTraffic ? "✅" : "❌"}</div>
+              <div>Show Safe Zones: {showSafeZones ? "✅" : "❌"}</div>
+              <div>Show Emergency: {showEmergencyServices ? "✅" : "❌"}</div>
+              <div>Emergency Markers: {emergencyMarkers.length}</div>
+              <div>Traffic Layers: {trafficLayers.length}</div>
+              <div>Safe Zone Polygons: {safeZonePolygons.length}</div>
+              <div>Is Navigating: {isNavigating ? "✅" : "❌"}</div>
+              <div>Has Destination: {destination ? "✅" : "❌"}</div>
+              <div>Has Location: {location ? "✅" : "❌"}</div>
+              {realTimeData && (
+                <div className="mt-2 pt-2 border-t border-gray-600">
+                  <div>RT Data: {realTimeData.lastUpdate ? "✅" : "❌"}</div>
+                  <div>
+                    Emergency Services: {realTimeData.emergencyServices.length}
+                  </div>
+                  <div>Traffic Segments: {realTimeData.trafficData.length}</div>
+                  <div>Safety Areas: {realTimeData.safetyAreas.length}</div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </Wrapper>

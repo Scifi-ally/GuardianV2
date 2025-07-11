@@ -39,7 +39,7 @@ import { motion } from "framer-motion";
 import { RealTimeSafetyFeatures } from "@/components/RealTimeSafetyFeatures";
 import { EnhancedLocationSharing } from "@/components/EnhancedLocationSharing";
 
-import { CustomCheckbox } from "@/components/ui/custom-checkbox";
+import { input type="checkbox" } from "@/components/ui/custom-checkbox";
 
 import { LocationIndicator } from "@/components/LocationStatus";
 import {
@@ -587,13 +587,14 @@ export default function Index() {
         <EnhancedGoogleMap
           key="main-map"
           location={location}
-          mapTheme={mapTheme}
-          mapType={mapType}
+          mapTheme="light"
+          mapType="normal"
           showTraffic={routeSettings.showTraffic}
-          showSafeZones={routeSettings.showSafeZones}
+          showSafeZones={false}
           showEmergencyServices={routeSettings.showEmergencyServices}
-          showSafeAreaCircles={routeSettings.showSafeAreaCircles}
-          showDebug={routeSettings.showDebug}
+          showSafeAreaCircles={false}
+          showDebug={false}
+          enableSatelliteView={false}
           zoomLevel={routeSettings.zoomLevel}
           destination={destination}
           trackUserLocation={true}
@@ -1038,7 +1039,7 @@ export default function Index() {
                           Real-time conditions
                         </p>
                       </div>
-                      <CustomCheckbox
+                      <input type="checkbox"
                         checked={routeSettings.showTraffic}
                         onChange={(checked) =>
                           setRouteSettings((prev) => ({
@@ -1061,7 +1062,7 @@ export default function Index() {
                           Police & safe areas
                         </p>
                       </div>
-                      <CustomCheckbox
+                      <input type="checkbox"
                         checked={routeSettings.showSafeZones}
                         onChange={(checked) =>
                           setRouteSettings((prev) => ({
@@ -1086,7 +1087,7 @@ export default function Index() {
                           Hospitals & services
                         </p>
                       </div>
-                      <CustomCheckbox
+                      <input type="checkbox"
                         checked={routeSettings.showEmergencyServices}
                         onChange={(checked) =>
                           setRouteSettings((prev) => ({
@@ -1109,7 +1110,7 @@ export default function Index() {
                           Developer info & logs
                         </p>
                       </div>
-                      <CustomCheckbox
+                      <input type="checkbox"
                         checked={routeSettings.showDebug}
                         onChange={(checked) =>
                           setRouteSettings((prev) => ({
@@ -1118,6 +1119,32 @@ export default function Index() {
                           }))
                         }
                         size="sm"
+                      />
+                    </motion.div>
+
+                    <motion.div
+                      className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      <div>
+                        <p className="text-sm font-medium">Zoom Level</p>
+                        <p className="text-xs text-muted-foreground">
+                          {routeSettings.zoomLevel}
+                        </p>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="20"
+                        value={routeSettings.zoomLevel}
+                        onChange={(e) =>
+                          setRouteSettings((prev) => ({
+                            ...prev,
+                            zoomLevel: parseInt(e.target.value),
+                          }))
+                        }
+                        className="w-16 h-2"
                       />
                     </motion.div>
 
