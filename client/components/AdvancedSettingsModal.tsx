@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -19,141 +21,222 @@ import {
 import {
   Shield,
   Bell,
+  Smartphone,
   Lock,
   Eye,
   MapPin,
+  Users,
   Settings,
   Save,
   RotateCcw,
-  Clock,
-  Activity,
+  AlertTriangle,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSettings } from "@/contexts/SettingsContext";
-import { cn } from "@/lib/utils";
 
 interface AdvancedSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface SettingsState {
+  // Privacy Settings
+  profileVisibility: boolean;
+  locationTracking: boolean;
+  activityStatus: boolean;
+  contactsAccess: boolean;
+
+  // Notification Settings
+  pushNotifications: boolean;
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  emergencyAlerts: boolean;
+  weeklyReports: boolean;
+
+  // Security Settings
+  twoFactorAuth: boolean;
+  sessionTimeout: number;
+  autoLock: boolean;
+  biometricAuth: boolean;
+
+  // Emergency Settings
+  emergencyTimeout: number;
+  silentMode: boolean;
+  autoShareLocation: boolean;
+  emergencyRecording: boolean;
+
+  // Performance Settings
+  backgroundRefresh: boolean;
+  dataUsage: boolean;
+  crashReports: boolean;
+  analytics: boolean;
+}
+
 export function AdvancedSettingsModal({
   isOpen,
   onClose,
 }: AdvancedSettingsModalProps) {
-  const {
-    settings,
-    loading,
-    updateSetting,
-    resetSettings,
-    saveAllSettings,
-    isLocationTrackingActive,
-    isPushNotificationsActive,
-    isSessionTimeoutActive,
-    isAutoLockActive,
-  } = useSettings();
-
+  const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState("privacy");
-  const [localSettings, setLocalSettings] = useState(settings);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [settings, setSettings] = useState<SettingsState>({
+    // Privacy Settings
+    profileVisibility: true,
+    locationTracking: true,
+    activityStatus: true,
+    contactsAccess: true,
 
-  // Sync local settings with context settings
-  useEffect(() => {
-    if (settings) {
-      setLocalSettings(settings);
-      setHasUnsavedChanges(false);
-    }
-  }, [settings]);
+    // Notification Settings
+    pushNotifications: true,
+    emailNotifications: false,
+    smsNotifications: true,
+    emergencyAlerts: true,
+    weeklyReports: false,
+
+    // Security Settings
+    twoFactorAuth: false,
+    sessionTimeout: 30,
+    autoLock: true,
+    biometricAuth: false,
+
+    // Emergency Settings
+    emergencyTimeout: 5,
+    silentMode: false,
+    autoShareLocation: true,
+    emergencyRecording: true,
+
+    // Performance Settings
+    backgroundRefresh: true,
+    dataUsage: false,
+    crashReports: true,
+    analytics: true,
+  });
 
   const categories = [
     {
       id: "privacy",
       label: "Privacy",
       icon: Eye,
+      color: "text-blue-600",
       description: "Control your data and visibility",
-      count: 2,
     },
     {
       id: "notifications",
       label: "Notifications",
       icon: Bell,
-      description: "Manage alerts",
-      count: 2,
+      color: "text-orange-600",
+      description: "Manage alerts and messages",
     },
     {
       id: "security",
       label: "Security",
       icon: Lock,
+      color: "text-red-600",
       description: "Authentication and protection",
-      count: 2,
     },
     {
       id: "emergency",
       label: "Emergency",
       icon: Shield,
-      description: "Safety settings",
-      count: 2,
+      color: "text-green-600",
+      description: "Safety and response settings",
+    },
+    {
+      id: "performance",
+      label: "Performance",
+      icon: Zap,
+      color: "text-purple-600",
+      description: "App behavior and optimization",
     },
   ];
 
-  const handleLocalSettingChange = (
-    key: keyof typeof localSettings,
-    value: any,
+  const handleSettingChange = (
+    key: keyof SettingsState,
+    value: boolean | number,
   ) => {
-    if (!localSettings) return;
+    setSettings((prev) => ({ ...prev, [key]: value }));
+  };
 
-    setLocalSettings((prev) => {
-      if (!prev) return prev;
-      return { ...prev, [key]: value };
+  const handleSaveSettings = async () => {
+    setLoading(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Save to localStorage as fallback
+      localStorage.setItem(
+        "guardian-advanced-settings",
+        JSON.stringify(settings),
+      );
+
+      toast.success("Settings saved successfully!");
+    } catch (error) {
+      toast.error("Failed to save settings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetSettings = () => {
+    setSettings({
+      profileVisibility: true,
+      locationTracking: true,
+      activityStatus: true,
+      contactsAccess: true,
+      pushNotifications: true,
+      emailNotifications: false,
+      smsNotifications: true,
+      emergencyAlerts: true,
+      weeklyReports: false,
+      twoFactorAuth: false,
+      sessionTimeout: 30,
+      autoLock: true,
+      biometricAuth: false,
+      emergencyTimeout: 5,
+      silentMode: false,
+      autoShareLocation: true,
+      emergencyRecording: true,
+      backgroundRefresh: true,
+      dataUsage: false,
+      crashReports: true,
+      analytics: true,
     });
-    setHasUnsavedChanges(true);
+    toast.success("Settings reset to defaults");
   };
 
-  const handleInstantUpdate = async (
-    key: keyof typeof localSettings,
-    value: any,
-  ) => {
-    try {
-      await updateSetting(key, value);
-    } catch (error) {
-      toast.error(`Failed to update ${key}`);
-    }
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 500,
+        damping: 30,
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      y: 20,
+      transition: { duration: 0.2 },
+    },
   };
 
-  const handleSaveAllChanges = async () => {
-    if (!localSettings || !hasUnsavedChanges) return;
-
-    try {
-      await saveAllSettings(localSettings);
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      // Error already handled in context
-    }
+  const contentVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+      },
+    },
+    exit: { opacity: 0, x: -20, transition: { duration: 0.15 } },
   };
-
-  const handleResetSettings = async () => {
-    try {
-      await resetSettings();
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      // Error already handled in context
-    }
-  };
-
-  const StatusIndicator = ({ isActive }: { isActive: boolean }) => (
-    <div className="flex items-center gap-1">
-      <div
-        className={cn(
-          "w-2 h-2 rounded-full",
-          isActive ? "bg-green-500 animate-pulse" : "bg-gray-400",
-        )}
-      />
-      <span className="text-xs text-gray-600">
-        {isActive ? "Active" : "Inactive"}
-      </span>
-    </div>
-  );
 
   const SettingItem = ({
     icon: Icon,
@@ -164,126 +247,68 @@ export function AdvancedSettingsModal({
     min = 1,
     max = 60,
     step = 1,
-    instant = false,
-    statusIndicator = false,
-    getStatusActive,
   }: {
     icon: any;
     title: string;
     description: string;
-    settingKey: keyof typeof localSettings;
-    type?: "switch" | "slider" | "select";
+    settingKey: keyof SettingsState;
+    type?: "switch" | "slider";
     min?: number;
     max?: number;
     step?: number;
-    instant?: boolean;
-    statusIndicator?: boolean;
-    getStatusActive?: () => boolean;
-  }) => {
-    if (!localSettings) return null;
-
-    const value = localSettings[settingKey];
-    const isStatusActive =
-      statusIndicator && getStatusActive ? getStatusActive() : false;
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between p-4 border rounded-lg bg-white hover:bg-gray-50 transition-all duration-200 hover:shadow-sm"
-      >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="p-2 rounded-lg bg-gray-100 flex-shrink-0">
-            <Icon className="h-4 w-4 text-black" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h4 className="font-medium text-sm text-black">{title}</h4>
-              {statusIndicator && <StatusIndicator isActive={isStatusActive} />}
-            </div>
-            <p className="text-xs text-gray-600 mt-1 leading-tight">
-              {description}
-            </p>
-          </div>
+  }) => (
+    <div className="flex items-center justify-between p-3 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="p-2 rounded-lg bg-gray-100 flex-shrink-0">
+          <Icon className="h-4 w-4 text-black" />
         </div>
-
-        <div className="flex-shrink-0 ml-4">
-          {type === "switch" ? (
-            <Switch
-              checked={value as boolean}
-              onCheckedChange={(checked) => {
-                if (instant) {
-                  handleInstantUpdate(settingKey, checked);
-                } else {
-                  handleLocalSettingChange(settingKey, checked);
-                }
-              }}
-              disabled={loading}
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-sm text-black">{title}</h4>
+          <p className="text-xs text-gray-600 mt-1 leading-tight">
+            {description}
+          </p>
+        </div>
+      </div>
+      <div className="flex-shrink-0 ml-4">
+        {type === "switch" ? (
+          <Switch
+            checked={settings[settingKey] as boolean}
+            onCheckedChange={(checked) =>
+              handleSettingChange(settingKey, checked)
+            }
+          />
+        ) : (
+          <div className="w-24">
+            <Slider
+              value={[settings[settingKey] as number]}
+              onValueChange={(value) =>
+                handleSettingChange(settingKey, value[0])
+              }
+              max={max}
+              min={min}
+              step={step}
+              className="w-full"
             />
-          ) : type === "slider" ? (
-            <div className="w-24">
-              <Slider
-                value={[value as number]}
-                onValueChange={(newValue) => {
-                  if (instant) {
-                    handleInstantUpdate(settingKey, newValue[0]);
-                  } else {
-                    handleLocalSettingChange(settingKey, newValue[0]);
-                  }
-                }}
-                max={max}
-                min={min}
-                step={step}
-                className="w-full"
-                disabled={loading}
-              />
-              <div className="text-xs text-center text-gray-600 mt-1">
-                {value}
-                {settingKey.includes("timeout")
-                  ? "s"
-                  : settingKey.includes("session")
-                    ? "m"
-                    : ""}
-              </div>
+            <div className="text-xs text-center text-gray-600 mt-1">
+              {settings[settingKey]}
+              {type === "slider" && settingKey.includes("timeout") ? "s" : ""}
             </div>
-          ) : type === "select" ? (
-            <Select
-              value={value as string}
-              onValueChange={(newValue) => {
-                if (instant) {
-                  handleInstantUpdate(settingKey, newValue);
-                } else {
-                  handleLocalSettingChange(settingKey, newValue);
-                }
-              }}
-              disabled={loading}
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="public">Public</SelectItem>
-                <SelectItem value="contacts">Contacts</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
-              </SelectContent>
-            </Select>
-          ) : null}
-        </div>
-      </motion.div>
-    );
-  };
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   const renderCategoryContent = () => {
-    if (!localSettings) return null;
-
     switch (activeCategory) {
       case "privacy":
         return (
           <motion.div
             key="privacy"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="space-y-4"
           >
             <SettingItem
@@ -291,17 +316,24 @@ export function AdvancedSettingsModal({
               title="Profile Visibility"
               description="Control who can see your profile information"
               settingKey="profileVisibility"
-              type="select"
-              instant={true}
             />
             <SettingItem
               icon={MapPin}
               title="Location Tracking"
               description="Allow the app to track your location for safety features"
               settingKey="locationTracking"
-              instant={true}
-              statusIndicator={true}
-              getStatusActive={() => isLocationTrackingActive}
+            />
+            <SettingItem
+              icon={Users}
+              title="Activity Status"
+              description="Share your online status with emergency contacts"
+              settingKey="activityStatus"
+            />
+            <SettingItem
+              icon={Smartphone}
+              title="Contacts Access"
+              description="Allow access to your device contacts for emergency features"
+              settingKey="contactsAccess"
             />
           </motion.div>
         );
@@ -310,26 +342,41 @@ export function AdvancedSettingsModal({
         return (
           <motion.div
             key="notifications"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="space-y-4"
           >
             <SettingItem
-              icon={Bell}
+              icon={Smartphone}
               title="Push Notifications"
               description="Receive notifications on this device"
               settingKey="pushNotifications"
-              instant={true}
-              statusIndicator={true}
-              getStatusActive={() => isPushNotificationsActive}
             />
             <SettingItem
-              icon={Shield}
+              icon={Bell}
+              title="Email Notifications"
+              description="Receive updates via email"
+              settingKey="emailNotifications"
+            />
+            <SettingItem
+              icon={Smartphone}
+              title="SMS Notifications"
+              description="Receive critical alerts via SMS"
+              settingKey="smsNotifications"
+            />
+            <SettingItem
+              icon={AlertTriangle}
               title="Emergency Alerts"
-              description="Critical safety notifications (always enabled)"
+              description="Critical safety notifications"
               settingKey="emergencyAlerts"
-              instant={true}
+            />
+            <SettingItem
+              icon={Bell}
+              title="Weekly Reports"
+              description="Receive weekly safety activity reports"
+              settingKey="weeklyReports"
             />
           </motion.div>
         );
@@ -338,33 +385,41 @@ export function AdvancedSettingsModal({
         return (
           <motion.div
             key="security"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="space-y-4"
           >
             <SettingItem
-              icon={Clock}
+              icon={Lock}
               title="Session Timeout"
-              description="Auto logout after inactivity (minutes)"
+              description="Automatically log out after period of inactivity"
               settingKey="sessionTimeout"
               type="slider"
               min={5}
               max={120}
               step={5}
-              instant={true}
-              statusIndicator={true}
-              getStatusActive={() => isSessionTimeoutActive}
             />
             <SettingItem
-              icon={Lock}
+              icon={Smartphone}
               title="Auto Lock"
               description="Automatically lock the app when not in use"
               settingKey="autoLock"
-              instant={true}
-              statusIndicator={true}
-              getStatusActive={() => isAutoLockActive}
             />
+            <div className="p-3 border rounded-lg bg-yellow-50 border-yellow-200">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <span className="text-sm font-medium text-yellow-800">
+                  Security Note
+                </span>
+              </div>
+              <p className="text-xs text-yellow-700">
+                Advanced security features like 2FA and biometric authentication
+                require additional setup and will be available in future
+                updates.
+              </p>
+            </div>
           </motion.div>
         );
 
@@ -372,28 +427,76 @@ export function AdvancedSettingsModal({
         return (
           <motion.div
             key="emergency"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="space-y-4"
           >
             <SettingItem
               icon={Shield}
               title="Emergency Timeout"
-              description="Delay before triggering emergency alert (seconds)"
+              description="Delay before triggering emergency alert"
               settingKey="emergencyTimeout"
               type="slider"
               min={1}
               max={30}
               step={1}
-              instant={true}
+            />
+            <SettingItem
+              icon={Bell}
+              title="Silent Mode"
+              description="Trigger alerts without sound or vibration"
+              settingKey="silentMode"
             />
             <SettingItem
               icon={MapPin}
               title="Auto Share Location"
               description="Automatically share location during emergencies"
               settingKey="autoShareLocation"
-              instant={true}
+            />
+            <SettingItem
+              icon={Smartphone}
+              title="Emergency Recording"
+              description="Automatically start recording during emergencies"
+              settingKey="emergencyRecording"
+            />
+          </motion.div>
+        );
+
+      case "performance":
+        return (
+          <motion.div
+            key="performance"
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="space-y-4"
+          >
+            <SettingItem
+              icon={Zap}
+              title="Background Refresh"
+              description="Keep the app updated when not in use"
+              settingKey="backgroundRefresh"
+            />
+            <SettingItem
+              icon={Smartphone}
+              title="Data Usage Optimization"
+              description="Reduce data usage for better performance"
+              settingKey="dataUsage"
+            />
+            <SettingItem
+              icon={AlertTriangle}
+              title="Crash Reports"
+              description="Send anonymous crash reports to improve the app"
+              settingKey="crashReports"
+            />
+            <SettingItem
+              icon={Settings}
+              title="Analytics"
+              description="Share anonymous usage data to improve features"
+              settingKey="analytics"
             />
           </motion.div>
         );
@@ -403,36 +506,22 @@ export function AdvancedSettingsModal({
     }
   };
 
-  if (!settings) {
-    return null;
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] max-w-[95vw] max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="sm:max-w-[900px] max-w-[95vw] max-h-[95vh] overflow-hidden p-0">
         <AnimatePresence mode="wait">
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               className="flex flex-col h-full"
             >
               <DialogHeader className="px-4 sm:px-6 py-4 border-b bg-white">
-                <DialogTitle className="text-lg font-semibold flex items-center justify-between text-black">
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-black" />
-                    Settings
-                  </div>
-                  {hasUnsavedChanges && (
-                    <Badge
-                      variant="outline"
-                      className="text-orange-600 border-orange-300"
-                    >
-                      Unsaved Changes
-                    </Badge>
-                  )}
+                <DialogTitle className="text-lg font-semibold flex items-center gap-2 text-black">
+                  <Settings className="h-5 w-5 text-black" />
+                  Advanced Settings
                 </DialogTitle>
               </DialogHeader>
 
@@ -444,21 +533,53 @@ export function AdvancedSettingsModal({
                       value={activeCategory}
                       onValueChange={setActiveCategory}
                     >
-                      <SelectTrigger className="w-full bg-white">
-                        <SelectValue />
+                      <SelectTrigger className="w-full bg-white border-gray-300 text-black">
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const activeCategory_ = categories.find(
+                              (cat) => cat.id === activeCategory,
+                            );
+                            const IconComponent = activeCategory_?.icon;
+                            return (
+                              <>
+                                {IconComponent && (
+                                  <IconComponent className="h-4 w-4 text-black" />
+                                )}
+                                <SelectValue />
+                              </>
+                            );
+                          })()}
+                        </div>
                       </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.label}
-                          </SelectItem>
-                        ))}
+                      <SelectContent className="w-full">
+                        {categories.map((category) => {
+                          const IconComponent = category.icon;
+                          return (
+                            <SelectItem
+                              key={category.id}
+                              value={category.id}
+                              className="text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <IconComponent className="h-4 w-4 text-gray-600" />
+                                <div className="flex flex-col">
+                                  <span className="font-medium">
+                                    {category.label}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {category.description}
+                                  </span>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Desktop Sidebar Categories */}
-                  <div className="hidden sm:block w-48 border-r bg-gray-50 p-4 flex-shrink-0">
+                  <div className="hidden sm:block w-56 border-r bg-gray-50 p-4 flex-shrink-0">
                     <nav className="space-y-1">
                       {categories.map((category) => {
                         const IconComponent = category.icon;
@@ -466,15 +587,14 @@ export function AdvancedSettingsModal({
                           <button
                             key={category.id}
                             onClick={() => setActiveCategory(category.id)}
-                            className={cn(
-                              "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors",
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
                               activeCategory === category.id
                                 ? "bg-black text-white"
-                                : "text-gray-700 hover:bg-gray-200",
-                            )}
+                                : "text-gray-700 hover:bg-gray-200"
+                            }`}
                           >
                             <IconComponent className="h-4 w-4 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0">
                               <div className="font-medium text-sm">
                                 {category.label}
                               </div>
@@ -482,9 +602,6 @@ export function AdvancedSettingsModal({
                                 {category.description}
                               </div>
                             </div>
-                            <Badge variant="secondary" className="text-xs">
-                              {category.count}
-                            </Badge>
                           </button>
                         );
                       })}
@@ -524,22 +641,20 @@ export function AdvancedSettingsModal({
                   >
                     Cancel
                   </Button>
-                  {hasUnsavedChanges && (
-                    <Button
-                      onClick={handleSaveAllChanges}
-                      disabled={loading}
-                      className="flex-1 sm:flex-none bg-black text-white hover:bg-gray-800"
-                    >
-                      {loading ? (
-                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-2" />
-                          Save Changes
-                        </>
-                      )}
-                    </Button>
-                  )}
+                  <Button
+                    onClick={handleSaveSettings}
+                    disabled={loading}
+                    className="flex-1 sm:flex-none bg-black text-white hover:bg-gray-800"
+                  >
+                    {loading ? (
+                      <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Settings
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
             </motion.div>
