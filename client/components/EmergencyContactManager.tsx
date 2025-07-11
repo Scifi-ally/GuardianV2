@@ -71,17 +71,12 @@ export function EmergencyContactManager({
 
   const emergencyContacts = userProfile?.emergencyContacts || [];
 
-  // Simulate dynamic loading
+  // Real-time contact loading
   useEffect(() => {
-    const loadContacts = async () => {
-      setLoadingContacts(true);
-      // Simulate loading time for dynamic effect
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setLoadingContacts(false);
-    };
-
     if (userProfile) {
-      loadContacts();
+      setLoadingContacts(false);
+    } else {
+      setLoadingContacts(true);
     }
   }, [userProfile]);
 
@@ -121,7 +116,6 @@ export function EmergencyContactManager({
     try {
       // Simulate validation
       setIsValidating(true);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const result = await EmergencyContactService.addEmergencyContact(
         currentUser.uid,
@@ -440,7 +434,7 @@ export function EmergencyContactManager({
                           💑 Spouse/Partner
                         </SelectItem>
                         <SelectItem value="friend">👫 Friend</SelectItem>
-                        <SelectItem value="colleague">💼 Colleague</SelectItem>
+                        <SelectItem value="colleague">�� Colleague</SelectItem>
                         <SelectItem value="neighbor">🏠 Neighbor</SelectItem>
                         <SelectItem value="other">👤 Other</SelectItem>
                       </SelectContent>

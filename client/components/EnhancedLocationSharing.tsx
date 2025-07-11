@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface LocationShare {
   id: string;
@@ -42,6 +43,7 @@ interface SOSStatus {
 export function EnhancedLocationSharing() {
   const { userProfile } = useAuth();
   const { location } = useGeolocation();
+  const navigate = useNavigate();
   const [locationShares, setLocationShares] = useState<LocationShare[]>([]);
   const [sosStatus, setSOSStatus] = useState<SOSStatus>({
     isActive: false,
@@ -279,7 +281,11 @@ export function EnhancedLocationSharing() {
           <p className="text-sm text-gray-600 mb-4">
             Add emergency contacts in your profile to enable location sharing.
           </p>
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/contacts")}
+          >
             Add Contacts
           </Button>
         </CardContent>

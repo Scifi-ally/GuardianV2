@@ -25,6 +25,8 @@ import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal";
 import { UserStatsManager } from "@/components/UserStatsManager";
 import { ProfileErrorBoundary } from "@/components/ProfileErrorBoundary";
 import { InteractiveSafetyTutorial } from "@/components/InteractiveSafetyTutorial";
+import { SettingsStatusIndicator } from "@/components/SettingsStatusIndicator";
+import { SettingsDebugPanel } from "@/components/SettingsDebugPanel";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { EmergencyKeyService } from "@/services/emergencyKeyService";
@@ -467,6 +469,12 @@ export default function Profile() {
             </div>
           </Card>
         </div>
+
+        {/* Settings Status Indicator */}
+        <SettingsStatusIndicator />
+
+        {/* Debug Panel for Settings */}
+        <SettingsDebugPanel />
 
         {/* User Stats & Activity */}
         <ProfileErrorBoundary>

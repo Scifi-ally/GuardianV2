@@ -2,17 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Phone,
-  MessageCircle,
-  Camera,
-  Calculator,
-  Clock,
-  Settings,
-  Shield,
-  ShieldAlert,
-  Power,
-} from "lucide-react";
+import { Power, Settings, Shield, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -36,34 +26,6 @@ export function InvisibleSOS() {
   const [isSOSMode, setIsSOSMode] = useState(false);
   const [activationMethods, setActivationMethods] = useState<SOSMethod[]>([
     {
-      id: "fake-call",
-      name: "Fake Call",
-      description: "Tap 'Mom' contact 3 times quickly",
-      icon: <Phone className="h-4 w-4" />,
-      isActive: true,
-    },
-    {
-      id: "fake-selfie",
-      name: "Emergency Selfie",
-      description: "Open camera and tap flash 5 times",
-      icon: <Camera className="h-4 w-4" />,
-      isActive: true,
-    },
-    {
-      id: "calculator-code",
-      name: "Calculator SOS",
-      description: "Enter 911 and press equals 3 times",
-      icon: <Calculator className="h-4 w-4" />,
-      isActive: true,
-    },
-    {
-      id: "clock-pattern",
-      name: "Time Check",
-      description: "Check time 4 times in 30 seconds",
-      icon: <Clock className="h-4 w-4" />,
-      isActive: true,
-    },
-    {
       id: "power-button",
       name: "Power Button SOS",
       description: "Press power button 5 times quickly",
@@ -78,10 +40,7 @@ export function InvisibleSOS() {
   const [isListening, setIsListening] = useState(false);
 
   // Pattern tracking
-  const tapHistory = useRef<{ target: string; time: number }[]>([]);
   const powerButtonPresses = useRef<number[]>([]);
-  const timeChecks = useRef<number[]>([]);
-  const calculatorInputs = useRef<string[]>([]);
 
   useEffect(() => {
     if (isListening) {
@@ -94,115 +53,32 @@ export function InvisibleSOS() {
   }, [isListening]);
 
   const startInvisibleListening = () => {
-    console.log("👻 Invisible SOS listening started");
-
-    // Listen for fake call pattern
-    setupFakeCallDetection();
-
-    // Listen for camera flash pattern
-    setupCameraFlashDetection();
-
-    // Listen for calculator pattern
-    setupCalculatorDetection();
-
-    // Listen for time check pattern
-    setupTimeCheckDetection();
-
-    // Listen for power button pattern
+    console.log("👻 Emergency detection started - power button only");
     setupPowerButtonDetection();
   };
 
   const stopInvisibleListening = () => {
-    console.log("👻 Invisible SOS listening stopped");
-    // Remove event listeners
-    document.removeEventListener("click", handleGenericClick);
+    console.log("👻 Emergency detection stopped");
     document.removeEventListener("keydown", handleKeyDown);
   };
 
-  const setupFakeCallDetection = () => {
-    const handleGenericClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      const targetText = target.textContent?.toLowerCase() || "";
-
-      // Look for "mom", "dad", or other family contacts
-      if (
-        targetText.includes("mom") ||
-        targetText.includes("dad") ||
-        targetText.includes("family") ||
-        target.closest("[data-contact]")
-      ) {
-        tapHistory.current.push({ target: "family-contact", time: Date.now() });
-        checkFakeCallPattern();
-      }
-    };
-
-    document.addEventListener("click", handleGenericClick);
-  };
-
-  const checkFakeCallPattern = () => {
-    const now = Date.now();
-    const recentTaps = tapHistory.current.filter(
-      (tap) => now - tap.time < 10000 && tap.target === "family-contact",
-    );
-
-    if (recentTaps.length >= 3) {
-      console.log("📞 Fake call SOS detected!");
-      triggerInvisibleSOS("fake-call", 90);
-      tapHistory.current = [];
-    }
-  };
-
-  const setupCameraFlashDetection = () => {
-    // This would integrate with camera API
-    // For now, simulate with specific UI interactions
-    let flashTaps = 0;
-    let flashTimer: NodeJS.Timeout;
-
-    const detectFlashTaps = () => {
-      flashTaps++;
-      clearTimeout(flashTimer);
-
-      if (flashTaps >= 5) {
-        console.log("📸 Camera flash SOS detected!");
-        triggerInvisibleSOS("fake-selfie", 85);
-        flashTaps = 0;
-      }
-
-      flashTimer = setTimeout(() => {
-        flashTaps = 0;
-      }, 15000);
-    };
-
-    // Listen for camera-related elements
-    document.addEventListener("click", (event) => {
-      const target = event.target as HTMLElement;
-      if (
-        target.closest("[data-camera]") ||
-        target.textContent?.toLowerCase().includes("camera") ||
-        target.textContent?.toLowerCase().includes("photo")
-      ) {
-        detectFlashTaps();
-      }
-    });
-  };
-
-  const setupCalculatorDetection = () => {
+  const setupPowerButtonDetection = () => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Track number inputs that could be calculator usage
-      if (event.key >= "0" && event.key <= "9") {
-        calculatorInputs.current.push(event.key);
+      // Detect power button simulation (F8 key for testing)
+      if (event.key === "F8" || event.code === "F8") {
+        event.preventDefault();
+        const now = Date.now();
+        powerButtonPresses.current.push(now);
 
-        // Check for 911 pattern
-        const recent = calculatorInputs.current.slice(-3).join("");
-        if (recent === "911") {
-          console.log("🔢 Calculator 911 detected!");
-          triggerInvisibleSOS("calculator-code", 95);
-          calculatorInputs.current = [];
-        }
+        // Keep only recent presses (within 5 seconds)
+        powerButtonPresses.current = powerButtonPresses.current.filter(
+          (press) => now - press < 5000,
+        );
 
-        // Clean old inputs
-        if (calculatorInputs.current.length > 10) {
-          calculatorInputs.current = calculatorInputs.current.slice(-5);
+        if (powerButtonPresses.current.length >= 5) {
+          console.log("⚡ Power button SOS detected!");
+          triggerInvisibleSOS("power-button", 100);
+          powerButtonPresses.current = [];
         }
       }
     };
@@ -210,266 +86,206 @@ export function InvisibleSOS() {
     document.addEventListener("keydown", handleKeyDown);
   };
 
-  const setupTimeCheckDetection = () => {
-    document.addEventListener("click", (event) => {
-      const target = event.target as HTMLElement;
-      const targetText = target.textContent?.toLowerCase() || "";
-
-      // Detect time-related interactions
-      if (
-        targetText.includes("time") ||
-        targetText.includes("clock") ||
-        target.closest("[data-time]") ||
-        /\d{1,2}:\d{2}/.test(targetText)
-      ) {
-        timeChecks.current.push(Date.now());
-        checkTimePattern();
-      }
-    });
-  };
-
-  const checkTimePattern = () => {
-    const now = Date.now();
-    const recentChecks = timeChecks.current.filter(
-      (time) => now - time < 30000,
-    );
-
-    if (recentChecks.length >= 4) {
-      console.log("🕐 Time check SOS detected!");
-      triggerInvisibleSOS("clock-pattern", 80);
-      timeChecks.current = [];
-    }
-  };
-
-  const setupPowerButtonDetection = () => {
-    // Simulate power button with specific key combination
-    let keySequence: string[] = [];
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "p" && event.ctrlKey) {
-        // Ctrl+P as power button simulation
-        powerButtonPresses.current.push(Date.now());
-        checkPowerButtonPattern();
-      }
-    });
-  };
-
-  const checkPowerButtonPattern = () => {
-    const now = Date.now();
-    const recentPresses = powerButtonPresses.current.filter(
-      (time) => now - time < 10000,
-    );
-
-    if (recentPresses.length >= 5) {
-      console.log("⚡ Power button SOS detected!");
-      triggerInvisibleSOS("power-button", 100);
-      powerButtonPresses.current = [];
-    }
-  };
-
-  const triggerInvisibleSOS = (method: string, confidence: number) => {
-    const activation: SOSActivation = {
-      method,
-      timestamp: new Date(),
-      confidence,
-      location: { lat: 37.7749, lng: -122.4194 }, // Would use real location
-    };
-
-    setRecentActivations((prev) => [activation, ...prev.slice(0, 4)]);
-    setIsSOSMode(true);
-
-    // Show invisible SOS mode
-    setTimeout(() => setIsSOSMode(false), 5000);
-
-    // In real app, this would trigger emergency protocols
-    console.log("🚨 INVISIBLE SOS ACTIVATED:", activation);
-  };
-
-  const handleGenericClick = useCallback((event: MouseEvent) => {
-    // This is handled by individual detection functions
-  }, []);
-
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // This is handled by individual detection functions
+    // Global key handler
   }, []);
+
+  const triggerInvisibleSOS = useCallback(
+    (method: string, confidence: number) => {
+      console.log(`🚨 Invisible SOS triggered: ${method} (${confidence}%)`);
+
+      const activation: SOSActivation = {
+        method,
+        timestamp: new Date(),
+        confidence,
+      };
+
+      setRecentActivations((prev) => [activation, ...prev.slice(0, 4)]);
+      setIsSOSMode(true);
+
+      // Auto-dismiss after 10 seconds
+      setTimeout(() => {
+        setIsSOSMode(false);
+      }, 10000);
+    },
+    [],
+  );
+
+  const toggleListening = () => {
+    setIsListening(!isListening);
+  };
+
+  const toggleMethod = (methodId: string) => {
+    setActivationMethods((prev) =>
+      prev.map((method) =>
+        method.id === methodId
+          ? { ...method, isActive: !method.isActive }
+          : method,
+      ),
+    );
+  };
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-4">
-      {/* SOS Status */}
-      <Card>
+    <div className="space-y-4">
+      {/* Emergency Detection Status */}
+      <Card className="border-2 border-dashed border-orange-300 bg-orange-50">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-blue-600" />
-              <h3 className="font-semibold">Invisible SOS</h3>
-            </div>
-            <Button
-              variant={isListening ? "destructive" : "default"}
-              size="sm"
-              onClick={() => setIsListening(!isListening)}
-            >
-              {isListening ? (
-                <>
-                  <ShieldAlert className="h-4 w-4 mr-2" />
-                  Active
-                </>
-              ) : (
-                <>
-                  <Shield className="h-4 w-4 mr-2" />
-                  Start
-                </>
-              )}
-            </Button>
-          </div>
-
-          <p className="text-sm text-gray-600 mb-4">
-            Activate emergency mode through normal-looking interactions that
-            won't raise suspicion.
-          </p>
-
-          <div className="space-y-2">
-            {activationMethods.map((method) => (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <div
-                key={method.id}
                 className={cn(
-                  "flex items-center gap-3 p-3 rounded-lg border",
-                  method.isActive
-                    ? "bg-green-50 border-green-200"
-                    : "bg-gray-50 border-gray-200",
+                  "p-2 rounded-full",
+                  isListening
+                    ? "bg-green-100 text-green-600"
+                    : "bg-gray-100 text-gray-600",
                 )}
               >
-                <div className="text-green-600">{method.icon}</div>
-                <div className="flex-1">
-                  <div className="font-medium text-sm">{method.name}</div>
-                  <div className="text-xs text-gray-600">
-                    {method.description}
-                  </div>
-                </div>
-                <Badge
-                  variant={method.isActive ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {method.isActive ? "Active" : "Off"}
-                </Badge>
+                {isListening ? (
+                  <ShieldAlert className="h-4 w-4" />
+                ) : (
+                  <Shield className="h-4 w-4" />
+                )}
               </div>
-            ))}
+              <div>
+                <h3 className="font-semibold text-sm">Emergency Detection</h3>
+                <p className="text-xs text-gray-600">
+                  {isListening
+                    ? "Monitoring for emergency patterns"
+                    : "Detection paused"}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={toggleListening}
+              size="sm"
+              className={cn(
+                "h-8 px-3 text-xs",
+                isListening
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-gray-600 hover:bg-gray-700 text-white",
+              )}
+            >
+              {isListening ? "Active" : "Paused"}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* SOS Mode Indicator */}
+      {/* SOS Activation Alert */}
       <AnimatePresence>
         {isSOSMode && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
           >
-            <Card className="bg-red-50 border-red-200">
+            <Card className="w-11/12 max-w-md border-red-500 bg-red-50">
               <CardContent className="p-6 text-center">
-                <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  className="mb-4"
-                >
-                  <ShieldAlert className="h-12 w-12 text-red-600 mx-auto" />
-                </motion.div>
-                <h3 className="text-lg font-bold text-red-800 mb-2">
-                  Invisible SOS Activated
-                </h3>
-                <p className="text-sm text-red-600 mb-4">
-                  Emergency protocols are now active. Stay calm.
-                </p>
-                <Button
-                  onClick={() => setIsSOSMode(false)}
-                  variant="outline"
-                  size="sm"
-                >
-                  I'm Safe
-                </Button>
+                <div className="space-y-4">
+                  <div className="p-4 bg-red-100 rounded-full w-fit mx-auto">
+                    <ShieldAlert className="h-8 w-8 text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-red-800">
+                      Emergency Detected
+                    </h3>
+                    <p className="text-sm text-red-600">
+                      Invisible SOS pattern recognized
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setIsSOSMode(false)}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Dismiss Alert
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Activation Methods */}
+      <Card>
+        <CardContent className="p-4">
+          <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Detection Methods
+          </h4>
+          <div className="space-y-3">
+            {activationMethods.map((method) => (
+              <div
+                key={method.id}
+                className="flex items-center justify-between p-3 border rounded-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-1 bg-gray-100 rounded">{method.icon}</div>
+                  <div>
+                    <p className="text-sm font-medium">{method.name}</p>
+                    <p className="text-xs text-gray-600">
+                      {method.description}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => toggleMethod(method.id)}
+                  size="sm"
+                  variant={method.isActive ? "default" : "outline"}
+                  className="h-7 px-2 text-xs"
+                >
+                  {method.isActive ? "ON" : "OFF"}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Recent Activations */}
       {recentActivations.length > 0 && (
         <Card>
           <CardContent className="p-4">
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4" />
-              Recent Activations
-            </h4>
+            <h4 className="font-semibold text-sm mb-3">Recent Detections</h4>
             <div className="space-y-2">
               {recentActivations.map((activation, index) => (
-                <motion.div
-                  key={`${activation.method}-${activation.timestamp.getTime()}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                <div
+                  key={index}
                   className="flex items-center justify-between p-2 bg-gray-50 rounded"
                 >
                   <div>
-                    <div className="text-sm font-medium capitalize">
-                      {activation.method.replace("-", " ")}
-                    </div>
-                    <div className="text-xs text-gray-500">
+                    <p className="text-xs font-medium">{activation.method}</p>
+                    <p className="text-xs text-gray-600">
                       {activation.timestamp.toLocaleTimeString()}
-                    </div>
+                    </p>
                   </div>
-                  <Badge className="text-xs">
-                    {activation.confidence}% confidence
+                  <Badge variant="outline" className="text-xs">
+                    {activation.confidence}%
                   </Badge>
-                </motion.div>
+                </div>
               ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Test Triggers */}
-      <Card>
+      {/* Help Text */}
+      <Card className="bg-blue-50 border-blue-200">
         <CardContent className="p-4">
-          <h4 className="font-semibold mb-3">Test Invisible SOS</h4>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => triggerInvisibleSOS("test-fake-call", 100)}
-              data-contact="mom"
-            >
-              Test Fake Call
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => triggerInvisibleSOS("test-calculator", 100)}
-              data-calculator="911"
-            >
-              Test Calculator
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => triggerInvisibleSOS("test-time", 100)}
-              data-time="check"
-            >
-              Test Time Check
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => triggerInvisibleSOS("test-camera", 100)}
-              data-camera="flash"
-            >
-              Test Camera
-            </Button>
+          <div className="text-center space-y-2">
+            <h4 className="font-semibold text-sm text-blue-800">
+              Emergency Detection Help
+            </h4>
+            <p className="text-xs text-blue-600">
+              Press F8 five times quickly to test power button emergency
+              detection. This simulates real device power button detection.
+            </p>
+            <p className="text-xs text-blue-500">
+              Real implementation would detect actual device power button
+              presses.
+            </p>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Click these buttons to test the invisible SOS detection system.
-          </p>
         </CardContent>
       </Card>
     </div>

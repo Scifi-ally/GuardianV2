@@ -3,16 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Activity,
-  Shield,
-  MapPin,
-  Clock,
-  Users,
-  AlertTriangle,
   Settings,
+  MapPin,
+  AlertTriangle,
   Eye,
   EyeOff,
-  ChevronDown,
+  Users,
 } from "lucide-react";
 import {
   Select,
@@ -27,12 +23,9 @@ import { toast } from "sonner";
 interface UserStats {
   emergencyContactsCount: number;
   activeAlertsCount: number;
-  lastActiveTime: string;
   locationPermission: boolean;
   notificationPermission: boolean;
   profileVisibility: "public" | "contacts" | "private";
-  safetyScore: number;
-  weeklyActivity: number;
 }
 
 export function UserStatsManager() {
@@ -40,12 +33,9 @@ export function UserStatsManager() {
   const [stats, setStats] = useState<UserStats>({
     emergencyContactsCount: 0,
     activeAlertsCount: 0,
-    lastActiveTime: new Date().toISOString(),
     locationPermission: false,
     notificationPermission: false,
     profileVisibility: "contacts",
-    safetyScore: 0,
-    weeklyActivity: 1, // Default to 1 (current day)
   });
   const [loading, setLoading] = useState(true);
 
@@ -71,50 +61,16 @@ export function UserStatsManager() {
           }
         } catch (parseError) {
           console.warn("Error parsing saved stats:", parseError);
-          // Continue with default stats
         }
       }
 
       // Get real emergency contacts count
       const emergencyContacts = userProfile?.emergencyContacts || [];
 
-      // Calculate real weekly activity based on user data with proper date validation
-      const now = new Date();
-      let lastActive = now; // Default to now
-      let weeklyActivity = 1; // Default to 1 day active (today)
-
-      try {
-        if (userProfile?.lastActive) {
-          // Validate the date before using it
-          const lastActiveDate = new Date(userProfile.lastActive);
-          if (!isNaN(lastActiveDate.getTime())) {
-            lastActive = lastActiveDate;
-            const daysSinceActive = Math.floor(
-              (now.getTime() - lastActive.getTime()) / (24 * 60 * 60 * 1000),
-            );
-            weeklyActivity = Math.max(0, Math.min(7, 7 - daysSinceActive));
-          }
-        }
-      } catch (error) {
-        console.warn("Error calculating weekly activity:", error);
-        // Use default values
-      }
-
       setStats((prev) => ({
         ...prev,
         emergencyContactsCount: emergencyContacts.length,
-        lastActiveTime: lastActive.toISOString(),
-        weeklyActivity,
       }));
-
-      // Calculate safety score based on profile completeness
-      try {
-        const safetyScore = calculateSafetyScore();
-        setStats((prev) => ({ ...prev, safetyScore }));
-      } catch (scoreError) {
-        console.warn("Error calculating safety score:", scoreError);
-        setStats((prev) => ({ ...prev, safetyScore: 0 }));
-      }
     } catch (error) {
       console.error("Error loading user stats:", error);
     } finally {
@@ -147,26 +103,6 @@ export function UserStatsManager() {
     }
   };
 
-  const calculateSafetyScore = (): number => {
-    let score = 0;
-
-    // Profile completeness (40 points)
-    if (userProfile?.displayName || currentUser?.displayName) score += 10;
-    if (userProfile?.email || currentUser?.email) score += 10;
-    if (userProfile?.phone) score += 10;
-    if (userProfile?.photoURL || currentUser?.photoURL) score += 10;
-
-    // Emergency contacts (30 points)
-    const contactsCount = userProfile?.emergencyContacts?.length || 0;
-    score += Math.min(contactsCount * 10, 30);
-
-    // Permissions (30 points)
-    if (stats.locationPermission) score += 15;
-    if (stats.notificationPermission) score += 15;
-
-    return Math.min(score, 100);
-  };
-
   const requestLocationPermission = async () => {
     try {
       const position = await new Promise<GeolocationPosition>(
@@ -196,28 +132,6 @@ export function UserStatsManager() {
     }
   };
 
-  const toggleProfileVisibility = () => {
-    const visibilityOrder: Array<"public" | "contacts" | "private"> = [
-      "public",
-      "contacts",
-      "private",
-    ];
-    const currentIndex = visibilityOrder.indexOf(stats.profileVisibility);
-    const nextIndex = (currentIndex + 1) % visibilityOrder.length;
-    const newVisibility = visibilityOrder[nextIndex];
-
-    setStats((prev) => ({ ...prev, profileVisibility: newVisibility }));
-
-    // Save to localStorage
-    const updatedStats = { ...stats, profileVisibility: newVisibility };
-    localStorage.setItem(
-      `user-stats-${currentUser?.uid}`,
-      JSON.stringify(updatedStats),
-    );
-
-    toast.success(`Profile visibility set to ${newVisibility}`);
-  };
-
   const getVisibilityIcon = () => {
     switch (stats.profileVisibility) {
       case "public":
@@ -240,12 +154,6 @@ export function UserStatsManager() {
     }
   };
 
-  const getSafetyScoreColor = () => {
-    if (stats.safetyScore >= 80) return "text-green-600";
-    if (stats.safetyScore >= 60) return "text-yellow-600";
-    return "text-red-600";
-  };
-
   if (loading) {
     return (
       <Card className="border shadow-lg bg-white">
@@ -262,77 +170,15 @@ export function UserStatsManager() {
 
   return (
     <div className="space-y-4">
-      {/* Safety Score */}
+      {/* Permissions & Privacy */}
       <Card className="border shadow-lg bg-white">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-black">
-            <Shield className="h-5 w-5" />
-            Safety Score
+            <Settings className="h-5 w-5" />
+            Permissions & Privacy
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-center">
-            <div className={`text-3xl font-bold ${getSafetyScoreColor()}`}>
-              {stats.safetyScore}/100
-            </div>
-            <p className="text-sm text-gray-600 mt-1">
-              Complete your profile and add contacts to improve your score
-            </p>
-          </div>
-
-          {stats.safetyScore < 100 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-black">Suggestions:</p>
-              <div className="space-y-1 text-xs text-gray-600">
-                {!userProfile?.phone && <p>• Add a phone number</p>}
-                {(userProfile?.emergencyContacts?.length || 0) < 3 && (
-                  <p>• Add more emergency contacts</p>
-                )}
-                {!stats.locationPermission && <p>• Enable location services</p>}
-                {!stats.notificationPermission && <p>• Enable notifications</p>}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Activity & Permissions */}
-      <Card className="border shadow-lg bg-white">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-black">
-            <Activity className="h-5 w-5" />
-            Activity & Permissions
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <div className="text-xl font-bold text-black">
-                {stats.weeklyActivity}
-              </div>
-              <div className="text-xs text-gray-600">Days Active</div>
-            </div>
-            <div>
-              <div className="text-xl font-bold text-black">
-                {(() => {
-                  try {
-                    const lastActiveDate = new Date(stats.lastActiveTime);
-                    if (isNaN(lastActiveDate.getTime())) {
-                      return "Now";
-                    }
-                    const minutesAgo = Math.floor(
-                      (Date.now() - lastActiveDate.getTime()) / (1000 * 60),
-                    );
-                    return minutesAgo < 1 ? "Now" : `${minutesAgo}m`;
-                  } catch (error) {
-                    return "Now";
-                  }
-                })()}
-              </div>
-              <div className="text-xs text-gray-600">Last Active</div>
-            </div>
-          </div>
-
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

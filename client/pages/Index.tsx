@@ -24,7 +24,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { GoogleMap as EnhancedGoogleMap } from "@/components/SimpleEnhancedGoogleMap";
-import { SlideUpPanel } from "@/components/SlideUpPanel";
+import { EnhancedSlideUpPanel } from "@/components/EnhancedSlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useMapTheme } from "@/hooks/use-map-theme";
@@ -49,7 +49,7 @@ import {
 import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import AINavigationPanel from "@/components/AINavigationPanel";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
-import GoogleMapsStyleSearch from "@/components/GoogleMapsStyleSearch";
+import { EnhancedGoogleMapsStyleSearch } from "@/components/EnhancedGoogleMapsStyleSearch";
 
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 
@@ -63,6 +63,7 @@ import {
   SmartLocationDisplay,
   useLocationName,
 } from "@/components/SmartLocationDisplay";
+import { CompactSettingsStatus } from "@/components/SettingsStatusIndicator";
 
 // Debug Content Component
 function DebugContent() {
@@ -539,14 +540,16 @@ export default function Index() {
       <PerformanceOptimizer />
       {/* Compact Navigation Header - Reduced Height */}
       {/* Google Maps Style Search */}
-      <GoogleMapsStyleSearch
+      <EnhancedGoogleMapsStyleSearch
         fromLocation={fromLocation}
         setFromLocation={setFromLocation}
         toLocation={toLocation}
         setToLocation={setToLocation}
         onSearch={handleSearch}
         onUseCurrentLocation={handleUseCurrentLocation}
+        onPlaceSelect={handlePlaceSelect}
         location={location}
+        isSearching={isSearching}
       />
 
       {/* Clear Route Button */}
@@ -615,13 +618,17 @@ export default function Index() {
       </div>
 
       {/* Slide Up Panel with Tabs for Navigation, Contacts, and Settings */}
-      <SlideUpPanel
+      <EnhancedSlideUpPanel
         minHeight={200}
-        maxHeight={Math.floor(window.innerHeight * 0.8)}
-        initialHeight={Math.floor(window.innerHeight * 0.45)}
+        maxHeight={Math.floor(window.innerHeight * 0.85)}
+        initialHeight={Math.floor(window.innerHeight * 0.5)}
         bottomOffset={80}
         collapsedHeight={60}
-        onTouchOutside={() => console.log("Panel closed by touch outside")}
+        showPeekContent={true}
+        enableParallax={true}
+        onTouchOutside={() => {
+          /* Panel closed by touch outside */
+        }}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -975,9 +982,12 @@ export default function Index() {
                       showCoordinates={false}
                       className="mb-2"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Real-time safety analysis active
-                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-xs text-gray-500">
+                        Real-time safety analysis active
+                      </p>
+                      <CompactSettingsStatus />
+                    </div>
                   </div>
                 )}
 
@@ -1143,7 +1153,7 @@ export default function Index() {
             </TabsContent>
           </Tabs>
         </motion.div>
-      </SlideUpPanel>
+      </EnhancedSlideUpPanel>
 
       {/* Magic Navbar */}
       <MagicNavbar onSOSPress={handleSOSPress} />

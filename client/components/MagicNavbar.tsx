@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+} from "framer-motion";
+import { useScrollDirection } from "@/hooks/useScrollAnimations";
 import {
   Home,
   MapPin,
@@ -48,6 +54,20 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
   const [sosPressed, setSOSPressed] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [sending, setSending] = useState(false);
+  const scrollDirection = useScrollDirection();
+  const { scrollY } = useScroll();
+
+  // Transform navbar based on scroll
+  const navbarY = useTransform(
+    scrollY,
+    [0, 100],
+    [0, scrollDirection === "down" ? 100 : 0],
+  );
+  const navbarOpacity = useTransform(
+    scrollY,
+    [0, 50],
+    [1, scrollDirection === "down" ? 0.95 : 1],
+  );
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [activeAlertId, setActiveAlertId] = useState<string | null>(null);
   const [mapLongPressTimer, setMapLongPressTimer] =
@@ -340,12 +360,42 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         />
       )}
 
-      <div
+      <motion.div
         className="fixed bottom-0 left-0 right-0 z-50"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+          y: navbarY,
+          opacity: navbarOpacity,
+        }}
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 300,
+          damping: 30,
+          delay: 0.2,
+        }}
       >
-        {/* Background with blur effect */}
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-lg border-t border-border" />
+        {/* Enhanced Background with blur effect and gradient */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/90 to-background/80 backdrop-blur-xl border-t border-border/50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        />
+
+        {/* Animated gradient overlay */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-emerald-500/5"
+          animate={{
+            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
 
         {/* Navigation items */}
         <div className="relative px-6 py-3">
@@ -526,7 +576,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
     </>
   );
 }
