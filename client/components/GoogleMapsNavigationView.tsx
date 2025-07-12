@@ -67,17 +67,12 @@ export function GoogleMapsNavigationView({
   // Initialize map with Google Maps styling
   useEffect(() => {
     if (!mapRef.current) {
-      console.log("⚠️ Map ref not ready");
       return;
     }
 
     if (map) {
-      console.log("ℹ️ Map already initialized");
       return;
     }
-
-    console.log("🗺️ Initializing Google Maps Navigation View...");
-    console.log("📍 Initial location:", currentLocation);
 
     try {
       const newMap = new google.maps.Map(mapRef.current, {
