@@ -654,19 +654,7 @@ export default function Index() {
         onClose={() => setShowAIPanel(false)}
       />
 
-      {/* Location Permission Prompt */}
-      {(!location || permissionStatus !== "granted") && (
-        <LocationPermissionPrompt
-          permissionStatus={permissionStatus}
-          onLocationRequest={async () => {
-            try {
-              await getCurrentLocation();
-            } catch (error) {
-              throw error;
-            }
-          }}
-        />
-      )}
+      {/* Location Permission Prompt removed */}
 
       {/* Enhanced Google Map with Safety Score Coloring */}
       <div className="absolute inset-0 top-0 z-10">
