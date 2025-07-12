@@ -818,7 +818,29 @@ export default function Index() {
                 transition={{ delay: 0.1 }}
               >
                 {/* Comprehensive SOS Workflow */}
-                <ComprehensiveSOSWorkflow map={null} />
+                <ComprehensiveSOSWorkflow
+                  map={null}
+                  onStartNavigation={(location) => {
+                    // Set destination for navigation
+                    setDestination({
+                      lat: location.latitude,
+                      lng: location.longitude,
+                    });
+                    setIsNavigating(true);
+
+                    // Auto-set as destination location
+                    setToLocation(
+                      location.address ||
+                        `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`,
+                    );
+
+                    addNotification({
+                      type: "success",
+                      title: "🧭 Navigation Started",
+                      message: "Navigation to emergency location activated",
+                    });
+                  }}
+                />
 
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
                   <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
