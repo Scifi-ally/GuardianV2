@@ -782,11 +782,7 @@ export default function Index() {
                         `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`,
                     );
 
-                    addNotification({
-                      type: "success",
-                      title: "🧭 Navigation Started",
-                      message: "Navigation to emergency location activated",
-                    });
+                    // Navigation started - no slide down notification
                   }}
                 />
 
