@@ -1241,9 +1241,10 @@ export default function Index() {
                     </motion.div>
 
                     <motion.div
-                      className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                      className="flex items-center justify-between p-3 sm:p-4 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
+                      onClick={toggleMapType}
                     >
                       <div>
                         <p className="text-sm font-medium">Map Type</p>
@@ -1251,14 +1252,9 @@ export default function Index() {
                           Standard or satellite
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={toggleMapType}
-                        className="h-7 px-2 text-xs"
-                      >
+                      <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border text-lg">
                         {mapType === "normal" ? "🗺️" : "🛰️"}
-                      </Button>
+                      </div>
                     </motion.div>
 
                     <motion.div
