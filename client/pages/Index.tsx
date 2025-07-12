@@ -383,11 +383,14 @@ export default function Index() {
       // Start simulation for movement
       sharedLocationService.startEmergencyContactSimulation();
 
-      addNotification({
-        type: "info",
-        title: "Emergency Contacts",
-        message: `${userProfile.emergencyContacts.length} emergency contacts are sharing their location with you`,
-      });
+      // Only show notification if enabled
+      if (shouldShowNotification("emergencyContacts")) {
+        addNotification({
+          type: "info",
+          title: "Emergency Contacts",
+          message: `${userProfile.emergencyContacts.length} emergency contacts are sharing their location with you`,
+        });
+      }
     }
   }, [location, userProfile?.emergencyContacts, addNotification]);
 
