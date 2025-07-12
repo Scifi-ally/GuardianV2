@@ -162,9 +162,11 @@ export function QuickSafetyActions() {
         },
       );
     } catch (error) {
-      alert(
-        `Send this emergency message to ${primaryContact.name} (${primaryContact.phone}):\n\n${message}`,
-      );
+      toast.error("Message sending failed", {
+        description: `Send this message to ${primaryContact.name} manually`,
+        duration: 5000,
+      });
+      navigator.clipboard?.writeText(message);
       toast.success("Emergency message shown");
     }
   };
