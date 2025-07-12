@@ -124,51 +124,40 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         return;
       }
 
-      // Enhanced SOS with immediate location sharing
-      const locationUrl = currentLocation
-        ? `coordinates ${currentLocation.latitude.toFixed(4)}, ${currentLocation.longitude.toFixed(4)}`
+      // Enhanced SOS with internal location sharing only
+      const locationName = currentLocation
+        ? await getLocationName(
+            currentLocation.latitude,
+            currentLocation.longitude,
+          )
         : "Location unavailable";
 
-      const emergencyMessage = `🚨 EMERGENCY ALERT: ${userProfile.displayName || "Emergency User"} needs immediate help! Location: ${locationUrl} - Time: ${new Date().toLocaleString()} - Please respond immediately or call emergency services!`;
+      const locationCoords = currentLocation
+        ? `${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)}`
+        : "Location unavailable";
 
-      // Send to all emergency contacts via multiple channels
-      const notificationPromises = emergencyContacts.map(async (contact) => {
-        // Try native sharing first
-        if (navigator.share) {
-          try {
-            await navigator.share({
-              title: "🚨 EMERGENCY ALERT",
-              text: emergencyMessage,
-            });
-          } catch (shareError) {
-            // Fallback to clipboard copy
-            try {
-              if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(emergencyMessage);
-              }
-              console.log(
-                `Emergency message copied for ${contact.name}: ${contact.phone}`,
-              );
-            } catch (error) {
-              console.error("Failed to copy emergency message:", error);
-            }
-          }
+      const emergencyMessage = `🚨 EMERGENCY ALERT: ${userProfile.displayName || "Emergency User"} needs immediate help!\n\nLocation: ${locationName}\nCoordinates: ${locationCoords}\nTime: ${new Date().toLocaleString()}\nAccuracy: ±${Math.round(currentLocation?.accuracy || 0)}m\n\nPlease respond immediately or call emergency services!`;
+
+      // Internal sharing only - copy to clipboard
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(emergencyMessage);
         } else {
-          // Direct clipboard fallback
-          try {
-            if (navigator.clipboard && window.isSecureContext) {
-              await navigator.clipboard.writeText(emergencyMessage);
-            }
-            console.log(
-              `Emergency message copied for ${contact.name}: ${contact.phone}`,
-            );
-          } catch (error) {
-            console.error("Failed to copy emergency message:", error);
-          }
+          // Fallback for non-secure contexts
+          const textArea = document.createElement("textarea");
+          textArea.value = emergencyMessage;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
         }
-      });
-
-      await Promise.allSettled(notificationPromises);
+      } catch (error) {
+        console.error("Failed to copy emergency message:", error);
+      }
 
       // Also use the original SOS service for tracking
       try {
