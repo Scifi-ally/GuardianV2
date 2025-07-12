@@ -180,10 +180,10 @@ export function EmergencyDetection({
             document.execCommand("copy");
             document.body.removeChild(textArea);
           }
-          alert("Location copied to clipboard");
+          toast.success("Location copied to clipboard");
         } catch (error) {
           console.error("Copy failed:", error);
-          alert("Failed to copy location");
+          toast.error("Failed to copy location");
         }
       }
       successVibration();
