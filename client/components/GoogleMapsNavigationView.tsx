@@ -339,15 +339,8 @@ export function GoogleMapsNavigationView({
           });
           bounds.extend({ lat: destination.lat, lng: destination.lng });
           map.fitBounds(bounds, { top: 80, right: 40, bottom: 200, left: 40 });
-          console.log("🗺️ Map bounds fitted to route");
         }
-
-        console.log("✅ Route calculated and displayed with blue color");
       } else {
-        console.error("❌ Directions request failed:", {
-          status,
-          error: result,
-        });
       }
     });
   }, [
