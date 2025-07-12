@@ -474,17 +474,7 @@ export default function Index() {
             safetyScore: area.safetyScore,
           });
 
-          // Only show safety notification if there are concerns and notifications are enabled
-          if (
-            area.safetyScore < 60 &&
-            shouldShowNotification("safetyUpdates")
-          ) {
-            addNotification({
-              type: "warning",
-              title: "Route Safety Notice",
-              message: `Destination area has safety score: ${area.safetyScore}/100. Consider travel time and route.`,
-            });
-          }
+          // Route safety notification removed - no slide down notifications
         } catch (safetyError) {
           console.warn("Safety analysis failed:", safetyError);
         }
