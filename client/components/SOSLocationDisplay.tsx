@@ -39,6 +39,7 @@ interface SOSLocationDisplayProps {
   map?: google.maps.Map | null;
   onNavigateToSOS?: (location: SOSLocation) => void;
   onDismissSOS?: (sosId: string) => void;
+  onStartNavigation?: (location: SOSLocation) => void;
   className?: string;
 }
 
@@ -47,6 +48,7 @@ export function SOSLocationDisplay({
   map,
   onNavigateToSOS,
   onDismissSOS,
+  onStartNavigation,
   className,
 }: SOSLocationDisplayProps) {
   const sosMarkersRef = useRef<Map<string, google.maps.Marker>>(new Map());
@@ -180,6 +182,27 @@ export function SOSLocationDisplay({
     onNavigateToSOS?.(location);
   };
 
+  const startAutoNavigation = async (location: SOSLocation) => {
+    try {
+      // Start automatic navigation using the app's internal navigation
+      onStartNavigation?.(location);
+
+      // Also pan to location on map
+      if (map) {
+        map.panTo({
+          lat: location.latitude,
+          lng: location.longitude,
+        });
+        map.setZoom(17);
+      }
+
+      toast.success("Navigation started to emergency location");
+    } catch (error) {
+      console.error("Failed to start navigation:", error);
+      toast.error("Failed to start navigation");
+    }
+  };
+
   const formatTimeAgo = (timestamp: number) => {
     const now = Date.now();
     const diff = now - timestamp;
@@ -277,14 +300,26 @@ export function SOSLocationDisplay({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 h-7 text-xs"
+                      className="h-7 text-xs px-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         navigateToLocation(sosData.location);
                       }}
                     >
-                      <Navigation className="h-3 w-3 mr-1" />
+                      <MapPin className="h-3 w-3 mr-1" />
                       View
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="h-7 text-xs px-2 bg-blue-600 hover:bg-blue-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startAutoNavigation(sosData.location);
+                      }}
+                    >
+                      <Navigation className="h-3 w-3 mr-1" />
+                      Navigate
                     </Button>
                     <Button
                       variant="outline"
@@ -418,13 +453,23 @@ export function SOSLocationDisplay({
                   <div className="flex gap-2">
                     <Button
                       onClick={() => {
+                        startAutoNavigation(selectedSOS.location);
+                        setSelectedSOS(null);
+                      }}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Navigation className="h-4 w-4 mr-2" />
+                      Start Navigation
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
                         navigateToLocation(selectedSOS.location);
                         setSelectedSOS(null);
                       }}
-                      className="flex-1"
                     >
-                      <Navigation className="h-4 w-4 mr-2" />
-                      Navigate to Location
+                      <MapPin className="h-4 w-4 mr-2" />
+                      View
                     </Button>
                     <Button
                       variant="outline"
