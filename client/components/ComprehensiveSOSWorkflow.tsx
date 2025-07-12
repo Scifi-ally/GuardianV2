@@ -54,11 +54,13 @@ interface SOSAlert {
 
 interface ComprehensiveSOSWorkflowProps {
   map?: google.maps.Map | null;
+  onStartNavigation?: (location: SOSLocation) => void;
   className?: string;
 }
 
 export function ComprehensiveSOSWorkflow({
   map,
+  onStartNavigation,
   className,
 }: ComprehensiveSOSWorkflowProps) {
   const { userProfile } = useAuth();
@@ -172,9 +174,28 @@ export function ComprehensiveSOSWorkflow({
         });
         map.setZoom(17);
       }
-      toast.success("Navigating to SOS location");
+      toast.success("Viewing SOS location on map");
     },
     [map],
+  );
+
+  const handleStartNavigation = useCallback(
+    (location: SOSLocation) => {
+      // Trigger the parent navigation handler
+      onStartNavigation?.(location);
+
+      // Also pan to location on map
+      if (map) {
+        map.panTo({
+          lat: location.latitude,
+          lng: location.longitude,
+        });
+        map.setZoom(17);
+      }
+
+      toast.success("Navigation started to emergency location!");
+    },
+    [map, onStartNavigation],
   );
 
   const handleDismissSOS = useCallback((sosId: string) => {
@@ -233,6 +254,7 @@ export function ComprehensiveSOSWorkflow({
         map={map}
         onNavigateToSOS={handleNavigateToSOS}
         onDismissSOS={handleDismissSOS}
+        onStartNavigation={handleStartNavigation}
       />
 
       <Card>
