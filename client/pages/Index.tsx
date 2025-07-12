@@ -919,7 +919,7 @@ export default function Index() {
                   <div className="grid grid-cols-1 gap-3">
                     <Button
                       variant="outline"
-                      className="h-12 flex-col gap-1 text-xs transition-all duration-200 hover:scale-105 hover:shadow-md"
+                      className="h-12 sm:h-14 flex-col gap-1 text-xs sm:text-sm px-4 py-2 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                       onClick={async () => {
                         if (location && userProfile) {
                           try {
