@@ -289,7 +289,7 @@ export function ConnectivityDiagnostics() {
                   userAgent: navigator.userAgent,
                 };
                 navigator.clipboard?.writeText(JSON.stringify(data, null, 2));
-                alert("Diagnostic data copied to clipboard");
+                toast.success("Diagnostic data copied to clipboard");
               }}
               className="w-full"
             >
