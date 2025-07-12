@@ -290,7 +290,7 @@ export default function Index() {
   const { userProfile } = useAuth();
 
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
-  const [showClickableAudit, setShowClickableAudit] = useState(false);
+
   const [routeOptions, setRouteOptions] = useState<{
     safestRoute: any;
     quickestRoute: any;
