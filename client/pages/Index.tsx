@@ -520,7 +520,7 @@ export default function Index() {
 
         const routes = await routeCalculationService.calculateRoutes(
           { latitude: location.latitude, longitude: location.longitude },
-          destinationCoords,
+          { latitude: destinationCoords.lat, longitude: destinationCoords.lng },
         );
 
         setRouteOptions(routes);
