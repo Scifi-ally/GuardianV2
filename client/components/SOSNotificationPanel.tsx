@@ -107,13 +107,13 @@ export function SOSNotificationPanel({
             `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
           );
         }
-        window.alert(
-          `Navigation info copied to clipboard:\n${routeInfo}\n\nUse your preferred navigation app.`,
-        );
+        toast.success("Navigation info copied", {
+          description: "Use your preferred navigation app",
+        });
       } catch (error) {
-        window.alert(
-          `Navigate to:\n${toLat.toFixed(6)}, ${toLng.toFixed(6)}\n\nUse your preferred navigation app.`,
-        );
+        toast.info("Navigation coordinates", {
+          description: `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
+        });
       }
 
       // Also respond that we're navigating
@@ -178,13 +178,13 @@ export function SOSNotificationPanel({
             `Navigate to: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
           );
         }
-        window.alert(
-          `Destination copied to clipboard:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
-        );
+        toast.success("Destination copied", {
+          description: "Use your preferred navigation app",
+        });
       } catch (error) {
-        window.alert(
-          `Navigate to:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
-        );
+        toast.info("Navigation coordinates", {
+          description: `Navigate to: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+        });
       }
     }
   };
@@ -196,7 +196,9 @@ export function SOSNotificationPanel({
       window.location.href = `tel:${phoneNumber}`;
     } catch (error) {
       console.error("Failed to initiate call:", error);
-      alert(`Call ${phoneNumber} for emergency assistance`);
+      toast.error("Call failed", {
+        description: `Call ${phoneNumber} for emergency assistance`,
+      });
     }
   };
 
