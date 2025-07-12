@@ -229,7 +229,11 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
           const sosInterval = setInterval(async () => {
             try {
               const updatedLocation = await getCurrentLocation();
-              const updateMessage = `🚨 SOS LOCATION UPDATE: ${locationUrl} - Time: ${new Date().toLocaleString()}`;
+              const currentLocationName = await getLocationName(
+                updatedLocation.latitude,
+                updatedLocation.longitude,
+              );
+              const updateMessage = `🚨 SOS LOCATION UPDATE: ${currentLocationName} (${updatedLocation.latitude.toFixed(6)}, ${updatedLocation.longitude.toFixed(6)}) - Time: ${new Date().toLocaleString()}`;
 
               emergencyContacts.forEach(async (contact) => {
                 try {
