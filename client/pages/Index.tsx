@@ -62,6 +62,11 @@ import { EnhancedSafetyMonitor } from "@/components/EnhancedSafetyMonitor";
 import { PerformanceOptimizer } from "@/components/PerformanceOptimizer";
 
 import { ComprehensiveSafetySystem } from "@/components/ComprehensiveSafetySystem";
+import { ComprehensiveSOSWorkflow } from "@/components/ComprehensiveSOSWorkflow";
+import {
+  notificationSettingsService,
+  shouldShowNotification,
+} from "@/services/notificationSettingsService";
 import { areaBasedSafety } from "@/services/areaBasedSafety";
 import { realTimeDataService } from "@/services/realTimeDataService";
 import {
