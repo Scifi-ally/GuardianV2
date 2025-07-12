@@ -10,7 +10,6 @@ import {
   Navigation as NavIcon,
   Phone,
   MessageSquare,
-  Camera,
   Clock,
   Activity,
   User,
@@ -20,6 +19,7 @@ import {
   Key,
   Layers,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   SlidingPanel,
   PanelContainer,
@@ -236,10 +236,10 @@ export default function Guardian() {
             document.execCommand("copy");
             document.body.removeChild(textArea);
           }
-          alert("Location copied to clipboard!");
+          toast.success("Location copied to clipboard!");
         } catch (error) {
           console.error("Copy failed:", error);
-          alert("Failed to copy location");
+          toast.error("Failed to copy location");
         }
       }
       successVibration();
@@ -253,9 +253,9 @@ export default function Guardian() {
       // Internal call handling - copy number to clipboard
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(phone);
-        alert(`Phone number ${phone} copied to clipboard`);
+        toast.success(`Phone number ${phone} copied to clipboard`);
       } else {
-        alert(`Emergency number: ${phone}`);
+        toast.info(`Emergency number: ${phone}`);
       }
       warningVibration();
     },
@@ -586,14 +586,6 @@ export default function Guardian() {
                   >
                     <Shield className="h-4 w-4 mr-3" />
                     Help & Support
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start h-12"
-                    onClick={() => openPanel("camera")}
-                  >
-                    <Camera className="h-4 w-4 mr-3" />
-                    Camera & Evidence
                   </Button>
                 </div>
               </div>
@@ -1133,38 +1125,6 @@ export default function Guardian() {
         </div>
       </SlidingPanel>
 
-      <SlidingPanel
-        title="Camera & Evidence"
-        isOpen={activePanel === "camera"}
-        onClose={closePanel}
-        direction="bottom"
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Button className="h-16 flex-col gap-1">
-              <Camera className="h-5 w-5" />
-              <span className="text-xs">Take Photo</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex-col gap-1">
-              <Clock className="h-5 w-5" />
-              <span className="text-xs">Record Video</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex-col gap-1">
-              <Mic className="h-5 w-5" />
-              <span className="text-xs">Audio Record</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex-col gap-1">
-              <Shield className="h-5 w-5" />
-              <span className="text-xs">Stealth Mode</span>
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground text-center">
-            Evidence automatically uploaded to secure cloud and shared with
-            emergency contacts
-          </p>
-        </div>
-      </SlidingPanel>
-
       {/* Safety Details Panels */}
       <SlidingPanel
         title="Emergency Contacts"
@@ -1283,7 +1243,7 @@ export default function Guardian() {
                       "quick-route-destination",
                     ) as HTMLInputElement;
                     if (!destinationInput?.value || !location) {
-                      alert(
+                      toast.error(
                         "Please enter a destination and ensure location is available",
                       );
                       return;
@@ -1316,13 +1276,13 @@ export default function Guardian() {
                       setNavigationRoute(recommended);
                       successVibration();
 
-                      alert(
+                      toast.success(
                         `Route planned to: ${destinationInput.value}\nUsing: ${recommended.title}\nDuration: ${recommended.duration}\nDistance: ${recommended.distance}\n\nFor more options, use the Routes panel.`,
                       );
                     } catch (error) {
                       console.error("❌ Navigation failed:", error);
                       warningVibration();
-                      alert("Failed to plan route. Please try again.");
+                      toast.error("Failed to plan route. Please try again.");
                     }
                   }}
                 >
@@ -1378,7 +1338,7 @@ export default function Guardian() {
                   setIsNavigating(true);
                   successVibration();
 
-                  alert(
+                  toast.success(
                     `Navigation started from: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`,
                   );
                 } catch (error) {
@@ -1428,7 +1388,7 @@ export default function Guardian() {
               <div className="text-xs text-gray-600 space-y-1">
                 <div>
                   {safetyStatus === "safe"
-                    ? "✅ Area monitoring shows normal conditions. Standard precautions recommended."
+                    ? "�� Area monitoring shows normal conditions. Standard precautions recommended."
                     : safetyStatus === "alert"
                       ? "⚠️ Elevated monitoring detected. Exercise additional caution."
                       : "🚨 Safety concerns detected. Consider alternative routes or seek assistance."}
@@ -1467,12 +1427,12 @@ export default function Guardian() {
                       }
 
                       successVibration();
-                      alert(
+                      toast.success(
                         `Safety analysis updated!\nStatus: ${safetyStatus.toUpperCase()}\nKey factors: ${analysis.factors.slice(0, 2).join(", ")}`,
                       );
                     } catch (error) {
                       console.error("Failed to update analysis:", error);
-                      alert("Failed to update safety analysis");
+                      toast.error("Failed to update safety analysis");
                     }
                   }
                 }}
@@ -1505,10 +1465,10 @@ export default function Guardian() {
 
                       const details = `Safety Analysis:\n\nStatus: ${safetyStatus.toUpperCase()}\nConfidence: ${analysis.confidence}%\n\nKey Factors:\n${analysis.factors.slice(0, 3).join("\n")}\n\nLocation: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}\nTime: ${new Date().toLocaleTimeString()}`;
 
-                      alert(details);
+                      toast.info(details);
                     } catch (error) {
                       const fallbackDetails = `Safety Status: ${safetyStatus.toUpperCase()}\nLocation: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}\nTime: ${new Date().toLocaleTimeString()}`;
-                      alert(fallbackDetails);
+                      toast.info(fallbackDetails);
                     }
                   }
                 }}
@@ -1568,7 +1528,7 @@ export default function Guardian() {
                       "route-destination",
                     ) as HTMLInputElement;
                     if (!destinationInput?.value || !location) {
-                      alert(
+                      toast.error(
                         "Please enter a destination and ensure location is available",
                       );
                       return;
@@ -1603,7 +1563,9 @@ export default function Guardian() {
                     } catch (error) {
                       console.error("❌ Route calculation failed:", error);
                       warningVibration();
-                      alert("Failed to calculate routes. Please try again.");
+                      toast.error(
+                        "Failed to calculate routes. Please try again.",
+                      );
                     } finally {
                       setIsCalculatingRoutes(false);
                     }
@@ -1772,7 +1734,7 @@ export default function Guardian() {
                       setIsNavigating(true);
                       setNavigationRoute(selectedRoute);
                       successVibration();
-                      alert(
+                      toast.success(
                         `Navigation started using ${selectedRoute.title}\nDuration: ${selectedRoute.duration}\nDistance: ${selectedRoute.distance}`,
                       );
                       closePanel();
@@ -1834,15 +1796,7 @@ export default function Guardian() {
           </div>
 
           {/* Quick Features Grid */}
-          <div className="grid grid-cols-3 gap-3">
-            <Button
-              onClick={() => openPanel("camera")}
-              variant="outline"
-              className="h-16 flex-col gap-1 text-xs border-gray-300 text-black hover:bg-gray-100"
-            >
-              <Camera className="h-4 w-4" />
-              Evidence
-            </Button>
+          <div className="grid grid-cols-2 gap-3">
             <Button
               onClick={() => openPanel("tracking")}
               variant="outline"

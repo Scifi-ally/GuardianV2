@@ -39,7 +39,7 @@ import { motion } from "framer-motion";
 import { RealTimeSafetyFeatures } from "@/components/RealTimeSafetyFeatures";
 import { EnhancedLocationSharing } from "@/components/EnhancedLocationSharing";
 
-import { input type="checkbox" } from "@/components/ui/custom-checkbox";
+import { CustomCheckbox } from "@/components/ui/custom-checkbox";
 
 import { LocationIndicator } from "@/components/LocationStatus";
 import {
@@ -1039,7 +1039,8 @@ export default function Index() {
                           Real-time conditions
                         </p>
                       </div>
-                      <input type="checkbox"
+                      <input
+                        type="checkbox"
                         checked={routeSettings.showTraffic}
                         onChange={(checked) =>
                           setRouteSettings((prev) => ({
@@ -1062,7 +1063,8 @@ export default function Index() {
                           Police & safe areas
                         </p>
                       </div>
-                      <input type="checkbox"
+                      <input
+                        type="checkbox"
                         checked={routeSettings.showSafeZones}
                         onChange={(checked) =>
                           setRouteSettings((prev) => ({
@@ -1087,7 +1089,8 @@ export default function Index() {
                           Hospitals & services
                         </p>
                       </div>
-                      <input type="checkbox"
+                      <input
+                        type="checkbox"
                         checked={routeSettings.showEmergencyServices}
                         onChange={(checked) =>
                           setRouteSettings((prev) => ({
@@ -1110,7 +1113,8 @@ export default function Index() {
                           Developer info & logs
                         </p>
                       </div>
-                      <input type="checkbox"
+                      <input
+                        type="checkbox"
                         checked={routeSettings.showDebug}
                         onChange={(checked) =>
                           setRouteSettings((prev) => ({

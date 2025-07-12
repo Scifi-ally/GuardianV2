@@ -31,13 +31,18 @@
   }
 
   * {
-    font-family: var(--font-inter);
+    font-family: var(--font-geist-mono);
   }
 
   code,
   pre,
   .font-mono {
     font-family: var(--font-geist-mono);
+  }
+
+  /* Inter for specific components that need sans-serif */
+  .font-sans {
+    font-family: var(--font-inter);
   }
 
   /**
@@ -153,35 +158,33 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family:
-      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-      Arial, sans-serif;
+    font-family: var(--font-geist-mono);
     font-size: 14px; /* Better for mobile and desktop */
-    line-height: 1.5; /* Improved readability */
+    line-height: 1.6; /* Improved readability for monospace */
     font-weight: 400;
-    letter-spacing: -0.01em; /* Subtle letter spacing */
+    letter-spacing: 0; /* No letter spacing for monospace */
   }
 
-  /* Improved text scale for better hierarchy */
+  /* Improved text scale for better hierarchy with monospace */
   .text-xs {
     font-size: 0.75rem;
-    line-height: 1.4;
+    line-height: 1.5;
   }
   .text-sm {
     font-size: 0.875rem;
-    line-height: 1.4;
+    line-height: 1.5;
   }
   .text-base {
     font-size: 1rem;
-    line-height: 1.5;
+    line-height: 1.6;
   }
   .text-lg {
     font-size: 1.125rem;
-    line-height: 1.4;
+    line-height: 1.5;
   }
   .text-xl {
     font-size: 1.25rem;
-    line-height: 1.3;
+    line-height: 1.4;
   }
 }
 

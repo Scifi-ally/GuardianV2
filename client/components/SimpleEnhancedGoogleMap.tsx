@@ -8,6 +8,10 @@ import {
   realTimeMapData,
   type RealTimeMapData,
 } from "@/services/realTimeMapData";
+import {
+  sharedLocationService,
+  type SharedLocation,
+} from "@/services/sharedLocationService";
 
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
@@ -33,6 +37,8 @@ interface GoogleMapProps {
   }) => void;
   onEmergencyServiceClick?: (service: any) => void;
   travelMode?: string;
+  showSharedLocations?: boolean;
+  currentUserId?: string;
 }
 
 export function GoogleMap({
@@ -50,6 +56,8 @@ export function GoogleMap({
   onLocationChange,
   onEmergencyServiceClick,
   travelMode = "WALKING",
+  showSharedLocations = true,
+  currentUserId,
 }: GoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -70,6 +78,10 @@ export function GoogleMap({
   const [safeZonePolygons, setSafeZonePolygons] = useState<
     google.maps.Polygon[]
   >([]);
+  const [sharedLocationMarkers, setSharedLocationMarkers] = useState<
+    Map<string, google.maps.Marker>
+  >(new Map());
+  const [sharedLocations, setSharedLocations] = useState<SharedLocation[]>([]);
   const [directionsService, setDirectionsService] =
     useState<google.maps.DirectionsService | null>(null);
   const [directionsRenderer, setDirectionsRenderer] =
@@ -402,6 +414,141 @@ export function GoogleMap({
       );
     }
   }, [map, location, onLocationChange]);
+
+  // Handle shared locations updates
+  useEffect(() => {
+    if (!map || !showSharedLocations) return;
+
+    // Subscribe to shared location updates
+    const handleLocationUpdate = (location: SharedLocation) => {
+      setSharedLocations(sharedLocationService.getSharedLocations());
+    };
+
+    const handleSessionStarted = () => {
+      setSharedLocations(sharedLocationService.getSharedLocations());
+    };
+
+    const handleSessionEnded = () => {
+      setSharedLocations(sharedLocationService.getSharedLocations());
+    };
+
+    sharedLocationService.on("locationUpdated", handleLocationUpdate);
+    sharedLocationService.on("sessionStarted", handleSessionStarted);
+    sharedLocationService.on("sessionEnded", handleSessionEnded);
+
+    // Initial load
+    setSharedLocations(sharedLocationService.getSharedLocations());
+
+    return () => {
+      sharedLocationService.off("locationUpdated", handleLocationUpdate);
+      sharedLocationService.off("sessionStarted", handleSessionStarted);
+      sharedLocationService.off("sessionEnded", handleSessionEnded);
+    };
+  }, [map, showSharedLocations]);
+
+  // Render shared location markers
+  useEffect(() => {
+    if (!map || !showSharedLocations) return;
+
+    // Clear existing shared location markers
+    sharedLocationMarkers.forEach((marker) => marker.setMap(null));
+    const newMarkers = new Map<string, google.maps.Marker>();
+
+    // Create markers for each shared location
+    sharedLocations.forEach((sharedLoc) => {
+      // Don't show marker for current user (they already have their own marker)
+      if (currentUserId && sharedLoc.userId === currentUserId) return;
+
+      const markerColor =
+        sharedLoc.status === "emergency"
+          ? "#ef4444"
+          : sharedLoc.isEmergencyContact
+            ? "#16a34a" // Green for emergency contacts
+            : sharedLoc.isLiveTracking
+              ? "#22c55e"
+              : "#3b82f6";
+
+      const marker = new google.maps.Marker({
+        position: {
+          lat: sharedLoc.latitude,
+          lng: sharedLoc.longitude,
+        },
+        map: map,
+        title: `${sharedLoc.name || sharedLoc.userName} (${sharedLoc.isEmergencyContact ? "Emergency Contact" : sharedLoc.isLiveTracking ? "Live" : "Shared"})`,
+        icon: {
+          path: sharedLoc.isEmergencyContact
+            ? google.maps.SymbolPath.BACKWARD_CLOSED_ARROW
+            : google.maps.SymbolPath.CIRCLE,
+          fillColor: markerColor,
+          fillOpacity: 0.9,
+          strokeColor: "#ffffff",
+          strokeWeight: 2,
+          scale:
+            sharedLoc.status === "emergency"
+              ? 12
+              : sharedLoc.isEmergencyContact
+                ? 10
+                : 8,
+        },
+        zIndex:
+          sharedLoc.status === "emergency"
+            ? 1000
+            : sharedLoc.isEmergencyContact
+              ? 500
+              : 100,
+      });
+
+      // Add info window
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="padding: 8px; font-family: system-ui;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              ${sharedLoc.userAvatar ? `<img src="${sharedLoc.userAvatar}" style="width: 24px; height: 24px; border-radius: 12px;">` : ""}
+              <strong>${sharedLoc.name || sharedLoc.userName || "Unknown Contact"}</strong>
+              ${sharedLoc.isEmergencyContact ? '<span style="color: #16a34a; font-size: 12px;">👥 Emergency Contact</span>' : ""}
+              ${sharedLoc.status === "emergency" ? '<span style="color: #ef4444; font-size: 12px;">🚨 EMERGENCY</span>' : ""}
+            </div>
+            <div style="font-size: 12px; color: #666;">
+              ${sharedLoc.isLiveTracking ? "🟢 Live tracking" : "📍 Location shared"}
+            </div>
+            <div style="font-size: 11px; color: #888; margin-top: 4px;">
+              Updated: ${new Date(sharedLoc.lastUpdated || sharedLoc.timestamp).toLocaleTimeString()}
+            </div>
+            <div style="font-size: 11px; color: #888;">
+              Accuracy: ±${Math.round(sharedLoc.accuracy)}m
+            </div>
+            ${
+              sharedLoc.batteryLevel
+                ? `<div style="font-size: 11px; color: #888;">
+              Battery: ${Math.round(sharedLoc.batteryLevel)}%
+            </div>`
+                : ""
+            }
+          </div>
+        `,
+      });
+
+      marker.addListener("click", () => {
+        // Close other info windows
+        sharedLocationMarkers.forEach((_, userId) => {
+          const existingMarker = sharedLocationMarkers.get(userId);
+          if (existingMarker && existingMarker !== marker) {
+            // Close info window for other markers (if we tracked them)
+          }
+        });
+
+        infoWindow.open(map, marker);
+      });
+
+      newMarkers.set(sharedLoc.userId, marker);
+    });
+
+    setSharedLocationMarkers(newMarkers);
+
+    return () => {
+      newMarkers.forEach((marker) => marker.setMap(null));
+    };
+  }, [map, sharedLocations, showSharedLocations, currentUserId]);
 
   // Render real-time emergency services
   useEffect(() => {
@@ -1095,7 +1242,7 @@ export function GoogleMap({
               <div>Traffic Layers: {trafficLayers.length}</div>
               <div>Safe Zone Polygons: {safeZonePolygons.length}</div>
               <div>Is Navigating: {isNavigating ? "✅" : "❌"}</div>
-              <div>Has Destination: {destination ? "✅" : "❌"}</div>
+              <div>Has Destination: {destination ? "���" : "❌"}</div>
               <div>Has Location: {location ? "✅" : "❌"}</div>
               {realTimeData && (
                 <div className="mt-2 pt-2 border-t border-gray-600">

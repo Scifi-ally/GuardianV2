@@ -52,6 +52,11 @@ interface EnvironmentalIntelligence {
     emergencyServices: number;
     publicTransport: number;
     businessDensity: number;
+    hospitalProximity: number;
+    policeStationDistance: number;
+    fireStationDistance: number;
+    atriumSignalStrength: number;
+    emergencyCallBoxes: number;
   };
 
   // Crowd analytics
@@ -61,6 +66,11 @@ interface EnvironmentalIntelligence {
     activity: string;
     mood: "positive" | "neutral" | "negative" | "tense";
     noiseLevel: number;
+    groupBehavior: "cooperative" | "neutral" | "hostile";
+    familyPresence: number; // percentage of families/children
+    elderlyPresence: number;
+    securityPersonnel: number;
+    socialCohesion: number; // community interaction level
   };
 
   // Traffic intelligence
@@ -70,6 +80,31 @@ interface EnvironmentalIntelligence {
     accidents: number;
     roadConditions: string;
     emergencyVehicles: boolean;
+    roadLightingQuality: number;
+    sidewalkCondition: number;
+    crosswalkSafety: number;
+  };
+
+  // Temporal factors
+  temporal: {
+    timeOfDay: number; // hour 0-23
+    dayOfWeek: number; // 0-6
+    seasonalFactors: number;
+    holidayEvents: boolean;
+    schoolHours: boolean;
+    businessHours: boolean;
+    sunsetFactor: number; // proximity to sunset/sunrise
+  };
+
+  // Personal safety factors
+  personal: {
+    userDemographics: "young" | "adult" | "elderly";
+    travelMethod: "walking" | "cycling" | "driving" | "public_transport";
+    groupSize: number;
+    emergencyContactProximity: number;
+    previousAreaExperience: number;
+    deviceBatteryLevel: number;
+    internetConnectivity: number;
   };
 }
 
@@ -335,7 +370,20 @@ export class AdvancedAISafetyEngine {
       // Traffic intelligence
       const traffic = await this.analyzeTrafficIntelligence(lat, lng);
 
-      return { weather, infrastructure, crowdAnalytics, traffic };
+      // Temporal factors
+      const temporal = this.analyzeTemporalFactors();
+
+      // Personal factors
+      const personal = this.analyzePersonalFactors(this.userProfile);
+
+      return {
+        weather,
+        infrastructure,
+        crowdAnalytics,
+        traffic,
+        temporal,
+        personal,
+      };
     } catch (error) {
       console.warn("Environmental analysis fallback:", error);
       return this.getFallbackEnvironmental();
@@ -418,15 +466,35 @@ export class AdvancedAISafetyEngine {
     if (env.weather.temperature < 0 || env.weather.temperature > 35) score -= 5;
     if (env.weather.windSpeed > 50) score -= 15; // High wind
 
-    // Infrastructure quality
+    // Infrastructure quality (enhanced)
     score += (env.infrastructure.streetLighting / 100) * 20;
     score += (env.infrastructure.cameraCount / 100) * 15;
     score += (env.infrastructure.emergencyServices / 100) * 25;
+    score += (env.infrastructure.hospitalProximity / 100) * 15; // Medical help nearby
+    score +=
+      env.infrastructure.policeStationDistance > 0
+        ? Math.max(
+            0,
+            ((100 - env.infrastructure.policeStationDistance) / 100) * 20,
+          )
+        : 0;
+    score += (env.infrastructure.emergencyCallBoxes / 10) * 5; // Emergency communication
+    score += (env.infrastructure.atriumSignalStrength / 100) * 10; // Cell service quality
 
-    // Crowd dynamics
+    // Crowd dynamics (enhanced)
     if (env.crowdAnalytics.mood === "positive") score += 10;
     else if (env.crowdAnalytics.mood === "tense") score -= 20;
     else if (env.crowdAnalytics.mood === "negative") score -= 15;
+
+    // Group behavior analysis
+    if (env.crowdAnalytics.groupBehavior === "cooperative") score += 15;
+    else if (env.crowdAnalytics.groupBehavior === "hostile") score -= 25;
+
+    // Family and vulnerable population presence (safety indicator)
+    score += (env.crowdAnalytics.familyPresence / 100) * 10; // Families indicate safe areas
+    score += (env.crowdAnalytics.elderlyPresence / 100) * 5; // Elder presence suggests safety
+    score += (env.crowdAnalytics.securityPersonnel / 10) * 15; // Security presence
+    score += (env.crowdAnalytics.socialCohesion / 100) * 12; // Community interaction
 
     // Optimal crowd density (not too empty, not too crowded)
     if (env.crowdAnalytics.density >= 30 && env.crowdAnalytics.density <= 70)
@@ -435,9 +503,82 @@ export class AdvancedAISafetyEngine {
       score -= 10; // Too isolated
     else if (env.crowdAnalytics.density > 90) score -= 10; // Too crowded
 
-    // Traffic safety
+    // Traffic safety (enhanced)
     if (env.traffic.emergencyVehicles) score -= 10; // Active emergency
     score += Math.max(0, ((50 - env.traffic.accidents) / 50) * 20); // Fewer accidents = safer
+    score += (env.traffic.roadLightingQuality / 100) * 15; // Road visibility
+    score += (env.traffic.sidewalkCondition / 100) * 10; // Safe walking paths
+    score += (env.traffic.crosswalkSafety / 100) * 12; // Safe crossing points
+
+    // Temporal factors
+    if (env.temporal) {
+      // Time of day enhanced analysis
+      if (env.temporal.timeOfDay >= 6 && env.temporal.timeOfDay <= 18)
+        score += 15; // Daylight
+      else if (env.temporal.timeOfDay >= 19 && env.temporal.timeOfDay <= 22)
+        score += 5; // Early evening
+      else score -= 15; // Night hours
+
+      // Day of week patterns
+      if (env.temporal.dayOfWeek >= 1 && env.temporal.dayOfWeek <= 5)
+        score += 5; // Weekdays generally safer
+
+      // Business hours provide more activity and safety
+      if (env.temporal.businessHours) score += 10;
+      if (env.temporal.schoolHours) score += 8; // School hours mean more supervised activity
+
+      // Holiday events can be unpredictable
+      if (env.temporal.holidayEvents) score -= 5;
+
+      // Sunset/sunrise transition periods
+      score += (env.temporal.sunsetFactor / 100) * 8; // Better visibility during daylight
+    }
+
+    // Personal factors
+    if (env.personal) {
+      // Group size safety
+      if (env.personal.groupSize > 1) score += 10; // Safety in numbers
+      if (env.personal.groupSize > 4) score -= 5; // Large groups can attract attention
+
+      // Emergency contact proximity
+      score += (env.personal.emergencyContactProximity / 100) * 15;
+
+      // Area familiarity
+      score += (env.personal.previousAreaExperience / 100) * 12;
+
+      // Device reliability for emergency
+      score += (env.personal.deviceBatteryLevel / 100) * 8;
+      score += (env.personal.internetConnectivity / 100) * 7;
+
+      // Travel method considerations
+      switch (env.personal.travelMethod) {
+        case "walking":
+          score += 5; // More aware of surroundings
+          break;
+        case "cycling":
+          score += 3; // Good mobility but some vulnerability
+          break;
+        case "public_transport":
+          score += 8; // Other people around, established routes
+          break;
+        case "driving":
+          score += 12; // Protected, mobile, can leave quickly
+          break;
+      }
+
+      // Demographic considerations
+      switch (env.personal.userDemographics) {
+        case "elderly":
+          score -= 8; // May need more assistance
+          break;
+        case "young":
+          score -= 3; // May take more risks
+          break;
+        case "adult":
+          score += 5; // Most capable of self-defense/awareness
+          break;
+      }
+    }
 
     return Math.max(0, Math.min(100, score));
   }
@@ -856,6 +997,11 @@ export class AdvancedAISafetyEngine {
       emergencyServices: Math.min(100, 40 + (seed % 60)),
       publicTransport: Math.min(100, 25 + (seed % 75)),
       businessDensity: Math.min(100, 35 + (seed % 65)),
+      hospitalProximity: Math.min(100, 30 + (seed % 70)),
+      policeStationDistance: Math.min(100, seed % 80), // Lower is better
+      fireStationDistance: Math.min(100, seed % 60),
+      atriumSignalStrength: Math.min(100, 60 + (seed % 40)), // Generally good signal
+      emergencyCallBoxes: Math.floor(seed % 10), // 0-9 call boxes in area
     };
   }
 
@@ -872,12 +1018,33 @@ export class AdvancedAISafetyEngine {
     const moods = ["positive", "neutral", "negative", "tense"];
     const moodIndex = Math.abs((lat * lng * hour) % moods.length);
 
+    const currentDensity = Math.min(
+      100,
+      density + Math.abs((lat * lng * 7) % 30),
+    );
+
     return {
-      density: Math.min(100, density + Math.abs((lat * lng * 7) % 30)),
+      density: currentDensity,
       demographics: ["diverse", "business", "leisure", "commuter"],
       activity: hour >= 17 && hour <= 21 ? "social" : "transit",
       mood: moods[Math.floor(moodIndex)] as any,
       noiseLevel: Math.min(100, 40 + density / 2),
+      groupBehavior:
+        Math.random() > 0.8
+          ? "hostile"
+          : Math.random() > 0.3
+            ? "cooperative"
+            : "neutral",
+      familyPresence: Math.min(
+        100,
+        hour >= 10 && hour <= 16 ? 30 + (seed % 50) : 10 + (seed % 20),
+      ), // More families during day
+      elderlyPresence: Math.min(
+        100,
+        hour >= 8 && hour <= 11 ? 25 + (seed % 40) : 5 + (seed % 15),
+      ), // Morning activities
+      securityPersonnel: Math.floor((seed % 5) + (currentDensity > 70 ? 2 : 0)), // More security in busy areas
+      socialCohesion: Math.min(100, 40 + (seed % 60)), // Community interaction level
     };
   }
 
@@ -893,12 +1060,61 @@ export class AdvancedAISafetyEngine {
       vehicularDensity += 40; // Rush hour
     }
 
+    const seed = Math.abs((lat * lng * 1000) % 1000);
+
     return {
       vehicularDensity: Math.min(100, vehicularDensity),
       pedestrianFlow: Math.min(100, 20 + Math.abs((lat * lng * 11) % 60)),
       accidents: Math.max(0, Math.abs((lat * lng * hour) % 5) - 3),
       roadConditions: "good",
       emergencyVehicles: Math.random() < 0.05, // 5% chance
+      roadLightingQuality: Math.min(
+        100,
+        hour >= 6 && hour <= 18 ? 90 : 40 + (seed % 50),
+      ), // Better during day
+      sidewalkCondition: Math.min(100, 60 + (seed % 40)), // Generally good condition
+      crosswalkSafety: Math.min(100, 70 + (seed % 30)), // Most crosswalks are safe
+    };
+  }
+
+  private analyzeTemporalFactors(): any {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay();
+    const month = now.getMonth();
+
+    // Calculate sunset factor (simplified)
+    const sunsetHour = 18; // Approximate sunset
+    const sunriseHour = 6; // Approximate sunrise
+    let sunsetFactor = 100;
+
+    if (hour >= sunriseHour && hour <= sunsetHour) {
+      sunsetFactor = 100; // Full daylight
+    } else {
+      sunsetFactor = Math.max(0, 100 - Math.abs(hour - 12) * 10); // Decreases away from noon
+    }
+
+    return {
+      timeOfDay: hour,
+      dayOfWeek: day,
+      seasonalFactors: Math.min(100, 60 + (month % 4) * 10), // Seasonal variation
+      holidayEvents: Math.random() < 0.1, // 10% chance of holiday/event
+      schoolHours: hour >= 8 && hour <= 15 && day >= 1 && day <= 5, // Weekday school hours
+      businessHours: hour >= 9 && hour <= 17 && day >= 1 && day <= 5, // Business hours
+      sunsetFactor: sunsetFactor,
+    };
+  }
+
+  private analyzePersonalFactors(userProfile?: any): any {
+    // In a real app, this would come from user data
+    return {
+      userDemographics: "adult", // Default
+      travelMethod: "walking", // Default
+      groupSize: 1, // Default solo travel
+      emergencyContactProximity: Math.random() * 100, // Random for demo
+      previousAreaExperience: Math.random() * 100, // Random for demo
+      deviceBatteryLevel: Math.min(100, 50 + Math.random() * 50), // 50-100%
+      internetConnectivity: Math.min(100, 70 + Math.random() * 30), // Generally good
     };
   }
 
@@ -1038,6 +1254,11 @@ export class AdvancedAISafetyEngine {
         emergencyServices: 40,
         publicTransport: 50,
         businessDensity: 45,
+        hospitalProximity: 50,
+        policeStationDistance: 50,
+        fireStationDistance: 50,
+        atriumSignalStrength: 75,
+        emergencyCallBoxes: 3,
       },
       crowdAnalytics: {
         density: 40,
@@ -1045,6 +1266,11 @@ export class AdvancedAISafetyEngine {
         activity: "normal",
         mood: "neutral",
         noiseLevel: 50,
+        groupBehavior: "neutral",
+        familyPresence: 30,
+        elderlyPresence: 20,
+        securityPersonnel: 2,
+        socialCohesion: 50,
       },
       traffic: {
         vehicularDensity: 50,
@@ -1052,7 +1278,12 @@ export class AdvancedAISafetyEngine {
         accidents: 0,
         roadConditions: "good",
         emergencyVehicles: false,
+        roadLightingQuality: 70,
+        sidewalkCondition: 80,
+        crosswalkSafety: 75,
       },
+      temporal: this.analyzeTemporalFactors(),
+      personal: this.analyzePersonalFactors(),
     };
   }
 

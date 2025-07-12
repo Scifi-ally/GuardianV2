@@ -101,11 +101,11 @@ export function SOSNotification({
         if (navigator.clipboard && window.isSecureContext) {
           navigator.clipboard.writeText(coordinates);
         }
-        alert(
+        window.alert(
           `Location coordinates copied to clipboard:\n${coordinates}\n\nUse your preferred navigation app to navigate to these coordinates.`,
         );
       } catch (error) {
-        alert(
+        window.alert(
           `Navigate to these coordinates:\n${coordinates}\n\nUse your preferred navigation app.`,
         );
       }

@@ -194,14 +194,40 @@ export function EmergencyContactManager({
     }, 300);
   };
 
-  const handleAlert = (contact: EmergencyContact) => {
-    console.log(`Sending in-app alert to ${contact.name}`);
-    // In-app alert functionality would go here
+  const handleAlert = async (contact: EmergencyContact) => {
+    try {
+      setAddingContact(true);
+      const { emergencyContactActionsService } = await import(
+        "@/services/emergencyContactActionsService"
+      );
+      await emergencyContactActionsService.alertContact(contact);
+      setSuccess(`Emergency alert sent to ${contact.name}!`);
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      console.error("Failed to send alert:", error);
+      setError(`Failed to send alert to ${contact.name}`);
+      setTimeout(() => setError(""), 3000);
+    } finally {
+      setAddingContact(false);
+    }
   };
 
-  const handleMessage = (contact: EmergencyContact) => {
-    console.log(`Messaging ${contact.name} through Guardian app`);
-    // In-app messaging functionality would go here
+  const handleMessage = async (contact: EmergencyContact) => {
+    try {
+      setAddingContact(true);
+      const { emergencyContactActionsService } = await import(
+        "@/services/emergencyContactActionsService"
+      );
+      await emergencyContactActionsService.messageContact(contact);
+      setSuccess(`Message sent to ${contact.name}!`);
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      setError(`Failed to send message to ${contact.name}`);
+      setTimeout(() => setError(""), 3000);
+    } finally {
+      setAddingContact(false);
+    }
   };
 
   const handleCopyKey = () => {
@@ -567,22 +593,58 @@ export function EmergencyContactManager({
               <div className="flex gap-2 mb-4">
                 <Button
                   className="flex-1 h-10 bg-emergency hover:bg-emergency/90"
-                  onClick={() =>
-                    sortedContacts.forEach((contact) => handleAlert(contact))
-                  }
+                  onClick={async () => {
+                    try {
+                      setAddingContact(true);
+                      const { emergencyContactActionsService } = await import(
+                        "@/services/emergencyContactActionsService"
+                      );
+                      const result =
+                        await emergencyContactActionsService.alertAllContacts(
+                          sortedContacts,
+                        );
+                      setSuccess(result.message);
+                      setTimeout(() => setSuccess(""), 3000);
+                    } catch (error) {
+                      console.error("Failed to alert all contacts:", error);
+                      setError("Failed to alert all contacts");
+                      setTimeout(() => setError(""), 3000);
+                    } finally {
+                      setAddingContact(false);
+                    }
+                  }}
+                  disabled={addingContact}
                 >
                   <Shield className="h-4 w-4 mr-2" />
-                  Alert All Contacts
+                  {addingContact ? "Sending..." : "Alert All Contacts"}
                 </Button>
                 <Button
                   variant="outline"
                   className="flex-1 h-10 border-warning text-warning hover:bg-warning hover:text-warning-foreground"
-                  onClick={() =>
-                    sortedContacts.forEach((contact) => handleMessage(contact))
-                  }
+                  onClick={async () => {
+                    try {
+                      setAddingContact(true);
+                      const { emergencyContactActionsService } = await import(
+                        "@/services/emergencyContactActionsService"
+                      );
+                      const result =
+                        await emergencyContactActionsService.messageAllContacts(
+                          sortedContacts,
+                        );
+                      setSuccess(result.message);
+                      setTimeout(() => setSuccess(""), 3000);
+                    } catch (error) {
+                      console.error("Failed to message all contacts:", error);
+                      setError("Failed to message all contacts");
+                      setTimeout(() => setError(""), 3000);
+                    } finally {
+                      setAddingContact(false);
+                    }
+                  }}
+                  disabled={addingContact}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
-                  Alert All
+                  {addingContact ? "Sending..." : "Message All"}
                 </Button>
               </div>
 

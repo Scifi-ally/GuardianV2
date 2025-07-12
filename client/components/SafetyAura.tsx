@@ -381,7 +381,7 @@ export function SafetyAura() {
                 >
                   {currentReading.overallScore}
                 </div>
-                <div className="text-sm text-gray-600">Safety Score</div>
+                <div className="text-sm text-gray-600">Area Assessment</div>
                 <div className="text-xs text-gray-500">
                   Last updated: {currentReading.timestamp.toLocaleTimeString()}
                 </div>

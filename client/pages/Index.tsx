@@ -11,7 +11,6 @@ import {
   RotateCcw,
   RotateCw,
   Navigation2,
-  Users,
   RefreshCw,
   Locate,
   Footprints,
@@ -37,7 +36,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { RealTimeSafetyFeatures } from "@/components/RealTimeSafetyFeatures";
-import { EnhancedLocationSharing } from "@/components/EnhancedLocationSharing";
 
 import { CustomCheckbox } from "@/components/ui/custom-checkbox";
 
@@ -48,8 +46,15 @@ import {
 } from "@/components/SlideDownNotifications";
 import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import AINavigationPanel from "@/components/AINavigationPanel";
+import { emergencyContactActionsService } from "@/services/emergencyContactActionsService";
+import { realTimeService } from "@/services/realTimeService";
+import { sharedLocationService } from "@/services/sharedLocationService";
+import { LocationPermissionPrompt } from "@/components/LocationPermissionPrompt";
+import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
+import { RouteSelection } from "@/components/RouteSelection";
+import { routeCalculationService } from "@/services/routeCalculationService";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
-import GoogleMapsStyleSearch from "@/components/GoogleMapsStyleSearch";
+import { CompactSearchBar } from "@/components/CompactSearchBar";
 
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 
@@ -272,11 +277,40 @@ export default function Index() {
     showDebug: false,
   });
 
-  const { location, error, getCurrentLocation } = useGeolocation();
+  const { location, error, getCurrentLocation, permissionStatus } =
+    useGeolocation();
   const { mapTheme, mapType, toggleTheme, toggleMapType } = useMapTheme();
   const { userProfile } = useAuth();
 
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+  const [routeOptions, setRouteOptions] = useState<{
+    safestRoute: any;
+    quickestRoute: any;
+    recommendedRoute: "safest" | "quickest";
+  } | null>(null);
+  const [showRouteSelection, setShowRouteSelection] = useState(false);
+
   const emergencyContacts = userProfile?.emergencyContacts || [];
+
+  // Route planning function (removed - now integrated into handleSearch)
+
+  const handleRouteSelect = useCallback(
+    (route: any) => {
+      setShowRouteSelection(false);
+      setDestination({
+        lat: route.waypoints[route.waypoints.length - 1].latitude,
+        lng: route.waypoints[route.waypoints.length - 1].longitude,
+      });
+      setIsNavigating(true);
+
+      addNotification({
+        type: "success",
+        title: "Navigation Started",
+        message: `Following ${route.title} - ${route.duration}`,
+      });
+    },
+    [addNotification],
+  );
 
   // Initialize real-time data monitoring
   useEffect(() => {
@@ -327,6 +361,30 @@ export default function Index() {
       realTimeDataService.stopTracking();
     };
   }, [location, addNotification]);
+
+  // Auto-populate emergency contact locations when user location and contacts are available
+  useEffect(() => {
+    if (
+      location &&
+      userProfile?.emergencyContacts &&
+      userProfile.emergencyContacts.length > 0
+    ) {
+      console.log("🎯 Auto-populating emergency contact locations...");
+      sharedLocationService.autoPopulateEmergencyContactLocations(
+        { latitude: location.latitude, longitude: location.longitude },
+        userProfile.emergencyContacts,
+      );
+
+      // Start simulation for movement
+      sharedLocationService.startEmergencyContactSimulation();
+
+      addNotification({
+        type: "info",
+        title: "Emergency Contacts",
+        message: `${userProfile.emergencyContacts.length} emergency contacts are sharing their location with you`,
+      });
+    }
+  }, [location, userProfile?.emergencyContacts, addNotification]);
 
   const handleDirectionsChange = useCallback(
     (directions: google.maps.DirectionsResult | null) => {
@@ -421,7 +479,7 @@ export default function Index() {
             longitude: destinationCoords.lng,
           });
 
-          console.log("🛡️ Route safety analysis:", {
+          console.log("🛡�� Route safety analysis:", {
             destination: `${destinationCoords.lat.toFixed(4)}, ${destinationCoords.lng.toFixed(4)}`,
             safetyScore: area.safetyScore,
           });
@@ -439,9 +497,31 @@ export default function Index() {
         }
       }
 
-      // Route calculated - no notification needed
+      // Show route selection modal after calculating routes
+      try {
+        addNotification({
+          type: "info",
+          title: "Planning Routes",
+          message: "Analyzing safest and quickest options...",
+        });
 
-      setIsNavigating(true);
+        const routes = await routeCalculationService.calculateRoutes(
+          { latitude: location.latitude, longitude: location.longitude },
+          destinationCoords,
+        );
+
+        setRouteOptions(routes);
+        setShowRouteSelection(true);
+      } catch (routeError) {
+        console.error("Route calculation error:", routeError);
+        addNotification({
+          type: "error",
+          title: "Route Planning Failed",
+          message: "Unable to calculate routes. Please try again.",
+        });
+      }
+
+      setIsNavigating(false); // Reset navigation state
     } catch (error) {
       console.error("Navigation error:", error);
       addNotification({
@@ -458,7 +538,9 @@ export default function Index() {
 
   const handleUseCurrentLocation = useCallback(async () => {
     try {
+      console.log("🎯 Green button clicked - getting current location...");
       const currentLoc = await getCurrentLocation();
+      console.log("✅ Got current location:", currentLoc);
 
       // Try to get location name using geocoding
       if (window.google?.maps) {
@@ -492,23 +574,37 @@ export default function Index() {
             });
 
             if (shortName) {
+              console.log("📍 Setting from location to:", shortName);
               setFromLocation(shortName);
             } else if (neighborhood && city) {
+              console.log(
+                "📍 Setting from location to:",
+                `${neighborhood}, ${city}`,
+              );
               setFromLocation(`${neighborhood}, ${city}`);
             } else if (city) {
+              console.log("📍 Setting from location to:", city);
               setFromLocation(city);
             } else {
+              console.log("📍 Setting from location to: Current Location");
               setFromLocation("Current Location");
             }
           } else {
+            console.log("📍 Geocoding failed, using: Current Location");
             setFromLocation("Current Location");
           }
         });
       } else {
+        console.log("📍 Google Maps not available, using: Current Location");
         setFromLocation("Current Location");
       }
 
-      // Removed notification - silent location usage
+      // Add success notification to confirm button worked
+      addNotification({
+        type: "success",
+        title: "Location Set",
+        message: "Current location has been set as starting point",
+      });
     } catch (error: any) {
       console.error("Error getting current location:", error);
 
@@ -538,8 +634,8 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       <PerformanceOptimizer />
       {/* Compact Navigation Header - Reduced Height */}
-      {/* Google Maps Style Search */}
-      <GoogleMapsStyleSearch
+      {/* Compact Search Bar */}
+      <CompactSearchBar
         fromLocation={fromLocation}
         setFromLocation={setFromLocation}
         toLocation={toLocation}
@@ -547,6 +643,7 @@ export default function Index() {
         onSearch={handleSearch}
         onUseCurrentLocation={handleUseCurrentLocation}
         location={location}
+        isSearching={isNavigating}
       />
 
       {/* Clear Route Button */}
@@ -582,6 +679,20 @@ export default function Index() {
         onClose={() => setShowAIPanel(false)}
       />
 
+      {/* Location Permission Prompt */}
+      {(!location || permissionStatus !== "granted") && (
+        <LocationPermissionPrompt
+          permissionStatus={permissionStatus}
+          onLocationRequest={async () => {
+            try {
+              await getCurrentLocation();
+            } catch (error) {
+              throw error;
+            }
+          }}
+        />
+      )}
+
       {/* Enhanced Google Map with Safety Score Coloring */}
       <div className="absolute inset-0 top-0 z-10">
         <EnhancedGoogleMap
@@ -599,6 +710,8 @@ export default function Index() {
           trackUserLocation={true}
           travelMode={travelMode}
           onDirectionsChange={handleDirectionsChange}
+          showSharedLocations={true}
+          currentUserId={userProfile?.uid}
           emergencyContacts={emergencyContacts.map((contact) => ({
             id: contact.id,
             name: contact.name,
@@ -613,6 +726,27 @@ export default function Index() {
           }}
         />
       </div>
+
+      {/* Notification Permission Prompt */}
+      <NotificationPermissionPrompt
+        onClose={() => setShowNotificationPrompt(false)}
+        autoShow={true}
+      />
+
+      {/* Route Selection Modal */}
+      {showRouteSelection && routeOptions && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <RouteSelection
+              safestRoute={routeOptions.safestRoute}
+              quickestRoute={routeOptions.quickestRoute}
+              recommendedRoute={routeOptions.recommendedRoute}
+              onRouteSelect={handleRouteSelect}
+              onClose={() => setShowRouteSelection(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Slide Up Panel with Tabs for Navigation, Contacts, and Settings */}
       <SlideUpPanel
@@ -670,7 +804,7 @@ export default function Index() {
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
                   <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
                     <div className="p-2 bg-blue-500 rounded-xl shadow-md">
-                      <Users className="h-5 w-5 text-white" />
+                      <Target className="h-5 w-5 text-white" />
                     </div>
                     LOCATION SHARING
                     <LocationSharingInfoButton />
@@ -679,9 +813,6 @@ export default function Index() {
                     Share your location with trusted contacts for enhanced
                     safety
                   </p>
-                  <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/50">
-                    <EnhancedLocationSharing />
-                  </div>
                 </div>
               </motion.div>
             </TabsContent>
@@ -800,14 +931,32 @@ export default function Index() {
                 // Route Planning
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Route Planning</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     <Button
                       variant="outline"
                       className="h-12 flex-col gap-1 text-xs transition-all duration-200 hover:scale-105 hover:shadow-md"
                       onClick={async () => {
-                        if (location) {
-                          // Get location name for sharing
+                        if (location && userProfile) {
                           try {
+                            // Start sharing location on the map
+                            const sessionId =
+                              sharedLocationService.startLocationSharing(
+                                userProfile.uid,
+                                userProfile.displayName || "You",
+                                userProfile.photoURL,
+                              );
+
+                            // Update initial location
+                            sharedLocationService.updateUserLocation(
+                              userProfile.uid,
+                              userProfile.displayName || "You",
+                              location.latitude,
+                              location.longitude,
+                              location.accuracy || 100,
+                              userProfile.photoURL,
+                            );
+
+                            // Get location name for sharing message
                             let locationMessage = "My current location";
 
                             if (window.google?.maps) {
@@ -888,10 +1037,20 @@ export default function Index() {
                                           document.execCommand("copy");
                                           document.body.removeChild(textArea);
                                         }
-                                        alert("Location copied to clipboard!");
+                                        addNotification({
+                                          type: "success",
+                                          title: "Location Shared",
+                                          message:
+                                            "Location copied to clipboard!",
+                                        });
                                       } catch (error) {
                                         console.error("Copy failed:", error);
-                                        alert("Failed to copy location");
+                                        addNotification({
+                                          type: "error",
+                                          title: "Share Failed",
+                                          message:
+                                            "Failed to copy location to clipboard",
+                                        });
                                       }
                                     }
                                   } else {
@@ -905,9 +1064,19 @@ export default function Index() {
                                     } else {
                                       try {
                                         navigator.clipboard?.writeText(message);
-                                        alert("Location copied to clipboard!");
+                                        addNotification({
+                                          type: "success",
+                                          title: "Location Shared",
+                                          message:
+                                            "Location copied to clipboard!",
+                                        });
                                       } catch {
-                                        alert("Failed to copy location");
+                                        addNotification({
+                                          type: "error",
+                                          title: "Share Failed",
+                                          message:
+                                            "Failed to copy location to clipboard",
+                                        });
                                       }
                                     }
                                   }
@@ -924,9 +1093,18 @@ export default function Index() {
                               } else {
                                 try {
                                   navigator.clipboard?.writeText(message);
-                                  alert("Location copied to clipboard!");
+                                  addNotification({
+                                    type: "success",
+                                    title: "Location Shared",
+                                    message: "Location copied to clipboard!",
+                                  });
                                 } catch {
-                                  alert("Failed to copy location");
+                                  addNotification({
+                                    type: "error",
+                                    title: "Share Failed",
+                                    message:
+                                      "Failed to copy location to clipboard",
+                                  });
                                 }
                               }
                             }
@@ -942,11 +1120,86 @@ export default function Index() {
                     <Button
                       variant="outline"
                       className="h-12 flex-col gap-1 text-xs transition-all duration-200 hover:scale-105 hover:shadow-md"
-                      onClick={() => {
-                        console.log("Starting live tracking...");
-                        alert(
-                          "Live tracking started! Your location will be shared with emergency contacts.",
-                        );
+                      onClick={async () => {
+                        try {
+                          if (!userProfile?.emergencyContacts?.length) {
+                            addNotification({
+                              type: "error",
+                              title: "Live Tracking Unavailable",
+                              message:
+                                "Please add emergency contacts first to enable live tracking.",
+                            });
+                            return;
+                          }
+
+                          const currentLocation = await getCurrentLocation();
+
+                          // Start live tracking with real-time service
+                          realTimeService.startLiveTracking({
+                            latitude: currentLocation.latitude,
+                            longitude: currentLocation.longitude,
+                            accuracy: currentLocation.accuracy,
+                            timestamp: Date.now(),
+                          });
+
+                          // Also start live tracking on the map
+                          if (userProfile) {
+                            const sessionId =
+                              sharedLocationService.startLiveTracking(
+                                userProfile.uid,
+                                userProfile.displayName || "You",
+                                userProfile.photoURL,
+                              );
+
+                            // Update initial location for live tracking
+                            sharedLocationService.updateUserLocation(
+                              userProfile.uid,
+                              userProfile.displayName || "You",
+                              currentLocation.latitude,
+                              currentLocation.longitude,
+                              currentLocation.accuracy,
+                              userProfile.photoURL,
+                              true, // isLiveTracking
+                            );
+                          }
+
+                          // Notify emergency contacts about live tracking
+                          const locationUrl = `https://maps.google.com/?q=${currentLocation.latitude},${currentLocation.longitude}`;
+                          await emergencyContactActionsService.sendEmergencyMessage(
+                            `🔴 LIVE TRACKING STARTED: I'm sharing my real-time location with you. Current location: ${locationUrl}. You'll receive updates every 2 minutes.`,
+                          );
+
+                          // Add to real-time alerts
+                          realTimeService.addAlert({
+                            id: `live-tracking-${Date.now()}`,
+                            type: "info",
+                            title: "Live Tracking Active",
+                            message: `Sharing location with ${userProfile.emergencyContacts.length} emergency contacts`,
+                            timestamp: new Date(),
+                            location: {
+                              latitude: currentLocation.latitude,
+                              longitude: currentLocation.longitude,
+                              accuracy: currentLocation.accuracy,
+                              timestamp: Date.now(),
+                            },
+                          });
+
+                          addNotification({
+                            type: "success",
+                            title: "Live Tracking Started",
+                            message: `Your location is now being shared with ${userProfile.emergencyContacts.length} emergency contacts.`,
+                          });
+
+                          console.log("✅ Live tracking started successfully");
+                        } catch (error) {
+                          console.error("Live tracking error:", error);
+                          addNotification({
+                            type: "error",
+                            title: "Live Tracking Failed",
+                            message:
+                              "Unable to start live tracking. Please check your location permissions.",
+                          });
+                        }
                       }}
                     >
                       <Navigation className="h-4 w-4" />

@@ -60,53 +60,72 @@ export class EnhancedLocationService {
 
   // Request permission and get current location
   async getCurrentLocation(options?: PositionOptions): Promise<LocationData> {
-    // Always return demo location immediately - no geolocation timeouts
-    const demoLocation: LocationData = {
-      latitude: 37.7749, // San Francisco default
-      longitude: -122.4194,
-      accuracy: 1000,
-      timestamp: Date.now(),
-    };
+    return new Promise((resolve, reject) => {
+      if (!this.isSupported()) {
+        // Fallback to demo location only if geolocation not supported
+        const fallbackLocation: LocationData = {
+          latitude: 37.7749,
+          longitude: -122.4194,
+          accuracy: 1000,
+          timestamp: Date.now(),
+        };
+        console.log("⚠️ Geolocation not supported, using fallback location");
+        this.lastKnownLocation = fallbackLocation;
+        return resolve(fallbackLocation);
+      }
 
-    console.log("🔍 Providing immediate demo location - no GPS timeouts");
-    this.lastKnownLocation = demoLocation;
+      // Try to get real location first
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const realLocation: LocationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp,
+            heading: position.coords.heading || undefined,
+            speed: position.coords.speed || undefined,
+          };
 
-    // Optionally try to get real location in the background (completely silent)
-    if (this.isSupported()) {
-      // Use very short timeout and don't retry to avoid any timeout errors
-      setTimeout(() => {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const realLocation: LocationData = {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              accuracy: position.coords.accuracy,
-              timestamp: position.timestamp,
-              heading: position.coords.heading || undefined,
-              speed: position.coords.speed || undefined,
-            };
+          console.log("✅ Real location obtained:", {
+            lat: realLocation.latitude.toFixed(4),
+            lng: realLocation.longitude.toFixed(4),
+            accuracy: Math.round(realLocation.accuracy),
+          });
 
-            this.lastKnownLocation = realLocation;
-            console.log("✅ Real location found silently in background");
-            this.callbacks.forEach((callback) => callback(realLocation));
-          },
-          () => {
-            // Silent failure - no errors, no retries
-            console.log(
-              "ℹ️ Background location unavailable - continuing with demo",
-            );
-          },
-          {
-            enableHighAccuracy: false,
-            maximumAge: 600000, // Use very old cache if available
-            timeout: 5000, // Very short timeout
-          },
-        );
-      }, 500);
-    }
+          this.lastKnownLocation = realLocation;
+          this.callbacks.forEach((callback) => callback(realLocation));
+          resolve(realLocation);
+        },
+        (error) => {
+          console.log("⚠️ Failed to get real location:", error.message);
 
-    // Always resolve immediately with demo location
-    return Promise.resolve(demoLocation);
+          // Use last known location if available
+          if (this.lastKnownLocation) {
+            console.log("🔄 Using last known location");
+            resolve(this.lastKnownLocation);
+            return;
+          }
+
+          // Only use demo location as last resort
+          const demoLocation: LocationData = {
+            latitude: 37.7749,
+            longitude: -122.4194,
+            accuracy: 1000,
+            timestamp: Date.now(),
+          };
+
+          console.log("📍 Using demo location as fallback");
+          this.lastKnownLocation = demoLocation;
+          resolve(demoLocation);
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 300000, // 5 minutes
+          timeout: 15000, // 15 seconds - reasonable timeout
+          ...options,
+        },
+      );
+    });
   }
 
   // Start continuous location tracking (optional, non-blocking)

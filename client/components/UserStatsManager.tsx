@@ -262,40 +262,6 @@ export function UserStatsManager() {
 
   return (
     <div className="space-y-4">
-      {/* Safety Score */}
-      <Card className="border shadow-lg bg-white">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-black">
-            <Shield className="h-5 w-5" />
-            Safety Score
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center">
-            <div className={`text-3xl font-bold ${getSafetyScoreColor()}`}>
-              {stats.safetyScore}/100
-            </div>
-            <p className="text-sm text-gray-600 mt-1">
-              Complete your profile and add contacts to improve your score
-            </p>
-          </div>
-
-          {stats.safetyScore < 100 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-black">Suggestions:</p>
-              <div className="space-y-1 text-xs text-gray-600">
-                {!userProfile?.phone && <p>• Add a phone number</p>}
-                {(userProfile?.emergencyContacts?.length || 0) < 3 && (
-                  <p>• Add more emergency contacts</p>
-                )}
-                {!stats.locationPermission && <p>• Enable location services</p>}
-                {!stats.notificationPermission && <p>• Enable notifications</p>}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Activity & Permissions */}
       <Card className="border shadow-lg bg-white">
         <CardHeader>
@@ -305,33 +271,7 @@ export function UserStatsManager() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <div className="text-xl font-bold text-black">
-                {stats.weeklyActivity}
-              </div>
-              <div className="text-xs text-gray-600">Days Active</div>
-            </div>
-            <div>
-              <div className="text-xl font-bold text-black">
-                {(() => {
-                  try {
-                    const lastActiveDate = new Date(stats.lastActiveTime);
-                    if (isNaN(lastActiveDate.getTime())) {
-                      return "Now";
-                    }
-                    const minutesAgo = Math.floor(
-                      (Date.now() - lastActiveDate.getTime()) / (1000 * 60),
-                    );
-                    return minutesAgo < 1 ? "Now" : `${minutesAgo}m`;
-                  } catch (error) {
-                    return "Now";
-                  }
-                })()}
-              </div>
-              <div className="text-xs text-gray-600">Last Active</div>
-            </div>
-          </div>
+          <div className="grid grid-cols-2 gap-4 text-center"></div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">

@@ -4,7 +4,6 @@ import {
   Phone,
   MessageSquare,
   MapPin,
-  Camera,
   Volume2,
   Flashlight,
   Shield,
@@ -135,7 +134,7 @@ export function QuickSafetyActions() {
     }
   };
 
-  const sendQuickSMS = () => {
+  const sendQuickSMS = async () => {
     if (
       !userProfile?.emergencyContacts ||
       userProfile.emergencyContacts.length === 0
@@ -169,23 +168,15 @@ export function QuickSafetyActions() {
     }
   };
 
-  const callEmergencyContact = () => {
+  const callEmergencyContact = async () => {
     if (
       !userProfile?.emergencyContacts ||
       userProfile.emergencyContacts.length === 0
     ) {
-      // Fallback to 911
-      // Copy emergency number instead of auto-calling
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText("911");
-        }
-        toast.info(
-          "Emergency number (911) copied to clipboard - Call manually",
-        );
-      } catch (error) {
-        toast.info("Call emergency services: 911");
-      }
+      toast.error(
+        "No emergency contacts configured. Please add emergency contacts in settings.",
+      );
+      return;
     } else {
       const primaryContact = userProfile.emergencyContacts[0];
       // Copy contact number instead of auto-calling
@@ -199,55 +190,6 @@ export function QuickSafetyActions() {
       } catch (error) {
         toast.info(`Call ${primaryContact.name}: ${primaryContact.phone}`);
       }
-    }
-  };
-
-  const takeEvidencePhoto = async () => {
-    try {
-      if (navigator.mediaDevices && "getUserMedia" in navigator.mediaDevices) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
-
-        // Create video element to capture photo
-        const video = document.createElement("video");
-        video.srcObject = stream;
-        video.play();
-
-        video.addEventListener("loadedmetadata", () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(video, 0, 0);
-
-          // Convert to blob and trigger download
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `safety-evidence-${Date.now()}.jpg`;
-                a.click();
-                URL.revokeObjectURL(url);
-                toast.success("Evidence photo captured");
-              }
-            },
-            "image/jpeg",
-            0.8,
-          );
-
-          // Stop camera
-          stream.getTracks().forEach((track) => track.stop());
-        });
-      } else {
-        toast.error("Camera not available");
-      }
-    } catch (error) {
-      console.error("Camera error:", error);
-      toast.error("Failed to access camera");
     }
   };
 
@@ -265,7 +207,7 @@ export function QuickSafetyActions() {
       icon: Phone,
       color: "bg-red-500 hover:bg-red-600",
       action: callEmergencyContact,
-      description: "Call emergency contact or 911",
+      description: "Call your emergency contacts",
     },
     {
       id: "sms",
@@ -303,14 +245,7 @@ export function QuickSafetyActions() {
       action: toggleFlashlight,
       description: "Emergency flashlight",
     },
-    {
-      id: "photo",
-      label: "Evidence Photo",
-      icon: Camera,
-      color: "bg-green-500 hover:bg-green-600",
-      action: takeEvidencePhoto,
-      description: "Take photo as evidence",
-    },
+
     {
       id: "tracking",
       label: "Live Tracking",

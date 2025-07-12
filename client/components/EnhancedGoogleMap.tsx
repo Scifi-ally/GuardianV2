@@ -198,11 +198,17 @@ export function EnhancedGoogleMap({
       clickableIcons: true,
       backgroundColor: "#f5f5f5",
       // Performance and animation settings
-      animatedZoom: true,
+
       tilt: 0,
       maxZoom: 20,
       minZoom: 8,
       restriction: {
+        latLngBounds: {
+          north: 85,
+          south: -85,
+          west: -180,
+          east: 180,
+        },
         strictBounds: false,
       },
       // Google Maps-like animations

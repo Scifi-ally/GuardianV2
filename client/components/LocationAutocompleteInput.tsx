@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { MapPin, Clock, Star, Building } from "lucide-react";
+import { MapPin, Clock, Star, Building, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LocationSuggestion {
@@ -334,7 +334,7 @@ export function LocationAutocompleteInput({
     if (types.includes("airport")) return "✈️";
     if (types.includes("university") || types.includes("school")) return "🎓";
     if (types.includes("hospital")) return "🏥";
-    if (types.includes("restaurant")) return "🍽️";
+    if (types.includes("restaurant")) return "���️";
     if (types.includes("cafe")) return "☕";
     if (types.includes("gas_station")) return "⛽";
     if (types.includes("bank")) return "🏦";

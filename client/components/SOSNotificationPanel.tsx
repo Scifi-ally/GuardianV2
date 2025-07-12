@@ -106,11 +106,11 @@ export function SOSNotificationPanel({
             `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
           );
         }
-        alert(
+        window.alert(
           `Navigation info copied to clipboard:\n${routeInfo}\n\nUse your preferred navigation app.`,
         );
       } catch (error) {
-        alert(
+        window.alert(
           `Navigate to:\n${toLat.toFixed(6)}, ${toLng.toFixed(6)}\n\nUse your preferred navigation app.`,
         );
       }
@@ -177,11 +177,11 @@ export function SOSNotificationPanel({
             `Navigate to: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
           );
         }
-        alert(
+        window.alert(
           `Destination copied to clipboard:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
         );
       } catch (error) {
-        alert(
+        window.alert(
           `Navigate to:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
         );
       }

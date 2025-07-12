@@ -190,11 +190,9 @@ export function AIFeaturesPanel({
           transition={{ delay: 0.1 }}
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">AI Safety Score</span>
-            <Badge
-              className={`${getSafetyBgColor(safetyScore)} ${getSafetyColor(safetyScore)} border-0`}
-            >
-              {safetyScore}/100
+            <span className="text-sm font-medium">AI Analysis Active</span>
+            <Badge className="bg-green-100 text-green-700 border-0">
+              Running
             </Badge>
           </div>
           <Progress

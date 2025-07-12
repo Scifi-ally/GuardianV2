@@ -191,11 +191,6 @@ export function EmergencyDetection({
     }
   };
 
-  const callEmergency = () => {
-    window.location.href = "tel:911";
-    emergencyVibration();
-  };
-
   if (emergencyMode && sosCountdown > 0) {
     return (
       <Card className="border-emergency bg-emergency/5">
@@ -303,14 +298,6 @@ export function EmergencyDetection({
         >
           <MapPin className="h-5 w-5" />
           <span className="text-xs">Share Location</span>
-        </Button>
-
-        <Button
-          onClick={callEmergency}
-          className="h-16 flex-col gap-1 bg-emergency hover:bg-emergency/90 text-emergency-foreground"
-        >
-          <Phone className="h-5 w-5" />
-          <span className="text-xs">Call 911</span>
         </Button>
       </div>
 

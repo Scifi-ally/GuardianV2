@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   Shield,
   Phone,
-  Camera,
   MapPin,
   Users,
   Brain,
@@ -31,7 +30,6 @@ interface SystemHealth {
   battery: number;
   signal: number;
   gps: boolean;
-  camera: boolean;
   microphone: boolean;
   flashlight: boolean;
 }
@@ -56,7 +54,6 @@ export function ComprehensiveSafetySystem() {
     battery: 85,
     signal: 78,
     gps: true,
-    camera: true,
     microphone: true,
     flashlight: true,
   });
@@ -93,14 +90,7 @@ export function ComprehensiveSafetySystem() {
         navigator.clipboard.writeText(contact.phone);
         toast.success(`${contact.name}'s number copied: ${contact.phone}`);
       } else {
-        alert(`Call ${contact.name}: ${contact.phone}`);
-      }
-    } else {
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText("911");
-        toast.success("Emergency number copied: 911");
-      } else {
-        alert("Emergency number: 911");
+        toast.info(`Call ${contact.name}: ${contact.phone}`);
       }
     }
   };
@@ -200,12 +190,7 @@ export function ComprehensiveSafetySystem() {
       action: shareLocation,
       color: "bg-blue-500 hover:bg-blue-600",
     },
-    {
-      icon: Camera,
-      label: "Take Photo",
-      action: () => toast.info("Camera feature coming soon"),
-      color: "bg-green-500 hover:bg-green-600",
-    },
+
     {
       icon: Volume2,
       label: "Panic Alarm",
@@ -266,19 +251,6 @@ export function ComprehensiveSafetySystem() {
               />
               <span className="text-xs">
                 GPS: {systemHealth.gps ? "Active" : "Offline"}
-              </span>
-            </div>
-
-            {/* Camera Status */}
-            <div className="flex items-center gap-2">
-              <Camera
-                className={cn(
-                  "h-4 w-4",
-                  systemHealth.camera ? "text-green-600" : "text-red-600",
-                )}
-              />
-              <span className="text-xs">
-                Camera: {systemHealth.camera ? "Ready" : "Error"}
               </span>
             </div>
           </div>

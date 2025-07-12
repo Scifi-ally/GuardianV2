@@ -193,8 +193,8 @@ export function AIInsightsPanel({
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
-            <div className="text-lg font-bold text-black">{safetyScore}</div>
-            <div className="text-xs text-gray-600">Safety Score</div>
+            <div className="text-lg font-bold text-black">Analysis</div>
+            <div className="text-xs text-gray-600">AI Status</div>
           </div>
           <div>
             <div className="text-lg font-bold text-black">

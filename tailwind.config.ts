@@ -13,6 +13,24 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        mono: [
+          "Geist Mono",
+          "SF Mono",
+          "Monaco",
+          "Inconsolata",
+          "Roboto Mono",
+          "monospace",
+        ],
+        sans: [
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif",
+        ],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

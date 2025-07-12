@@ -50,8 +50,9 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
   const [sending, setSending] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [activeAlertId, setActiveAlertId] = useState<string | null>(null);
-  const [mapLongPressTimer, setMapLongPressTimer] =
-    useState<NodeJS.Timeout | null>(null);
+  const [mapLongPressTimer, setMapLongPressTimer] = useState<number | null>(
+    null,
+  );
   const [showEnhancedMapHint, setShowEnhancedMapHint] = useState(false);
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         setShowEnhancedMapHint(true);
         handleMapLongPress();
       }, 800); // 800ms long press
-      setMapLongPressTimer(timer);
+      setMapLongPressTimer(timer as unknown as number);
     }
   };
 
