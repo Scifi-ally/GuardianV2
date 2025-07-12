@@ -189,8 +189,14 @@ export function SOSNotificationPanel({
   };
 
   const handleCall = () => {
-    // In a real app, you'd call the sender's phone number
-    console.log("Calling emergency contact...");
+    // Try to call emergency services or the alert sender
+    const phoneNumber = "911"; // Default to emergency services
+    try {
+      window.location.href = `tel:${phoneNumber}`;
+    } catch (error) {
+      console.error("Failed to initiate call:", error);
+      alert(`Call ${phoneNumber} for emergency assistance`);
+    }
   };
 
   const timeAgo = (date: Date) => {
