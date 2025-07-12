@@ -1443,6 +1443,12 @@ export default function Index() {
 
       {/* Magic Navbar */}
       <MagicNavbar onSOSPress={handleSOSPress} />
+
+      {/* Clickable Elements Audit Tool */}
+      <ClickableElementsAudit
+        isVisible={showClickableAudit}
+        onToggle={() => setShowClickableAudit(!showClickableAudit)}
+      />
     </div>
   );
 }
