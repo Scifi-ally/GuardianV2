@@ -335,7 +335,7 @@ export default function Index() {
           error instanceof Error ? error.message : "Unknown error";
         console.error("🚫 Failed to initialize location tracking:", {
           error: errorMessage,
-          type: error?.constructor?.name || typeof error,
+          type: (error as any)?.constructor?.name || typeof error,
         });
 
         addNotification({
