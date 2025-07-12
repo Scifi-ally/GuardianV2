@@ -356,9 +356,20 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
         ))}
         {activeAlerts.length > 3 && (
           <Card
-            className="cursor-pointer"
+            role="button"
+            tabIndex={0}
+            aria-label={`Show ${activeAlerts.length - 3} more emergency alerts`}
+            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-gray-50"
             onClick={() => {
-              /* Show all alerts */
+              console.log("Show all alerts");
+              // Add actual show all alerts functionality
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                console.log("Show all alerts");
+                // Add actual show all alerts functionality
+              }
             }}
           >
             <CardContent className="p-2 text-center">
