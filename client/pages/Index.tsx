@@ -492,8 +492,11 @@ export default function Index() {
             safetyScore: area.safetyScore,
           });
 
-          // Only show safety notification if there are concerns
-          if (area.safetyScore < 60) {
+          // Only show safety notification if there are concerns and notifications are enabled
+          if (
+            area.safetyScore < 60 &&
+            shouldShowNotification("safetyUpdates")
+          ) {
             addNotification({
               type: "warning",
               title: "Route Safety Notice",
