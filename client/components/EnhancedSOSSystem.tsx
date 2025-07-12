@@ -425,11 +425,19 @@ export function EnhancedSOSSystem({
             className="fixed top-4 left-4 right-4 z-50"
           >
             <Card className="border-red-500 bg-red-50 shadow-2xl">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-red-700 flex items-center gap-2">
+              <CardHeader className="pb-2 relative">
+                <CardTitle className="text-red-700 flex items-center gap-2 pr-8">
                   <AlertTriangle className="h-5 w-5 animate-pulse" />
                   SOS ACTIVE - Emergency Alert Sent
                 </CardTitle>
+                <Button
+                  onClick={stopActiveAlert}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-8 w-8 p-0 text-red-600 hover:bg-red-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-sm text-red-600">
