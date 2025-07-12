@@ -183,11 +183,7 @@ export function GoogleMapsNavigationView({
 
       // Notify parent component that map is loaded
       onMapLoad?.(newMap);
-
-      console.log("✅ Google Maps Navigation View initialized successfully");
-    } catch (error) {
-      console.error("❌ Failed to initialize Google Maps:", error);
-    }
+    } catch (error) {}
   }, [mapRef.current, currentLocation]);
 
   // Create user location marker (only once)
@@ -324,11 +320,6 @@ export function GoogleMapsNavigationView({
 
         // Log route details
         const route = result.routes[0];
-        console.log("🗺️ Route details:", {
-          distance: route.legs[0].distance?.text,
-          duration: route.legs[0].duration?.text,
-          steps: route.legs[0].steps.length,
-        });
 
         if (!isNavigating) {
           // Fit map to route for overview
@@ -411,7 +402,6 @@ export function GoogleMapsNavigationView({
 
       return unsubscribe;
     } catch (error) {
-      console.error("Failed to start live tracking:", error);
       setIsTracking(false);
       setIsNavigationMode(false);
     }
@@ -480,7 +470,6 @@ export function GoogleMapsNavigationView({
   };
 
   if (!GOOGLE_MAPS_API_KEY) {
-    console.error("❌ Google Maps API key missing!");
     return (
       <div className="w-full h-full bg-red-100 rounded-lg flex items-center justify-center">
         <div className="text-center">
@@ -495,11 +484,6 @@ export function GoogleMapsNavigationView({
       </div>
     );
   }
-
-  console.log(
-    "🗺️ Google Maps API Key available:",
-    GOOGLE_MAPS_API_KEY.substring(0, 10) + "...",
-  );
 
   return (
     <div className="relative w-full h-full">
