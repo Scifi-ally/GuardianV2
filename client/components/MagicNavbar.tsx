@@ -97,6 +97,51 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
     setShowEnhancedMapHint(false);
   };
 
+  const getLocationName = async (lat: number, lng: number): Promise<string> => {
+    if (!window.google?.maps) return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+    try {
+      const geocoder = new google.maps.Geocoder();
+      const result = await new Promise<string>((resolve) => {
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+          if (status === "OK" && results && results[0]) {
+            const components = results[0].address_components;
+            let shortName = "";
+            let neighborhood = "";
+            let city = "";
+
+            components.forEach((component) => {
+              const types = component.types;
+              if (
+                types.includes("establishment") ||
+                types.includes("point_of_interest")
+              ) {
+                shortName = component.long_name;
+              } else if (
+                types.includes("neighborhood") ||
+                types.includes("sublocality")
+              ) {
+                neighborhood = component.long_name;
+              } else if (types.includes("locality")) {
+                city = component.long_name;
+              }
+            });
+
+            if (shortName) resolve(shortName);
+            else if (neighborhood && city) resolve(`${neighborhood}, ${city}`);
+            else if (city) resolve(city);
+            else resolve(results[0].formatted_address);
+          } else {
+            resolve(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+          }
+        });
+      });
+      return result;
+    } catch (error) {
+      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+  };
+
   const sendSOSAlert = async () => {
     if (!currentUser || !userProfile) {
       toast.error("Authentication required to send SOS");
