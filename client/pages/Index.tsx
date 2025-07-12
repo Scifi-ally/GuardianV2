@@ -510,11 +510,13 @@ export default function Index() {
 
       // Show route selection modal after calculating routes
       try {
-        addNotification({
-          type: "info",
-          title: "Planning Routes",
-          message: "Analyzing safest and quickest options...",
-        });
+        if (shouldShowNotification("routeUpdates")) {
+          addNotification({
+            type: "info",
+            title: "Planning Routes",
+            message: "Analyzing safest and quickest options...",
+          });
+        }
 
         const routes = await routeCalculationService.calculateRoutes(
           { latitude: location.latitude, longitude: location.longitude },
