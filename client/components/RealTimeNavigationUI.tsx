@@ -442,7 +442,21 @@ export function RealTimeNavigationUI({
                       {nearbyServices.map((service, index) => (
                         <div
                           key={index}
-                          className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => {
+                            console.log(`Navigating to ${service.name}`);
+                            // Add actual navigation logic here
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              console.log(`Navigating to ${service.name}`);
+                              // Add actual navigation logic here
+                            }
+                          }}
+                          aria-label={`Navigate to ${service.name} - ${service.vicinity}`}
+                          className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <MapPin className="h-4 w-4 text-gray-500" />
                           <div className="flex-1">
