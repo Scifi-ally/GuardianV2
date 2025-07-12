@@ -276,6 +276,7 @@ export function ComprehensiveSOSWorkflow({
               <EnhancedSOSSystem
                 onSOSLocationReceived={handleSOSLocationReceived}
                 onSOSAlert={handleSOSAlert}
+                onStartNavigation={handleStartNavigation}
               />
 
               {/* Test Button for Development */}
