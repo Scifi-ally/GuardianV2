@@ -194,8 +194,6 @@ export function GoogleMapsNavigationView({
   useEffect(() => {
     if (!map || !currentLocation || userMarker) return;
 
-    console.log("📍 Creating user location marker");
-
     // Create Google Maps-style user marker (only once)
     const marker = new google.maps.Marker({
       position: {
@@ -237,8 +235,6 @@ export function GoogleMapsNavigationView({
     userMarker.setTitle(
       `Your location (±${Math.round(currentLocation.accuracy || 0)}m)`,
     );
-
-    console.log("📍 Updated marker position (no animation)");
   }, [userMarker, currentLocation]);
 
   // Update marker icon when navigation state changes
@@ -320,13 +316,8 @@ export function GoogleMapsNavigationView({
       optimizeWaypoints: true,
     };
 
-    console.log("🗺️ Requesting directions:", request);
-
     directionsService.route(request, (result, status) => {
-      console.log("🗺️ Directions response:", { status, result });
-
       if (status === google.maps.DirectionsStatus.OK && result) {
-        console.log("✅ Setting directions on renderer");
         directionsRenderer.setDirections(result);
         setCurrentRoute(result);
         onDirectionsChange?.(result);
