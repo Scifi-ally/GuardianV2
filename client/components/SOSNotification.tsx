@@ -102,13 +102,13 @@ export function SOSNotification({
         if (navigator.clipboard && window.isSecureContext) {
           navigator.clipboard.writeText(coordinates);
         }
-        window.alert(
-          `Location coordinates copied to clipboard:\n${coordinates}\n\nUse your preferred navigation app to navigate to these coordinates.`,
-        );
+        toast.success("Location copied", {
+          description: "Use your navigation app with the copied coordinates",
+        });
       } catch (error) {
-        window.alert(
-          `Navigate to these coordinates:\n${coordinates}\n\nUse your preferred navigation app.`,
-        );
+        toast.info("Navigation coordinates", {
+          description: `Navigate to: ${coordinates}`,
+        });
       }
     }
   };
