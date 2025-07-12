@@ -765,39 +765,39 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                {/* Comprehensive SOS Workflow */}
-                <ComprehensiveSOSWorkflow
-                  map={null}
-                  onStartNavigation={(location) => {
-                    // Set destination for navigation
-                    setDestination({
-                      lat: location.latitude,
-                      lng: location.longitude,
-                    });
-                    setIsNavigating(true);
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
+                    <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
+                      <div className="p-2 bg-blue-500 rounded-xl shadow-md">
+                        <Target className="h-5 w-5 text-white" />
+                      </div>
+                      LOCATION SHARING
+                      <LocationSharingInfoButton />
+                    </h3>
+                    <p className="text-sm text-slate-600 font-mono mb-4">
+                      Share your location with trusted contacts for enhanced
+                      safety
+                    </p>
+                  </div>
 
-                    // Auto-set as destination location
-                    setToLocation(
-                      location.address ||
-                        `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`,
-                    );
-
-                    // Navigation started - no slide down notification
-                  }}
-                />
-
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
-                  <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
-                    <div className="p-2 bg-blue-500 rounded-xl shadow-md">
-                      <Target className="h-5 w-5 text-white" />
+                  <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100/50 shadow-sm">
+                    <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
+                      <div className="p-2 bg-red-500 rounded-xl shadow-md">
+                        <AlertTriangle className="h-5 w-5 text-white" />
+                      </div>
+                      EMERGENCY SOS
+                    </h3>
+                    <p className="text-sm text-slate-600 font-mono mb-4">
+                      Use the red SOS button in the bottom navigation to send
+                      emergency alerts
+                    </p>
+                    <div className="flex items-center gap-2 text-sm text-red-600">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span>
+                        Press and hold for 3 seconds to activate emergency mode
+                      </span>
                     </div>
-                    LOCATION SHARING
-                    <LocationSharingInfoButton />
-                  </h3>
-                  <p className="text-sm text-slate-600 font-mono mb-4">
-                    Share your location with trusted contacts for enhanced
-                    safety
-                  </p>
+                  </div>
                 </div>
               </motion.div>
             </TabsContent>
