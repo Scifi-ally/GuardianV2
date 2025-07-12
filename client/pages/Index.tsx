@@ -651,6 +651,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       <PerformanceOptimizer />
+      <ClickableFixes />
       {/* Compact Navigation Header - Reduced Height */}
       {/* Compact Search Bar */}
       <CompactSearchBar
