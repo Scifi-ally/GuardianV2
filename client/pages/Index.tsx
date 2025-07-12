@@ -347,17 +347,7 @@ export default function Index() {
 
     initializeTracking();
 
-    // Listen for real-time safety updates
-    realTimeDataService.onSafetyDataUpdate((safetyData) => {
-      // Only notify on significant safety score changes
-      if (safetyData.safetyScore < 50) {
-        addNotification({
-          type: "warning",
-          title: "Safety Alert",
-          message: `Current area safety score: ${safetyData.safetyScore}/100`,
-        });
-      }
-    });
+    // Safety updates notification removed - no slide down notifications
 
     // Safety calculation now only during navigation - removed auto-notifications
 
