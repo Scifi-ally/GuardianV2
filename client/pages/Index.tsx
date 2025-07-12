@@ -1373,7 +1373,7 @@ export default function Index() {
       </SlideUpPanel>
 
       {/* Magic Navbar */}
-      <MagicNavbar onSOSPress={handleSOSPress} />
+      <MagicNavbar />
     </div>
   );
 }
