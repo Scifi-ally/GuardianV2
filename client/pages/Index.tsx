@@ -67,6 +67,7 @@ import {
   notificationSettingsService,
   shouldShowNotification,
 } from "@/services/notificationSettingsService";
+import { ClickableElementsAudit } from "@/components/ClickableElementsAudit";
 import { areaBasedSafety } from "@/services/areaBasedSafety";
 import { realTimeDataService } from "@/services/realTimeDataService";
 import {
