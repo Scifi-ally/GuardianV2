@@ -239,13 +239,22 @@ export function BackgroundSafetyMonitor({
 
           {/* Location Tracking */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={`Location tracking is ${safetyServices.locationTracking ? "enabled" : "disabled"}. Click to toggle.`}
             className={cn(
-              "p-2 rounded-lg border cursor-pointer transition-all duration-200",
+              "p-2 rounded-lg border cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500",
               safetyServices.locationTracking
                 ? "bg-safe/10 border-safe/30"
                 : "bg-muted/30 border-border",
             )}
             onClick={() => toggleService("locationTracking")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleService("locationTracking");
+              }
+            }}
           >
             <div className="flex items-center gap-2">
               <MapPin
