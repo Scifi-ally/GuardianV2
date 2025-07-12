@@ -23,6 +23,7 @@ import {
   type ConnectivityTest,
 } from "@/services/connectivityService";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function ConnectivityDiagnostics() {
   const [status, setStatus] = useState<ConnectivityStatus | null>(null);
