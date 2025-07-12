@@ -57,12 +57,14 @@ interface SOSResponse {
 interface EnhancedSOSSystemProps {
   onSOSLocationReceived?: (location: SOSLocation) => void;
   onSOSAlert?: (alert: SOSAlert) => void;
+  onStartNavigation?: (location: SOSLocation) => void;
   className?: string;
 }
 
 export function EnhancedSOSSystem({
   onSOSLocationReceived,
   onSOSAlert,
+  onStartNavigation,
   className,
 }: EnhancedSOSSystemProps) {
   const { userProfile, currentUser } = useAuth();
@@ -315,31 +317,11 @@ export function EnhancedSOSSystem({
       }
 
       toast.success(
-        "🚨 Emergency alert sent! Continuous location sharing activated.",
+        "🚨 Emergency alert sent! Location shared and tracking active.",
         {
-          duration: 10000,
+          duration: 5000,
         },
       );
-
-      addNotification({
-        type: "error", // Use error type for high visibility
-        title: "🚨 SOS ACTIVE",
-        message: `Emergency alert sent. Location updates every 30 seconds. Tap to copy current location.`,
-        persistent: true,
-        action: {
-          label: "Copy Location",
-          onClick: async () => {
-            const current = await getCurrentLocation();
-            const name = await getLocationName(
-              current.latitude,
-              current.longitude,
-            );
-            const msg = `📍 Current Location: ${name}\nCoordinates: ${current.latitude.toFixed(6)}, ${current.longitude.toFixed(6)}\nTime: ${new Date().toLocaleString()}`;
-            await copyToClipboard(msg);
-            toast.success("Current location copied");
-          },
-        },
-      });
     } catch (error) {
       console.error("Error sending SOS alert:", error);
       toast.error(
@@ -384,29 +366,15 @@ export function EnhancedSOSSystem({
         setLocationUpdateInterval(null);
       }
 
-      // Update alert status
-      const updatedAlert = { ...activeAlert, status: "cancelled" as const };
-      setActiveAlert(updatedAlert);
-      setSOSActive(false);
-
       // Send cancellation message
       const cancelMessage = `✅ SOS CANCELLED: ${userProfile?.displayName || "User"} is now safe. Emergency situation resolved at ${new Date().toLocaleString()}.`;
       await copyToClipboard(cancelMessage);
 
-      toast.success(
-        "SOS alert cancelled - please send the cancellation message to your contacts",
-      );
-      addNotification({
-        type: "success",
-        title: "SOS Cancelled",
-        message:
-          "Cancellation message copied to clipboard. Send to your emergency contacts.",
-      });
+      // Immediately clear the alert (no delay)
+      setActiveAlert(null);
+      setSOSActive(false);
 
-      // Clear active alert after a delay
-      setTimeout(() => {
-        setActiveAlert(null);
-      }, 5000);
+      toast.success("SOS cancelled - cancellation message copied to clipboard");
     } catch (error) {
       console.error("Failed to stop SOS alert:", error);
       toast.error("Failed to cancel SOS alert");
@@ -449,13 +417,20 @@ export function EnhancedSOSSystem({
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={stopActiveAlert}
-                    variant="destructive"
+                    onClick={() => {
+                      if (activeAlert?.location && onStartNavigation) {
+                        onStartNavigation(activeAlert.location);
+                        toast.success(
+                          "Navigation started to emergency location",
+                        );
+                      }
+                    }}
+                    variant="default"
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
                   >
-                    <StopCircle className="h-4 w-4 mr-2" />
-                    Stop SOS
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Navigate There
                   </Button>
                   <Button
                     onClick={async () => {
@@ -472,7 +447,15 @@ export function EnhancedSOSSystem({
                     size="sm"
                   >
                     <Copy className="h-4 w-4 mr-2" />
-                    Copy Location
+                    Copy
+                  </Button>
+                  <Button
+                    onClick={stopActiveAlert}
+                    variant="destructive"
+                    size="sm"
+                  >
+                    <StopCircle className="h-4 w-4 mr-2" />
+                    Stop
                   </Button>
                 </div>
               </CardContent>
