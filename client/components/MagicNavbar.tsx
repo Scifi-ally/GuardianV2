@@ -259,7 +259,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       }
 
       toast.success(
-        `🚨 Emergency alert sent to ${emergencyContacts.length} contact${emergencyContacts.length > 1 ? "s" : ""}! Continuous location sharing activated.`,
+        `🚨 Emergency message copied to clipboard! Send to your ${emergencyContacts.length} emergency contact${emergencyContacts.length > 1 ? "s" : ""}. Location sharing activated.`,
         { duration: 10000 },
       );
 
