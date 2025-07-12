@@ -188,13 +188,22 @@ export function BackgroundSafetyMonitor({
         <div className="grid grid-cols-2 gap-2">
           {/* Voice Activation */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={`Voice alert is ${safetyServices.voiceActivation ? "enabled" : "disabled"}. Click to toggle.`}
             className={cn(
-              "p-2 rounded-lg border cursor-pointer transition-all duration-200",
+              "p-2 rounded-lg border cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500",
               safetyServices.voiceActivation
                 ? "bg-primary/10 border-primary/30"
                 : "bg-muted/30 border-border",
             )}
             onClick={() => toggleService("voiceActivation")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleService("voiceActivation");
+              }
+            }}
           >
             <div className="flex items-center gap-2">
               <Mic
