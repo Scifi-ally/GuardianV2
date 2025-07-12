@@ -1224,9 +1224,10 @@ export default function Index() {
                   <h4 className="text-sm font-medium mb-3">Map Display</h4>
                   <div className="space-y-2">
                     <motion.div
-                      className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                      className="flex items-center justify-between p-3 sm:p-4 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
+                      onClick={toggleTheme}
                     >
                       <div>
                         <p className="text-sm font-medium">Map Theme</p>
@@ -1234,14 +1235,9 @@ export default function Index() {
                           Light or dark
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={toggleTheme}
-                        className="h-7 px-2 text-xs"
-                      >
+                      <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border text-lg">
                         {mapTheme === "light" ? "🌞" : "🌙"}
-                      </Button>
+                      </div>
                     </motion.div>
 
                     <motion.div
