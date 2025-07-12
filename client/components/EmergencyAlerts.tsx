@@ -106,12 +106,12 @@ export function EmergencyAlerts() {
         // Fallback to copy to clipboard
         if (navigator.clipboard) {
           navigator.clipboard.writeText(locationText);
-          alert("Location copied to clipboard!");
+          toast.success("Location copied to clipboard!");
         }
       }
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(locationText);
-      alert("Location copied to clipboard!");
+      toast.success("Location copied to clipboard!");
     }
   };
 
