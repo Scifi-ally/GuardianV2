@@ -133,7 +133,6 @@ function DebugContent() {
   const testLocation = async () => {
     try {
       await getCurrentLocation();
-      console.log("Location test successful");
     } catch (error) {
       console.error("Location test failed:", error);
     }
@@ -324,13 +323,10 @@ export default function Index() {
   useEffect(() => {
     const initializeTracking = async () => {
       try {
-        console.log("🚀 Initializing location tracking...");
-
         // Start real-time tracking with error handling
         await realTimeDataService.startTracking();
 
         const status = realTimeDataService.getLocationStatus();
-        console.log("📍 Location tracking status:", status);
 
         // Removed automatic location notifications - only show on user action
       } catch (error) {
@@ -363,7 +359,6 @@ export default function Index() {
       userProfile?.emergencyContacts &&
       userProfile.emergencyContacts.length > 0
     ) {
-      console.log("🎯 Auto-populating emergency contact locations...");
       sharedLocationService.autoPopulateEmergencyContactLocations(
         { latitude: location.latitude, longitude: location.longitude },
         userProfile.emergencyContacts,
@@ -467,11 +462,6 @@ export default function Index() {
           const { area } = await areaBasedSafety.getSafetyScore({
             latitude: destinationCoords.lat,
             longitude: destinationCoords.lng,
-          });
-
-          console.log("🛡�� Route safety analysis:", {
-            destination: `${destinationCoords.lat.toFixed(4)}, ${destinationCoords.lng.toFixed(4)}`,
-            safetyScore: area.safetyScore,
           });
 
           // Route safety notification removed - no slide down notifications
