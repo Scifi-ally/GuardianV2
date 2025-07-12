@@ -578,14 +578,7 @@ export default function Index() {
         setFromLocation("Current Location");
       }
 
-      // Add success notification to confirm button worked (only if enabled)
-      if (shouldShowNotification("systemNotifications")) {
-        addNotification({
-          type: "success",
-          title: "Location Set",
-          message: "Current location has been set as starting point",
-        });
-      }
+      // Location set notification removed - no slide down notifications
     } catch (error: any) {
       console.error("Error getting current location:", error);
 
