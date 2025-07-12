@@ -599,10 +599,7 @@ export default function Index() {
   }, [getCurrentLocation, addNotification]);
 
   // Route refreshes automatically when destination changes
-
-  const handleSOSPress = useCallback(() => {
-    console.log("SOS activated");
-  }, []);
+  // SOS functionality is handled by MagicNavbar component
 
   return (
     <div className="min-h-screen bg-background">
