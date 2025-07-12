@@ -129,9 +129,11 @@ export function EnhancedLocationSharing() {
       } catch (clipboardError) {
         console.error("Clipboard failed:", clipboardError);
         // Show the message in an alert as last resort
-        alert(
-          `Share this location with ${share.recipientName} (${share.recipientPhone}):\n\n${message}`,
-        );
+        toast.info("Share location manually", {
+          description: `Send this message to ${share.recipientName}`,
+          duration: 5000,
+        });
+        navigator.clipboard?.writeText(message);
         updateShareStatus(share.id);
         toast.info(`Location details shown for ${share.recipientName}`);
       }
