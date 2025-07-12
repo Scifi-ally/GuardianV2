@@ -816,6 +816,9 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
+                {/* Comprehensive SOS Workflow */}
+                <ComprehensiveSOSWorkflow map={null} />
+
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
                   <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
                     <div className="p-2 bg-blue-500 rounded-xl shadow-md">
