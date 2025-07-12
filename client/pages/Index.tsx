@@ -382,14 +382,7 @@ export default function Index() {
       // Start simulation for movement
       sharedLocationService.startEmergencyContactSimulation();
 
-      // Only show notification if enabled
-      if (shouldShowNotification("emergencyContacts")) {
-        addNotification({
-          type: "info",
-          title: "Emergency Contacts",
-          message: `${userProfile.emergencyContacts.length} emergency contacts are sharing their location with you`,
-        });
-      }
+      // Emergency contacts notification removed - no slide down notifications
     }
   }, [location, userProfile?.emergencyContacts, addNotification]);
 
