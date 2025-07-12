@@ -445,14 +445,28 @@ export function RealTimeNavigationUI({
                           role="button"
                           tabIndex={0}
                           onClick={() => {
-                            console.log(`Navigating to ${service.name}`);
-                            // Add actual navigation logic here
+                            if (service.place_id) {
+                              const url = `https://www.google.com/maps/place/?q=place_id:${service.place_id}`;
+                              window.open(url, "_blank");
+                            } else if (service.geometry?.location) {
+                              const lat = service.geometry.location.lat();
+                              const lng = service.geometry.location.lng();
+                              const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+                              window.open(url, "_blank");
+                            }
                           }}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
-                              console.log(`Navigating to ${service.name}`);
-                              // Add actual navigation logic here
+                              if (service.place_id) {
+                                const url = `https://www.google.com/maps/place/?q=place_id:${service.place_id}`;
+                                window.open(url, "_blank");
+                              } else if (service.geometry?.location) {
+                                const lat = service.geometry.location.lat();
+                                const lng = service.geometry.location.lng();
+                                const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+                                window.open(url, "_blank");
+                              }
                             }
                           }}
                           aria-label={`Navigate to ${service.name} - ${service.vicinity}`}
