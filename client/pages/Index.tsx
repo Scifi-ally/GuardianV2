@@ -507,9 +507,7 @@ export default function Index() {
 
   const handleUseCurrentLocation = useCallback(async () => {
     try {
-      console.log("🎯 Green button clicked - getting current location...");
       const currentLoc = await getCurrentLocation();
-      console.log("✅ Got current location:", currentLoc);
 
       // Try to get location name using geocoding
       if (window.google?.maps) {
@@ -555,16 +553,13 @@ export default function Index() {
               console.log("📍 Setting from location to:", city);
               setFromLocation(city);
             } else {
-              console.log("📍 Setting from location to: Current Location");
               setFromLocation("Current Location");
             }
           } else {
-            console.log("📍 Geocoding failed, using: Current Location");
             setFromLocation("Current Location");
           }
         });
       } else {
-        console.log("📍 Google Maps not available, using: Current Location");
         setFromLocation("Current Location");
       }
 
