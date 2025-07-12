@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   AlertTriangle,
   Bell,
@@ -137,13 +138,14 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
             `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
           );
         }
-        window.alert(
-          `Navigation info copied to clipboard:\n${routeInfo}\n\nUse your preferred navigation app with the copied coordinates.`,
-        );
+        toast.success("Navigation info copied", {
+          description:
+            "Use your preferred navigation app with the copied coordinates",
+        });
       } catch (error) {
-        window.alert(
-          `Navigate to these coordinates:\n${toLat.toFixed(6)}, ${toLng.toFixed(6)}\n\nUse your preferred navigation app.`,
-        );
+        toast.info("Navigation coordinates", {
+          description: `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
+        });
       }
 
       // Respond that we're en route with our current location
