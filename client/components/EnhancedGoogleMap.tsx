@@ -13,8 +13,6 @@ const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
   "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
 
-console.log("🗺️ EnhancedGoogleMap - API Key available:", !!GOOGLE_MAPS_API_KEY);
-
 interface EnhancedGoogleMapProps {
   location?: { latitude: number; longitude: number; accuracy?: number };
   destination?: { lat: number; lng: number };
@@ -119,7 +117,6 @@ export function EnhancedGoogleMap({
 
       return unsubscribe;
     } catch (error) {
-      console.error("Failed to start live tracking:", error);
       setIsTracking(false);
       addNotification({
         type: "error",
@@ -170,16 +167,8 @@ export function EnhancedGoogleMap({
   // Initialize map
   useEffect(() => {
     if (!mapRef.current || map) {
-      console.log(
-        "🗺️ Map init skipped - mapRef:",
-        !!mapRef.current,
-        "map exists:",
-        !!map,
-      );
       return;
     }
-
-    console.log("🗺️ Initializing Google Map...");
 
     const newMap = new google.maps.Map(mapRef.current, {
       zoom: zoomLevel,
@@ -216,7 +205,6 @@ export function EnhancedGoogleMap({
       scaleControl: false,
     });
 
-    console.log("🗺️ Google Map created successfully");
     setMap(newMap);
 
     // Initialize navigation services
@@ -322,10 +310,7 @@ export function EnhancedGoogleMap({
         setTimeout(() => {
           map.panToBounds(bounds, padding);
         }, 500);
-
-        console.log("🗺️ Route calculated and displayed in blue");
       } else {
-        console.error("🗺️ Directions request failed:", status);
         addNotification({
           type: "error",
           title: "Navigation Error",
@@ -619,9 +604,7 @@ export function EnhancedGoogleMap({
             map={map}
             userLocation={currentLocation}
             showSafeAreaCircles={showSafeAreaCircles}
-            onAreaUpdate={(areas) => {
-              console.log(`Updated ${areas.length} enhanced safety areas`);
-            }}
+            onAreaUpdate={(areas) => {}}
           />
         )}
       </Wrapper>
