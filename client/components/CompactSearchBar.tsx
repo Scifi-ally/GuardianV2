@@ -167,7 +167,7 @@ export function CompactSearchBar({
                     {location && !fromLocation && (
                       <button
                         onClick={onUseCurrentLocation}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors touch-manipulation min-h-[32px]"
                       >
                         Use current
                       </button>
