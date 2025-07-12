@@ -730,6 +730,7 @@ export default function Index() {
           emergencyContacts={emergencyContacts.map((contact) => ({
             id: contact.id,
             name: contact.name,
+            phone: contact.phone || "",
             guardianKey: contact.guardianKey,
             location: {
               lat: 37.7749 + Math.random() * 0.01,
