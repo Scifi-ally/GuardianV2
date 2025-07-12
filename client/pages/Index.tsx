@@ -341,11 +341,7 @@ export default function Index() {
           type: (error as any)?.constructor?.name || typeof error,
         });
 
-        addNotification({
-          type: "warning",
-          title: "Location Error",
-          message: "Unable to access location. Some features may be limited.",
-        });
+        // Location error notification removed - no slide down notifications
       }
     };
 
