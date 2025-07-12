@@ -386,7 +386,8 @@ export function ComprehensiveSOSWorkflow({
                                 {contact.phone}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {contact.relationship}
+                                {(contact as any).relationship ||
+                                  "Emergency Contact"}
                               </p>
                             </div>
                           </div>
