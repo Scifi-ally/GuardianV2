@@ -251,7 +251,7 @@ export function CompactSearchBar({
                             }
                             setShowSuggestions(false);
                           }}
-                          className="flex items-center gap-2 p-2 text-left hover:bg-white rounded-lg transition-colors"
+                          className="flex items-center gap-2 p-3 text-left hover:bg-white rounded-lg transition-colors min-h-[44px] touch-manipulation"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           initial={{ opacity: 0, x: -10 }}
