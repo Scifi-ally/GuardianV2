@@ -667,9 +667,7 @@ export default function Index() {
               lng: -122.4194 + Math.random() * 0.01,
             },
           }))}
-          onLocationUpdate={(newLocation) => {
-            console.log("Location updated:", newLocation);
-          }}
+          onLocationUpdate={(newLocation) => {}}
         />
       </div>
 
@@ -701,7 +699,7 @@ export default function Index() {
         initialHeight={Math.floor(window.innerHeight * 0.45)}
         bottomOffset={80}
         collapsedHeight={60}
-        onTouchOutside={() => console.log("Panel closed by touch outside")}
+        onTouchOutside={() => {}}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1156,8 +1154,6 @@ export default function Index() {
                             title: "Live Tracking Started",
                             message: `Your location is now being shared with ${userProfile.emergencyContacts.length} emergency contacts.`,
                           });
-
-                          console.log("✅ Live tracking started successfully");
                         } catch (error) {
                           console.error("Live tracking error:", error);
                           addNotification({
