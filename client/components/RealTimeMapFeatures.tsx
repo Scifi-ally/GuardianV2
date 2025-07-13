@@ -79,8 +79,6 @@ export function RealTimeMapFeatures({
     if (!currentLocation) return;
 
     try {
-      console.log("🚑 Loading emergency services...");
-
       // Generate realistic emergency services based on actual location
       const services: EmergencyService[] = [];
 
@@ -158,12 +156,7 @@ export function RealTimeMapFeatures({
 
       setEmergencyServices(services);
       onFeatureUpdate?.("emergency", services);
-      console.log(
-        `✅ Loaded ${services.length} emergency services near ${currentLocation.latitude.toFixed(4)}, ${currentLocation.longitude.toFixed(4)}`,
-      );
-    } catch (error) {
-      console.error("❌ Failed to load emergency services:", error);
-    }
+    } catch (error) {}
   }, [currentLocation, onFeatureUpdate]);
 
   // Load safety areas
@@ -171,8 +164,6 @@ export function RealTimeMapFeatures({
     if (!currentLocation) return;
 
     try {
-      console.log("🛡️ Loading safety areas...");
-
       // Generate dynamic safety areas based on current location and time
       const areas: SafetyArea[] = [];
       const currentHour = new Date().getHours();
@@ -237,12 +228,7 @@ export function RealTimeMapFeatures({
 
       setSafetyAreas(areas);
       onFeatureUpdate?.("safety", areas);
-      console.log(
-        `✅ Generated ${areas.length} safety areas based on current location and time`,
-      );
-    } catch (error) {
-      console.error("❌ Failed to load safety areas:", error);
-    }
+    } catch (error) {}
   }, [currentLocation, onFeatureUpdate]);
 
   // Load traffic information
@@ -250,8 +236,6 @@ export function RealTimeMapFeatures({
     if (!currentLocation) return;
 
     try {
-      console.log("🚗 Loading traffic information...");
-
       const mockTraffic: TrafficInfo = {
         severity:
           Math.random() > 0.7
@@ -279,10 +263,7 @@ export function RealTimeMapFeatures({
 
       setTrafficInfo(mockTraffic);
       onFeatureUpdate?.("traffic", mockTraffic);
-      console.log("✅ Loaded traffic information");
-    } catch (error) {
-      console.error("❌ Failed to load traffic info:", error);
-    }
+    } catch (error) {}
   }, [currentLocation, onFeatureUpdate]);
 
   // Render emergency service markers

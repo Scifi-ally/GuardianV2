@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MapPin, Navigation, Locate } from "lucide-react";
 
@@ -150,9 +151,9 @@ export function LocationAutocomplete({
           },
           (error) => {
             console.error("Failed to get current location:", error);
-            alert(
-              "Unable to get your current location. Please ensure location access is enabled.",
-            );
+            toast.error("Location access failed", {
+              description: "Please enable location access and try again",
+            });
           },
           {
             enableHighAccuracy: true,
@@ -161,7 +162,9 @@ export function LocationAutocomplete({
           },
         );
       } else {
-        alert("Geolocation is not supported by this browser.");
+        toast.error("Geolocation not supported", {
+          description: "Your browser doesn't support location services",
+        });
       }
     } finally {
       setIsLoading(false);

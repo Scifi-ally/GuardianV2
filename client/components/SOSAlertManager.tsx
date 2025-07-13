@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   AlertTriangle,
   Bell,
@@ -13,12 +14,12 @@ import {
 } from "lucide-react";
 import { SOSService, type SOSAlert } from "@/services/sosService";
 import { SOSNotificationPanel } from "@/components/SOSNotificationPanel";
-import { SOSPopupNotification } from "@/components/SOSPopupNotification";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation, useHapticFeedback } from "@/hooks/use-device-apis";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { SlidingPanel, PanelContainer } from "@/components/SlidingPanel";
 import { cn } from "@/lib/utils";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
 
 interface SOSAlertManagerProps {
   className?: string;
@@ -137,13 +138,14 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
             `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
           );
         }
-        window.alert(
-          `Navigation info copied to clipboard:\n${routeInfo}\n\nUse your preferred navigation app with the copied coordinates.`,
-        );
+        toast.success("Navigation info copied", {
+          description:
+            "Use your preferred navigation app with the copied coordinates",
+        });
       } catch (error) {
-        window.alert(
-          `Navigate to these coordinates:\n${toLat.toFixed(6)}, ${toLng.toFixed(6)}\n\nUse your preferred navigation app.`,
-        );
+        toast.info("Navigation coordinates", {
+          description: `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
+        });
       }
 
       // Respond that we're en route with our current location
@@ -356,9 +358,24 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
         ))}
         {activeAlerts.length > 3 && (
           <Card
-            className="cursor-pointer"
+            role="button"
+            tabIndex={0}
+            aria-label={`Show ${activeAlerts.length - 3} more emergency alerts`}
+            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-gray-50"
             onClick={() => {
-              /* Show all alerts */
+              setIsNotificationPanelOpen(true);
+              unifiedNotifications.info("Showing all emergency alerts", {
+                message: `Displaying ${activeAlerts.length} active emergency alerts`,
+              });
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setIsNotificationPanelOpen(true);
+                unifiedNotifications.info("Showing all emergency alerts", {
+                  message: `Displaying ${activeAlerts.length} active emergency alerts`,
+                });
+              }
             }}
           >
             <CardContent className="p-2 text-center">

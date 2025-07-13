@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useGeolocation } from "@/hooks/use-device-apis";
-import { useNotifications } from "./NotificationSystem";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
 
 interface LocationIndicatorProps {
   className?: string;
@@ -25,7 +25,7 @@ export function LocationIndicator({
   compact = false,
 }: LocationIndicatorProps) {
   const { location, getCurrentLocation } = useGeolocation();
-  const { addNotification } = useNotifications();
+
   const [locationStatus, setLocationStatus] = useState<
     "unknown" | "requesting" | "granted" | "denied" | "unavailable"
   >("unknown");
@@ -82,28 +82,20 @@ export function LocationIndicator({
       await getCurrentLocation();
       setLocationStatus("granted");
 
-      addNotification({
-        type: "success",
-        title: "Location Enabled",
+      unifiedNotifications.success("Location Enabled", {
         message: "Your location is now being tracked for safety features",
-        duration: 3000,
       });
     } catch (error) {
       setLocationStatus("denied");
 
-      addNotification({
-        type: "error",
-        title: "Location Access Required",
+      unifiedNotifications.error("Location Access Required", {
         message: "Please enable location services in your browser settings",
         action: {
           label: "Help",
           onClick: () => {
-            addNotification({
-              type: "info",
-              title: "How to Enable Location",
+            unifiedNotifications.info("How to Enable Location", {
               message:
                 "1. Click the location icon in your browser's address bar\n2. Select 'Allow'\n3. Refresh the page",
-              duration: 10000,
             });
           },
         },

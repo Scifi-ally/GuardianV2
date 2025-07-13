@@ -97,6 +97,51 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
     setShowEnhancedMapHint(false);
   };
 
+  const getLocationName = async (lat: number, lng: number): Promise<string> => {
+    if (!window.google?.maps) return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+    try {
+      const geocoder = new google.maps.Geocoder();
+      const result = await new Promise<string>((resolve) => {
+        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+          if (status === "OK" && results && results[0]) {
+            const components = results[0].address_components;
+            let shortName = "";
+            let neighborhood = "";
+            let city = "";
+
+            components.forEach((component) => {
+              const types = component.types;
+              if (
+                types.includes("establishment") ||
+                types.includes("point_of_interest")
+              ) {
+                shortName = component.long_name;
+              } else if (
+                types.includes("neighborhood") ||
+                types.includes("sublocality")
+              ) {
+                neighborhood = component.long_name;
+              } else if (types.includes("locality")) {
+                city = component.long_name;
+              }
+            });
+
+            if (shortName) resolve(shortName);
+            else if (neighborhood && city) resolve(`${neighborhood}, ${city}`);
+            else if (city) resolve(city);
+            else resolve(results[0].formatted_address);
+          } else {
+            resolve(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+          }
+        });
+      });
+      return result;
+    } catch (error) {
+      return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+  };
+
   const sendSOSAlert = async () => {
     if (!currentUser || !userProfile) {
       toast.error("Authentication required to send SOS");
@@ -124,51 +169,40 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         return;
       }
 
-      // Enhanced SOS with immediate location sharing
-      const locationUrl = currentLocation
-        ? `coordinates ${currentLocation.latitude.toFixed(4)}, ${currentLocation.longitude.toFixed(4)}`
+      // Enhanced SOS with internal location sharing only
+      const locationName = currentLocation
+        ? await getLocationName(
+            currentLocation.latitude,
+            currentLocation.longitude,
+          )
         : "Location unavailable";
 
-      const emergencyMessage = `🚨 EMERGENCY ALERT: ${userProfile.displayName || "Emergency User"} needs immediate help! Location: ${locationUrl} - Time: ${new Date().toLocaleString()} - Please respond immediately or call emergency services!`;
+      const locationCoords = currentLocation
+        ? `${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)}`
+        : "Location unavailable";
 
-      // Send to all emergency contacts via multiple channels
-      const notificationPromises = emergencyContacts.map(async (contact) => {
-        // Try native sharing first
-        if (navigator.share) {
-          try {
-            await navigator.share({
-              title: "🚨 EMERGENCY ALERT",
-              text: emergencyMessage,
-            });
-          } catch (shareError) {
-            // Fallback to clipboard copy
-            try {
-              if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(emergencyMessage);
-              }
-              console.log(
-                `Emergency message copied for ${contact.name}: ${contact.phone}`,
-              );
-            } catch (error) {
-              console.error("Failed to copy emergency message:", error);
-            }
-          }
+      const emergencyMessage = `🚨 EMERGENCY ALERT: ${userProfile.displayName || "Emergency User"} needs immediate help!\n\nLocation: ${locationName}\nCoordinates: ${locationCoords}\nTime: ${new Date().toLocaleString()}\nAccuracy: ±${Math.round(currentLocation?.accuracy || 0)}m\n\nPlease respond immediately or call emergency services!`;
+
+      // Internal sharing only - copy to clipboard
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(emergencyMessage);
         } else {
-          // Direct clipboard fallback
-          try {
-            if (navigator.clipboard && window.isSecureContext) {
-              await navigator.clipboard.writeText(emergencyMessage);
-            }
-            console.log(
-              `Emergency message copied for ${contact.name}: ${contact.phone}`,
-            );
-          } catch (error) {
-            console.error("Failed to copy emergency message:", error);
-          }
+          // Fallback for non-secure contexts
+          const textArea = document.createElement("textarea");
+          textArea.value = emergencyMessage;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
         }
-      });
-
-      await Promise.allSettled(notificationPromises);
+      } catch (error) {
+        console.error("Failed to copy emergency message:", error);
+      }
 
       // Also use the original SOS service for tracking
       try {
@@ -195,7 +229,11 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
           const sosInterval = setInterval(async () => {
             try {
               const updatedLocation = await getCurrentLocation();
-              const updateMessage = `🚨 SOS LOCATION UPDATE: ${locationUrl} - Time: ${new Date().toLocaleString()}`;
+              const currentLocationName = await getLocationName(
+                updatedLocation.latitude,
+                updatedLocation.longitude,
+              );
+              const updateMessage = `🚨 SOS LOCATION UPDATE: ${currentLocationName} (${updatedLocation.latitude.toFixed(6)}, ${updatedLocation.longitude.toFixed(6)}) - Time: ${new Date().toLocaleString()}`;
 
               emergencyContacts.forEach(async (contact) => {
                 try {
@@ -224,10 +262,55 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         );
       }
 
-      toast.success(
-        `🚨 Emergency alert sent to ${emergencyContacts.length} contact${emergencyContacts.length > 1 ? "s" : ""}! Continuous location sharing activated.`,
-        { duration: 10000 },
-      );
+      // Try to actually contact emergency services
+      const actuallyContactEmergencyServices = async () => {
+        const settings = JSON.parse(
+          localStorage.getItem("guardian-advanced-settings") || "{}",
+        );
+
+        // Check if auto-call is enabled
+        if (settings.autoCallEmergencyServices) {
+          try {
+            // Try to initiate call to emergency services
+            window.location.href = "tel:911";
+            unifiedNotifications.warning(
+              "🚨 Calling emergency services (911)",
+              {
+                message:
+                  "Emergency call initiated. Stay on the line and provide your location.",
+              },
+            );
+          } catch (error) {
+            console.warn("Auto-call failed:", error);
+          }
+        }
+
+        // Try to send actual messages to emergency contacts
+        emergencyContacts.forEach((contact) => {
+          if (contact.phone) {
+            try {
+              // Try SMS (limited browser support)
+              const smsLink = `sms:${contact.phone}?body=${encodeURIComponent(emergencyMessage)}`;
+              window.location.href = smsLink;
+            } catch (error) {
+              console.warn(`Failed to send SMS to ${contact.name}:`, error);
+            }
+          }
+        });
+      };
+
+      await actuallyContactEmergencyServices();
+
+      unifiedNotifications.critical("🚨 EMERGENCY ALERT ACTIVATED", {
+        message: `Emergency message copied to clipboard and sent to ${emergencyContacts.length} contacts. Location sharing activated.`,
+        persistent: true,
+        action: {
+          label: "Call 911 Now",
+          onClick: () => {
+            window.location.href = "tel:911";
+          },
+        },
+      });
 
       onSOSPress?.();
     } catch (error) {
@@ -349,8 +432,8 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         <div className="absolute inset-0 bg-background/80 backdrop-blur-lg border-t border-border" />
 
         {/* Navigation items */}
-        <div className="relative px-6 py-3">
-          <div className="flex items-center justify-between max-w-xs mx-auto">
+        <div className="relative px-8 py-3">
+          <div className="flex items-center justify-between w-full max-w-md mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = activeIndex === index;
@@ -368,8 +451,27 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                           : undefined
                     }
                     disabled={sending}
+                    data-emergency="true"
+                    aria-label={
+                      sosPressed
+                        ? "Cancel Emergency Alert"
+                        : activeAlertId
+                          ? "Stop Active SOS Alert"
+                          : "Emergency SOS Button"
+                    }
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        if (sosPressed) {
+                          handleCancelSOS();
+                        } else if (activeAlertId) {
+                          stopActiveSOSAlert();
+                        }
+                      }
+                    }}
                     className={cn(
-                      "relative flex flex-col items-center p-3 transition-all duration-300",
+                      "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px] emergency-focus",
                       sosPressed
                         ? "bg-warning/20 rounded-2xl animate-pulse"
                         : activeAlertId
@@ -429,7 +531,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   onTouchEnd={handleMapMouseUp}
                   disabled={sending}
                   className={cn(
-                    "relative flex flex-col items-center px-3 py-2 transition-all duration-300",
+                    "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px]",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
                     item.id === "map" &&
                       showEnhancedMapHint &&

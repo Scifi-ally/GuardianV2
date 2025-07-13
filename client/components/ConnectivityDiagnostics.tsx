@@ -23,6 +23,7 @@ import {
   type ConnectivityTest,
 } from "@/services/connectivityService";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function ConnectivityDiagnostics() {
   const [status, setStatus] = useState<ConnectivityStatus | null>(null);
@@ -288,7 +289,7 @@ export function ConnectivityDiagnostics() {
                   userAgent: navigator.userAgent,
                 };
                 navigator.clipboard?.writeText(JSON.stringify(data, null, 2));
-                alert("Diagnostic data copied to clipboard");
+                toast.success("Diagnostic data copied to clipboard");
               }}
               className="w-full"
             >

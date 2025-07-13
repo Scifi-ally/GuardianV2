@@ -67,17 +67,12 @@ export function GoogleMapsNavigationView({
   // Initialize map with Google Maps styling
   useEffect(() => {
     if (!mapRef.current) {
-      console.log("⚠️ Map ref not ready");
       return;
     }
 
     if (map) {
-      console.log("ℹ️ Map already initialized");
       return;
     }
-
-    console.log("🗺️ Initializing Google Maps Navigation View...");
-    console.log("📍 Initial location:", currentLocation);
 
     try {
       const newMap = new google.maps.Map(mapRef.current, {
@@ -188,18 +183,12 @@ export function GoogleMapsNavigationView({
 
       // Notify parent component that map is loaded
       onMapLoad?.(newMap);
-
-      console.log("✅ Google Maps Navigation View initialized successfully");
-    } catch (error) {
-      console.error("❌ Failed to initialize Google Maps:", error);
-    }
+    } catch (error) {}
   }, [mapRef.current, currentLocation]);
 
   // Create user location marker (only once)
   useEffect(() => {
     if (!map || !currentLocation || userMarker) return;
-
-    console.log("📍 Creating user location marker");
 
     // Create Google Maps-style user marker (only once)
     const marker = new google.maps.Marker({
@@ -242,8 +231,6 @@ export function GoogleMapsNavigationView({
     userMarker.setTitle(
       `Your location (±${Math.round(currentLocation.accuracy || 0)}m)`,
     );
-
-    console.log("📍 Updated marker position (no animation)");
   }, [userMarker, currentLocation]);
 
   // Update marker icon when navigation state changes
@@ -325,24 +312,14 @@ export function GoogleMapsNavigationView({
       optimizeWaypoints: true,
     };
 
-    console.log("🗺️ Requesting directions:", request);
-
     directionsService.route(request, (result, status) => {
-      console.log("🗺️ Directions response:", { status, result });
-
       if (status === google.maps.DirectionsStatus.OK && result) {
-        console.log("✅ Setting directions on renderer");
         directionsRenderer.setDirections(result);
         setCurrentRoute(result);
         onDirectionsChange?.(result);
 
         // Log route details
         const route = result.routes[0];
-        console.log("🗺️ Route details:", {
-          distance: route.legs[0].distance?.text,
-          duration: route.legs[0].duration?.text,
-          steps: route.legs[0].steps.length,
-        });
 
         if (!isNavigating) {
           // Fit map to route for overview
@@ -353,15 +330,8 @@ export function GoogleMapsNavigationView({
           });
           bounds.extend({ lat: destination.lat, lng: destination.lng });
           map.fitBounds(bounds, { top: 80, right: 40, bottom: 200, left: 40 });
-          console.log("🗺️ Map bounds fitted to route");
         }
-
-        console.log("✅ Route calculated and displayed with blue color");
       } else {
-        console.error("❌ Directions request failed:", {
-          status,
-          error: result,
-        });
       }
     });
   }, [
@@ -432,7 +402,6 @@ export function GoogleMapsNavigationView({
 
       return unsubscribe;
     } catch (error) {
-      console.error("Failed to start live tracking:", error);
       setIsTracking(false);
       setIsNavigationMode(false);
     }
@@ -501,7 +470,6 @@ export function GoogleMapsNavigationView({
   };
 
   if (!GOOGLE_MAPS_API_KEY) {
-    console.error("❌ Google Maps API key missing!");
     return (
       <div className="w-full h-full bg-red-100 rounded-lg flex items-center justify-center">
         <div className="text-center">
@@ -516,11 +484,6 @@ export function GoogleMapsNavigationView({
       </div>
     );
   }
-
-  console.log(
-    "🗺️ Google Maps API Key available:",
-    GOOGLE_MAPS_API_KEY.substring(0, 10) + "...",
-  );
 
   return (
     <div className="relative w-full h-full">

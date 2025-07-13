@@ -37,21 +37,21 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { realTimeService } from "@/services/realTimeService";
-import { toast } from "sonner";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
+import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { buttonAnimations, cardAnimations } from "@/lib/animations";
 
 export default function Settings() {
   const [settings, setSettings] = useState({
     notifications: {
       push: true,
-      email: true,
-      sms: false,
       emergencyOnly: false,
     },
     privacy: {
       shareLocation: true,
       anonymousReporting: true,
       dataSaving: false,
+      highAccuracyMode: false,
     },
     safety: {
       sosCountdown: 3,
@@ -80,6 +80,40 @@ export default function Settings() {
     console.log("SOS triggered from settings");
   };
 
+  // Apply settings to actual services
+  const applySettingsToServices = (newSettings: typeof settings) => {
+    try {
+      // Apply high accuracy location mode
+      if (newSettings.privacy.highAccuracyMode) {
+        enhancedLocationService.setHighAccuracyMode(true);
+        unifiedNotifications.info("High accuracy location enabled", {
+          message:
+            "GPS tracking precision increased. This will use more battery.",
+        });
+      } else {
+        enhancedLocationService.setHighAccuracyMode(false);
+      }
+
+      // Apply data saving mode
+      if (newSettings.privacy.dataSaving) {
+        enhancedLocationService.setTrackingInterval(15000); // Longer interval for data saving
+        unifiedNotifications.info("Data saving mode enabled", {
+          message: "Location updates reduced to save battery and data.",
+        });
+      } else {
+        enhancedLocationService.setTrackingInterval(5000); // Normal interval
+      }
+
+      // Apply sound settings to notification service
+      if (!newSettings.safety.soundEnabled) {
+        unifiedNotifications.info("Sound alerts disabled");
+      }
+    } catch (error) {
+      console.error("Failed to apply settings:", error);
+      unifiedNotifications.warning("Some settings may not have been applied");
+    }
+  };
+
   const updateSetting = async (
     category: keyof typeof settings,
     key: string,
@@ -106,7 +140,10 @@ export default function Settings() {
       const success = realTimeService.saveSettings(settingsWithTimestamp);
       if (success) {
         setLastSaved(new Date());
-        toast.success("Settings saved", { duration: 1000 });
+        unifiedNotifications.success("Settings saved");
+
+        // Apply settings to services immediately
+        applySettingsToServices(newSettings);
       } else {
         toast.error("Failed to save settings");
       }
@@ -131,22 +168,7 @@ export default function Settings() {
           value: settings.notifications.push,
           category: "notifications" as const,
         },
-        {
-          id: "email",
-          label: "Email Alerts",
-          description: "Emergency notifications via email",
-          type: "switch",
-          value: settings.notifications.email,
-          category: "notifications" as const,
-        },
-        {
-          id: "sms",
-          label: "SMS Alerts",
-          description: "Text message notifications",
-          type: "switch",
-          value: settings.notifications.sms,
-          category: "notifications" as const,
-        },
+        // Email/SMS removed - requires backend integration
         {
           id: "emergencyOnly",
           label: "Emergency Only",
@@ -223,6 +245,15 @@ export default function Settings() {
           description: "Reduce data usage for maps and routes",
           type: "switch",
           value: settings.privacy.dataSaving,
+          category: "privacy" as const,
+        },
+        {
+          id: "highAccuracyMode",
+          label: "High Accuracy Location",
+          description:
+            "Use GPS for maximum location precision (uses more battery)",
+          type: "switch",
+          value: settings.privacy.highAccuracyMode || false,
           category: "privacy" as const,
         },
       ],
@@ -568,7 +599,7 @@ Guardian Safety Technologies is committed to protecting your privacy. This polic
 
 🤝 Data Sharing:
 • Never shared with advertising companies
-• Only shared with emergency services during active emergencies
+�� Only shared with emergency services during active emergencies
 • Emergency contacts receive only location data you authorize
 • No sale of personal data to third parties
 

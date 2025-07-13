@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useNotifications } from "@/components/NotificationSystem";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { geminiNewsAnalysisService } from "@/services/geminiNewsAnalysisService";
 
 interface RoadPoint {
@@ -45,7 +45,6 @@ export function RoadBasedSafetyAreas({
   const [polygons, setPolygons] = useState<google.maps.Polygon[]>([]);
   const [roadPoints, setRoadPoints] = useState<RoadPoint[]>([]);
   const [lastUpdate, setLastUpdate] = useState<number>(0);
-  const { removeNotification } = useNotifications();
 
   // Rate limiting for Gemini API
   const [apiCallQueue, setApiCallQueue] = useState<Array<() => Promise<any>>>(

@@ -83,8 +83,6 @@ export function IntelligentGoogleMap({
   useEffect(() => {
     if (!mapRef.current || map) return;
 
-    console.log("🗺️ Initializing Intelligent Google Map...");
-
     try {
       const newMap = new google.maps.Map(mapRef.current, {
         zoom: 15,
@@ -170,8 +168,6 @@ export function IntelligentGoogleMap({
       setDirectionsRenderer(directionsRendererInstance);
       setMap(newMap);
       onMapLoad?.(newMap);
-
-      console.log("✅ Intelligent Google Map initialized");
     } catch (error) {
       console.error("❌ Failed to initialize map:", error);
     }
@@ -202,7 +198,6 @@ export function IntelligentGoogleMap({
       });
 
       setUserMarker(marker);
-      console.log("📍 User location marker created");
     }
   }, [map, location]);
 
@@ -224,8 +219,6 @@ export function IntelligentGoogleMap({
         toast.error("Navigation services not ready");
         return;
       }
-
-      console.log("🧭 Starting intelligent navigation...");
 
       try {
         // Calculate route
@@ -303,7 +296,6 @@ export function IntelligentGoogleMap({
         // Start enhanced location tracking
         startEnhancedTracking();
 
-        console.log("✅ Navigation started successfully");
         toast.success("Navigation started with AI safety analysis");
       } catch (error) {
         console.error("❌ Navigation start failed:", error);
@@ -315,8 +307,6 @@ export function IntelligentGoogleMap({
 
   // Stop navigation
   const stopNavigation = useCallback(() => {
-    console.log("🛑 Stopping navigation...");
-
     setNavigationState({
       isNavigating: false,
       destination: null,

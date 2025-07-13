@@ -19,11 +19,10 @@ import {
 } from "lucide-react";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
-import { SOSNotificationManager } from "@/components/SOSNotification";
 import { EditProfileModal } from "@/components/EditProfileModal";
 import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal";
 import { UserStatsManager } from "@/components/UserStatsManager";
-import { ProfileErrorBoundary } from "@/components/ProfileErrorBoundary";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InteractiveSafetyTutorial } from "@/components/InteractiveSafetyTutorial";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -286,13 +285,7 @@ export default function Profile() {
       {/* Navigation */}
       <MagicNavbar />
 
-      {/* SOS Notification Manager */}
-      {currentUser && userProfile && (
-        <SOSNotificationManager
-          userId={currentUser.uid}
-          userName={userProfile.displayName || "Guardian User"}
-        />
-      )}
+      {/* SOS notifications now handled by unified notification system */}
 
       <main className="container px-4 py-6 space-y-6 max-w-4xl mx-auto">
         {/* Profile Header */}
@@ -469,9 +462,9 @@ export default function Profile() {
         </div>
 
         {/* User Stats & Activity */}
-        <ProfileErrorBoundary>
+        <ErrorBoundary>
           <UserStatsManager />
-        </ProfileErrorBoundary>
+        </ErrorBoundary>
 
         {/* Emergency Contacts Section */}
         <EmergencyContactManager />

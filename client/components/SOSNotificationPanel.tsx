@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -106,13 +107,13 @@ export function SOSNotificationPanel({
             `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
           );
         }
-        window.alert(
-          `Navigation info copied to clipboard:\n${routeInfo}\n\nUse your preferred navigation app.`,
-        );
+        toast.success("Navigation info copied", {
+          description: "Use your preferred navigation app",
+        });
       } catch (error) {
-        window.alert(
-          `Navigate to:\n${toLat.toFixed(6)}, ${toLng.toFixed(6)}\n\nUse your preferred navigation app.`,
-        );
+        toast.info("Navigation coordinates", {
+          description: `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
+        });
       }
 
       // Also respond that we're navigating
@@ -177,20 +178,28 @@ export function SOSNotificationPanel({
             `Navigate to: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
           );
         }
-        window.alert(
-          `Destination copied to clipboard:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
-        );
+        toast.success("Destination copied", {
+          description: "Use your preferred navigation app",
+        });
       } catch (error) {
-        window.alert(
-          `Navigate to:\n${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\nUse your preferred navigation app.`,
-        );
+        toast.info("Navigation coordinates", {
+          description: `Navigate to: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+        });
       }
     }
   };
 
   const handleCall = () => {
-    // In a real app, you'd call the sender's phone number
-    console.log("Calling emergency contact...");
+    // Try to call emergency services or the alert sender
+    const phoneNumber = "911"; // Default to emergency services
+    try {
+      window.location.href = `tel:${phoneNumber}`;
+    } catch (error) {
+      console.error("Failed to initiate call:", error);
+      toast.error("Call failed", {
+        description: `Call ${phoneNumber} for emergency assistance`,
+      });
+    }
   };
 
   const timeAgo = (date: Date) => {

@@ -5,6 +5,10 @@ interface LocationData {
   timestamp: number;
   heading?: number;
   speed?: number;
+  altitude?: number;
+  altitudeAccuracy?: number;
+  quality: "excellent" | "good" | "fair" | "poor";
+  source: "gps" | "network" | "passive";
 }
 
 interface LocationError {
@@ -23,6 +27,12 @@ export class EnhancedLocationService {
   private retryCount = 0;
   private readonly MAX_RETRIES = 3;
   private retryTimeout: NodeJS.Timeout | null = null;
+  private locationHistory: LocationData[] = [];
+  private readonly MAX_HISTORY = 50;
+  private isHighAccuracyMode = false;
+  private trackingInterval: number = 5000; // 5 seconds default
+  private lastUpdateTime = 0;
+  private readonly MIN_UPDATE_INTERVAL = 1000; // Minimum 1 second between updates
 
   static getInstance(): EnhancedLocationService {
     if (!EnhancedLocationService.instance) {
@@ -62,16 +72,14 @@ export class EnhancedLocationService {
   async getCurrentLocation(options?: PositionOptions): Promise<LocationData> {
     return new Promise((resolve, reject) => {
       if (!this.isSupported()) {
-        // Fallback to demo location only if geolocation not supported
-        const fallbackLocation: LocationData = {
-          latitude: 37.7749,
-          longitude: -122.4194,
-          accuracy: 1000,
-          timestamp: Date.now(),
-        };
-        console.log("⚠️ Geolocation not supported, using fallback location");
-        this.lastKnownLocation = fallbackLocation;
-        return resolve(fallbackLocation);
+        // CRITICAL: Don't provide false location during emergencies
+        const geoError = new Error(
+          "Geolocation not supported. Please enable location services for emergency features. This is critical for your safety.",
+        );
+        console.error(
+          "🚨 EMERGENCY SAFETY WARNING: Location services unavailable - emergency response may be severely impacted",
+        );
+        return reject(geoError);
       }
 
       // Try to get real location first
@@ -84,7 +92,14 @@ export class EnhancedLocationService {
             timestamp: position.timestamp,
             heading: position.coords.heading || undefined,
             speed: position.coords.speed || undefined,
+            altitude: position.coords.altitude || undefined,
+            altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
+            quality: this.assessLocationQuality(position.coords.accuracy),
+            source: this.determineLocationSource(position.coords.accuracy),
           };
+
+          // Add to history and trigger quality analysis
+          this.addToHistory(realLocation);
 
           console.log("✅ Real location obtained:", {
             lat: realLocation.latitude.toFixed(4),
@@ -93,7 +108,14 @@ export class EnhancedLocationService {
           });
 
           this.lastKnownLocation = realLocation;
-          this.callbacks.forEach((callback) => callback(realLocation));
+
+          // Only call callbacks if enough time has passed (debounce)
+          const now = Date.now();
+          if (now - this.lastUpdateTime >= this.MIN_UPDATE_INTERVAL) {
+            this.lastUpdateTime = now;
+            this.callbacks.forEach((callback) => callback(realLocation));
+          }
+
           resolve(realLocation);
         },
         (error) => {
@@ -106,17 +128,14 @@ export class EnhancedLocationService {
             return;
           }
 
-          // Only use demo location as last resort
-          const demoLocation: LocationData = {
-            latitude: 37.7749,
-            longitude: -122.4194,
-            accuracy: 1000,
-            timestamp: Date.now(),
-          };
-
-          console.log("📍 Using demo location as fallback");
-          this.lastKnownLocation = demoLocation;
-          resolve(demoLocation);
+          // CRITICAL: Never provide false coordinates during emergencies
+          const locationError = new Error(
+            "Location access denied. Emergency features require location permission. Please enable location access in your browser settings.",
+          );
+          console.error(
+            "🚨 EMERGENCY SAFETY WARNING: Location permission denied - emergency responders will not be able to locate you",
+          );
+          reject(locationError);
         },
         {
           enableHighAccuracy: true,
@@ -318,6 +337,168 @@ export class EnhancedLocationService {
     } else {
       return `±${(accuracy / 1000).toFixed(1)}km`;
     }
+  }
+
+  // Get comprehensive location status
+  getDetailedStatus(): {
+    isTracking: boolean;
+    lastLocation: LocationData | null;
+    retryCount: number;
+    locationHistory: LocationData[];
+    isHighAccuracy: boolean;
+    trackingInterval: number;
+  } {
+    return {
+      isTracking: this.isTracking,
+      lastLocation: this.lastKnownLocation,
+      retryCount: this.retryCount,
+      locationHistory: this.locationHistory.slice(-5), // Last 5 locations
+      isHighAccuracy: this.isHighAccuracyMode,
+      trackingInterval: this.trackingInterval,
+    };
+  }
+
+  // Enable high accuracy mode for emergency situations
+  setHighAccuracyMode(enabled: boolean): void {
+    this.isHighAccuracyMode = enabled;
+    this.trackingInterval = enabled ? 1000 : 5000; // 1s vs 5s
+
+    if (this.isTracking) {
+      // Restart tracking with new settings
+      this.stopTracking();
+      this.startTracking();
+    }
+  }
+
+  // Set custom tracking interval
+  setTrackingInterval(intervalMs: number): void {
+    this.trackingInterval = Math.max(intervalMs, 1000); // Minimum 1 second
+  }
+
+  // Assess location quality based on accuracy
+  private assessLocationQuality(
+    accuracy: number,
+  ): "excellent" | "good" | "fair" | "poor" {
+    if (accuracy <= 5) return "excellent"; // Within 5 meters
+    if (accuracy <= 20) return "good"; // Within 20 meters
+    if (accuracy <= 50) return "fair"; // Within 50 meters
+    return "poor"; // Over 50 meters
+  }
+
+  // Determine likely location source
+  private determineLocationSource(
+    accuracy: number,
+  ): "gps" | "network" | "passive" {
+    if (accuracy <= 10) return "gps"; // High accuracy, likely GPS
+    if (accuracy <= 100) return "network"; // Medium accuracy, likely network
+    return "passive"; // Low accuracy, passive location
+  }
+
+  // Add location to history with smart filtering
+  private addToHistory(location: LocationData): void {
+    // Only add if it's significantly different from the last location
+    const lastLocation = this.locationHistory[this.locationHistory.length - 1];
+    if (lastLocation) {
+      const distance = this.calculateDistanceBetween(lastLocation, location);
+      const timeDiff = location.timestamp - lastLocation.timestamp;
+
+      // Skip if location hasn't changed much and time is too recent
+      if (distance < 5 && timeDiff < 30000) {
+        // 5 meters, 30 seconds
+        return;
+      }
+    }
+
+    this.locationHistory.push(location);
+
+    // Keep only recent history
+    if (this.locationHistory.length > this.MAX_HISTORY) {
+      this.locationHistory = this.locationHistory.slice(-this.MAX_HISTORY);
+    }
+  }
+
+  // Calculate distance between two locations (Haversine formula)
+  private calculateDistanceBetween(
+    loc1: LocationData,
+    loc2: LocationData,
+  ): number {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (loc1.latitude * Math.PI) / 180;
+    const φ2 = (loc2.latitude * Math.PI) / 180;
+    const Δφ = ((loc2.latitude - loc1.latitude) * Math.PI) / 180;
+    const Δλ = ((loc2.longitude - loc1.longitude) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
+  }
+
+  // Get location movement analysis
+  getMovementAnalysis(): {
+    isStationary: boolean;
+    averageSpeed: number;
+    direction: string;
+    totalDistance: number;
+  } {
+    if (this.locationHistory.length < 2) {
+      return {
+        isStationary: true,
+        averageSpeed: 0,
+        direction: "unknown",
+        totalDistance: 0,
+      };
+    }
+
+    let totalDistance = 0;
+    let totalTime = 0;
+    const recent = this.locationHistory.slice(-10); // Last 10 locations
+
+    for (let i = 1; i < recent.length; i++) {
+      const distance = this.calculateDistanceBetween(recent[i - 1], recent[i]);
+      const time = (recent[i].timestamp - recent[i - 1].timestamp) / 1000; // seconds
+      totalDistance += distance;
+      totalTime += time;
+    }
+
+    const averageSpeed = totalTime > 0 ? (totalDistance / totalTime) * 3.6 : 0; // km/h
+    const isStationary = averageSpeed < 0.5; // Less than 0.5 km/h
+
+    // Simple direction calculation
+    const first = recent[0];
+    const last = recent[recent.length - 1];
+    const bearing = this.calculateBearing(first, last);
+    const direction = this.bearingToDirection(bearing);
+
+    return {
+      isStationary,
+      averageSpeed,
+      direction,
+      totalDistance,
+    };
+  }
+
+  // Calculate bearing between two points
+  private calculateBearing(start: LocationData, end: LocationData): number {
+    const φ1 = (start.latitude * Math.PI) / 180;
+    const φ2 = (end.latitude * Math.PI) / 180;
+    const Δλ = ((end.longitude - start.longitude) * Math.PI) / 180;
+
+    const y = Math.sin(Δλ) * Math.cos(φ2);
+    const x =
+      Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+
+    const bearing = (Math.atan2(y, x) * 180) / Math.PI;
+    return (bearing + 360) % 360; // Normalize to 0-360
+  }
+
+  // Convert bearing to compass direction
+  private bearingToDirection(bearing: number): string {
+    const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    const index = Math.round(bearing / 45) % 8;
+    return directions[index];
   }
 }
 
