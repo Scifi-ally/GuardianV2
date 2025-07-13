@@ -286,12 +286,11 @@ export default function Profile() {
       <MagicNavbar />
 
       {/* SOS Notification Manager */}
-      {currentUser && userProfile && (
-        <SOSNotificationManager
-          userId={currentUser.uid}
-          userName={userProfile.displayName || "Guardian User"}
-        />
-      )}
+      {currentUser &&
+        userProfile &&
+        {
+          /* SOS notifications now handled by unified notification system */
+        }}
 
       <main className="container px-4 py-6 space-y-6 max-w-4xl mx-auto">
         {/* Profile Header */}
@@ -468,9 +467,9 @@ export default function Profile() {
         </div>
 
         {/* User Stats & Activity */}
-        <ProfileErrorBoundary>
+        <ErrorBoundary>
           <UserStatsManager />
-        </ProfileErrorBoundary>
+        </ErrorBoundary>
 
         {/* Emergency Contacts Section */}
         <EmergencyContactManager />
