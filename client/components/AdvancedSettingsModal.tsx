@@ -96,39 +96,25 @@ export function AdvancedSettingsModal({
 
   const categories = [
     {
-      id: "privacy",
-      label: "Privacy",
-      icon: Eye,
+      id: "location",
+      label: "Location",
+      icon: MapPin,
       color: "text-blue-600",
-      description: "Control your data and visibility",
+      description: "Location tracking and GPS settings",
     },
     {
       id: "notifications",
       label: "Notifications",
       icon: Bell,
       color: "text-orange-600",
-      description: "Manage alerts and messages",
-    },
-    {
-      id: "security",
-      label: "Security",
-      icon: Lock,
-      color: "text-red-600",
-      description: "Authentication and protection",
+      description: "Alert and message preferences",
     },
     {
       id: "emergency",
       label: "Emergency",
       icon: Shield,
-      color: "text-green-600",
-      description: "Safety and response settings",
-    },
-    {
-      id: "performance",
-      label: "Performance",
-      icon: Zap,
-      color: "text-purple-600",
-      description: "App behavior and optimization",
+      color: "text-red-600",
+      description: "Emergency response and safety settings",
     },
   ];
 
