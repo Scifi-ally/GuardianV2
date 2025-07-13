@@ -97,7 +97,55 @@ export function GoogleMap({
     useState<google.maps.DirectionsRenderer | null>(null);
   const [destinationMarker, setDestinationMarker] =
     useState<google.maps.Marker | null>(null);
+  const [locationQuality, setLocationQuality] = useState<{
+    accuracy: number;
+    quality: string;
+    source: string;
+  } | null>(null);
+  const [movementData, setMovementData] = useState<{
+    isStationary: boolean;
+    speed: number;
+    direction: string;
+  } | null>(null);
+  const [locationHistory, setLocationHistory] = useState<LocationData[]>([]);
+  const [isHighAccuracyMode, setIsHighAccuracyMode] = useState(false);
+
   const { addNotification } = useNotifications();
+
+  // Enhanced location monitoring
+  const enableHighAccuracyMode = useCallback((enabled: boolean) => {
+    setIsHighAccuracyMode(enabled);
+    enhancedLocationService.setHighAccuracyMode(enabled);
+
+    if (enabled) {
+      unifiedNotifications.info("High accuracy mode enabled", {
+        message:
+          "Location tracking precision increased for better safety monitoring",
+      });
+    }
+  }, []);
+
+  // Monitor location quality and movement
+  const updateLocationAnalysis = useCallback(() => {
+    const status = enhancedLocationService.getDetailedStatus();
+    const movement = enhancedLocationService.getMovementAnalysis();
+
+    if (status.lastLocation) {
+      setLocationQuality({
+        accuracy: status.lastLocation.accuracy,
+        quality: status.lastLocation.quality || "unknown",
+        source: status.lastLocation.source || "unknown",
+      });
+    }
+
+    setMovementData({
+      isStationary: movement.isStationary,
+      speed: movement.averageSpeed,
+      direction: movement.direction,
+    });
+
+    setLocationHistory(status.locationHistory);
+  }, []);
 
   console.log(
     "🗺️ SimpleEnhancedGoogleMap - API Key available:",
