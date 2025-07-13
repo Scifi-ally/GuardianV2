@@ -451,8 +451,27 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                           : undefined
                     }
                     disabled={sending}
+                    data-emergency="true"
+                    aria-label={
+                      sosPressed
+                        ? "Cancel Emergency Alert"
+                        : activeAlertId
+                          ? "Stop Active SOS Alert"
+                          : "Emergency SOS Button"
+                    }
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        if (sosPressed) {
+                          handleCancelSOS();
+                        } else if (activeAlertId) {
+                          stopActiveSOSAlert();
+                        }
+                      }
+                    }}
                     className={cn(
-                      "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px]",
+                      "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px] emergency-focus",
                       sosPressed
                         ? "bg-warning/20 rounded-2xl animate-pulse"
                         : activeAlertId
