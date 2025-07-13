@@ -44,16 +44,22 @@ interface AdvancedSettingsModalProps {
 interface SettingsState {
   // Location Settings
   locationTracking: boolean;
+  highAccuracyGPS: boolean;
+  backgroundLocationUpdates: boolean;
 
   // Notification Settings
   pushNotifications: boolean;
   emergencyAlerts: boolean;
+  criticalAlertsOnly: boolean;
 
   // Emergency Settings
   emergencyTimeout: number;
   silentMode: boolean;
   autoShareLocation: boolean;
   emergencyRecording: boolean;
+  panicGestureEnabled: boolean;
+  autoCallEmergencyServices: boolean;
+  batteryOptimizedMode: boolean;
 }
 
 export function AdvancedSettingsModal({
@@ -65,16 +71,22 @@ export function AdvancedSettingsModal({
   const [settings, setSettings] = useState<SettingsState>({
     // Location Settings
     locationTracking: true,
+    highAccuracyGPS: true,
+    backgroundLocationUpdates: true,
 
     // Notification Settings
     pushNotifications: true,
     emergencyAlerts: true,
+    criticalAlertsOnly: false,
 
     // Emergency Settings
     emergencyTimeout: 5,
     silentMode: false,
     autoShareLocation: true,
     emergencyRecording: true,
+    panicGestureEnabled: true,
+    autoCallEmergencyServices: false,
+    batteryOptimizedMode: false,
   });
 
   // Load and apply settings on component mount
@@ -276,16 +288,24 @@ export function AdvancedSettingsModal({
   };
 
   const handleResetSettings = () => {
-    setSettings({
+    const defaultSettings = {
       locationTracking: true,
+      highAccuracyGPS: true,
+      backgroundLocationUpdates: true,
       pushNotifications: true,
       emergencyAlerts: true,
+      criticalAlertsOnly: false,
       emergencyTimeout: 5,
       silentMode: false,
       autoShareLocation: true,
       emergencyRecording: true,
-    });
-    unifiedNotifications.success("Settings reset to defaults");
+      panicGestureEnabled: true,
+      autoCallEmergencyServices: false,
+      batteryOptimizedMode: false,
+    };
+    setSettings(defaultSettings);
+    applySettingsToServices(defaultSettings);
+    unifiedNotifications.success("Settings reset to emergency-ready defaults");
   };
 
   const modalVariants = {
