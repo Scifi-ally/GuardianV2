@@ -14,15 +14,27 @@ import { cn } from "@/lib/utils";
 
 interface Notification {
   id: string;
-  type: "success" | "warning" | "error" | "info";
+  type: "success" | "warning" | "error" | "info" | "sos" | "critical";
   title: string;
   message: string;
   timestamp: number;
   persistent?: boolean;
+  priority?: "low" | "medium" | "high" | "critical";
   action?: {
     label: string;
     onClick: () => void;
   };
+  secondaryAction?: {
+    label: string;
+    onClick: () => void;
+  };
+  location?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
+  autoEscalate?: boolean;
+  soundAlert?: boolean;
 }
 
 interface SlideDownNotificationsProps {
@@ -58,19 +70,85 @@ class NotificationManager {
       ...notification,
       id,
       timestamp: Date.now(),
+      priority: notification.priority || "medium",
     };
 
-    this.notifications = [newNotification, ...this.notifications].slice(0, 10); // Keep max 10
+    // For critical/SOS notifications, add to front and play sound
+    if (
+      notification.type === "sos" ||
+      notification.type === "critical" ||
+      notification.priority === "critical"
+    ) {
+      this.notifications = [newNotification, ...this.notifications].slice(
+        0,
+        15,
+      ); // More for critical
+
+      // Play sound alert for critical notifications
+      if (notification.soundAlert !== false) {
+        this.playCriticalAlert();
+      }
+    } else {
+      this.notifications = [newNotification, ...this.notifications].slice(
+        0,
+        10,
+      ); // Keep max 10
+    }
+
     this.notifySubscribers();
 
-    // Auto-remove non-persistent notifications
+    // Auto-remove based on priority
     if (!notification.persistent) {
+      const duration = this.getNotificationDuration(
+        notification.type,
+        notification.priority,
+      );
       setTimeout(() => {
         this.removeNotification(id);
-      }, 5000);
+      }, duration);
     }
 
     return id;
+  }
+
+  private getNotificationDuration(type: string, priority?: string): number {
+    if (type === "sos" || type === "critical" || priority === "critical") {
+      return 30000; // 30 seconds for critical
+    }
+    if (type === "error" || priority === "high") {
+      return 10000; // 10 seconds for errors
+    }
+    return 5000; // 5 seconds for normal
+  }
+
+  private playCriticalAlert(): void {
+    try {
+      // Create a simple beep sound
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.type = "sine";
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.5,
+      );
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+      // Fallback - vibration if available
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+      }
+    }
   }
 
   removeNotification(id: string): void {
@@ -121,12 +199,21 @@ export function SlideDownNotifications({
         return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
       case "error":
         return <AlertTriangle className="w-4 h-4 text-red-600" />;
+      case "sos":
+        return <AlertTriangle className="w-5 h-5 text-red-700 animate-pulse" />;
+      case "critical":
+        return (
+          <AlertTriangle className="w-5 h-5 text-red-800 animate-bounce" />
+        );
       default:
         return <Info className="w-4 h-4 text-blue-600" />;
     }
   };
 
-  const getNotificationBg = (type: string) => {
+  const getNotificationBg = (type: string, priority?: string) => {
+    if (type === "sos" || type === "critical" || priority === "critical") {
+      return "bg-red-100 border-red-300 ring-2 ring-red-200";
+    }
     switch (type) {
       case "success":
         return "bg-green-50 border-green-200";
@@ -160,7 +247,10 @@ export function SlideDownNotifications({
         <div
           className={cn(
             "rounded-lg border shadow-lg backdrop-blur-md",
-            getNotificationBg(latestNotification.type),
+            getNotificationBg(
+              latestNotification.type,
+              latestNotification.priority,
+            ),
           )}
         >
           {/* Main notification */}
@@ -183,16 +273,53 @@ export function SlideDownNotifications({
                     {latestNotification.message}
                   </p>
 
-                  {latestNotification.action && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={latestNotification.action.onClick}
-                      className="h-7 text-xs"
-                    >
-                      {latestNotification.action.label}
-                    </Button>
+                  {/* Priority badge for critical notifications */}
+                  {(latestNotification.priority === "critical" ||
+                    latestNotification.type === "sos") && (
+                    <Badge variant="destructive" className="text-xs mb-2">
+                      {latestNotification.type === "sos"
+                        ? "EMERGENCY"
+                        : "CRITICAL"}
+                    </Badge>
                   )}
+
+                  {/* Location info for SOS notifications */}
+                  {latestNotification.location && (
+                    <div className="text-xs text-gray-600 mb-2 p-2 bg-white/50 rounded">
+                      📍{" "}
+                      {latestNotification.location.address ||
+                        `${latestNotification.location.latitude.toFixed(6)}, ${latestNotification.location.longitude.toFixed(6)}`}
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    {latestNotification.action && (
+                      <Button
+                        size="sm"
+                        variant={
+                          latestNotification.type === "sos" ||
+                          latestNotification.type === "critical"
+                            ? "default"
+                            : "outline"
+                        }
+                        onClick={latestNotification.action.onClick}
+                        className="h-7 text-xs"
+                      >
+                        {latestNotification.action.label}
+                      </Button>
+                    )}
+                    {latestNotification.secondaryAction && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={latestNotification.secondaryAction.onClick}
+                        className="h-7 text-xs"
+                      >
+                        {latestNotification.secondaryAction.label}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 

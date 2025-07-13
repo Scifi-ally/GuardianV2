@@ -1,6 +1,7 @@
 import { EventEmitter } from "@/lib/eventEmitter";
 import { realTimeService } from "./realTimeService";
 import type { EmergencyContact } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export interface EmergencyAction {
   id: string;
@@ -461,13 +462,18 @@ class EmergencyContactActionsService extends EventEmitter {
 
     // Method 3: Show alert as last resort
     try {
-      alert(
-        `${title}\n\nPlease copy and send this message manually:\n\n${message}`,
-      );
+      // Copy to clipboard and show toast notification
+      navigator.clipboard.writeText(message);
+      toast.error(`${title}`, {
+        description: "Message copied to clipboard - please send manually",
+        duration: 5000,
+      });
       action.method = "clipboard";
       return true;
     } catch (error) {
-      console.error("All send methods failed:", error);
+      toast.error("Emergency alert failed", {
+        description: "Unable to send emergency message",
+      });
       return false;
     }
   }

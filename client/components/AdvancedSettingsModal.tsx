@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,8 @@ import {
   AlertTriangle,
   Zap,
 } from "lucide-react";
-import { toast } from "sonner";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
+import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AdvancedSettingsModalProps {
@@ -41,36 +42,24 @@ interface AdvancedSettingsModalProps {
 }
 
 interface SettingsState {
-  // Privacy Settings
-  profileVisibility: boolean;
+  // Location Settings
   locationTracking: boolean;
-  activityStatus: boolean;
-  contactsAccess: boolean;
+  highAccuracyGPS: boolean;
+  backgroundLocationUpdates: boolean;
 
   // Notification Settings
   pushNotifications: boolean;
-  emailNotifications: boolean;
-  smsNotifications: boolean;
   emergencyAlerts: boolean;
-  weeklyReports: boolean;
-
-  // Security Settings
-  twoFactorAuth: boolean;
-  sessionTimeout: number;
-  autoLock: boolean;
-  biometricAuth: boolean;
+  criticalAlertsOnly: boolean;
 
   // Emergency Settings
   emergencyTimeout: number;
   silentMode: boolean;
   autoShareLocation: boolean;
   emergencyRecording: boolean;
-
-  // Performance Settings
-  backgroundRefresh: boolean;
-  dataUsage: boolean;
-  crashReports: boolean;
-  analytics: boolean;
+  panicGestureEnabled: boolean;
+  autoCallEmergencyServices: boolean;
+  batteryOptimizedMode: boolean;
 }
 
 export function AdvancedSettingsModal({
@@ -78,75 +67,66 @@ export function AdvancedSettingsModal({
   onClose,
 }: AdvancedSettingsModalProps) {
   const [loading, setLoading] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("privacy");
+  const [activeCategory, setActiveCategory] = useState("location");
   const [settings, setSettings] = useState<SettingsState>({
-    // Privacy Settings
-    profileVisibility: true,
+    // Location Settings
     locationTracking: true,
-    activityStatus: true,
-    contactsAccess: true,
+    highAccuracyGPS: true,
+    backgroundLocationUpdates: true,
 
     // Notification Settings
     pushNotifications: true,
-    emailNotifications: false,
-    smsNotifications: true,
     emergencyAlerts: true,
-    weeklyReports: false,
-
-    // Security Settings
-    twoFactorAuth: false,
-    sessionTimeout: 30,
-    autoLock: true,
-    biometricAuth: false,
+    criticalAlertsOnly: false,
 
     // Emergency Settings
     emergencyTimeout: 5,
     silentMode: false,
     autoShareLocation: true,
     emergencyRecording: true,
-
-    // Performance Settings
-    backgroundRefresh: true,
-    dataUsage: false,
-    crashReports: true,
-    analytics: true,
+    panicGestureEnabled: true,
+    autoCallEmergencyServices: false,
+    batteryOptimizedMode: false,
   });
+
+  // Load and apply settings on component mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("guardian-advanced-settings");
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        const loadedSettings = { ...settings, ...parsed };
+        setSettings(loadedSettings);
+
+        // Apply loaded settings to services immediately
+        applySettingsToServices(loadedSettings);
+      } catch (error) {
+        console.error("Failed to parse saved settings:", error);
+      }
+    }
+  }, []);
 
   const categories = [
     {
-      id: "privacy",
-      label: "Privacy",
-      icon: Eye,
+      id: "location",
+      label: "Location",
+      icon: MapPin,
       color: "text-blue-600",
-      description: "Control your data and visibility",
+      description: "Location tracking and GPS settings",
     },
     {
       id: "notifications",
       label: "Notifications",
       icon: Bell,
       color: "text-orange-600",
-      description: "Manage alerts and messages",
-    },
-    {
-      id: "security",
-      label: "Security",
-      icon: Lock,
-      color: "text-red-600",
-      description: "Authentication and protection",
+      description: "Alert and message preferences",
     },
     {
       id: "emergency",
       label: "Emergency",
       icon: Shield,
-      color: "text-green-600",
-      description: "Safety and response settings",
-    },
-    {
-      id: "performance",
-      label: "Performance",
-      icon: Zap,
-      color: "text-purple-600",
-      description: "App behavior and optimization",
+      color: "text-red-600",
+      description: "Emergency response and safety settings",
     },
   ];
 
@@ -154,54 +134,244 @@ export function AdvancedSettingsModal({
     key: keyof SettingsState,
     value: boolean | number,
   ) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+
+    // Apply settings immediately for real-time functionality
+    applyIndividualSetting(key, value, newSettings);
   };
 
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Save to localStorage as fallback
+      // Save to localStorage
       localStorage.setItem(
         "guardian-advanced-settings",
         JSON.stringify(settings),
       );
 
-      toast.success("Settings saved successfully!");
+      // ACTUALLY APPLY SETTINGS TO APP SERVICES
+      applySettingsToServices(settings);
+
+      unifiedNotifications.success("Advanced settings saved and applied", {
+        message: "All settings have been activated across the app",
+      });
     } catch (error) {
-      toast.error("Failed to save settings");
+      unifiedNotifications.error("Failed to save settings");
     } finally {
       setLoading(false);
     }
   };
 
+  // Apply individual setting changes in real-time
+  const applyIndividualSetting = (
+    key: keyof SettingsState,
+    value: boolean | number,
+    allSettings: SettingsState,
+  ) => {
+    try {
+      switch (key) {
+        case "locationTracking":
+          if (value as boolean) {
+            enhancedLocationService.startTracking();
+            enhancedLocationService.setHighAccuracyMode(true);
+            unifiedNotifications.success(
+              "High-accuracy location tracking enabled",
+            );
+          } else {
+            enhancedLocationService.stopTracking();
+            unifiedNotifications.info("Location tracking disabled");
+          }
+          break;
+
+        case "pushNotifications":
+          // Apply push notification settings
+          if (value as boolean) {
+            // Request notification permission if needed
+            if (
+              "Notification" in window &&
+              Notification.permission === "default"
+            ) {
+              Notification.requestPermission();
+            }
+            unifiedNotifications.success("Push notifications enabled");
+          } else {
+            unifiedNotifications.info("Push notifications disabled");
+          }
+          break;
+
+        case "emergencyAlerts":
+          if (value as boolean) {
+            unifiedNotifications.success("Emergency alerts enabled with sound");
+          } else {
+            unifiedNotifications.warning(
+              "Emergency alerts disabled - NOT RECOMMENDED for safety",
+            );
+          }
+          break;
+
+        case "emergencyTimeout":
+          unifiedNotifications.info(
+            `Emergency timeout updated to ${value} seconds`,
+          );
+          // Store timeout for SOS service
+          localStorage.setItem("guardian-emergency-timeout", value.toString());
+          break;
+
+        case "silentMode":
+          if (value as boolean) {
+            unifiedNotifications.info("Silent emergency mode enabled", {
+              message:
+                "Emergency alerts will be sent without sound or vibration",
+            });
+          } else {
+            unifiedNotifications.success("Normal emergency mode restored");
+          }
+          break;
+
+        case "autoShareLocation":
+          if (value as boolean) {
+            unifiedNotifications.success(
+              "Auto location sharing enabled for emergencies",
+            );
+          } else {
+            unifiedNotifications.warning(
+              "Auto location sharing disabled - Emergency response may be delayed",
+            );
+          }
+          break;
+
+        case "emergencyRecording":
+          if (value as boolean) {
+            // Check if media recording is supported
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+              unifiedNotifications.success("Emergency recording enabled");
+            } else {
+              unifiedNotifications.warning(
+                "Emergency recording not supported on this device",
+              );
+            }
+          } else {
+            unifiedNotifications.info("Emergency recording disabled");
+          }
+          break;
+
+        case "highAccuracyGPS":
+          if (value as boolean) {
+            enhancedLocationService.setHighAccuracyMode(true);
+            unifiedNotifications.success(
+              "High accuracy GPS enabled - Maximum precision",
+            );
+          } else {
+            enhancedLocationService.setHighAccuracyMode(false);
+            unifiedNotifications.info("Standard GPS accuracy enabled");
+          }
+          break;
+
+        case "backgroundLocationUpdates":
+          if (value as boolean) {
+            unifiedNotifications.success("Background location updates enabled");
+          } else {
+            unifiedNotifications.warning(
+              "Background updates disabled - Emergency response may be limited",
+            );
+          }
+          break;
+
+        case "criticalAlertsOnly":
+          if (value as boolean) {
+            unifiedNotifications.info(
+              "Showing only critical life-threatening alerts",
+            );
+          } else {
+            unifiedNotifications.success("Showing all safety notifications");
+          }
+          break;
+
+        case "panicGestureEnabled":
+          if (value as boolean) {
+            unifiedNotifications.success(
+              "Panic gesture detection enabled - Shake device rapidly or tap 5 times",
+            );
+          } else {
+            unifiedNotifications.info("Panic gesture detection disabled");
+          }
+          break;
+
+        case "autoCallEmergencyServices":
+          if (value as boolean) {
+            unifiedNotifications.warning(
+              "Auto-call emergency services enabled - Use with extreme caution!",
+              {
+                message:
+                  "This will automatically call 911 during emergencies. Ensure this is appropriate for your situation.",
+              },
+            );
+          } else {
+            unifiedNotifications.info("Manual emergency calling mode");
+          }
+          break;
+
+        case "batteryOptimizedMode":
+          if (value as boolean) {
+            unifiedNotifications.success(
+              "Battery optimization enabled for extended emergency situations",
+            );
+          } else {
+            unifiedNotifications.info("Full performance mode enabled");
+          }
+          break;
+      }
+
+      // Save to localStorage immediately
+      localStorage.setItem(
+        "guardian-advanced-settings",
+        JSON.stringify(allSettings),
+      );
+    } catch (error) {
+      console.error(`Failed to apply setting ${key}:`, error);
+      unifiedNotifications.error(`Failed to apply ${key} setting`);
+    }
+  };
+
+  // Apply settings to actual app services
+  const applySettingsToServices = (newSettings: typeof settings) => {
+    try {
+      // Apply all settings at once
+      Object.keys(newSettings).forEach((key) => {
+        applyIndividualSetting(
+          key as keyof SettingsState,
+          newSettings[key as keyof SettingsState],
+          newSettings,
+        );
+      });
+    } catch (error) {
+      console.error("Failed to apply advanced settings:", error);
+      unifiedNotifications.warning(
+        "Some settings may not have been applied correctly",
+      );
+    }
+  };
+
   const handleResetSettings = () => {
-    setSettings({
-      profileVisibility: true,
+    const defaultSettings = {
       locationTracking: true,
-      activityStatus: true,
-      contactsAccess: true,
+      highAccuracyGPS: true,
+      backgroundLocationUpdates: true,
       pushNotifications: true,
-      emailNotifications: false,
-      smsNotifications: true,
       emergencyAlerts: true,
-      weeklyReports: false,
-      twoFactorAuth: false,
-      sessionTimeout: 30,
-      autoLock: true,
-      biometricAuth: false,
+      criticalAlertsOnly: false,
       emergencyTimeout: 5,
       silentMode: false,
       autoShareLocation: true,
       emergencyRecording: true,
-      backgroundRefresh: true,
-      dataUsage: false,
-      crashReports: true,
-      analytics: true,
-    });
-    toast.success("Settings reset to defaults");
+      panicGestureEnabled: true,
+      autoCallEmergencyServices: false,
+      batteryOptimizedMode: false,
+    };
+    setSettings(defaultSettings);
+    applySettingsToServices(defaultSettings);
+    unifiedNotifications.success("Settings reset to emergency-ready defaults");
   };
 
   const modalVariants = {
@@ -301,10 +471,10 @@ export function AdvancedSettingsModal({
 
   const renderCategoryContent = () => {
     switch (activeCategory) {
-      case "privacy":
+      case "location":
         return (
           <motion.div
-            key="privacy"
+            key="location"
             variants={contentVariants}
             initial="hidden"
             animate="visible"
@@ -312,28 +482,22 @@ export function AdvancedSettingsModal({
             className="space-y-4"
           >
             <SettingItem
-              icon={Eye}
-              title="Profile Visibility"
-              description="Control who can see your profile information"
-              settingKey="profileVisibility"
-            />
-            <SettingItem
               icon={MapPin}
               title="Location Tracking"
-              description="Allow the app to track your location for safety features"
+              description="Enable GPS tracking for safety features and emergency response"
               settingKey="locationTracking"
             />
             <SettingItem
-              icon={Users}
-              title="Activity Status"
-              description="Share your online status with emergency contacts"
-              settingKey="activityStatus"
+              icon={Zap}
+              title="High Accuracy GPS"
+              description="Use maximum GPS precision for better emergency location accuracy"
+              settingKey="highAccuracyGPS"
             />
             <SettingItem
               icon={Smartphone}
-              title="Contacts Access"
-              description="Allow access to your device contacts for emergency features"
-              settingKey="contactsAccess"
+              title="Background Updates"
+              description="Continue location tracking even when app is in background"
+              settingKey="backgroundLocationUpdates"
             />
           </motion.div>
         );
@@ -351,75 +515,21 @@ export function AdvancedSettingsModal({
             <SettingItem
               icon={Smartphone}
               title="Push Notifications"
-              description="Receive notifications on this device"
+              description="Receive notifications on this device for safety updates"
               settingKey="pushNotifications"
-            />
-            <SettingItem
-              icon={Bell}
-              title="Email Notifications"
-              description="Receive updates via email"
-              settingKey="emailNotifications"
-            />
-            <SettingItem
-              icon={Smartphone}
-              title="SMS Notifications"
-              description="Receive critical alerts via SMS"
-              settingKey="smsNotifications"
             />
             <SettingItem
               icon={AlertTriangle}
               title="Emergency Alerts"
-              description="Critical safety notifications"
+              description="Critical safety and emergency notifications with sound"
               settingKey="emergencyAlerts"
             />
             <SettingItem
-              icon={Bell}
-              title="Weekly Reports"
-              description="Receive weekly safety activity reports"
-              settingKey="weeklyReports"
+              icon={Shield}
+              title="Critical Alerts Only"
+              description="Show only life-threatening emergency alerts to reduce distractions"
+              settingKey="criticalAlertsOnly"
             />
-          </motion.div>
-        );
-
-      case "security":
-        return (
-          <motion.div
-            key="security"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="space-y-4"
-          >
-            <SettingItem
-              icon={Lock}
-              title="Session Timeout"
-              description="Automatically log out after period of inactivity"
-              settingKey="sessionTimeout"
-              type="slider"
-              min={5}
-              max={120}
-              step={5}
-            />
-            <SettingItem
-              icon={Smartphone}
-              title="Auto Lock"
-              description="Automatically lock the app when not in use"
-              settingKey="autoLock"
-            />
-            <div className="p-3 border rounded-lg bg-yellow-50 border-yellow-200">
-              <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <span className="text-sm font-medium text-yellow-800">
-                  Security Note
-                </span>
-              </div>
-              <p className="text-xs text-yellow-700">
-                Advanced security features like 2FA and biometric authentication
-                require additional setup and will be available in future
-                updates.
-              </p>
-            </div>
           </motion.div>
         );
 
@@ -436,7 +546,7 @@ export function AdvancedSettingsModal({
             <SettingItem
               icon={Shield}
               title="Emergency Timeout"
-              description="Delay before triggering emergency alert"
+              description="Delay before triggering emergency alert (1-30 seconds)"
               settingKey="emergencyTimeout"
               type="slider"
               min={1}
@@ -446,57 +556,38 @@ export function AdvancedSettingsModal({
             <SettingItem
               icon={Bell}
               title="Silent Mode"
-              description="Trigger alerts without sound or vibration"
+              description="Trigger alerts without sound or vibration for discrete emergencies"
               settingKey="silentMode"
             />
             <SettingItem
               icon={MapPin}
               title="Auto Share Location"
-              description="Automatically share location during emergencies"
+              description="Automatically share precise location during emergencies"
               settingKey="autoShareLocation"
             />
             <SettingItem
               icon={Smartphone}
               title="Emergency Recording"
-              description="Automatically start recording during emergencies"
+              description="Automatically start audio/video recording during emergencies"
               settingKey="emergencyRecording"
             />
-          </motion.div>
-        );
-
-      case "performance":
-        return (
-          <motion.div
-            key="performance"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="space-y-4"
-          >
+            <SettingItem
+              icon={Users}
+              title="Panic Gesture Detection"
+              description="Detect shake patterns and rapid taps for emergency activation"
+              settingKey="panicGestureEnabled"
+            />
+            <SettingItem
+              icon={Phone}
+              title="Auto Call Emergency Services"
+              description="Automatically call 911/emergency services (use with caution)"
+              settingKey="autoCallEmergencyServices"
+            />
             <SettingItem
               icon={Zap}
-              title="Background Refresh"
-              description="Keep the app updated when not in use"
-              settingKey="backgroundRefresh"
-            />
-            <SettingItem
-              icon={Smartphone}
-              title="Data Usage Optimization"
-              description="Reduce data usage for better performance"
-              settingKey="dataUsage"
-            />
-            <SettingItem
-              icon={AlertTriangle}
-              title="Crash Reports"
-              description="Send anonymous crash reports to improve the app"
-              settingKey="crashReports"
-            />
-            <SettingItem
-              icon={Settings}
-              title="Analytics"
-              description="Share anonymous usage data to improve features"
-              settingKey="analytics"
+              title="Battery Optimized Mode"
+              description="Extend battery life during extended emergency situations"
+              settingKey="batteryOptimizedMode"
             />
           </motion.div>
         );

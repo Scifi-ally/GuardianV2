@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface EmergencyAlert {
   id: string;
@@ -105,12 +106,12 @@ export function EmergencyAlerts() {
         // Fallback to copy to clipboard
         if (navigator.clipboard) {
           navigator.clipboard.writeText(locationText);
-          alert("Location copied to clipboard!");
+          toast.success("Location copied to clipboard!");
         }
       }
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(locationText);
-      alert("Location copied to clipboard!");
+      toast.success("Location copied to clipboard!");
     }
   };
 

@@ -3,6 +3,7 @@ import "./global.css";
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { SlideDownNotifications } from "@/components/SlideDownNotifications";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -14,7 +15,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SOSSettingsProvider } from "@/contexts/SOSSettingsContext";
-import { NotificationProvider } from "@/components/NotificationSystem";
+
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Guardian from "./pages/Guardian";
@@ -251,17 +252,16 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <SOSSettingsProvider>
-        <NotificationProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <div className="relative w-full min-h-screen bg-background">
-                <AnimatedRoutes />
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </NotificationProvider>
+        <TooltipProvider>
+          <SlideDownNotifications />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="relative w-full min-h-screen bg-background">
+              <AnimatedRoutes />
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
       </SOSSettingsProvider>
     </AuthProvider>
   </QueryClientProvider>
