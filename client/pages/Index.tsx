@@ -28,6 +28,7 @@ import { MagicNavbar } from "@/components/MagicNavbar";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useMapTheme } from "@/hooks/use-map-theme";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGestures } from "@/hooks/useGestures";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
