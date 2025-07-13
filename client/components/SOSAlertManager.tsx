@@ -363,14 +363,18 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
             aria-label={`Show ${activeAlerts.length - 3} more emergency alerts`}
             className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-gray-50"
             onClick={() => {
-              console.log("Show all alerts");
-              // Add actual show all alerts functionality
+              setIsNotificationPanelOpen(true);
+              unifiedNotifications.info("Showing all emergency alerts", {
+                message: `Displaying ${activeAlerts.length} active emergency alerts`,
+              });
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                console.log("Show all alerts");
-                // Add actual show all alerts functionality
+                setIsNotificationPanelOpen(true);
+                unifiedNotifications.info("Showing all emergency alerts", {
+                  message: `Displaying ${activeAlerts.length} active emergency alerts`,
+                });
               }
             }}
           >
