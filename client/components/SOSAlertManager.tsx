@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { SOSService, type SOSAlert } from "@/services/sosService";
 import { SOSNotificationPanel } from "@/components/SOSNotificationPanel";
-import { SOSPopupNotification } from "@/components/SOSPopupNotification";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation, useHapticFeedback } from "@/hooks/use-device-apis";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
