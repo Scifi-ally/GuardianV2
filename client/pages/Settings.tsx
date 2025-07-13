@@ -81,6 +81,28 @@ export default function Settings() {
     console.log("SOS triggered from settings");
   };
 
+  // Apply settings to actual services
+  const applySettingsToServices = (newSettings: typeof settings) => {
+    try {
+      // Apply location/safety settings
+      if (newSettings.safety.autoAlert) {
+        enhancedLocationService.setHighAccuracyMode(true);
+      }
+
+      // Apply privacy settings
+      if (newSettings.privacy.dataSaving) {
+        enhancedLocationService.setTrackingInterval(10000); // Longer interval for data saving
+      } else {
+        enhancedLocationService.setTrackingInterval(5000); // Normal interval
+      }
+
+      unifiedNotifications.info("Settings applied to all services");
+    } catch (error) {
+      console.error("Failed to apply settings:", error);
+      unifiedNotifications.warning("Some settings may not have been applied");
+    }
+  };
+
   const updateSetting = async (
     category: keyof typeof settings,
     key: string,
