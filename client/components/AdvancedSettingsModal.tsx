@@ -113,6 +113,23 @@ export function AdvancedSettingsModal({
     analytics: true,
   });
 
+  // Load and apply settings on component mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("guardian-advanced-settings");
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        const loadedSettings = { ...settings, ...parsed };
+        setSettings(loadedSettings);
+
+        // Apply loaded settings to services immediately
+        applySettingsToServices(loadedSettings);
+      } catch (error) {
+        console.error("Failed to parse saved settings:", error);
+      }
+    }
+  }, []);
+
   const categories = [
     {
       id: "privacy",
