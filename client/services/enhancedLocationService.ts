@@ -72,16 +72,14 @@ export class EnhancedLocationService {
   async getCurrentLocation(options?: PositionOptions): Promise<LocationData> {
     return new Promise((resolve, reject) => {
       if (!this.isSupported()) {
-        // Fallback to demo location only if geolocation not supported
-        const fallbackLocation: LocationData = {
-          latitude: 37.7749,
-          longitude: -122.4194,
-          accuracy: 1000,
-          timestamp: Date.now(),
-        };
-        console.log("⚠️ Geolocation not supported, using fallback location");
-        this.lastKnownLocation = fallbackLocation;
-        return resolve(fallbackLocation);
+        // CRITICAL: Don't provide false location during emergencies
+        const error = new Error(
+          "Geolocation not supported. Please enable location services for emergency features. This is critical for your safety.",
+        );
+        console.error(
+          "🚨 EMERGENCY SAFETY WARNING: Location services unavailable - emergency response may be severely impacted",
+        );
+        return reject(error);
       }
 
       // Try to get real location first
