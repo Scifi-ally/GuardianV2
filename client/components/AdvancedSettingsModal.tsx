@@ -81,36 +81,18 @@ export function AdvancedSettingsModal({
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState("privacy");
   const [settings, setSettings] = useState<SettingsState>({
-    // Privacy Settings
-    profileVisibility: true,
+    // Location Settings
     locationTracking: true,
-    activityStatus: true,
-    contactsAccess: true,
 
     // Notification Settings
     pushNotifications: true,
-    emailNotifications: false,
-    smsNotifications: true,
     emergencyAlerts: true,
-    weeklyReports: false,
-
-    // Security Settings
-    twoFactorAuth: false,
-    sessionTimeout: 30,
-    autoLock: true,
-    biometricAuth: false,
 
     // Emergency Settings
     emergencyTimeout: 5,
     silentMode: false,
     autoShareLocation: true,
     emergencyRecording: true,
-
-    // Performance Settings
-    backgroundRefresh: true,
-    dataUsage: false,
-    crashReports: true,
-    analytics: true,
   });
 
   // Load and apply settings on component mount
