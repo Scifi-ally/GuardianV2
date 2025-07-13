@@ -63,8 +63,6 @@ import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 import { EnhancedSafetyMonitor } from "@/components/EnhancedSafetyMonitor";
 import { PerformanceOptimizer } from "@/components/PerformanceOptimizer";
 
-import { ComprehensiveSafetySystem } from "@/components/ComprehensiveSafetySystem";
-
 import {
   notificationSettingsService,
   shouldShowNotification,
@@ -350,7 +348,7 @@ export default function Index() {
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
-        console.error("🚫 Failed to initialize location tracking:", {
+        console.error("��� Failed to initialize location tracking:", {
           error: errorMessage,
           type: (error as any)?.constructor?.name || typeof error,
         });
@@ -1149,7 +1147,7 @@ export default function Index() {
                           // Notify emergency contacts about live tracking
                           const locationUrl = `https://maps.google.com/?q=${currentLocation.latitude},${currentLocation.longitude}`;
                           await emergencyContactActionsService.sendEmergencyMessage(
-                            `🔴 LIVE TRACKING STARTED: I'm sharing my real-time location with you. Current location: ${locationUrl}. You'll receive updates every 2 minutes.`,
+                            `���� LIVE TRACKING STARTED: I'm sharing my real-time location with you. Current location: ${locationUrl}. You'll receive updates every 2 minutes.`,
                           );
 
                           // Add to real-time alerts
