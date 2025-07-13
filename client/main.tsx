@@ -15,7 +15,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SOSSettingsProvider } from "@/contexts/SOSSettingsContext";
-import { NotificationProvider } from "@/components/NotificationSystem";
+
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Guardian from "./pages/Guardian";
@@ -252,18 +252,16 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <SOSSettingsProvider>
-        <NotificationProvider>
-          <TooltipProvider>
-            <SlideDownNotifications />
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <div className="relative w-full min-h-screen bg-background">
-                <AnimatedRoutes />
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </NotificationProvider>
+        <TooltipProvider>
+          <SlideDownNotifications />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="relative w-full min-h-screen bg-background">
+              <AnimatedRoutes />
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
       </SOSSettingsProvider>
     </AuthProvider>
   </QueryClientProvider>
