@@ -23,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useSlideDownNotifications } from "@/components/SlideDownNotifications";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
 
 interface SOSLocation {
   latitude: number;
@@ -138,12 +138,7 @@ export function EnhancedSOSSystem({
         batteryCritical: true,
       });
 
-      toast.error(
-        `Critical: Battery at ${batteryLevel}% - Emergency escalated`,
-        {
-          duration: 10000,
-        },
-      );
+      unifiedNotifications.batteryWarning(batteryLevel);
 
       // Auto-enable sound alarm for critical battery
       if (!soundAlarmActive && soundEnabled) {
@@ -161,9 +156,18 @@ export function EnhancedSOSSystem({
           Date.now() - activeAlert.lastHeartbeat.getTime();
         if (timeSinceLastHeartbeat > 120000) {
           // 2 minutes
-          toast.error("Warning: No response detected - Escalating emergency", {
-            duration: 10000,
-          });
+          unifiedNotifications.critical(
+            "No response detected - Emergency auto-escalated",
+            {
+              title: "Emergency Escalated",
+              action: {
+                label: "Respond Now",
+                onClick: () => {
+                  if (activeAlert) updateAlertHeartbeat(activeAlert.id);
+                },
+              },
+            },
+          );
 
           if (activeAlert) {
             setActiveAlert({
@@ -250,7 +254,7 @@ export function EnhancedSOSSystem({
       if (alarmAudio.current) {
         alarmAudio.current.loop = true;
         alarmAudio.current.play().catch(() => {
-          toast.error("Unable to play alarm sound");
+          unifiedNotifications.error("Unable to play alarm sound");
         });
       }
     }
@@ -265,10 +269,10 @@ export function EnhancedSOSSystem({
       ) {
         if (flashlightActive) {
           setFlashlightActive(false);
-          toast.info("Flashlight turned off");
+          unifiedNotifications.info("Flashlight turned off");
         } else {
           setFlashlightActive(true);
-          toast.info("Flashlight turned on");
+          unifiedNotifications.info("Flashlight turned on");
         }
       } else {
         toast.error("Flashlight not supported on this device");
