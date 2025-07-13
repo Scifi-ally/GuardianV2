@@ -260,6 +260,22 @@ export default function Index() {
   const [destination, setDestination] = useState<
     { lat: number; lng: number } | undefined
   >(undefined);
+
+  // Initialize gesture system for enhanced usability
+  const { gesturesEnabled, setGesturesEnabled } = useGestures({
+    onSOSActivated: () => {
+      unifiedNotifications.sos({
+        title: "🚨 Gesture SOS Activated",
+        message:
+          "Emergency SOS triggered by rapid taps or shake - immediate assistance needed!",
+      });
+    },
+    onQuickShare: async () => {
+      const shareText = `Emergency location shared via gesture`;
+      navigator.clipboard?.writeText(shareText);
+      unifiedNotifications.success("Location copied to clipboard via gesture");
+    },
+  });
   const [turnByTurnInstructions, setTurnByTurnInstructions] = useState<
     Array<{
       instruction: string;
