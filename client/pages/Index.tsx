@@ -28,7 +28,7 @@ import { MagicNavbar } from "@/components/MagicNavbar";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useMapTheme } from "@/hooks/use-map-theme";
 import { useAuth } from "@/contexts/AuthContext";
-import { useGestures } from "@/hooks/useGestures";
+import { useGestures, GestureGuide } from "@/hooks/useGestures";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
