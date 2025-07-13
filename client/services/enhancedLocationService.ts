@@ -129,13 +129,13 @@ export class EnhancedLocationService {
           }
 
           // CRITICAL: Never provide false coordinates during emergencies
-          const error = new Error(
+          const locationError = new Error(
             "Location access denied. Emergency features require location permission. Please enable location access in your browser settings.",
           );
           console.error(
             "🚨 EMERGENCY SAFETY WARNING: Location permission denied - emergency responders will not be able to locate you",
           );
-          reject(error);
+          reject(locationError);
         },
         {
           enableHighAccuracy: true,
