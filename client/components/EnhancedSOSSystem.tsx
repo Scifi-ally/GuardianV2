@@ -411,20 +411,37 @@ export function EnhancedSOSSystem({
 
       const emergencyMessage = `🚨 EMERGENCY ALERT: ${userProfile.displayName || "Emergency User"} needs immediate help!\n\nLocation: ${locationName}\nCoordinates: ${sosLocation.latitude.toFixed(6)}, ${sosLocation.longitude.toFixed(6)}\nTime: ${new Date().toLocaleString()}\nAccuracy: ±${Math.round(sosLocation.accuracy || 0)}m\n\nPlease respond immediately or call emergency services!`;
 
-      // Create SOS alert object
+      // Create enhanced SOS alert object
       const alert: SOSAlert = {
         id: `sos_${Date.now()}`,
         userId: currentUser.uid,
         userName: userProfile.displayName || "Emergency User",
-        message: emergencyMessage,
+        message: `${emergencyMessage}\n\n📱 Battery: ${batteryLevel}%\n🚨 Type: ${emergencyType.replace("_", " ").toUpperCase()}\n⏰ Auto-tracking enabled\n\nThis is an automated emergency alert with real-time location tracking.`,
         location: sosLocation,
         timestamp: new Date(),
         status: "active",
         responses: [],
+        emergencyType: emergencyType as any,
+        priority: batteryLevel < 20 ? "critical" : "high",
+        autoEscalated: false,
+        lastHeartbeat: new Date(),
+        batteryCritical: batteryLevel < 20,
+        soundAlarmEnabled: soundEnabled,
+        flashlightEnabled: false,
       };
 
       setActiveAlert(alert);
       setSOSActive(true);
+      startHeartbeat();
+
+      // Auto-enable sound alarm for critical situations
+      if (batteryLevel < 20 || emergencyType === "medical") {
+        setTimeout(() => {
+          if (soundEnabled) {
+            toggleSoundAlarm();
+          }
+        }, 5000);
+      }
 
       // Send to callback for external handling
       onSOSAlert?.(alert);
