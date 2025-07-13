@@ -511,21 +511,39 @@ export function EnhancedSOSSystem({
     if (!activeAlert) return;
 
     try {
-      // Stop location tracking
+      // Stop all monitoring and tracking
+      stopHeartbeat();
+
       if (locationUpdateInterval) {
         clearInterval(locationUpdateInterval);
         setLocationUpdateInterval(null);
       }
 
+      // Stop sound alarm
+      if (soundAlarmActive) {
+        setSoundAlarmActive(false);
+        if (alarmAudio.current) {
+          alarmAudio.current.pause();
+          alarmAudio.current.currentTime = 0;
+        }
+      }
+
+      // Turn off flashlight
+      if (flashlightActive) {
+        setFlashlightActive(false);
+      }
+
       // Send cancellation message
-      const cancelMessage = `✅ SOS CANCELLED: ${userProfile?.displayName || "User"} is now safe. Emergency situation resolved at ${new Date().toLocaleString()}.`;
+      const cancelMessage = `✅ SOS CANCELLED: ${userProfile?.displayName || "User"} is now safe. Emergency situation resolved at ${new Date().toLocaleString()}.\n\nFinal location was: ${activeAlert.location.address || `${activeAlert.location.latitude.toFixed(6)}, ${activeAlert.location.longitude.toFixed(6)}`}`;
       await copyToClipboard(cancelMessage);
 
       // Immediately clear the alert (no delay)
       setActiveAlert(null);
       setSOSActive(false);
 
-      toast.success("SOS cancelled - cancellation message copied to clipboard");
+      toast.success(
+        "SOS cancelled - all monitoring stopped, cancellation message copied to clipboard",
+      );
     } catch (error) {
       console.error("Failed to stop SOS alert:", error);
       toast.error("Failed to cancel SOS alert");
