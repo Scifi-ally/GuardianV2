@@ -99,7 +99,9 @@ export function InvisibleSOS() {
   }, [isListening]);
 
   const startInvisibleListening = () => {
-    console.log("👻 Invisible SOS listening started");
+    unifiedNotifications.info("Invisible SOS monitoring started", {
+      message: "Emergency detection patterns are now active",
+    });
 
     // Listen for fake call pattern
     setupFakeCallDetection();
@@ -118,7 +120,7 @@ export function InvisibleSOS() {
   };
 
   const stopInvisibleListening = () => {
-    console.log("👻 Invisible SOS listening stopped");
+    unifiedNotifications.info("Invisible SOS monitoring stopped");
     // Remove event listeners
     document.removeEventListener("click", handleGenericClick);
     document.removeEventListener("keydown", handleKeyDown);
@@ -151,7 +153,7 @@ export function InvisibleSOS() {
     );
 
     if (recentTaps.length >= 3) {
-      console.log("📞 Fake call SOS detected!");
+      // Fake call SOS detected - triggering emergency response
       triggerInvisibleSOS("fake-call", 90);
       tapHistory.current = [];
     }
@@ -168,7 +170,7 @@ export function InvisibleSOS() {
       clearTimeout(flashTimer);
 
       if (flashTaps >= 5) {
-        console.log("📸 Camera flash SOS detected!");
+        // Camera flash SOS detected - triggering emergency response
         triggerInvisibleSOS("fake-selfie", 85);
         flashTaps = 0;
       }
@@ -200,7 +202,7 @@ export function InvisibleSOS() {
         // Check for 911 pattern
         const recent = calculatorInputs.current.slice(-3).join("");
         if (recent === "911") {
-          console.log("🔢 Calculator 911 detected!");
+          // Calculator 911 SOS detected - triggering emergency response
           triggerInvisibleSOS("calculator-code", 95);
           calculatorInputs.current = [];
         }
@@ -240,7 +242,7 @@ export function InvisibleSOS() {
     );
 
     if (recentChecks.length >= 4) {
-      console.log("🕐 Time check SOS detected!");
+      // Time check SOS detected - triggering emergency response
       triggerInvisibleSOS("clock-pattern", 80);
       timeChecks.current = [];
     }
@@ -266,7 +268,7 @@ export function InvisibleSOS() {
     );
 
     if (recentPresses.length >= 5) {
-      console.log("⚡ Power button SOS detected!");
+      // Power button SOS detected - triggering emergency response
       triggerInvisibleSOS("power-button", 100);
       powerButtonPresses.current = [];
     }
