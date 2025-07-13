@@ -331,7 +331,7 @@ export default function Guardian() {
             >
               {/* Interactive Enhanced Google Map Full Screen */}
               <div className="absolute inset-0">
-                <EnhancedGoogleMap
+                <IntelligentGoogleMap
                   location={location}
                   mapTheme={mapTheme}
                   mapType={mapType}
@@ -550,7 +550,7 @@ export default function Guardian() {
                   </Card>
                 }
               >
-                <BackgroundSafetyMonitor
+                <ComprehensiveSafetySystem
                   onEmergencyDetected={handleEmergencyTriggered}
                   className="mb-4"
                 />
