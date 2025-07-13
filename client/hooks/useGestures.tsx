@@ -168,7 +168,6 @@ export function useGestures(options: GestureOptions = {}) {
     unifiedNotifications.critical("SOS activated by gesture!", {
       title: "🚨 Emergency Gesture Detected",
       message: "SOS activated by rapid taps or shake gesture",
-      soundAlert: true,
     });
 
     if (navigator.vibrate) {
@@ -182,7 +181,6 @@ export function useGestures(options: GestureOptions = {}) {
     unifiedNotifications.critical("Panic mode activated!", {
       title: "🔴 Panic Gesture Detected",
       message: "Three-finger panic gesture triggered",
-      soundAlert: true,
     });
 
     if (navigator.vibrate) {
@@ -214,7 +212,7 @@ export function useGestures(options: GestureOptions = {}) {
 
     if (event.touches.length === 2) {
       const timer = setTimeout(() => {
-        unifiedNotifications.info("Quick share activated", {
+        unifiedNotifications.success("Quick share activated", {
           message: "Location copied to clipboard for sharing",
         });
         onQuickShare?.();

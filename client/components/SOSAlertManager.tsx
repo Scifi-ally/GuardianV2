@@ -143,21 +143,11 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
           description:
             "Use your preferred navigation app with the copied coordinates",
           vibrate: true,
-          action: {
-            label: "Open Maps",
-            onClick: () =>
-              window.open(`https://maps.google.com/?q=${toLat},${toLng}`),
-          },
         });
       } catch (error) {
-        notifications.info({
+        notifications.success({
           title: "Navigation Coordinates",
           description: `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
-          action: {
-            label: "Open Maps",
-            onClick: () =>
-              window.open(`https://maps.google.com/?q=${toLat},${toLng}`),
-          },
         });
       }
 
@@ -174,8 +164,39 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
               latitude: currentLocation.latitude,
               longitude: currentLocation.longitude,
               accuracy: currentLocation.accuracy || 0,
+              altitude: null,
+              altitudeAccuracy: null,
+              heading: null,
+              speed: null,
+              toJSON: () => ({
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                accuracy: currentLocation.accuracy || 0,
+                altitude: null,
+                altitudeAccuracy: null,
+                heading: null,
+                speed: null,
+              }),
             },
-            timestamp: currentLocation.timestamp,
+            timestamp:
+              typeof currentLocation.timestamp === "number"
+                ? currentLocation.timestamp
+                : currentLocation.timestamp.getTime(),
+            toJSON: () => ({
+              coords: {
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                accuracy: currentLocation.accuracy || 0,
+                altitude: null,
+                altitudeAccuracy: null,
+                heading: null,
+                speed: null,
+              },
+              timestamp:
+                typeof currentLocation.timestamp === "number"
+                  ? currentLocation.timestamp
+                  : currentLocation.timestamp.getTime(),
+            }),
           } as GeolocationPosition,
         );
       }
@@ -377,7 +398,7 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
             className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-gray-50"
             onClick={() => {
               setIsNotificationPanelOpen(true);
-              unifiedNotifications.info("Showing all emergency alerts", {
+              unifiedNotifications.success("Showing all emergency alerts", {
                 message: `Displaying ${activeAlerts.length} active emergency alerts`,
               });
             }}
@@ -385,7 +406,7 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 setIsNotificationPanelOpen(true);
-                unifiedNotifications.info("Showing all emergency alerts", {
+                unifiedNotifications.success("Showing all emergency alerts", {
                   message: `Displaying ${activeAlerts.length} active emergency alerts`,
                 });
               }

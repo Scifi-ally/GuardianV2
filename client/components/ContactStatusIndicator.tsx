@@ -1,6 +1,19 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import {
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  Clock,
+  Wifi,
+  WifiOff,
+  Phone,
+  Mail,
+  MessageSquare,
+} from "lucide-react";
+import { emergencyContactConnectionService } from "@/services/emergencyContactConnectionService";
 
 interface ContactStatusIndicatorProps {
   contactId: string;
@@ -11,59 +24,98 @@ export function ContactStatusIndicator({
   contactId,
   className,
 }: ContactStatusIndicatorProps) {
-  const [status, setStatus] = useState<"online" | "offline" | "away">(
-    "offline",
-  );
-  const [lastSeen, setLastSeen] = useState<Date | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate dynamic status updates
-    const updateStatus = () => {
-      const statuses: ("online" | "offline" | "away")[] = [
-        "online",
-        "offline",
-        "away",
-      ];
-      const randomStatus =
-        statuses[Math.floor(Math.random() * statuses.length)];
-      setStatus(randomStatus);
+    const checkConnectionStatus = () => {
+      const status =
+        emergencyContactConnectionService.getConnectionStatus(contactId);
+      setConnectionStatus(status);
+      setIsLoading(false);
+    };
 
-      if (randomStatus !== "online") {
-        setLastSeen(new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000)); // Random time within last 24h
+    // Initial check
+    checkConnectionStatus();
+
+    // Listen for connection status changes
+    const handleStatusChange = (status: any) => {
+      if (status.contactId === contactId) {
+        setConnectionStatus(status);
       }
     };
 
-    // Initial update
-    updateStatus();
+    emergencyContactConnectionService.on(
+      "connectionStatusChanged",
+      handleStatusChange,
+    );
 
-    // Update every 10-30 seconds for dynamic effect
-    const interval = setInterval(updateStatus, 10000 + Math.random() * 20000);
+    // Periodic checks
+    const interval = setInterval(checkConnectionStatus, 60000);
 
-    return () => clearInterval(interval);
+    return () => {
+      emergencyContactConnectionService.off(
+        "connectionStatusChanged",
+        handleStatusChange,
+      );
+      clearInterval(interval);
+    };
   }, [contactId]);
 
+  if (isLoading) {
+    return (
+      <div className={cn("flex items-center gap-1.5", className)}>
+        <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse" />
+        <span className="text-xs text-muted-foreground">Checking...</span>
+      </div>
+    );
+  }
+
+  if (!connectionStatus) {
+    return (
+      <div className={cn("flex items-center gap-1.5", className)}>
+        <div className="w-2 h-2 rounded-full bg-gray-400" />
+        <span className="text-xs text-muted-foreground">Unknown</span>
+      </div>
+    );
+  }
+
   const getStatusColor = () => {
-    switch (status) {
-      case "online":
-        return "bg-green-500";
-      case "away":
-        return "bg-yellow-500";
-      case "offline":
-        return "bg-gray-400";
+    if (connectionStatus.isConnected) {
+      return "bg-green-500";
+    } else if (connectionStatus.error) {
+      return "bg-red-500";
+    } else {
+      return "bg-gray-400";
+    }
+  };
+
+  const getMethodIcon = () => {
+    switch (connectionStatus.method) {
+      case "push":
+        return <Wifi className="h-3 w-3" />;
+      case "email":
+        return <Mail className="h-3 w-3" />;
+      case "sms":
+        return <MessageSquare className="h-3 w-3" />;
+      case "call":
+        return <Phone className="h-3 w-3" />;
+      default:
+        return <WifiOff className="h-3 w-3" />;
     }
   };
 
   const getStatusText = () => {
-    switch (status) {
-      case "online":
-        return "Online";
-      case "away":
-        return "Away";
-      case "offline":
-        return lastSeen ? `Last seen ${getRelativeTime(lastSeen)}` : "Offline";
+    if (connectionStatus.isConnected) {
+      return connectionStatus.method.toUpperCase();
+    } else if (connectionStatus.error) {
+      return "Error";
+    } else {
+      return "Offline";
     }
   };
 
+  // Helper function kept for reference
   const getRelativeTime = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -80,23 +132,26 @@ export function ContactStatusIndicator({
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
       <motion.div
-        key={status}
+        key={connectionStatus.isConnected ? "connected" : "disconnected"}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         className={cn(
           "w-2 h-2 rounded-full transition-colors",
           getStatusColor(),
-          status === "online" && "animate-pulse",
+          connectionStatus.isConnected && "animate-pulse",
         )}
       />
-      <motion.span
+      <motion.div
         key={getStatusText()}
         initial={{ opacity: 0, x: -5 }}
         animate={{ opacity: 1, x: 0 }}
-        className="text-xs text-muted-foreground"
+        className="flex items-center gap-1"
+        title={
+          connectionStatus.error || `Connected via ${connectionStatus.method}`
+        }
       >
-        {getStatusText()}
-      </motion.span>
+        <span className="text-xs text-muted-foreground">{getStatusText()}</span>
+      </motion.div>
     </div>
   );
 }

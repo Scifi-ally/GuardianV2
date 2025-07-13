@@ -122,7 +122,8 @@ export default function EnhancedProfile() {
                   }}
                   transition={{
                     duration: 1,
-                    repeat: (stats?.activeAlerts ?? 0) > 0 ? Infinity : 0,
+                    repeat:
+                      (stats?.activeAlerts ?? 0) > 0 ? Infinity : undefined,
                   }}
                 >
                   {stats?.activeAlerts ?? 0}

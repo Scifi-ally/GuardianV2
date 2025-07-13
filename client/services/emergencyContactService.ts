@@ -38,12 +38,26 @@ export class EmergencyContactService {
       const targetUserDoc = querySnapshot.docs[0];
       const targetUser = targetUserDoc.data();
 
+      // Validate required fields
+      if (!targetUser.displayName) {
+        return {
+          success: false,
+          error: "Contact must have a display name",
+        };
+      }
+
       // Create emergency contact object
       const newContact: EmergencyContact = {
         id: targetUser.uid,
-        guardianKey,
         name: targetUser.displayName,
+        phone: targetUser.phone || "", // Required for emergency alerts
+        email: targetUser.email || undefined,
+        relationship: "Friend",
+        guardianKey,
         priority,
+        isVerified: false,
+        canShareLocation: true,
+        lastContacted: undefined,
         addedAt: new Date(),
         isActive: true,
       };

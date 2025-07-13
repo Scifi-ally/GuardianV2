@@ -160,11 +160,12 @@ class AINewsAnalysisService {
       // - Local police department APIs
       // - Traffic APIs
 
-      const mockNews = await this.generateMockNews(latitude, longitude);
-      this.newsCache.set(locationKey, mockNews);
+      // Real news analysis would be implemented here with actual APIs
+      // For now, return empty array - no mock data
+      this.newsCache.set(locationKey, []);
       this.lastUpdate = new Date();
 
-      return mockNews;
+      return [];
     } catch (error) {
       console.error("Failed to fetch news:", error);
       return [];

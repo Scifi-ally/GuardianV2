@@ -273,15 +273,9 @@ export function GuardianKeyCard({ className }: GuardianKeyCardProps) {
                   onClick={handleQRCode}
                   disabled={isGeneratingQR}
                 >
-                  <motion.div
-                    animate={{ rotate: isGeneratingQR ? 360 : 0 }}
-                    transition={{
-                      duration: 1,
-                      repeat: isGeneratingQR ? Infinity : 0,
-                    }}
-                  >
+                  <div className={isGeneratingQR ? "animate-spin" : ""}>
                     <QrCode className="h-4 w-4" />
-                  </motion.div>
+                  </div>
                 </Button>
               </motion.div>
             </div>

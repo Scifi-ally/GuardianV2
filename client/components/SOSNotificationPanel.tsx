@@ -140,7 +140,10 @@ export function SOSNotificationPanel({
                     speed: null,
                   }),
                 },
-                timestamp: currentLocation.timestamp,
+                timestamp:
+                  typeof currentLocation.timestamp === "number"
+                    ? currentLocation.timestamp
+                    : currentLocation.timestamp.getTime(),
                 toJSON: () => ({
                   coords: {
                     latitude: currentLocation.latitude,
@@ -151,7 +154,10 @@ export function SOSNotificationPanel({
                     heading: null,
                     speed: null,
                   },
-                  timestamp: currentLocation.timestamp,
+                  timestamp:
+                    typeof currentLocation.timestamp === "number"
+                      ? currentLocation.timestamp
+                      : currentLocation.timestamp.getTime(),
                 }),
               }
             : undefined;

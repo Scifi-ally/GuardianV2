@@ -13,8 +13,6 @@ import {
   Copy,
   Share,
   StopCircle,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,7 +52,7 @@ interface SOSAlert {
   autoEscalated: boolean;
   lastHeartbeat: Date;
   batteryCritical: boolean;
-  soundAlarmEnabled: boolean;
+
   flashlightEnabled: boolean;
 }
 
@@ -91,10 +89,8 @@ export function EnhancedSOSSystem({
   const [sending, setSending] = useState(false);
   const [activeAlert, setActiveAlert] = useState<SOSAlert | null>(null);
   const [receivedAlerts, setReceivedAlerts] = useState<SOSAlert[]>([]);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [batteryLevel, setBatteryLevel] = useState<number>(100);
   const [heartbeatActive, setHeartbeatActive] = useState(false);
-  const [soundAlarmActive, setSoundAlarmActive] = useState(false);
   const [flashlightActive, setFlashlightActive] = useState(false);
   const [emergencyType, setEmergencyType] = useState<string>("general");
 
@@ -103,16 +99,10 @@ export function EnhancedSOSSystem({
     useState<NodeJS.Timeout | null>(null);
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
   const batteryMonitor = useRef<NodeJS.Timeout | null>(null);
-  const alarmAudio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Initialize battery monitoring and alarm audio
+    // Initialize battery monitoring
     monitorBattery();
-
-    // Create alarm audio element
-    alarmAudio.current = new Audio();
-    alarmAudio.current.src =
-      "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+L1uGkdBTCB1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+L1uGkdBTCB";
 
     // Cleanup intervals on unmount
     return () => {
@@ -122,9 +112,6 @@ export function EnhancedSOSSystem({
       stopHeartbeat();
       if (batteryMonitor.current) {
         clearInterval(batteryMonitor.current);
-      }
-      if (alarmAudio.current) {
-        alarmAudio.current.pause();
       }
     };
   }, [locationUpdateInterval]);
@@ -141,13 +128,8 @@ export function EnhancedSOSSystem({
       });
 
       unifiedNotifications.batteryWarning(batteryLevel);
-
-      // Auto-enable sound alarm for critical battery
-      if (!soundAlarmActive && soundEnabled) {
-        toggleSoundAlarm();
-      }
     }
-  }, [batteryLevel, activeAlert, soundAlarmActive, soundEnabled]);
+  }, [batteryLevel, activeAlert]);
 
   // Heartbeat failure detection
   useEffect(() => {
@@ -162,12 +144,6 @@ export function EnhancedSOSSystem({
             "No response detected - Emergency auto-escalated",
             {
               title: "Emergency Escalated",
-              action: {
-                label: "Respond Now",
-                onClick: () => {
-                  if (activeAlert) updateAlertHeartbeat(activeAlert.id);
-                },
-              },
             },
           );
 
@@ -243,25 +219,6 @@ export function EnhancedSOSSystem({
     }
   };
 
-  // Toggle sound alarm
-  const toggleSoundAlarm = () => {
-    if (soundAlarmActive) {
-      setSoundAlarmActive(false);
-      if (alarmAudio.current) {
-        alarmAudio.current.pause();
-        alarmAudio.current.currentTime = 0;
-      }
-    } else {
-      setSoundAlarmActive(true);
-      if (alarmAudio.current) {
-        alarmAudio.current.loop = true;
-        alarmAudio.current.play().catch(() => {
-          unifiedNotifications.error("Unable to play alarm sound");
-        });
-      }
-    }
-  };
-
   // Toggle flashlight (where supported)
   const toggleFlashlight = async () => {
     try {
@@ -271,10 +228,10 @@ export function EnhancedSOSSystem({
       ) {
         if (flashlightActive) {
           setFlashlightActive(false);
-          unifiedNotifications.info("Flashlight turned off");
+          unifiedNotifications.success("Flashlight turned off");
         } else {
           setFlashlightActive(true);
-          unifiedNotifications.info("Flashlight turned on");
+          unifiedNotifications.success("Flashlight turned on");
         }
       } else {
         toast.error("Flashlight not supported on this device");
@@ -484,22 +441,12 @@ export function EnhancedSOSSystem({
         autoEscalated: false,
         lastHeartbeat: new Date(),
         batteryCritical: batteryLevel < 20,
-        soundAlarmEnabled: soundEnabled,
         flashlightEnabled: false,
       };
 
       setActiveAlert(alert);
       setSOSActive(true);
       startHeartbeat();
-
-      // Auto-enable sound alarm for critical situations
-      if (batteryLevel < 20 || emergencyType === "medical") {
-        setTimeout(() => {
-          if (soundEnabled) {
-            toggleSoundAlarm();
-          }
-        }, 5000);
-      }
 
       // Send to callback for external handling
       onSOSAlert?.(alert);
@@ -513,18 +460,6 @@ export function EnhancedSOSSystem({
       // Start continuous location tracking
       startLocationTracking(alert.id);
 
-      // Play sound if enabled
-      if (soundEnabled) {
-        try {
-          const audio = new Audio(
-            "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvWoeCD2a0+/CcSIFNJDE7tuJOAUWZLXq3Y9KCQ9Tr+Wqbh0JaKzqwW0gBjuPzuyJQQgPUbfj3p1eFApLoOFvqKgBCmKrz7iFQAhGjO/BQQgJQbXZ2Y1JCApPrbZhJ1SBmm1iqXMdCD+W0O/DcyQEKX7J8N6POQsVYLjt3p1VFwpKmuByrWUdCTuV0+/DdCQEL3fI8dmRQQUVXrLt35ZTFw1PpeBprd2MCwZfpNjewGwdB0Kf0O+7ayUILnrC8d+OQA0S",
-          );
-          audio.play().catch(() => console.log("Could not play alert sound"));
-        } catch (error) {
-          console.log("Alert sound failed:", error);
-        }
-      }
-
       // Show SOS notification with location and actions
       if (activeAlert) {
         unifiedNotifications.sos({
@@ -534,23 +469,6 @@ export function EnhancedSOSSystem({
             latitude: activeAlert.location.latitude,
             longitude: activeAlert.location.longitude,
             address: activeAlert.location.address,
-          },
-          action: {
-            label: "View Location",
-            onClick: () => {
-              if (activeAlert?.location && onStartNavigation) {
-                onStartNavigation(activeAlert.location);
-              }
-            },
-          },
-          secondaryAction: {
-            label: "Share Update",
-            onClick: async () => {
-              await shareLocationInternally(
-                activeAlert.location,
-                "Emergency update: Still need assistance",
-              );
-            },
           },
         });
       }
@@ -600,15 +518,6 @@ export function EnhancedSOSSystem({
         setLocationUpdateInterval(null);
       }
 
-      // Stop sound alarm
-      if (soundAlarmActive) {
-        setSoundAlarmActive(false);
-        if (alarmAudio.current) {
-          alarmAudio.current.pause();
-          alarmAudio.current.currentTime = 0;
-        }
-      }
-
       // Turn off flashlight
       if (flashlightActive) {
         setFlashlightActive(false);
@@ -622,17 +531,7 @@ export function EnhancedSOSSystem({
       setActiveAlert(null);
       setSOSActive(false);
 
-      unifiedNotifications.success("SOS cancelled - all monitoring stopped", {
-        action: {
-          label: "Send Update",
-          onClick: () => {
-            navigator.clipboard?.writeText(cancelMessage);
-            unifiedNotifications.info(
-              "Cancellation message copied to clipboard",
-            );
-          },
-        },
-      });
+      unifiedNotifications.success("SOS cancelled - all monitoring stopped");
     } catch (error) {
       console.error("Failed to stop SOS alert:", error);
       unifiedNotifications.error("Failed to cancel SOS alert");
@@ -712,24 +611,7 @@ export function EnhancedSOSSystem({
                 </div>
 
                 {/* Emergency Controls */}
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <Button
-                    onClick={toggleSoundAlarm}
-                    variant={soundAlarmActive ? "default" : "outline"}
-                    size="sm"
-                    className={
-                      soundAlarmActive
-                        ? "bg-orange-600 hover:bg-orange-700"
-                        : ""
-                    }
-                  >
-                    {soundAlarmActive ? (
-                      <Volume2 className="h-4 w-4 mr-1" />
-                    ) : (
-                      <VolumeX className="h-4 w-4 mr-1" />
-                    )}
-                    {soundAlarmActive ? "Stop Alarm" : "Sound Alarm"}
-                  </Button>
+                <div className="grid grid-cols-1 gap-2 mb-3">
                   <Button
                     onClick={toggleFlashlight}
                     variant={flashlightActive ? "default" : "outline"}
@@ -841,23 +723,6 @@ export function EnhancedSOSSystem({
             )}
           </div>
         </motion.button>
-      </div>
-
-      {/* Settings */}
-      <div className="flex items-center justify-center gap-4">
-        <Button
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          {soundEnabled ? (
-            <Volume2 className="h-4 w-4" />
-          ) : (
-            <VolumeX className="h-4 w-4" />
-          )}
-          Sound {soundEnabled ? "On" : "Off"}
-        </Button>
       </div>
 
       {/* Instructions */}

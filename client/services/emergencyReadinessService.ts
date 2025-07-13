@@ -503,11 +503,11 @@ class EmergencyReadinessService {
     const fixableIssues = report.checks.filter((check) => check.autoFix);
 
     if (fixableIssues.length === 0) {
-      unifiedNotifications.info("No auto-fixable issues found");
+      unifiedNotifications.success("No auto-fixable issues found");
       return;
     }
 
-    unifiedNotifications.info(
+    unifiedNotifications.success(
       `Attempting to fix ${fixableIssues.length} issues automatically...`,
     );
 
@@ -530,7 +530,7 @@ class EmergencyReadinessService {
       critical: "🚨",
     };
 
-    unifiedNotifications.info(
+    unifiedNotifications.success(
       `${statusEmoji[report.overallStatus]} Emergency Readiness: ${report.score}/100`,
       {
         message: `${report.checks.filter((c) => c.status === "pass").length} checks passed, ${report.checks.filter((c) => c.status === "warning").length} warnings, ${report.checks.filter((c) => c.status === "critical").length} critical issues`,

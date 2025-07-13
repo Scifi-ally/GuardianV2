@@ -394,11 +394,9 @@ export function GoogleMapsNavigationView({
         }
       });
 
-      await enhancedLocationService.startTracking({
-        enableHighAccuracy: true,
-        maximumAge: 1000,
-        timeout: 10000,
-      });
+      // Configure location service for high accuracy
+      enhancedLocationService.setHighAccuracyMode(true);
+      await enhancedLocationService.startTracking();
 
       return unsubscribe;
     } catch (error) {

@@ -1,75 +1,42 @@
-// Browser-compatible EventEmitter implementation
-export class EventEmitter {
-  private events: Map<string, Function[]> = new Map();
+export class EventEmitter<T = Record<string, any>> {
+  private events: { [key: string]: Array<(...args: any[]) => void> } = {};
 
-  on(event: string, listener: Function): this {
-    if (!this.events.has(event)) {
-      this.events.set(event, []);
+  on<K extends keyof T>(event: K, listener: (data: T[K]) => void): void {
+    const eventName = event as string;
+    if (!this.events[eventName]) {
+      this.events[eventName] = [];
     }
-    this.events.get(event)!.push(listener);
-    return this;
+    this.events[eventName].push(listener);
   }
 
-  off(event: string, listener: Function): this {
-    if (!this.events.has(event)) {
-      return this;
-    }
+  off<K extends keyof T>(event: K, listener: (data: T[K]) => void): void {
+    const eventName = event as string;
+    if (!this.events[eventName]) return;
 
-    const listeners = this.events.get(event)!;
-    const index = listeners.indexOf(listener);
+    const index = this.events[eventName].indexOf(listener);
     if (index > -1) {
-      listeners.splice(index, 1);
+      this.events[eventName].splice(index, 1);
     }
-
-    if (listeners.length === 0) {
-      this.events.delete(event);
-    }
-
-    return this;
   }
 
-  emit(event: string, ...args: any[]): boolean {
-    if (!this.events.has(event)) {
-      return false;
-    }
+  emit<K extends keyof T>(event: K, data: T[K]): void {
+    const eventName = event as string;
+    if (!this.events[eventName]) return;
 
-    const listeners = this.events.get(event)!;
-    listeners.forEach((listener) => {
+    this.events[eventName].forEach((listener) => {
       try {
-        listener(...args);
+        listener(data);
       } catch (error) {
-        console.error(`Error in event listener for "${event}":`, error);
+        console.error(`Error in event listener for ${eventName}:`, error);
       }
     });
-
-    return true;
   }
 
-  once(event: string, listener: Function): this {
-    const onceListener = (...args: any[]) => {
-      this.off(event, onceListener);
-      listener(...args);
-    };
-
-    return this.on(event, onceListener);
-  }
-
-  removeAllListeners(event?: string): this {
+  removeAllListeners(event?: string): void {
     if (event) {
-      this.events.delete(event);
+      delete this.events[event];
     } else {
-      this.events.clear();
+      this.events = {};
     }
-    return this;
-  }
-
-  listenerCount(event: string): number {
-    return this.events.get(event)?.length || 0;
-  }
-
-  eventNames(): string[] {
-    return Array.from(this.events.keys());
   }
 }
-
-export default EventEmitter;

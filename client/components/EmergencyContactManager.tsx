@@ -37,6 +37,7 @@ import {
 import { useAuth, type EmergencyContact } from "@/contexts/AuthContext";
 import { EmergencyContactService } from "@/services/emergencyContactService";
 import { EmergencyKeyService } from "@/services/emergencyKeyService";
+import { emergencyContactConnectionService } from "@/services/emergencyContactConnectionService";
 import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { ContactStatusIndicator } from "@/components/ContactStatusIndicator";
 import { cn } from "@/lib/utils";
@@ -197,15 +198,33 @@ export function EmergencyContactManager({
   const handleAlert = async (contact: EmergencyContact) => {
     try {
       setAddingContact(true);
+
+      // Test connection first
+      const connectionStatus =
+        await emergencyContactConnectionService.testConnection(contact);
+
+      if (!connectionStatus.isConnected) {
+        setError(
+          `Cannot reach ${contact.name}: ${connectionStatus.error || "No connection"}`,
+        );
+        setTimeout(() => setError(""), 3000);
+        return;
+      }
+
+      // Send alert using improved service
       const { emergencyContactActionsService } = await import(
         "@/services/emergencyContactActionsService"
       );
       await emergencyContactActionsService.alertContact(contact);
-      setSuccess(`Emergency alert sent to ${contact.name}!`);
+      setSuccess(
+        `Emergency alert sent to ${contact.name} via ${connectionStatus.method}!`,
+      );
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
       console.error("Failed to send alert:", error);
-      setError(`Failed to send alert to ${contact.name}`);
+      setError(
+        `Failed to send alert to ${contact.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       setTimeout(() => setError(""), 3000);
     } finally {
       setAddingContact(false);
@@ -215,15 +234,32 @@ export function EmergencyContactManager({
   const handleMessage = async (contact: EmergencyContact) => {
     try {
       setAddingContact(true);
+
+      // Test connection first
+      const connectionStatus =
+        await emergencyContactConnectionService.testConnection(contact);
+
+      if (!connectionStatus.isConnected) {
+        setError(
+          `Cannot reach ${contact.name}: ${connectionStatus.error || "No connection"}`,
+        );
+        setTimeout(() => setError(""), 3000);
+        return;
+      }
+
       const { emergencyContactActionsService } = await import(
         "@/services/emergencyContactActionsService"
       );
       await emergencyContactActionsService.messageContact(contact);
-      setSuccess(`Message sent to ${contact.name}!`);
+      setSuccess(
+        `Message sent to ${contact.name} via ${connectionStatus.method}!`,
+      );
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
       console.error("Failed to send message:", error);
-      setError(`Failed to send message to ${contact.name}`);
+      setError(
+        `Failed to send message to ${contact.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       setTimeout(() => setError(""), 3000);
     } finally {
       setAddingContact(false);
@@ -596,18 +632,37 @@ export function EmergencyContactManager({
                   onClick={async () => {
                     try {
                       setAddingContact(true);
-                      const { emergencyContactActionsService } = await import(
-                        "@/services/emergencyContactActionsService"
-                      );
-                      const result =
-                        await emergencyContactActionsService.alertAllContacts(
-                          sortedContacts,
+
+                      // Use improved broadcast service
+                      const broadcast =
+                        await emergencyContactConnectionService.sendEmergencyBroadcast(
+                          "Emergency assistance needed! Please respond or call emergency services.",
+                          "alert",
+                          "high",
                         );
-                      setSuccess(result.message);
-                      setTimeout(() => setSuccess(""), 3000);
+
+                      const successCount = Array.from(
+                        broadcast.responses.keys(),
+                      ).length;
+                      const totalCount = sortedContacts.length;
+
+                      if (successCount > 0) {
+                        setSuccess(
+                          `Emergency alert sent to ${successCount}/${totalCount} contacts`,
+                        );
+                      } else {
+                        setError("Failed to send alert to any contacts");
+                      }
+
+                      setTimeout(() => {
+                        setSuccess("");
+                        setError("");
+                      }, 3000);
                     } catch (error) {
                       console.error("Failed to alert all contacts:", error);
-                      setError("Failed to alert all contacts");
+                      setError(
+                        `Failed to alert all contacts: ${error instanceof Error ? error.message : "Unknown error"}`,
+                      );
                       setTimeout(() => setError(""), 3000);
                     } finally {
                       setAddingContact(false);

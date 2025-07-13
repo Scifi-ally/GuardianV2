@@ -13,6 +13,7 @@ import { useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { emergencyContactActionsService } from "@/services/emergencyContactActionsService";
 import { realTimeService } from "@/services/realTimeService";
+import { motion } from "framer-motion";
 
 interface QuickActionProps {
   icon: typeof MapPin;
@@ -37,19 +38,38 @@ function QuickActionButton({
   };
 
   return (
-    <Button
-      variant="ghost"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "h-16 flex-col gap-1 text-xs font-medium transition-all",
-        variantStyles[variant],
-        disabled && "opacity-50 cursor-not-allowed",
-      )}
+    <motion.div
+      whileHover={{ scale: disabled ? 1 : 1.05, y: -2 }}
+      whileTap={{ scale: disabled ? 1 : 0.95 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        type: "spring",
+        damping: 20,
+        stiffness: 300,
+        delay: Math.random() * 0.2,
+      }}
     >
-      <Icon className="h-5 w-5" />
-      <span>{label}</span>
-    </Button>
+      <Button
+        variant="ghost"
+        onClick={onClick}
+        disabled={disabled}
+        className={cn(
+          "h-16 flex-col gap-1 text-xs font-medium transition-all duration-300 ease-out card-interactive interactive-element",
+          variantStyles[variant],
+          disabled && "opacity-50 cursor-not-allowed",
+          "hover:shadow-lg active:shadow-sm",
+        )}
+      >
+        <motion.div
+          animate={disabled ? { rotate: [0, 5, -5, 0] } : {}}
+          transition={{ duration: 2, repeat: disabled ? Infinity : undefined }}
+        >
+          <Icon className="h-5 w-5" />
+        </motion.div>
+        <span>{label}</span>
+      </Button>
+    </motion.div>
   );
 }
 
@@ -95,10 +115,6 @@ export function QuickActions() {
       notifications.error({
         title: "Location Share Failed",
         description: "Unable to share location - check permissions",
-        action: {
-          label: "Try Again",
-          onClick: () => handleShareLocation(),
-        },
         vibrate: true,
       });
     } finally {
@@ -120,18 +136,12 @@ export function QuickActions() {
         timestamp: Date.now(),
       });
 
-      notifications.routeSafety("safe", {
-        findAlternate: () => (window.location.href = "/navigation"),
-      });
+      notifications.routeSafety("safe");
     } catch (error) {
       console.error("Safe route error:", error);
       notifications.error({
         title: "Route Analysis Failed",
         description: "Unable to calculate safe route",
-        action: {
-          label: "Try Navigation",
-          onClick: () => (window.location.href = "/navigation"),
-        },
         vibrate: true,
       });
     } finally {
@@ -146,10 +156,6 @@ export function QuickActions() {
         notifications.error({
           title: "No Emergency Contacts",
           description: "Add emergency contacts to send quick alerts",
-          action: {
-            label: "Add Contacts",
-            onClick: () => (window.location.href = "/contacts"),
-          },
           vibrate: true,
         });
         return;
@@ -167,10 +173,6 @@ export function QuickActions() {
       notifications.error({
         title: "Alert Failed",
         description: "Unable to send emergency alert",
-        action: {
-          label: "Try Again",
-          onClick: () => handleQuickText(),
-        },
         vibrate: true,
       });
     } finally {
@@ -258,10 +260,29 @@ export function QuickActions() {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <motion.div
+      className="grid grid-cols-3 gap-2"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       {actions.map((action, index) => (
-        <QuickActionButton key={index} {...action} />
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: index * 0.1,
+            type: "spring",
+            damping: 20,
+            stiffness: 300,
+          }}
+          className="stagger-item"
+          style={{ "--stagger-delay": index } as React.CSSProperties}
+        >
+          <QuickActionButton {...action} />
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }

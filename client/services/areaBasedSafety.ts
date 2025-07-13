@@ -31,71 +31,8 @@ class AreaBasedSafetyService {
   private readonly GRID_SIZE = 0.0045; // degrees
 
   constructor() {
-    this.initializeMockAreas();
-  }
-
-  private initializeMockAreas() {
-    // Generate some mock safety areas for demonstration
-    const mockAreas: SafetyArea[] = [
-      {
-        id: "downtown_safe",
-        bounds: {
-          north: 37.7849,
-          south: 37.7749,
-          east: -122.4094,
-          west: -122.4194,
-        },
-        safetyScore: 85,
-        lastUpdated: new Date(),
-        factors: {
-          crimeRate: 90,
-          lighting: 85,
-          footTraffic: 95,
-          emergencyServices: 80,
-          communityReports: 75,
-        },
-      },
-      {
-        id: "residential_medium",
-        bounds: {
-          north: 37.7749,
-          south: 37.7649,
-          east: -122.4094,
-          west: -122.4194,
-        },
-        safetyScore: 72,
-        lastUpdated: new Date(),
-        factors: {
-          crimeRate: 75,
-          lighting: 70,
-          footTraffic: 60,
-          emergencyServices: 85,
-          communityReports: 80,
-        },
-      },
-      {
-        id: "industrial_caution",
-        bounds: {
-          north: 37.7649,
-          south: 37.7549,
-          east: -122.4094,
-          west: -122.4194,
-        },
-        safetyScore: 45,
-        lastUpdated: new Date(),
-        factors: {
-          crimeRate: 40,
-          lighting: 35,
-          footTraffic: 30,
-          emergencyServices: 60,
-          communityReports: 50,
-        },
-      },
-    ];
-
-    mockAreas.forEach((area) => {
-      this.safetyAreas.set(area.id, area);
-    });
+    // Start with empty safety areas - real data will be loaded from external sources
+    // No mock data initialization
   }
 
   private getAreaId(location: LocationCoordinates): string {

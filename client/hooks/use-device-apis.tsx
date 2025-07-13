@@ -87,7 +87,6 @@ export function useGeolocation() {
   const [isTracking, setIsTracking] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState<string>("unknown");
   const unsubscribeRef = useRef<(() => void) | null>(null);
-  const errorUnsubscribeRef = useRef<(() => void) | null>(null);
 
   // Import the enhanced location service
   const getEnhancedLocationService = async () => {
@@ -109,38 +108,23 @@ export function useGeolocation() {
 
         // Subscribe to location updates
         unsubscribeRef.current = locationService.subscribe((locationData) => {
-          setLocation(locationData);
+          // Convert enhanced location data to legacy format
+          const legacyData = {
+            latitude: locationData.coords.latitude,
+            longitude: locationData.coords.longitude,
+            accuracy: locationData.coords.accuracy,
+            timestamp: locationData.timestamp,
+          };
+          setLocation(legacyData);
           setError(null);
           console.log("📍 Location updated:", {
-            lat: locationData.latitude.toFixed(6),
-            lng: locationData.longitude.toFixed(6),
-            accuracy: Math.round(locationData.accuracy) + "m",
+            lat: legacyData.latitude.toFixed(6),
+            lng: legacyData.longitude.toFixed(6),
+            accuracy: Math.round(legacyData.accuracy) + "m",
           });
-          // Removed automatic notifications for location updates
         });
 
-        // Subscribe to errors (only critical ones)
-        errorUnsubscribeRef.current = locationService.subscribeToErrors(
-          (locationError) => {
-            // Only handle critical errors, ignore timeouts
-            if (locationError.code === 3) {
-              // Timeout - ignore silently
-              console.log("ℹ️ Location timeout handled silently");
-              return;
-            }
-
-            setError(locationError.message);
-            setIsTracking(false);
-
-            // Only show notifications for permission errors
-            if (locationError.code === 1) {
-              // Show location permission error
-              console.warn(
-                "Location permission denied - some features may be limited",
-              );
-            }
-          },
-        );
+        // Error handling is built into the enhanced location service
 
         // Get current location immediately (non-blocking)
         locationService.getCurrentLocation().catch((err) => {
@@ -162,9 +146,6 @@ export function useGeolocation() {
     return () => {
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
-      }
-      if (errorUnsubscribeRef.current) {
-        errorUnsubscribeRef.current();
       }
     };
   }, []);
@@ -195,7 +176,14 @@ export function useGeolocation() {
     try {
       const locationService = await getEnhancedLocationService();
       const locationData = await locationService.getCurrentLocation();
-      setLocation(locationData);
+      // Convert EnhancedLocationData to LocationData format
+      const convertedLocation: LocationData = {
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        accuracy: locationData.accuracy,
+        timestamp: locationData.timestamp.getTime(), // Convert Date to number
+      };
+      setLocation(convertedLocation);
       setError(null);
       return locationData;
     } catch (err: any) {

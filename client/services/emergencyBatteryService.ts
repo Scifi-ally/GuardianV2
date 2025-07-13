@@ -140,7 +140,7 @@ class EmergencyBatteryService {
 
   private requestReducedBrightness() {
     // This is limited in browsers, but we can suggest to user
-    unifiedNotifications.info("💡 Battery Tip", {
+    unifiedNotifications.success("💡 Battery Tip", {
       message:
         "Consider reducing screen brightness manually to extend battery life during emergency.",
     });

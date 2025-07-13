@@ -16,6 +16,10 @@ import {
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { EmergencyKeyService } from "@/services/emergencyKeyService";
+import { enhancedFirebaseService } from "@/services/enhancedFirebaseService";
+import { enhancedLocationService } from "@/services/enhancedLocationService";
+import { voiceCommandService } from "@/services/voiceCommandService";
+import { notifications } from "@/services/enhancedNotificationService";
 
 interface GuardianUser extends User {
   guardianKey?: string;
@@ -30,6 +34,11 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
   loading: boolean;
   userProfile: UserProfile | null;
+  isOnline: boolean;
+  lastSyncTime: Date | null;
+  signInAnonymously: () => Promise<void>;
+  enableRealtimeFeatures: () => Promise<void>;
+  disableRealtimeFeatures: () => void;
 }
 
 interface UserProfile {
@@ -48,12 +57,17 @@ interface UserProfile {
 
 interface EmergencyContact {
   id: string;
-  guardianKey: string;
   name: string;
-  phone?: string;
+  phone: string;
+  email?: string;
+  relationship: string;
   priority: number;
-  addedAt: Date;
-  isActive: boolean;
+  guardianKey?: string;
+  isVerified: boolean;
+  canShareLocation: boolean;
+  lastContacted?: Date;
+  addedAt?: Date;
+  isActive?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -70,6 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [authAction, setAuthAction] = useState<string>("");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [realtimeFeaturesEnabled, setRealtimeFeaturesEnabled] = useState(false);
 
   async function signup(email: string, password: string, name: string) {
     try {
@@ -373,6 +389,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function signInAnonymously(): Promise<void> {
+    try {
+      setAuthAction("Signing in anonymously...");
+      await enhancedFirebaseService.signInAnonymously();
+
+      notifications.success({
+        title: "Anonymous Sign-In",
+        description: "You can now use emergency features without an account",
+        vibrate: true,
+      });
+    } catch (error) {
+      console.error("Anonymous sign-in failed:", error);
+      notifications.error({
+        title: "Sign-In Failed",
+        description: "Unable to sign in anonymously",
+      });
+      throw error;
+    } finally {
+      setAuthAction("");
+    }
+  }
+
+  async function enableRealtimeFeatures(): Promise<void> {
+    try {
+      if (!currentUser) {
+        await signInAnonymously();
+      }
+
+      // Start location tracking
+      await enhancedLocationService.startTracking();
+
+      // Enable voice commands if supported
+      if (voiceCommandService.isSupported) {
+        await voiceCommandService.enableVoiceCommands();
+      }
+
+      setRealtimeFeaturesEnabled(true);
+      setLastSyncTime(new Date());
+
+      notifications.success({
+        title: "Real-time Features Enabled",
+        description: "Location tracking and voice commands are now active",
+        vibrate: true,
+      });
+    } catch (error) {
+      console.error("Failed to enable real-time features:", error);
+      notifications.error({
+        title: "Real-time Features Failed",
+        description: "Some features may not be available",
+      });
+    }
+  }
+
+  function disableRealtimeFeatures(): void {
+    enhancedLocationService.stopTracking();
+    voiceCommandService.disableVoiceCommands();
+    setRealtimeFeaturesEnabled(false);
+
+    notifications.success({
+      title: "Real-time Features Disabled",
+      description: "Location tracking and voice commands have been turned off",
+    });
+  }
+
+  // Monitor connection status and sync when online
+  useEffect(() => {
+    if (isOnline && currentUser && !lastSyncTime) {
+      setLastSyncTime(new Date());
+    }
+  }, [isOnline, currentUser]);
+
   const value = {
     currentUser,
     signup,
@@ -382,6 +469,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshProfile,
     loading,
     userProfile,
+    isOnline,
+    lastSyncTime,
+    signInAnonymously,
+    enableRealtimeFeatures,
+    disableRealtimeFeatures,
   };
 
   return (

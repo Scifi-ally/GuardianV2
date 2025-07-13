@@ -16,6 +16,7 @@ import {
   Bell,
   Heart,
   Zap,
+  QrCode,
 } from "lucide-react";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
@@ -25,8 +26,11 @@ import { UserStatsManager } from "@/components/UserStatsManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InteractiveSafetyTutorial } from "@/components/InteractiveSafetyTutorial";
 import { GuardianKeyCard } from "@/components/GuardianKeyCard";
+import { QRScanner } from "@/components/QRScanner";
+import { ProfileLoading } from "@/components/ProfessionalLoading";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { SOSService } from "@/services/sosService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,11 +87,12 @@ const buttonVariants = {
 
 export default function Profile() {
   const { currentUser, userProfile, logout, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
   const [showSafetyTutorial, setShowSafetyTutorial] = useState(false);
-  const [activeAlertsCount, setActiveAlertsCount] = useState(0);
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   // Debug logging
   useEffect(() => {
@@ -98,41 +103,6 @@ export default function Profile() {
       loading,
     });
   }, [currentUser, userProfile, logout, loading]);
-
-  useEffect(() => {
-    loadActiveAlerts();
-  }, [currentUser]);
-
-  const loadActiveAlerts = () => {
-    if (!currentUser) {
-      setActiveAlertsCount(0);
-      return;
-    }
-
-    try {
-      // Subscribe to active SOS alerts for this user
-      const unsubscribe = SOSService.subscribeToSOSAlerts(
-        currentUser.uid,
-        (alerts) => {
-          try {
-            const activeAlerts = alerts.filter(
-              (alert) => alert.status === "active",
-            );
-            setActiveAlertsCount(activeAlerts.length);
-          } catch (filterError) {
-            console.warn("Error filtering active alerts:", filterError);
-            setActiveAlertsCount(0);
-          }
-        },
-      );
-
-      return unsubscribe;
-    } catch (subscribeError) {
-      console.warn("Error subscribing to active alerts:", subscribeError);
-      setActiveAlertsCount(0);
-      return () => {}; // Return no-op cleanup function
-    }
-  };
 
   // Guardian Key functionality moved to GuardianKeyCard component
 
@@ -168,11 +138,11 @@ export default function Profile() {
   // Show loading state while auth is initializing
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600">Loading your profile...</p>
-        </div>
+      <div className="min-h-screen bg-white pb-24">
+        <MagicNavbar />
+        <main className="container px-4 py-6 space-y-6 max-w-4xl mx-auto">
+          <ProfileLoading />
+        </main>
       </div>
     );
   }
@@ -306,57 +276,34 @@ export default function Profile() {
         {/* Guardian Key Section with QR Code */}
         <GuardianKeyCard />
 
-        {/* Quick Stats */}
+        {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-          <Card className="text-center p-4 bg-white border hover:shadow-lg transition-shadow cursor-pointer group">
-            <div className="text-2xl font-bold text-black group-hover:text-blue-600 transition-colors">
-              {emergencyContacts.length}
+          <Card
+            className="text-center p-4 bg-white border hover:shadow-lg transition-shadow cursor-pointer group"
+            onClick={() => setShowQRScanner(true)}
+          >
+            <div className="text-2xl font-bold text-blue-500 group-hover:text-blue-600 transition-colors">
+              <QrCode className="h-8 w-8 mx-auto" />
             </div>
             <div className="text-sm text-gray-600 group-hover:text-blue-500 transition-colors">
-              Emergency Contacts
+              QR Scanner
             </div>
             <div className="mt-1">
-              {emergencyContacts.length === 0 ? (
-                <span className="text-xs text-red-500">
-                  ⚠ Add contacts for safety
-                </span>
-              ) : emergencyContacts.length < 3 ? (
-                <span className="text-xs text-yellow-600">
-                  👥 Add more for better coverage
-                </span>
-              ) : (
-                <span className="text-xs text-green-600">✓ Good coverage</span>
-              )}
+              <span className="text-xs text-blue-600">Scan QR codes</span>
             </div>
           </Card>
-          <Card className="text-center p-4 bg-white border hover:shadow-lg transition-shadow cursor-pointer group">
-            <div
-              className={`text-2xl font-bold transition-colors ${
-                activeAlertsCount > 0
-                  ? "text-red-500 group-hover:text-red-600"
-                  : "text-green-500 group-hover:text-green-600"
-              }`}
-            >
-              {activeAlertsCount}
+          <Card
+            className="text-center p-4 bg-white border hover:shadow-lg transition-shadow cursor-pointer group"
+            onClick={() => setShowSafetyTutorial(true)}
+          >
+            <div className="text-2xl font-bold text-green-500 group-hover:text-green-600 transition-colors">
+              <Shield className="h-8 w-8 mx-auto" />
             </div>
-            <div
-              className={`text-sm transition-colors ${
-                activeAlertsCount > 0
-                  ? "text-gray-600 group-hover:text-red-500"
-                  : "text-gray-600 group-hover:text-green-500"
-              }`}
-            >
-              Active Alerts
+            <div className="text-sm text-gray-600 group-hover:text-green-500 transition-colors">
+              Safety Guide
             </div>
             <div className="mt-1">
-              {activeAlertsCount > 0 ? (
-                <span className="text-xs text-red-600">
-                  ⚠ {activeAlertsCount} active emergency alert
-                  {activeAlertsCount > 1 ? "s" : ""}
-                </span>
-              ) : (
-                <span className="text-xs text-green-600">✓ All clear</span>
-              )}
+              <span className="text-xs text-green-600">Learn features</span>
             </div>
           </Card>
         </div>
@@ -369,55 +316,16 @@ export default function Profile() {
         {/* Emergency Contacts Section */}
         <EmergencyContactManager />
 
-        {/* Quick Actions */}
+        {/* Sign Out */}
         <Card className="border shadow-lg bg-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-black">
-              <Zap className="h-5 w-5" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                onClick={() => setShowSafetyTutorial(true)}
-                variant="outline"
-                className="w-full justify-start h-14 text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Shield className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-black">
-                      Safety Tutorial
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      Learn safety features
-                    </div>
-                  </div>
-                </div>
-              </Button>
-            </div>
-
-            <Separator />
-
+          <CardContent className="p-6">
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="w-full justify-start h-14 text-left text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="w-full justify-center h-12 text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <LogOut className="h-4 w-4 text-red-600" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium">Sign Out</div>
-                  <div className="text-xs text-gray-600">
-                    Securely log out of your account
-                  </div>
-                </div>
-              </div>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
             </Button>
           </CardContent>
         </Card>
@@ -444,6 +352,32 @@ export default function Profile() {
           />
         )}
       </AnimatePresence>
+
+      {/* QR Scanner Modal */}
+      <QRScanner
+        isOpen={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScanResult={(data, parsedData) => {
+          console.log("QR Scanned:", data, parsedData);
+          // Handle different types of QR codes
+          if (parsedData.latitude && parsedData.longitude) {
+            // Location QR code - navigate to map with location
+            setShowQRScanner(false);
+            navigate("/", {
+              state: {
+                targetLocation: {
+                  lat: parsedData.latitude,
+                  lng: parsedData.longitude,
+                },
+              },
+            });
+          } else if (parsedData.guardianKey) {
+            // Guardian key QR code
+            setShowQRScanner(false);
+            toast.success(`Guardian Key scanned: ${parsedData.guardianKey}`);
+          }
+        }}
+      />
     </div>
   );
 }

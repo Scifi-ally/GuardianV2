@@ -40,6 +40,7 @@ import { realTimeService } from "@/services/realTimeService";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { buttonAnimations, cardAnimations } from "@/lib/animations";
+import { toast } from "@/lib/toast-migration";
 
 export default function Settings() {
   const [settings, setSettings] = useState({
@@ -56,7 +57,6 @@ export default function Settings() {
     safety: {
       sosCountdown: 3,
       autoAlert: true,
-      soundEnabled: true,
       vibrationEnabled: true,
     },
     appearance: {
@@ -86,7 +86,7 @@ export default function Settings() {
       // Apply high accuracy location mode
       if (newSettings.privacy.highAccuracyMode) {
         enhancedLocationService.setHighAccuracyMode(true);
-        unifiedNotifications.info("High accuracy location enabled", {
+        unifiedNotifications.success("High accuracy location enabled", {
           message:
             "GPS tracking precision increased. This will use more battery.",
         });
@@ -97,16 +97,11 @@ export default function Settings() {
       // Apply data saving mode
       if (newSettings.privacy.dataSaving) {
         enhancedLocationService.setTrackingInterval(15000); // Longer interval for data saving
-        unifiedNotifications.info("Data saving mode enabled", {
+        unifiedNotifications.success("Data saving mode enabled", {
           message: "Location updates reduced to save battery and data.",
         });
       } else {
         enhancedLocationService.setTrackingInterval(5000); // Normal interval
-      }
-
-      // Apply sound settings to notification service
-      if (!newSettings.safety.soundEnabled) {
-        unifiedNotifications.info("Sound alerts disabled");
       }
     } catch (error) {
       console.error("Failed to apply settings:", error);
@@ -201,14 +196,7 @@ export default function Settings() {
           value: settings.safety.autoAlert,
           category: "safety" as const,
         },
-        {
-          id: "soundEnabled",
-          label: "Sound Alerts",
-          description: "Play sound during emergency",
-          type: "switch",
-          value: settings.safety.soundEnabled,
-          category: "safety" as const,
-        },
+
         {
           id: "vibrationEnabled",
           label: "Vibration",

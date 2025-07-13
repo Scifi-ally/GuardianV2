@@ -11,7 +11,6 @@ export const toast = {
       title: message,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action,
       vibrate: true,
     });
   },
@@ -21,7 +20,6 @@ export const toast = {
       title: message,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action,
       vibrate: true,
     });
   },
@@ -31,23 +29,21 @@ export const toast = {
       title: message,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action,
       vibrate: true,
     });
   },
 
   info: (message: string, options?: any) => {
-    return notifications.info({
+    return notifications.warning({
       title: message,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action,
       vibrate: true,
     });
   },
 
   loading: (message: string, options?: any) => {
-    return notifications.info({
+    return notifications.warning({
       title: message,
       description: options?.description,
       duration: options?.duration || Infinity,

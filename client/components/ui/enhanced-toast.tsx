@@ -33,19 +33,24 @@ export const Toaster = ({ ...props }: ToasterProps) => {
           cursor: "pointer",
           userSelect: "none",
           touchAction: "pan-y",
-          transition: "all 0.2s ease-out",
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          transform: "translateZ(0)",
+          willChange: "transform, opacity",
         },
         classNames: {
           toast:
-            "group toast backdrop-blur-md border-border shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform cursor-pointer select-none",
-          title: "text-sm font-medium text-foreground",
-          description: "text-sm text-muted-foreground mt-1",
-          actionButton:
-            "bg-primary text-primary-foreground hover:bg-primary/90 text-xs px-3 py-1.5 rounded-md font-medium transition-colors",
-          cancelButton:
-            "bg-muted text-muted-foreground hover:bg-muted/80 text-xs px-3 py-1.5 rounded-md font-medium transition-colors",
+            "group toast backdrop-blur-md border-border shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-out cursor-pointer select-none animate-in slide-in-from-top-2 fade-in",
+          title:
+            "text-sm font-medium text-foreground animate-in fade-in duration-200 delay-75",
+          description:
+            "text-sm text-muted-foreground mt-1 animate-in fade-in duration-200 delay-100",
           closeButton:
-            "text-muted-foreground hover:text-foreground transition-colors",
+            "text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 active:scale-95",
+          loading: "animate-spin duration-1000",
+          success: "animate-in zoom-in duration-200",
+          error: "animate-in zoom-in duration-200 animate-pulse",
+          warning: "animate-in slide-in-from-left-1 duration-300",
+          default: "animate-in slide-in-from-right-1 duration-300",
         },
       }}
       {...props}
@@ -59,7 +64,6 @@ export const toast = {
     message: string,
     options?: {
       description?: string;
-      action?: { label: string; onClick: () => void };
       duration?: number;
     },
   ) => {
@@ -67,12 +71,6 @@ export const toast = {
       description: options?.description,
       duration: options?.duration || 4000,
       icon: <CheckCircle className="h-4 w-4" />,
-      action: options?.action
-        ? {
-            label: options.action.label,
-            onClick: options.action.onClick,
-          }
-        : undefined,
     });
   },
 
@@ -80,7 +78,6 @@ export const toast = {
     message: string,
     options?: {
       description?: string;
-      action?: { label: string; onClick: () => void };
       duration?: number;
     },
   ) => {
@@ -88,12 +85,6 @@ export const toast = {
       description: options?.description,
       duration: options?.duration || 6000,
       icon: <AlertCircle className="h-4 w-4" />,
-      action: options?.action
-        ? {
-            label: options.action.label,
-            onClick: options.action.onClick,
-          }
-        : undefined,
     });
   },
 
@@ -101,7 +92,6 @@ export const toast = {
     message: string,
     options?: {
       description?: string;
-      action?: { label: string; onClick: () => void };
       duration?: number;
     },
   ) => {
@@ -109,43 +99,14 @@ export const toast = {
       description: options?.description,
       duration: options?.duration || 5000,
       icon: <AlertTriangle className="h-4 w-4" />,
-      action: options?.action
-        ? {
-            label: options.action.label,
-            onClick: options.action.onClick,
-          }
-        : undefined,
     });
   },
 
-  info: (
-    message: string,
-    options?: {
-      description?: string;
-      action?: { label: string; onClick: () => void };
-      duration?: number;
-    },
-  ) => {
-    return sonnerToast.info(message, {
-      description: options?.description,
-      duration: options?.duration || 4000,
-      icon: <Info className="h-4 w-4" />,
-      action: options?.action
-        ? {
-            label: options.action.label,
-            onClick: options.action.onClick,
-          }
-        : undefined,
-    });
-  },
-
-  // Emergency toast with special styling and actions
+  // Emergency toast with special styling
   emergency: (
     message: string,
     options?: {
       description?: string;
-      primaryAction?: { label: string; onClick: () => void };
-      secondaryAction?: { label: string; onClick: () => void };
     },
   ) => {
     return sonnerToast.error(message, {
@@ -158,18 +119,6 @@ export const toast = {
         border: "2px solid hsl(var(--destructive))",
         animation: "emergency-pulse 1.5s ease-in-out infinite",
       },
-      action: options?.primaryAction
-        ? {
-            label: options.primaryAction.label,
-            onClick: options.primaryAction.onClick,
-          }
-        : undefined,
-      cancel: options?.secondaryAction
-        ? {
-            label: options.secondaryAction.label,
-            onClick: options.secondaryAction.onClick,
-          }
-        : undefined,
     });
   },
 
@@ -195,7 +144,6 @@ export const toast = {
       success: string | ((data: T) => string);
       error: string | ((error: any) => string);
       description?: string;
-      action?: { label: string; onClick: () => void };
     },
   ) => {
     return sonnerToast.promise(promise, {
@@ -203,12 +151,6 @@ export const toast = {
       success: options.success,
       error: options.error,
       description: options.description,
-      action: options.action
-        ? {
-            label: options.action.label,
-            onClick: options.action.onClick,
-          }
-        : undefined,
     });
   },
 
@@ -228,18 +170,14 @@ export type ToastType =
   | "success"
   | "error"
   | "warning"
-  | "info"
   | "loading"
   | "emergency";
 
 export interface ToastOptions {
   description?: string;
-  action?: { label: string; onClick: () => void };
   duration?: number;
 }
 
 export interface EmergencyToastOptions {
   description?: string;
-  primaryAction?: { label: string; onClick: () => void };
-  secondaryAction?: { label: string; onClick: () => void };
 }

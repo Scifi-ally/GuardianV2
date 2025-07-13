@@ -21,7 +21,7 @@ import { SafetyAura } from "./SafetyAura";
 // Import services
 import { panicDetectionService } from "@/services/panicDetectionService";
 import { safetyBreadcrumbsService } from "@/services/safetyBreadcrumbsService";
-import { geminiService } from "@/services/geminiService";
+import { geminiService } from "@/services/disabledAIServices";
 
 export function UniqueGuardianFeatures() {
   const [activeFeatures, setActiveFeatures] = useState<string[]>([]);

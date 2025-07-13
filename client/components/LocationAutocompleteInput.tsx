@@ -98,49 +98,10 @@ export function LocationAutocompleteInput({
     });
   };
 
-  // Fallback suggestions when Google Places API fails
+  // No fallback suggestions - only use real Google Places API results
   const getFallbackSuggestions = (query: string): LocationSuggestion[] => {
-    if (query.length < 2) return [];
-
-    const mockPlaces = [
-      {
-        place_id: "fallback_1",
-        description: "Starbucks Coffee",
-        main_text: "Starbucks",
-        secondary_text: "Coffee shop nearby",
-        types: ["cafe", "food", "establishment"],
-      },
-      {
-        place_id: "fallback_2",
-        description: "City Mall",
-        main_text: "City Mall",
-        secondary_text: "Shopping center",
-        types: ["shopping_mall", "establishment"],
-      },
-      {
-        place_id: "fallback_3",
-        description: "Central Library",
-        main_text: "Central Library",
-        secondary_text: "Public library",
-        types: ["library", "establishment"],
-      },
-      {
-        place_id: "fallback_4",
-        description: "Main Train Station",
-        main_text: "Train Station",
-        secondary_text: "Transit station",
-        types: ["transit_station", "establishment"],
-      },
-    ];
-
-    const queryLower = query.toLowerCase();
-    const filtered = mockPlaces.filter(
-      (place) =>
-        place.main_text.toLowerCase().includes(queryLower) ||
-        place.description.toLowerCase().includes(queryLower),
-    );
-
-    return filtered.length > 0 ? filtered : mockPlaces.slice(0, 3);
+    // Return empty array - no mock suggestions
+    return [];
   };
 
   // Handle input changes with debounced search

@@ -15,6 +15,9 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
+import { enhancedFirebaseService } from "@/services/enhancedFirebaseService";
+import { safeAIService } from "@/services/safeAIService";
+import { notifications } from "@/services/enhancedNotificationService";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -216,7 +219,7 @@ export function IntelligentGoogleMap({
       routeAnalysis: any,
     ): Promise<void> => {
       if (!map || !directionsService || !directionsRenderer || !location) {
-        toast.error("Navigation services not ready");
+        console.warn("Navigation services not ready");
         return;
       }
 
@@ -296,10 +299,10 @@ export function IntelligentGoogleMap({
         // Start enhanced location tracking
         startEnhancedTracking();
 
-        toast.success("Navigation started with AI safety analysis");
+        // Navigation started successfully
       } catch (error) {
         console.error("❌ Navigation start failed:", error);
-        toast.error("Failed to start navigation");
+        console.error("Failed to start navigation:", error);
       }
     },
     [map, directionsService, directionsRenderer, location, autoZoom],
@@ -338,16 +341,12 @@ export function IntelligentGoogleMap({
     }
 
     enhancedLocationService.stopTracking();
-    toast.success("Navigation stopped");
+    // Navigation stopped successfully
   }, [directionsRenderer, destinationMarker, map, location]);
 
   // Enhanced location tracking
   const startEnhancedTracking = useCallback(() => {
-    enhancedLocationService.startTracking({
-      enableHighAccuracy: true,
-      maximumAge: 1000,
-      timeout: 10000,
-    });
+    enhancedLocationService.startTracking();
 
     const unsubscribe = enhancedLocationService.subscribe((locationData) => {
       const newLocation = {

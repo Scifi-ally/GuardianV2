@@ -94,13 +94,9 @@ export function ComprehensiveSafetySystem() {
           vibrate: true,
         });
       } else {
-        notifications.info({
+        notifications.success({
           title: "Call Contact",
           description: `${contact.name}: ${contact.phone}`,
-          action: {
-            label: "Call Now",
-            onClick: () => window.open(`tel:${contact.phone}`),
-          },
         });
       }
     }
@@ -159,7 +155,7 @@ export function ComprehensiveSafetySystem() {
 
     // Start flashlight if available
     if (systemHealth.flashlight) {
-      notifications.info({
+      notifications.success({
         title: "Flashlight On",
         description: "Emergency flashlight activated",
         vibrate: true,

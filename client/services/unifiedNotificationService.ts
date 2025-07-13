@@ -3,19 +3,10 @@ import { notifications } from "@/services/enhancedNotificationService";
 export interface NotificationOptions {
   title: string;
   message: string;
-  type?: "success" | "warning" | "error" | "info" | "sos" | "critical";
+  type?: "success" | "warning" | "error" | "sos" | "critical";
   priority?: "low" | "medium" | "high" | "critical";
   persistent?: boolean;
-  soundAlert?: boolean;
   duration?: number;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
-  secondaryAction?: {
-    label: string;
-    onClick: () => void;
-  };
   location?: {
     latitude: number;
     longitude: number;
@@ -44,7 +35,6 @@ class UnifiedNotificationService {
             title: options.title,
             description: options.message,
             duration: options.duration,
-            action: options.action,
             vibrate: true,
           })
           .toString();
@@ -54,7 +44,6 @@ class UnifiedNotificationService {
             title: options.title,
             description: options.message,
             duration: options.duration,
-            action: options.action,
             vibrate: true,
           })
           .toString();
@@ -64,7 +53,6 @@ class UnifiedNotificationService {
             title: options.title,
             description: options.message,
             duration: options.duration,
-            action: options.action,
             vibrate: true,
           })
           .toString();
@@ -74,18 +62,15 @@ class UnifiedNotificationService {
           .emergency({
             title: options.title,
             description: options.message,
-            primaryAction: options.action,
-            secondaryAction: options.secondaryAction,
           })
           .toString();
       default:
         return notifications
-          .info({
+          .warning({
             title: options.title,
             description: options.message,
             duration: options.duration,
-            action: options.action,
-            vibrate: options.soundAlert,
+            vibrate: true,
           })
           .toString();
     }
@@ -120,15 +105,6 @@ class UnifiedNotificationService {
     });
   }
 
-  info(message: string, options?: Partial<NotificationOptions>): string {
-    return this.notify({
-      title: "Info",
-      message,
-      type: "info",
-      ...options,
-    });
-  }
-
   // SOS and critical notifications
   sos(
     options: NotificationOptions & {
@@ -140,7 +116,6 @@ class UnifiedNotificationService {
       type: "sos",
       priority: "critical",
       persistent: true,
-      soundAlert: true,
     });
   }
 
@@ -151,7 +126,6 @@ class UnifiedNotificationService {
       type: "critical",
       priority: "critical",
       persistent: true,
-      soundAlert: true,
       ...options,
     });
   }
@@ -174,17 +148,8 @@ class UnifiedNotificationService {
     return this.notify({
       title: "Location Updated",
       message: message || "Your location has been updated",
-      type: "info",
+      type: "success",
       location,
-      action: {
-        label: "Copy",
-        onClick: () => {
-          const text =
-            location.address ||
-            `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
-          navigator.clipboard?.writeText(text);
-        },
-      },
     });
   }
 
@@ -199,23 +164,6 @@ class UnifiedNotificationService {
       type: "sos",
       priority: "critical",
       persistent: true,
-      soundAlert: true,
-      action: options.action || {
-        label: "Navigate",
-        onClick: () => {
-          const url = `https://maps.google.com/?q=${options.location.latitude},${options.location.longitude}`;
-          window.open(url, "_blank");
-        },
-      },
-      secondaryAction: options.secondaryAction || {
-        label: "Copy Location",
-        onClick: () => {
-          const text =
-            options.location.address ||
-            `${options.location.latitude.toFixed(6)}, ${options.location.longitude.toFixed(6)}`;
-          navigator.clipboard?.writeText(text);
-        },
-      },
     });
   }
 
@@ -227,13 +175,6 @@ class UnifiedNotificationService {
       message: `Battery level: ${level}%. ${isCritical ? "Device may shut down soon!" : "Consider charging soon."}`,
       type: isCritical ? "critical" : "warning",
       priority: isCritical ? "critical" : "medium",
-      soundAlert: isCritical,
-      action: {
-        label: "Acknowledge",
-        onClick: () => {
-          // Handle battery warning acknowledgment
-        },
-      },
     });
   }
 
@@ -255,7 +196,7 @@ class UnifiedNotificationService {
     return this.notify({
       title: isLow ? "Safety Alert" : "Safety Update",
       message: `Safety score: ${score}% ${location ? `at ${location}` : ""}. ${isLow ? "Consider avoiding this area." : ""}`,
-      type: isLow ? "warning" : "info",
+      type: isLow ? "warning" : "success",
       priority: isLow ? "high" : "low",
     });
   }

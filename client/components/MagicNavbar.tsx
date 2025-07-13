@@ -147,10 +147,6 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       notifications.error({
         title: "Authentication Required",
         description: "Please sign in to send emergency alerts",
-        action: {
-          label: "Sign In",
-          onClick: () => navigate("/signin"),
-        },
         vibrate: true,
       });
       return;
@@ -175,10 +171,6 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         notifications.error({
           title: "No Emergency Contacts",
           description: "Add emergency contacts before sending SOS alerts",
-          action: {
-            label: "Add Contacts",
-            onClick: () => navigate("/contacts"),
-          },
           vibrate: true,
         });
         setSending(false);
@@ -319,12 +311,6 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         title: "🚨 EMERGENCY ALERT ACTIVATED",
         description: `Emergency message copied to clipboard and sent to ${emergencyContacts.length} contacts. Location sharing activated.`,
         persistent: true,
-        action: {
-          label: "Call 911 Now",
-          onClick: () => {
-            window.location.href = "tel:911";
-          },
-        },
       });
 
       onSOSPress?.();
@@ -333,10 +319,6 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       notifications.error({
         title: "SOS Alert Failed",
         description: "Unable to send emergency alert - try again",
-        action: {
-          label: "Retry",
-          onClick: () => sendSOSAlert(),
-        },
         vibrate: true,
       });
     } finally {
@@ -417,7 +399,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       (window as any).sosLocationInterval = null;
     }
 
-    notifications.info({
+    notifications.success({
       title: "Alert Cancelled",
       description: "Emergency alert cancelled and location sharing stopped",
       vibrate: true,

@@ -299,7 +299,7 @@ export function SafetyAura() {
                 }}
                 transition={{
                   duration: 2,
-                  repeat: isActive ? Infinity : 0,
+                  repeat: isActive ? Infinity : undefined,
                   ease: "easeInOut",
                 }}
               >
@@ -353,7 +353,7 @@ export function SafetyAura() {
                     }}
                     transition={{
                       duration: 2,
-                      repeat: isActive ? Infinity : 0,
+                      repeat: isActive ? Infinity : undefined,
                     }}
                   >
                     {isActive ? (

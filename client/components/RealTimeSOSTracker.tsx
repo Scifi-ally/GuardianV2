@@ -104,7 +104,7 @@ export function RealTimeSOSTracker({
   }
 
   // Only show status if there's an error (optional debug info)
-  if (error && process.env.NODE_ENV === "development") {
+  if (error && import.meta.env.DEV) {
     return (
       <div className={`text-xs text-red-500 ${className}`}>
         Location tracking error: {error}

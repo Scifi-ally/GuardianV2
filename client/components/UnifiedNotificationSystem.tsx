@@ -13,10 +13,6 @@ export function UnifiedNotificationSystem() {
       notifications.error({
         title: "No Emergency Contacts",
         description: "Please add emergency contacts in settings",
-        action: {
-          label: "Add Contacts",
-          onClick: () => (window.location.href = "/contacts"),
-        },
       });
       return;
     }
@@ -24,25 +20,6 @@ export function UnifiedNotificationSystem() {
     notifications.emergency({
       title: "Emergency Gesture Detected",
       description: "Shake detected - activating emergency protocols",
-      primaryAction: {
-        label: "Call 911",
-        onClick: () => {
-          window.open("tel:911");
-          notifications.info({
-            title: "Calling 911",
-            description: "Emergency services contacted",
-          });
-        },
-      },
-      secondaryAction: {
-        label: "Cancel",
-        onClick: () => {
-          notifications.info({
-            title: "Emergency Cancelled",
-            description: "Emergency protocols cancelled",
-          });
-        },
-      },
     });
 
     // Auto-share location with emergency contacts
@@ -62,7 +39,7 @@ export function UnifiedNotificationSystem() {
             }
           });
 
-          notifications.info({
+          notifications.success({
             title: "Location Shared",
             description: `Emergency location sent to ${userProfile.emergencyContacts?.length} contacts`,
           });

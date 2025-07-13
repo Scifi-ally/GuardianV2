@@ -31,6 +31,7 @@ import {
   RotateCcw,
   AlertTriangle,
   Zap,
+  Phone,
 } from "lucide-react";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
@@ -180,7 +181,7 @@ export function AdvancedSettingsModal({
             );
           } else {
             enhancedLocationService.stopTracking();
-            unifiedNotifications.info("Location tracking disabled");
+            unifiedNotifications.success("Location tracking disabled");
           }
           break;
 
@@ -196,7 +197,7 @@ export function AdvancedSettingsModal({
             }
             unifiedNotifications.success("Push notifications enabled");
           } else {
-            unifiedNotifications.info("Push notifications disabled");
+            unifiedNotifications.success("Push notifications disabled");
           }
           break;
 
@@ -211,7 +212,7 @@ export function AdvancedSettingsModal({
           break;
 
         case "emergencyTimeout":
-          unifiedNotifications.info(
+          unifiedNotifications.success(
             `Emergency timeout updated to ${value} seconds`,
           );
           // Store timeout for SOS service
@@ -220,7 +221,7 @@ export function AdvancedSettingsModal({
 
         case "silentMode":
           if (value as boolean) {
-            unifiedNotifications.info("Silent emergency mode enabled", {
+            unifiedNotifications.success("Silent emergency mode enabled", {
               message:
                 "Emergency alerts will be sent without sound or vibration",
             });
@@ -252,7 +253,7 @@ export function AdvancedSettingsModal({
               );
             }
           } else {
-            unifiedNotifications.info("Emergency recording disabled");
+            unifiedNotifications.success("Emergency recording disabled");
           }
           break;
 
@@ -264,7 +265,7 @@ export function AdvancedSettingsModal({
             );
           } else {
             enhancedLocationService.setHighAccuracyMode(false);
-            unifiedNotifications.info("Standard GPS accuracy enabled");
+            unifiedNotifications.success("Standard GPS accuracy enabled");
           }
           break;
 
@@ -280,7 +281,7 @@ export function AdvancedSettingsModal({
 
         case "criticalAlertsOnly":
           if (value as boolean) {
-            unifiedNotifications.info(
+            unifiedNotifications.success(
               "Showing only critical life-threatening alerts",
             );
           } else {
@@ -294,7 +295,7 @@ export function AdvancedSettingsModal({
               "Panic gesture detection enabled - Shake device rapidly or tap 5 times",
             );
           } else {
-            unifiedNotifications.info("Panic gesture detection disabled");
+            unifiedNotifications.success("Panic gesture detection disabled");
           }
           break;
 
@@ -308,7 +309,7 @@ export function AdvancedSettingsModal({
               },
             );
           } else {
-            unifiedNotifications.info("Manual emergency calling mode");
+            unifiedNotifications.success("Manual emergency calling mode");
           }
           break;
 
@@ -318,7 +319,7 @@ export function AdvancedSettingsModal({
               "Battery optimization enabled for extended emergency situations",
             );
           } else {
-            unifiedNotifications.info("Full performance mode enabled");
+            unifiedNotifications.success("Full performance mode enabled");
           }
           break;
       }

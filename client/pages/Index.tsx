@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useLocation as useRouterLocation } from "react-router-dom";
 import { notifications } from "@/services/enhancedNotificationService";
 import {
   Navigation,
@@ -23,10 +24,10 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "lucide-react";
-import { IntelligentGoogleMap } from "@/components/IntelligentGoogleMap";
+import { LocationAwareMap } from "@/components/LocationAwareMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
-import { useGeolocation } from "@/hooks/use-device-apis";
+// Removed redundant useGeolocation - handled by LocationAwareMap
 import { useMapTheme } from "@/hooks/use-map-theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGestures, GestureGuide } from "@/hooks/useGestures";
@@ -47,6 +48,8 @@ import { LocationIndicator } from "@/components/LocationStatus";
 // Removed redundant notification imports
 import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import AINavigationPanel from "@/components/AINavigationPanel";
+import { useRealTime } from "@/hooks/useRealTime";
+import { RealTimeStatusIndicator } from "@/components/RealTimeStatusIndicator";
 import { emergencyContactActionsService } from "@/services/emergencyContactActionsService";
 import { realTimeService } from "@/services/realTimeService";
 import { emergencyBatteryService } from "@/services/emergencyBatteryService";
@@ -79,18 +82,6 @@ import {
 
 // Debug Content Component
 function DebugContent() {
-  const {
-    location,
-    error,
-    isTracking,
-    permissionStatus,
-    getCurrentLocation,
-    startTracking,
-    stopTracking,
-  } = useGeolocation();
-
-  const [lastUpdate, setLastUpdate] = useState<string>("");
-  const [updateCount, setUpdateCount] = useState(0);
   const [systemInfo] = useState({
     userAgent:
       navigator.userAgent.slice(0, 100) +
@@ -102,103 +93,10 @@ function DebugContent() {
     viewportSize: `${window.innerWidth}x${window.innerHeight}`,
   });
 
-  useEffect(() => {
-    if (location) {
-      setLastUpdate(new Date(location.timestamp).toLocaleString());
-      setUpdateCount((prev) => prev + 1);
-    }
-  }, [location]);
-
-  const getLocationQuality = () => {
-    if (!location) return null;
-    const accuracy = location.accuracy;
-    if (accuracy <= 5) return { level: "excellent", color: "text-green-600" };
-    if (accuracy <= 20) return { level: "good", color: "text-blue-600" };
-    if (accuracy <= 100) return { level: "fair", color: "text-yellow-600" };
-    return { level: "poor", color: "text-red-600" };
-  };
-
-  const getPermissionColor = () => {
-    switch (permissionStatus) {
-      case "granted":
-        return "text-green-600";
-      case "denied":
-        return "text-red-600";
-      case "prompt":
-        return "text-yellow-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
-  const testLocation = async () => {
-    try {
-      await getCurrentLocation();
-    } catch (error) {
-      console.error("Location test failed:", error);
-    }
-  };
-
-  const quality = getLocationQuality();
-
   return (
     <div className="space-y-4">
-      {/* Location Information */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-medium">Permission Status:</span>
-          <Badge className={`text-xs ${getPermissionColor()}`}>
-            {permissionStatus || "unknown"}
-          </Badge>
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-medium">Tracking Status:</span>
-          <Badge
-            className={`text-xs ${isTracking ? "text-green-600" : "text-red-600"}`}
-          >
-            {isTracking ? "Active" : "Stopped"}
-          </Badge>
-        </div>
-
-        {location && (
-          <>
-            <div className="grid grid-cols-1 gap-3 text-xs">
-              <div className="col-span-2">
-                <span className="font-medium">Location:</span>
-                <div className="mt-1">
-                  <SmartLocationDisplay
-                    latitude={location.latitude}
-                    longitude={location.longitude}
-                    showCoordinates={true}
-                  />
-                </div>
-              </div>
-              <div>
-                <span className="font-medium">Accuracy:</span>{" "}
-                <span className={quality?.color}>
-                  ±{Math.round(location.accuracy)}m
-                </span>
-              </div>
-              <div>
-                <span className="font-medium">Updates:</span> {updateCount}
-              </div>
-            </div>
-            <div className="text-xs">
-              <span className="font-medium">Last Update:</span> {lastUpdate}
-            </div>
-          </>
-        )}
-
-        {error && (
-          <div className="text-xs text-red-600 bg-red-50 p-2 rounded border">
-            <strong>Error:</strong> {error.message}
-          </div>
-        )}
-      </div>
-
       {/* System Information */}
-      <div className="border-t pt-3 space-y-2">
+      <div className="space-y-2">
         <h5 className="text-xs font-semibold text-slate-700">System Info</h5>
         <div className="space-y-1 text-xs text-slate-600">
           <div>
@@ -225,32 +123,47 @@ function DebugContent() {
         </div>
       </div>
 
-      {/* Controls */}
+      {/* Note */}
       <div className="border-t pt-3">
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            onClick={testLocation}
-            className="flex-1 text-xs h-8"
-          >
-            <Target className="w-3 h-3 mr-1" />
-            Test Location
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={isTracking ? stopTracking : startTracking}
-            className="flex-1 text-xs h-8"
-          >
-            {isTracking ? "Stop Tracking" : "Start Tracking"}
-          </Button>
-        </div>
+        <p className="text-xs text-slate-500">
+          Location tracking handled by LocationAwareMap component
+        </p>
       </div>
     </div>
   );
 }
 
 export default function Index() {
+  // Real-time data management
+  const {
+    location: realTimeLocation,
+    isLocationTracking,
+    stats,
+    traffic,
+    connectionState,
+  } = useRealTime();
+
+  // Legacy location state (for compatibility with existing components)
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+  } | null>(null);
+
+  // Update legacy location when real-time location changes
+  useEffect(() => {
+    if (realTimeLocation) {
+      setLocation({
+        latitude: realTimeLocation.latitude,
+        longitude: realTimeLocation.longitude,
+      });
+    }
+  }, [realTimeLocation]);
+
+  // Get router location state for QR navigation
+  const routerLocation = useRouterLocation();
+  const qrTargetLocation = routerLocation.state?.targetLocation;
+
   // Using enhanced notification system instead of deprecated SlideDownNotifications
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
@@ -309,7 +222,9 @@ export default function Index() {
     distance: string;
     duration: string;
   } | null>(null);
-  const travelMode = "WALKING"; // Default to walking for safety
+  const [travelMode, setTravelMode] = useState<
+    "WALKING" | "DRIVING" | "BICYCLING"
+  >("WALKING"); // Default to walking for safety
   const [routeSettings, setRouteSettings] = useState({
     showTraffic: false,
     satelliteView: false,
@@ -320,8 +235,7 @@ export default function Index() {
     showDebug: false,
   });
 
-  const { location, error, getCurrentLocation, permissionStatus } =
-    useGeolocation();
+  // Location handling moved to LocationAwareMap
   const { mapTheme, mapType, toggleTheme, toggleMapType } = useMapTheme();
   const { userProfile } = useAuth();
 
@@ -400,6 +314,32 @@ export default function Index() {
       // Emergency contacts notification removed - no slide down notifications
     }
   }, [location, userProfile?.emergencyContacts]);
+
+  // Handle QR code location targeting
+  useEffect(() => {
+    if (qrTargetLocation) {
+      // Set destination from QR code
+      setDestination({
+        lat: qrTargetLocation.lat,
+        lng: qrTargetLocation.lng,
+      });
+
+      // Set toLocation for display
+      setToLocation(
+        `QR Location: ${qrTargetLocation.lat.toFixed(4)}, ${qrTargetLocation.lng.toFixed(4)}`,
+      );
+
+      // Show notification
+      notifications.success({
+        title: "QR Location Loaded",
+        description: "Location from QR code set as destination",
+        vibrate: true,
+      });
+
+      // Clear the state to prevent re-triggering
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [qrTargetLocation]);
 
   const handleDirectionsChange = useCallback(
     (directions: google.maps.DirectionsResult | null) => {
@@ -537,7 +477,7 @@ export default function Index() {
 
   const handleUseCurrentLocation = useCallback(async () => {
     try {
-      const currentLoc = await getCurrentLocation();
+      const currentLoc = location; // Use location from LocationAwareMap
 
       // Try to get location name using geocoding
       if (window.google?.maps) {
@@ -603,14 +543,10 @@ export default function Index() {
       notifications.error({
         title: "Location Error",
         description: errorMessage,
-        action: {
-          label: "Try Again",
-          onClick: handleUseCurrentLocation,
-        },
         vibrate: true,
       });
     }
-  }, [getCurrentLocation]);
+  }, [location]);
 
   // Route refreshes automatically when destination changes
   // SOS functionality is handled by MagicNavbar component
@@ -629,7 +565,16 @@ export default function Index() {
           setToLocation={setToLocation}
           onSearch={handleSearch}
           onUseCurrentLocation={handleUseCurrentLocation}
-          location={location}
+          location={
+            location
+              ? {
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  accuracy: 10, // Default accuracy
+                  timestamp: Date.now(), // Current timestamp
+                }
+              : null
+          }
           isSearching={isNavigating}
         />
 
@@ -669,15 +614,12 @@ export default function Index() {
 
         {/* Enhanced Google Map with Safety Score Coloring */}
         <div className="absolute inset-0 top-0 z-10">
-          <IntelligentGoogleMap
+          <LocationAwareMap
             key="main-map"
-            location={location}
-            mapTheme={mapTheme}
-            mapType={mapType}
-            showTraffic={routeSettings.showTraffic}
-            showSafeZones={routeSettings.showSafeZones}
-            showEmergencyServices={routeSettings.showEmergencyServices}
-            showSafeAreaCircles={routeSettings.showSafeAreaCircles}
+            onLocationChange={setLocation}
+            onMapLoad={(map) => {
+              console.log("🗺️ Map loaded successfully");
+            }}
             showDebug={routeSettings.showDebug}
             zoomLevel={routeSettings.zoomLevel}
             destination={destination}
@@ -699,6 +641,9 @@ export default function Index() {
             onLocationUpdate={(newLocation) => {}}
           />
         </div>
+
+        {/* Real-Time Status Indicator */}
+        <RealTimeStatusIndicator compact={true} className="z-50" />
 
         {/* Notification Permission Prompt */}
         <NotificationPermissionPrompt
@@ -1119,23 +1064,21 @@ export default function Index() {
                                 title: "Live Tracking Unavailable",
                                 description:
                                   "Please add emergency contacts first to enable live tracking.",
-                                action: {
-                                  label: "Add Contacts",
-                                  onClick: () =>
-                                    (window.location.href = "/contacts"),
-                                },
                                 vibrate: true,
                               });
                               return;
                             }
 
-                            const currentLocation = await getCurrentLocation();
+                            if (!location) {
+                              console.error("No location available");
+                              return;
+                            }
 
                             // Start live tracking with real-time service
                             realTimeService.startLiveTracking({
-                              latitude: currentLocation.latitude,
-                              longitude: currentLocation.longitude,
-                              accuracy: currentLocation.accuracy,
+                              latitude: location.latitude,
+                              longitude: location.longitude,
+                              accuracy: 10, // Default accuracy
                               timestamp: Date.now(),
                             });
 
@@ -1152,18 +1095,18 @@ export default function Index() {
                               sharedLocationService.updateUserLocation(
                                 userProfile.uid,
                                 userProfile.displayName || "You",
-                                currentLocation.latitude,
-                                currentLocation.longitude,
-                                currentLocation.accuracy,
+                                location.latitude,
+                                location.longitude,
+                                10, // Default accuracy
                                 userProfile.photoURL,
                                 true, // isLiveTracking
                               );
                             }
 
                             // Notify emergency contacts about live tracking
-                            const locationUrl = `https://maps.google.com/?q=${currentLocation.latitude},${currentLocation.longitude}`;
+                            const locationUrl = `https://maps.google.com/?q=${location.latitude},${location.longitude}`;
                             await emergencyContactActionsService.sendEmergencyMessage(
-                              `���� LIVE TRACKING STARTED: I'm sharing my real-time location with you. Current location: ${locationUrl}. You'll receive updates every 2 minutes.`,
+                              `����� LIVE TRACKING STARTED: I'm sharing my real-time location with you. Current location: ${locationUrl}. You'll receive updates every 2 minutes.`,
                             );
 
                             // Add to real-time alerts
@@ -1174,9 +1117,9 @@ export default function Index() {
                               message: `Sharing location with ${userProfile.emergencyContacts.length} emergency contacts`,
                               timestamp: new Date(),
                               location: {
-                                latitude: currentLocation.latitude,
-                                longitude: currentLocation.longitude,
-                                accuracy: currentLocation.accuracy,
+                                latitude: location.latitude,
+                                longitude: location.longitude,
+                                accuracy: 10, // Default accuracy
                                 timestamp: Date.now(),
                               },
                             });
@@ -1188,11 +1131,6 @@ export default function Index() {
                               title: "Live Tracking Failed",
                               description:
                                 "Unable to start live tracking. Please check your location permissions.",
-                              action: {
-                                label: "Check Settings",
-                                onClick: () =>
-                                  (window.location.href = "/settings"),
-                              },
                               vibrate: true,
                             });
                           }
@@ -1247,7 +1185,7 @@ export default function Index() {
                           </p>
                         </div>
                         <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border text-lg">
-                          {mapTheme === "light" ? "🌞" : "🌙"}
+                          {mapTheme === "light" ? "🌞" : "��"}
                         </div>
                       </motion.div>
 
@@ -1268,11 +1206,7 @@ export default function Index() {
                         </div>
                       </motion.div>
 
-                      <motion.div
-                        className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                      >
+                      <div className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.01] active:scale-[0.99]">
                         <div>
                           <p className="text-sm font-medium">Traffic</p>
                           <p className="text-xs text-muted-foreground">
@@ -1289,13 +1223,9 @@ export default function Index() {
                           }
                           size="sm"
                         />
-                      </motion.div>
+                      </div>
 
-                      <motion.div
-                        className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                      >
+                      <div className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.01] active:scale-[0.99]">
                         <div>
                           <p className="text-sm font-medium">Safe Zones</p>
                           <p className="text-xs text-muted-foreground">
@@ -1312,13 +1242,9 @@ export default function Index() {
                           }
                           size="sm"
                         />
-                      </motion.div>
+                      </div>
 
-                      <motion.div
-                        className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                      >
+                      <div className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.01] active:scale-[0.99]">
                         <div>
                           <p className="text-sm font-medium">
                             Emergency Services
@@ -1337,13 +1263,9 @@ export default function Index() {
                           }
                           size="sm"
                         />
-                      </motion.div>
+                      </div>
 
-                      <motion.div
-                        className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                      >
+                      <div className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.01] active:scale-[0.99]">
                         <div>
                           <p className="text-sm font-medium">Debug Console</p>
                           <p className="text-xs text-muted-foreground">
@@ -1360,13 +1282,9 @@ export default function Index() {
                           }
                           size="sm"
                         />
-                      </motion.div>
+                      </div>
 
-                      <motion.div
-                        className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                      >
+                      <div className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation hover:scale-[1.01] active:scale-[0.99]">
                         <div>
                           <p className="text-sm font-medium">
                             Gesture Controls
@@ -1379,7 +1297,7 @@ export default function Index() {
                           checked={gesturesEnabled}
                           onChange={(checked) => {
                             setGesturesEnabled(checked);
-                            unifiedNotifications.info(
+                            unifiedNotifications.success(
                               checked
                                 ? "Gesture controls enabled"
                                 : "Gesture controls disabled",
@@ -1392,35 +1310,24 @@ export default function Index() {
                           }}
                           size="sm"
                         />
-                      </motion.div>
+                      </div>
 
                       {/* Gesture Guide */}
                       {gesturesEnabled && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="mt-2"
-                        >
+                        <div className="mt-2 opacity-100 transition-opacity duration-200">
                           <GestureGuide />
-                        </motion.div>
+                        </div>
                       )}
 
                       {/* Debug Console Content */}
                       {routeSettings.showDebug && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200"
-                        >
+                        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200 opacity-100 transition-opacity duration-300">
                           <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
                             <Activity className="h-4 w-4" />
                             Debug Information
                           </h4>
                           <DebugContent />
-                        </motion.div>
+                        </div>
                       )}
                     </div>
                   </div>

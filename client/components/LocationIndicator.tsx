@@ -90,15 +90,6 @@ export function LocationIndicator({
 
       unifiedNotifications.error("Location Access Required", {
         message: "Please enable location services in your browser settings",
-        action: {
-          label: "Help",
-          onClick: () => {
-            unifiedNotifications.info("How to Enable Location", {
-              message:
-                "1. Click the location icon in your browser's address bar\n2. Select 'Allow'\n3. Refresh the page",
-            });
-          },
-        },
         persistent: true,
       });
     }

@@ -303,7 +303,7 @@ export class NewsAnalysisService {
   async integrateRealNewsAPIs(): Promise<boolean> {
     try {
       // Check if news APIs are available and configured
-      const apiKey = process.env.VITE_NEWS_API_KEY;
+      const apiKey = import.meta.env.VITE_NEWS_API_KEY;
 
       if (!apiKey) {
         console.warn("News API key not configured. Using simulated data.");

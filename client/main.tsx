@@ -16,11 +16,7 @@ import { SOSSettingsProvider } from "@/contexts/SOSSettingsContext";
 
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import Guardian from "./pages/Guardian";
 import Index from "./pages/Index";
-import Contacts from "./pages/Contacts";
-import NavigationPage from "./pages/Navigation";
-import EnhancedNavigationPage from "./pages/EnhancedNavigation";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import SignIn from "./pages/SignIn";
@@ -103,74 +99,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/guardian"
-          element={
-            <ProtectedRoute>
-              <motion.div
-                variants={pageVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={transition}
-                className="w-full min-h-screen"
-              >
-                <Guardian />
-              </motion.div>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/contacts"
-          element={
-            <ProtectedRoute>
-              <motion.div
-                variants={pageVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={transition}
-                className="w-full min-h-screen"
-              >
-                <Contacts />
-              </motion.div>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/navigation"
-          element={
-            <ProtectedRoute>
-              <motion.div
-                variants={pageVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={transition}
-                className="w-full min-h-screen"
-              >
-                <NavigationPage />
-              </motion.div>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/enhanced-navigation"
-          element={
-            <ProtectedRoute>
-              <motion.div
-                variants={pageVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={transition}
-                className="w-full min-h-screen"
-              >
-                <EnhancedNavigationPage />
-              </motion.div>
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/profile"
           element={

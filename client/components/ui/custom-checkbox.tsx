@@ -47,8 +47,8 @@ export function CustomCheckbox({
         sizeClasses[size],
         className,
       )}
-      whileHover={!disabled ? { scale: 1.05 } : undefined}
-      whileTap={!disabled ? { scale: 0.95 } : undefined}
+      whileHover={!disabled ? { scale: 1.05 } : {}}
+      whileTap={!disabled ? { scale: 0.95 } : {}}
       initial={false}
       animate={{
         backgroundColor: checked ? "var(--primary)" : "var(--background)",

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { IntelligentGoogleMap } from "@/components/IntelligentGoogleMap";
+import { LocationAwareMap } from "@/components/LocationAwareMap";
 import { EnhancedNavigationController } from "@/components/EnhancedNavigationController";
 import { LocationAutocompleteInput } from "@/components/LocationAutocompleteInput";
 import { AINavigationPanel } from "@/components/AINavigationPanel";
@@ -196,9 +196,7 @@ export default function EnhancedNavigationPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 relative">
       {/* Enhanced Map Container */}
       <div className="h-screen w-full">
-        <IntelligentGoogleMap
-          ref={mapRef}
-          location={currentLocation}
+        <LocationAwareMap
           onLocationChange={handleLocationUpdate}
           onMapLoad={handleMapLoad}
           className="w-full h-full"
