@@ -192,29 +192,15 @@ export function AdvancedSettingsModal({
 
   const handleResetSettings = () => {
     setSettings({
-      profileVisibility: true,
       locationTracking: true,
-      activityStatus: true,
-      contactsAccess: true,
       pushNotifications: true,
-      emailNotifications: false,
-      smsNotifications: true,
       emergencyAlerts: true,
-      weeklyReports: false,
-      twoFactorAuth: false,
-      sessionTimeout: 30,
-      autoLock: true,
-      biometricAuth: false,
       emergencyTimeout: 5,
       silentMode: false,
       autoShareLocation: true,
       emergencyRecording: true,
-      backgroundRefresh: true,
-      dataUsage: false,
-      crashReports: true,
-      analytics: true,
     });
-    toast.success("Settings reset to defaults");
+    unifiedNotifications.success("Settings reset to defaults");
   };
 
   const modalVariants = {
