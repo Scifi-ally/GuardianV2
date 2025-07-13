@@ -94,7 +94,14 @@ export class EnhancedLocationService {
             timestamp: position.timestamp,
             heading: position.coords.heading || undefined,
             speed: position.coords.speed || undefined,
+            altitude: position.coords.altitude || undefined,
+            altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
+            quality: this.assessLocationQuality(position.coords.accuracy),
+            source: this.determineLocationSource(position.coords.accuracy),
           };
+
+          // Add to history and trigger quality analysis
+          this.addToHistory(realLocation);
 
           console.log("✅ Real location obtained:", {
             lat: realLocation.latitude.toFixed(4),
@@ -103,7 +110,14 @@ export class EnhancedLocationService {
           });
 
           this.lastKnownLocation = realLocation;
-          this.callbacks.forEach((callback) => callback(realLocation));
+
+          // Only call callbacks if enough time has passed (debounce)
+          const now = Date.now();
+          if (now - this.lastUpdateTime >= this.MIN_UPDATE_INTERVAL) {
+            this.lastUpdateTime = now;
+            this.callbacks.forEach((callback) => callback(realLocation));
+          }
+
           resolve(realLocation);
         },
         (error) => {
