@@ -14,15 +14,27 @@ import { cn } from "@/lib/utils";
 
 interface Notification {
   id: string;
-  type: "success" | "warning" | "error" | "info";
+  type: "success" | "warning" | "error" | "info" | "sos" | "critical";
   title: string;
   message: string;
   timestamp: number;
   persistent?: boolean;
+  priority?: "low" | "medium" | "high" | "critical";
   action?: {
     label: string;
     onClick: () => void;
   };
+  secondaryAction?: {
+    label: string;
+    onClick: () => void;
+  };
+  location?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+  };
+  autoEscalate?: boolean;
+  soundAlert?: boolean;
 }
 
 interface SlideDownNotificationsProps {
@@ -58,19 +70,85 @@ class NotificationManager {
       ...notification,
       id,
       timestamp: Date.now(),
+      priority: notification.priority || "medium",
     };
 
-    this.notifications = [newNotification, ...this.notifications].slice(0, 10); // Keep max 10
+    // For critical/SOS notifications, add to front and play sound
+    if (
+      notification.type === "sos" ||
+      notification.type === "critical" ||
+      notification.priority === "critical"
+    ) {
+      this.notifications = [newNotification, ...this.notifications].slice(
+        0,
+        15,
+      ); // More for critical
+
+      // Play sound alert for critical notifications
+      if (notification.soundAlert !== false) {
+        this.playCriticalAlert();
+      }
+    } else {
+      this.notifications = [newNotification, ...this.notifications].slice(
+        0,
+        10,
+      ); // Keep max 10
+    }
+
     this.notifySubscribers();
 
-    // Auto-remove non-persistent notifications
+    // Auto-remove based on priority
     if (!notification.persistent) {
+      const duration = this.getNotificationDuration(
+        notification.type,
+        notification.priority,
+      );
       setTimeout(() => {
         this.removeNotification(id);
-      }, 5000);
+      }, duration);
     }
 
     return id;
+  }
+
+  private getNotificationDuration(type: string, priority?: string): number {
+    if (type === "sos" || type === "critical" || priority === "critical") {
+      return 30000; // 30 seconds for critical
+    }
+    if (type === "error" || priority === "high") {
+      return 10000; // 10 seconds for errors
+    }
+    return 5000; // 5 seconds for normal
+  }
+
+  private playCriticalAlert(): void {
+    try {
+      // Create a simple beep sound
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.type = "sine";
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.5,
+      );
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+      // Fallback - vibration if available
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+      }
+    }
   }
 
   removeNotification(id: string): void {
