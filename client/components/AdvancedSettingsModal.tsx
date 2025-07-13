@@ -122,7 +122,11 @@ export function AdvancedSettingsModal({
     key: keyof SettingsState,
     value: boolean | number,
   ) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+
+    // Apply settings immediately for real-time functionality
+    applyIndividualSetting(key, value, newSettings);
   };
 
   const handleSaveSettings = async () => {
@@ -147,41 +151,122 @@ export function AdvancedSettingsModal({
     }
   };
 
+  // Apply individual setting changes in real-time
+  const applyIndividualSetting = (
+    key: keyof SettingsState,
+    value: boolean | number,
+    allSettings: SettingsState,
+  ) => {
+    try {
+      switch (key) {
+        case "locationTracking":
+          if (value as boolean) {
+            enhancedLocationService.startTracking();
+            enhancedLocationService.setHighAccuracyMode(true);
+            unifiedNotifications.success(
+              "High-accuracy location tracking enabled",
+            );
+          } else {
+            enhancedLocationService.stopTracking();
+            unifiedNotifications.info("Location tracking disabled");
+          }
+          break;
+
+        case "pushNotifications":
+          // Apply push notification settings
+          if (value as boolean) {
+            // Request notification permission if needed
+            if (
+              "Notification" in window &&
+              Notification.permission === "default"
+            ) {
+              Notification.requestPermission();
+            }
+            unifiedNotifications.success("Push notifications enabled");
+          } else {
+            unifiedNotifications.info("Push notifications disabled");
+          }
+          break;
+
+        case "emergencyAlerts":
+          if (value as boolean) {
+            unifiedNotifications.success("Emergency alerts enabled with sound");
+          } else {
+            unifiedNotifications.warning(
+              "Emergency alerts disabled - NOT RECOMMENDED for safety",
+            );
+          }
+          break;
+
+        case "emergencyTimeout":
+          unifiedNotifications.info(
+            `Emergency timeout updated to ${value} seconds`,
+          );
+          // Store timeout for SOS service
+          localStorage.setItem("guardian-emergency-timeout", value.toString());
+          break;
+
+        case "silentMode":
+          if (value as boolean) {
+            unifiedNotifications.info("Silent emergency mode enabled", {
+              message:
+                "Emergency alerts will be sent without sound or vibration",
+            });
+          } else {
+            unifiedNotifications.success("Normal emergency mode restored");
+          }
+          break;
+
+        case "autoShareLocation":
+          if (value as boolean) {
+            unifiedNotifications.success(
+              "Auto location sharing enabled for emergencies",
+            );
+          } else {
+            unifiedNotifications.warning(
+              "Auto location sharing disabled - Emergency response may be delayed",
+            );
+          }
+          break;
+
+        case "emergencyRecording":
+          if (value as boolean) {
+            // Check if media recording is supported
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+              unifiedNotifications.success("Emergency recording enabled");
+            } else {
+              unifiedNotifications.warning(
+                "Emergency recording not supported on this device",
+              );
+            }
+          } else {
+            unifiedNotifications.info("Emergency recording disabled");
+          }
+          break;
+      }
+
+      // Save to localStorage immediately
+      localStorage.setItem(
+        "guardian-advanced-settings",
+        JSON.stringify(allSettings),
+      );
+    } catch (error) {
+      console.error(`Failed to apply setting ${key}:`, error);
+      unifiedNotifications.error(`Failed to apply ${key} setting`);
+    }
+  };
+
   // Apply settings to actual app services
   const applySettingsToServices = (newSettings: typeof settings) => {
     try {
-      // Apply location tracking settings
-      if (newSettings.locationTracking) {
-        enhancedLocationService.startTracking();
-        enhancedLocationService.setHighAccuracyMode(true);
-        unifiedNotifications.info("High-accuracy location tracking enabled");
-      } else {
-        enhancedLocationService.stopTracking();
-        unifiedNotifications.info("Location tracking disabled");
-      }
-
-      // Apply emergency settings
-      if (newSettings.emergencyTimeout) {
-        unifiedNotifications.info(
-          `Emergency timeout set to ${newSettings.emergencyTimeout} seconds`,
+      // Apply all settings at once
+      Object.keys(newSettings).forEach((key) => {
+        applyIndividualSetting(
+          key as keyof SettingsState,
+          newSettings[key as keyof SettingsState],
+          newSettings,
         );
-      }
-
-      if (newSettings.silentMode) {
-        unifiedNotifications.info("Silent emergency mode enabled", {
-          message: "Emergency alerts will be sent without sound or vibration",
-        });
-      }
-
-      if (newSettings.autoShareLocation) {
-        unifiedNotifications.info(
-          "Auto location sharing enabled for emergencies",
-        );
-      }
-
-      if (newSettings.emergencyRecording) {
-        unifiedNotifications.info("Emergency recording enabled");
-      }
+      });
     } catch (error) {
       console.error("Failed to apply advanced settings:", error);
       unifiedNotifications.warning(
