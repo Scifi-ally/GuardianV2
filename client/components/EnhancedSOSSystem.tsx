@@ -577,13 +577,84 @@ export function EnhancedSOSSystem({
                 </Button>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="text-sm text-red-600">
+                <div className="text-sm text-red-600 space-y-1">
                   <p>📍 Location: {activeAlert.location.address}</p>
                   <p>
                     🕐 Started: {activeAlert.timestamp.toLocaleTimeString()}
                   </p>
-                  <p>📡 Updating location every 30 seconds</p>
+                  <p>
+                    📱 Battery: {batteryLevel}%{" "}
+                    {activeAlert.batteryCritical && "⚠️ Critical"}
+                  </p>
+                  <p>
+                    🚨 Type:{" "}
+                    {activeAlert.emergencyType.replace("_", " ").toUpperCase()}
+                  </p>
+                  <p>
+                    📡{" "}
+                    {heartbeatActive
+                      ? "Monitoring active"
+                      : "Monitoring stopped"}
+                  </p>
+                  {activeAlert.lastHeartbeat && (
+                    <p>
+                      🔎 Last update:{" "}
+                      {activeAlert.lastHeartbeat.toLocaleTimeString()}
+                    </p>
+                  )}
                 </div>
+                {/* Emergency Type Selector */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Emergency Type:
+                  </label>
+                  <select
+                    value={emergencyType}
+                    onChange={(e) => setEmergencyType(e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                    disabled={activeAlert?.status === "active"}
+                  >
+                    <option value="general">General Emergency</option>
+                    <option value="medical">Medical Emergency</option>
+                    <option value="personal_safety">Personal Safety</option>
+                    <option value="accident">Accident</option>
+                    <option value="natural_disaster">Natural Disaster</option>
+                  </select>
+                </div>
+
+                {/* Emergency Controls */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <Button
+                    onClick={toggleSoundAlarm}
+                    variant={soundAlarmActive ? "default" : "outline"}
+                    size="sm"
+                    className={
+                      soundAlarmActive
+                        ? "bg-orange-600 hover:bg-orange-700"
+                        : ""
+                    }
+                  >
+                    {soundAlarmActive ? (
+                      <Volume2 className="h-4 w-4 mr-1" />
+                    ) : (
+                      <VolumeX className="h-4 w-4 mr-1" />
+                    )}
+                    {soundAlarmActive ? "Stop Alarm" : "Sound Alarm"}
+                  </Button>
+                  <Button
+                    onClick={toggleFlashlight}
+                    variant={flashlightActive ? "default" : "outline"}
+                    size="sm"
+                    className={
+                      flashlightActive
+                        ? "bg-yellow-600 hover:bg-yellow-700"
+                        : ""
+                    }
+                  >
+                    🔦 {flashlightActive ? "Turn Off" : "Flashlight"}
+                  </Button>
+                </div>
+
                 <div className="flex gap-2">
                   <Button
                     onClick={() => {
