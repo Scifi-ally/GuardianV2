@@ -15,6 +15,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
+import { useAuth } from "@/contexts/AuthContext";
+import { useGeolocation } from "@/hooks/use-device-apis";
 
 interface SOSMethod {
   id: string;
@@ -34,6 +37,8 @@ interface SOSActivation {
 
 export function InvisibleSOS() {
   const [isSOSMode, setIsSOSMode] = useState(false);
+  const { userProfile } = useAuth();
+  const { getCurrentLocation } = useGeolocation();
   const [activationMethods, setActivationMethods] = useState<SOSMethod[]>([
     {
       id: "fake-call",
