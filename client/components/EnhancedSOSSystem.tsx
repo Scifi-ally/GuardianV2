@@ -24,6 +24,7 @@ import { useGeolocation } from "@/hooks/use-device-apis";
 import { useSlideDownNotifications } from "@/components/SlideDownNotifications";
 import { cn } from "@/lib/utils";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
+import { toast } from "sonner";
 
 interface SOSLocation {
   latitude: number;
