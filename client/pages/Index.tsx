@@ -22,7 +22,7 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "lucide-react";
-import { GoogleMap as EnhancedGoogleMap } from "@/components/SimpleEnhancedGoogleMap";
+import { IntelligentGoogleMap } from "@/components/IntelligentGoogleMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { useGeolocation } from "@/hooks/use-device-apis";
@@ -35,7 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { RealTimeSafetyFeatures } from "@/components/RealTimeSafetyFeatures";
+import { ComprehensiveSafetySystem } from "@/components/ComprehensiveSafetySystem";
 
 import { CustomCheckbox } from "@/components/ui/custom-checkbox";
 
