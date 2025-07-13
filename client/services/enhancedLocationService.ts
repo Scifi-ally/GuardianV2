@@ -73,13 +73,13 @@ export class EnhancedLocationService {
     return new Promise((resolve, reject) => {
       if (!this.isSupported()) {
         // CRITICAL: Don't provide false location during emergencies
-        const error = new Error(
+        const geoError = new Error(
           "Geolocation not supported. Please enable location services for emergency features. This is critical for your safety.",
         );
         console.error(
           "🚨 EMERGENCY SAFETY WARNING: Location services unavailable - emergency response may be severely impacted",
         );
-        return reject(error);
+        return reject(geoError);
       }
 
       // Try to get real location first
