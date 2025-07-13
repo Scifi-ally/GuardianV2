@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { notifications } from "@/services/enhancedNotificationService";
 import {
   AlertTriangle,
   Bell,
@@ -138,13 +138,26 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
             `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
           );
         }
-        toast.success("Navigation info copied", {
+        notifications.success({
+          title: "Navigation Info Copied",
           description:
             "Use your preferred navigation app with the copied coordinates",
+          vibrate: true,
+          action: {
+            label: "Open Maps",
+            onClick: () =>
+              window.open(`https://maps.google.com/?q=${toLat},${toLng}`),
+          },
         });
       } catch (error) {
-        toast.info("Navigation coordinates", {
+        notifications.info({
+          title: "Navigation Coordinates",
           description: `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
+          action: {
+            label: "Open Maps",
+            onClick: () =>
+              window.open(`https://maps.google.com/?q=${toLat},${toLng}`),
+          },
         });
       }
 
@@ -255,13 +268,13 @@ export function SOSAlertManager({ className }: SOSAlertManagerProps) {
 
   return (
     <PanelContainer>
-      {/* Enhanced Popup Notifications */}
-      <SOSPopupNotification
+      {/* Enhanced Popup Notifications - Using unified notification system instead */}
+      {/* <SOSPopupNotification
         alerts={activeAlerts}
         onDismiss={handleDismissPopup}
         onNavigate={handleQuickNavigate}
         onCall={handleCall}
-      />
+      /> */}
 
       {/* Alert Indicator - Only show if there are non-critical alerts */}
       {activeAlerts.some((alert) => alert.priority !== "critical") && (

@@ -149,9 +149,7 @@ export function InteractiveSafetyTutorial({
       setIsStepCompleted(false);
     } else {
       // Tutorial completed
-      toast.success(
-        "🎉 Safety tutorial completed! You're now ready to use Guardian safely.",
-      );
+      // Silently complete tutorial
       localStorage.setItem("guardian-tutorial-completed", "true");
       onClose();
     }
@@ -384,7 +382,7 @@ function SOSDemo({
           clearInterval(timerRef.current);
           setIsPressed(false);
           setDemoCompleted(true);
-          toast.success("🎉 Great! You've mastered the SOS button!");
+          // Silently complete SOS demo
           setTimeout(onComplete, 1500);
           return 0;
         }
@@ -503,9 +501,7 @@ function GuardianKeyPractice({
       const success = await copyToClipboard(userProfile.guardianKey);
       if (success) {
         setCopied(true);
-        toast.success(
-          "🎉 Guardian Key copied! You can now share it with trusted contacts.",
-        );
+        // Silently copy Guardian Key
         setTimeout(onComplete, 1500);
       } else {
         toast.error("Failed to copy key. Please try again.");
@@ -613,7 +609,7 @@ function EmergencyContactsDemo({
     setSelectedPriority(level);
     setTimeout(() => {
       setUnderstood(true);
-      toast.success("🎉 Great! You understand the priority system.");
+      // Silently confirm understanding
       setTimeout(onComplete, 1000);
     }, 1000);
   };
@@ -733,9 +729,7 @@ function LocationServicesDemo({
         lng: position.coords.longitude,
       });
       setLocationTested(true);
-      toast.success(
-        "🎉 Location services are working! Your location will be shared during emergencies.",
-      );
+      // Silently confirm location services
       setTimeout(onComplete, 2000);
     } catch (error) {
       console.error("Location error:", error);
@@ -889,7 +883,7 @@ function SafetyScenarios({
     const scenario = scenarios.find((s) => s.id === scenarioId);
     if (scenario && selectedIndex === scenario.correctIndex) {
       setCompletedScenarios((prev) => new Set([...prev, scenarioId]));
-      toast.success("🎉 Correct! " + scenario.explanation);
+      // Silently confirm correct answer
 
       if (completedScenarios.size + 1 >= 3) {
         setTimeout(onComplete, 1500);

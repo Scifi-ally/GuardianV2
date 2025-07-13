@@ -24,7 +24,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
-import { toast } from "sonner";
+import { notifications } from "@/services/enhancedNotificationService";
 
 interface SystemHealth {
   battery: number;
@@ -88,16 +88,31 @@ export function ComprehensiveSafetySystem() {
       const contact = userProfile.emergencyContacts[0];
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(contact.phone);
-        toast.success(`${contact.name}'s number copied: ${contact.phone}`);
+        notifications.success({
+          title: "Contact Copied",
+          description: `${contact.name}: ${contact.phone}`,
+          vibrate: true,
+        });
       } else {
-        toast.info(`Call ${contact.name}: ${contact.phone}`);
+        notifications.info({
+          title: "Call Contact",
+          description: `${contact.name}: ${contact.phone}`,
+          action: {
+            label: "Call Now",
+            onClick: () => window.open(`tel:${contact.phone}`),
+          },
+        });
       }
     }
   };
 
   const shareLocation = async () => {
     if (!location) {
-      toast.error("Location not available");
+      notifications.error({
+        title: "Location Error",
+        description: "Unable to get current location",
+        vibrate: true,
+      });
       return;
     }
 
@@ -106,29 +121,49 @@ export function ComprehensiveSafetySystem() {
     if (navigator.share) {
       try {
         await navigator.share({ title: "Safety Location", text: message });
-        toast.success("Location shared");
+        notifications.success({
+          title: "Location Shared",
+          description: "Successfully shared your location",
+          vibrate: true,
+        });
       } catch (error) {
         if (navigator.clipboard) {
           navigator.clipboard.writeText(message);
-          toast.success("Location copied to clipboard");
+          notifications.success({
+            title: "Location Copied",
+            description: "Location copied to clipboard",
+            vibrate: true,
+          });
         }
       }
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(message);
-      toast.success("Location copied to clipboard");
+      notifications.success({
+        title: "Location Copied",
+        description: "Location copied to clipboard",
+        vibrate: true,
+      });
     }
   };
 
   const activateEmergencyMode = () => {
     setEmergencyMode(true);
-    toast.success("Emergency mode activated");
+    notifications.emergency({
+      title: "Emergency Mode Activated",
+      description: "All safety systems are now active",
+      vibrate: true,
+    });
 
     // Auto-share location
     shareLocation();
 
     // Start flashlight if available
     if (systemHealth.flashlight) {
-      toast.info("Flashlight activated");
+      notifications.info({
+        title: "Flashlight On",
+        description: "Emergency flashlight activated",
+        vibrate: true,
+      });
     }
 
     // Create loud alarm

@@ -165,7 +165,7 @@ export function SOSLocationDisplay({
         document.execCommand("copy");
         document.body.removeChild(textArea);
       }
-      toast.success("Location copied to clipboard");
+      // Silently copy location
     } catch (error) {
       toast.error("Failed to copy location");
     }
@@ -196,7 +196,7 @@ export function SOSLocationDisplay({
         map.setZoom(17);
       }
 
-      toast.success("Navigation started to emergency location");
+      // Silently start navigation
     } catch (error) {
       console.error("Failed to start navigation:", error);
       toast.error("Failed to start navigation");

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-migration";
 import {
   Phone,
   MessageSquare,
@@ -16,7 +16,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
-import { toast } from "sonner";
 
 interface QuickAction {
   id: string;
@@ -48,13 +47,13 @@ export function QuickSafetyActions() {
               advanced: [{ torch: true } as any],
             });
             setIsFlashlightOn(true);
-            toast.success("Flashlight turned on");
+            // Silently turn on flashlight
           } else {
             toast.error("Flashlight not available on this device");
           }
         } else {
           setIsFlashlightOn(false);
-          toast.success("Flashlight turned off");
+          // Silently turn off flashlight
         }
       } else {
         toast.error("Camera access not available");
@@ -92,18 +91,18 @@ export function QuickSafetyActions() {
       }, 200);
 
       setIsAlarmOn(true);
-      toast.success("Emergency alarm activated");
+      // Silently activate alarm
 
       // Auto stop after 30 seconds
       setTimeout(() => {
         clearInterval(alarmInterval);
         oscillator.stop();
         setIsAlarmOn(false);
-        toast.info("Emergency alarm stopped");
+        // Silently stop alarm after timeout
       }, 30000);
     } else {
       setIsAlarmOn(false);
-      toast.info("Emergency alarm stopped");
+      // Silently stop alarm
     }
   };
 
@@ -121,17 +120,17 @@ export function QuickSafetyActions() {
           title: "Safety Location Update",
           text: locationText,
         });
-        toast.success("Location shared with contacts");
+        // Silently share location
       } catch (error) {
         // Fallback to clipboard
         if (navigator.clipboard) {
           navigator.clipboard.writeText(locationText);
-          toast.success("Location copied to clipboard");
+          // Silently copy to clipboard
         }
       }
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(locationText);
-      toast.success("Location copied to clipboard");
+      // Silently copy to clipboard
     }
   };
 
@@ -154,20 +153,14 @@ export function QuickSafetyActions() {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(message);
       }
-      toast.success(
-        `Emergency message copied to clipboard for ${primaryContact.name} (${primaryContact.phone})`,
-        {
-          description: "Send this message manually",
-          duration: 5000,
-        },
-      );
+      // Silently copy emergency message
     } catch (error) {
       toast.error("Message sending failed", {
         description: `Send this message to ${primaryContact.name} manually`,
         duration: 5000,
       });
       navigator.clipboard?.writeText(message);
-      toast.success("Emergency message shown");
+      // Silently show emergency message
     }
   };
 

@@ -85,7 +85,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
 
     try {
       await updateProfile(formData);
-      toast.success("Profile updated successfully!");
+      // Silently update profile
       onClose();
     } catch (error) {
       console.error("Error updating profile:", error);

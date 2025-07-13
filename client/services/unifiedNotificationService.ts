@@ -1,4 +1,4 @@
-import { notificationManager } from "@/components/SlideDownNotifications";
+import { notifications } from "@/services/enhancedNotificationService";
 
 export interface NotificationOptions {
   title: string;
@@ -35,17 +35,60 @@ class UnifiedNotificationService {
 
   // Main notification method
   notify(options: NotificationOptions): string {
-    return notificationManager.addNotification({
-      title: options.title,
-      message: options.message,
-      type: options.type || "info",
-      priority: options.priority || "medium",
-      persistent: options.persistent || false,
-      soundAlert: options.soundAlert,
-      action: options.action,
-      secondaryAction: options.secondaryAction,
-      location: options.location,
-    });
+    const notificationType = options.type || "info";
+
+    switch (notificationType) {
+      case "success":
+        return notifications
+          .success({
+            title: options.title,
+            description: options.message,
+            duration: options.duration,
+            action: options.action,
+            vibrate: true,
+          })
+          .toString();
+      case "error":
+        return notifications
+          .error({
+            title: options.title,
+            description: options.message,
+            duration: options.duration,
+            action: options.action,
+            vibrate: true,
+          })
+          .toString();
+      case "warning":
+        return notifications
+          .warning({
+            title: options.title,
+            description: options.message,
+            duration: options.duration,
+            action: options.action,
+            vibrate: true,
+          })
+          .toString();
+      case "sos":
+      case "critical":
+        return notifications
+          .emergency({
+            title: options.title,
+            description: options.message,
+            primaryAction: options.action,
+            secondaryAction: options.secondaryAction,
+          })
+          .toString();
+      default:
+        return notifications
+          .info({
+            title: options.title,
+            description: options.message,
+            duration: options.duration,
+            action: options.action,
+            vibrate: options.soundAlert,
+          })
+          .toString();
+    }
   }
 
   // Convenience methods that match Sonner API
@@ -115,12 +158,12 @@ class UnifiedNotificationService {
 
   // Remove notification
   dismiss(id: string): void {
-    notificationManager.removeNotification(id);
+    notifications.dismiss(id);
   }
 
   // Clear all notifications
   dismissAll(): void {
-    notificationManager.clearAll();
+    notifications.dismissAll();
   }
 
   // Location-based notifications

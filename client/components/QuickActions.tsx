@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { notifications } from "@/services/enhancedNotificationService";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useAuth } from "@/contexts/AuthContext";
 import { emergencyContactActionsService } from "@/services/emergencyContactActionsService";
@@ -84,15 +84,23 @@ export function QuickActions() {
           title: "My Current Location",
           text: locationText,
         });
-        toast.success("Location shared successfully");
+        // Silently share location
       } else {
         // Fallback: copy to clipboard
         await navigator.clipboard.writeText(locationText);
-        toast.success("Location copied to clipboard");
+        // Silently copy location
       }
     } catch (error) {
       console.error("Share location error:", error);
-      toast.error("Unable to share location");
+      notifications.error({
+        title: "Location Share Failed",
+        description: "Unable to share location - check permissions",
+        action: {
+          label: "Try Again",
+          onClick: () => handleShareLocation(),
+        },
+        vibrate: true,
+      });
     } finally {
       setIsLoading(null);
     }
@@ -112,12 +120,20 @@ export function QuickActions() {
         timestamp: Date.now(),
       });
 
-      toast.success(
-        "Safe route analysis started - check navigation for options",
-      );
+      notifications.routeSafety("safe", {
+        findAlternate: () => (window.location.href = "/navigation"),
+      });
     } catch (error) {
       console.error("Safe route error:", error);
-      toast.error("Unable to calculate safe route");
+      notifications.error({
+        title: "Route Analysis Failed",
+        description: "Unable to calculate safe route",
+        action: {
+          label: "Try Navigation",
+          onClick: () => (window.location.href = "/navigation"),
+        },
+        vibrate: true,
+      });
     } finally {
       setIsLoading(null);
     }
@@ -127,7 +143,15 @@ export function QuickActions() {
     setIsLoading("text");
     try {
       if (!userProfile?.emergencyContacts?.length) {
-        toast.error("No emergency contacts configured");
+        notifications.error({
+          title: "No Emergency Contacts",
+          description: "Add emergency contacts to send quick alerts",
+          action: {
+            label: "Add Contacts",
+            onClick: () => (window.location.href = "/contacts"),
+          },
+          vibrate: true,
+        });
         return;
       }
 
@@ -137,12 +161,18 @@ export function QuickActions() {
       // Send to all emergency contacts
       await emergencyContactActionsService.sendEmergencyMessage(message);
 
-      toast.success(
-        `Alert sent to ${userProfile.emergencyContacts.length} contacts`,
-      );
+      // Silently send alert
     } catch (error) {
       console.error("Quick text error:", error);
-      toast.error("Unable to send alert");
+      notifications.error({
+        title: "Alert Failed",
+        description: "Unable to send emergency alert",
+        action: {
+          label: "Try Again",
+          onClick: () => handleQuickText(),
+        },
+        vibrate: true,
+      });
     } finally {
       setIsLoading(null);
     }
@@ -186,10 +216,10 @@ export function QuickActions() {
         );
       }
 
-      toast.success("Incident reported successfully");
+      // Silently report incident without notification
     } catch (error) {
       console.error("Report incident error:", error);
-      toast.error("Unable to report incident");
+      // Silently handle report errors
     } finally {
       setIsLoading(null);
     }

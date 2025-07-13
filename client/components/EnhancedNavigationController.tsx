@@ -158,12 +158,12 @@ export function EnhancedNavigationController({
 
         case "set-start":
           setStartPoint(latLng);
-          toast.success("Starting point set");
+          // Silently set starting point
           break;
 
         case "set-end":
           setEndPoint(latLng);
-          toast.success("Destination set");
+          // Silently set destination
           if (startPoint) {
             await analyzeRoute(startPoint, latLng);
           }
@@ -201,9 +201,7 @@ export function EnhancedNavigationController({
           startRealTimeTracking();
         }
 
-        toast.success(
-          `Navigation started! Safety score: ${analysis.overallSafety}/100`,
-        );
+        // Silently start navigation
       }
     } catch (error) {
       console.error("Navigation start failed:", error);

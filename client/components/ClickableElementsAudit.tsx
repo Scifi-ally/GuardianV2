@@ -185,9 +185,7 @@ export function ClickableElementsAudit({
     ).length;
     const issueElements = totalElements - workingElements;
 
-    toast.success(
-      `Scan complete: ${totalElements} clickable elements found. ${workingElements} working, ${issueElements} with issues.`,
-    );
+    // Silently complete scan
   };
 
   const highlightElement = (element: HTMLElement) => {
@@ -218,7 +216,7 @@ export function ClickableElementsAudit({
       // Attempt to click
       setTimeout(() => {
         element.click();
-        toast.info(`Clicked: ${elementData.text || elementData.tag}`);
+        // Silently test click
       }, 500);
     } catch (error) {
       toast.error(`Failed to click element: ${error}`);
@@ -257,7 +255,7 @@ export function ClickableElementsAudit({
       }
     });
 
-    toast.success(`Fixed ${fixedCount} common issues`);
+    // Silently apply fixes without notification
 
     // Re-scan after fixes
     setTimeout(scanClickableElements, 1000);

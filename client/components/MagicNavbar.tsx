@@ -18,7 +18,7 @@ import { SOSService } from "@/services/sosService";
 import { RealTimeLocationService } from "@/services/realTimeLocationService";
 import { SOSPasswordModal } from "@/components/SOSPasswordModal";
 import { RealTimeSOSTracker } from "@/components/RealTimeSOSTracker";
-import { toast } from "sonner";
+import { notifications } from "@/services/enhancedNotificationService";
 
 interface NavItem {
   id: string;
@@ -75,7 +75,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
 
   const handleMapLongPress = () => {
     navigate("/enhanced-navigation");
-    toast.success("Enhanced Navigation activated!");
+    // Silently activate enhanced navigation
     setShowEnhancedMapHint(false);
   };
 
@@ -144,7 +144,15 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
 
   const sendSOSAlert = async () => {
     if (!currentUser || !userProfile) {
-      toast.error("Authentication required to send SOS");
+      notifications.error({
+        title: "Authentication Required",
+        description: "Please sign in to send emergency alerts",
+        action: {
+          label: "Sign In",
+          onClick: () => navigate("/signin"),
+        },
+        vibrate: true,
+      });
       return;
     }
 
@@ -164,7 +172,15 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       const emergencyContacts = userProfile.emergencyContacts || [];
 
       if (emergencyContacts.length === 0) {
-        toast.error("No emergency contacts found. Add contacts first.");
+        notifications.error({
+          title: "No Emergency Contacts",
+          description: "Add emergency contacts before sending SOS alerts",
+          action: {
+            label: "Add Contacts",
+            onClick: () => navigate("/contacts"),
+          },
+          vibrate: true,
+        });
         setSending(false);
         return;
       }
@@ -273,13 +289,11 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
           try {
             // Try to initiate call to emergency services
             window.location.href = "tel:911";
-            unifiedNotifications.warning(
-              "🚨 Calling emergency services (911)",
-              {
-                message:
-                  "Emergency call initiated. Stay on the line and provide your location.",
-              },
-            );
+            notifications.emergency({
+              title: "🚨 Calling Emergency Services",
+              description:
+                "Emergency call initiated. Stay on the line and provide your location.",
+            });
           } catch (error) {
             console.warn("Auto-call failed:", error);
           }
@@ -301,8 +315,9 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
 
       await actuallyContactEmergencyServices();
 
-      unifiedNotifications.critical("🚨 EMERGENCY ALERT ACTIVATED", {
-        message: `Emergency message copied to clipboard and sent to ${emergencyContacts.length} contacts. Location sharing activated.`,
+      notifications.emergency({
+        title: "🚨 EMERGENCY ALERT ACTIVATED",
+        description: `Emergency message copied to clipboard and sent to ${emergencyContacts.length} contacts. Location sharing activated.`,
         persistent: true,
         action: {
           label: "Call 911 Now",
@@ -315,7 +330,15 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       onSOSPress?.();
     } catch (error) {
       console.error("Error sending SOS alert:", error);
-      toast.error("Failed to send emergency alert");
+      notifications.error({
+        title: "SOS Alert Failed",
+        description: "Unable to send emergency alert - try again",
+        action: {
+          label: "Retry",
+          onClick: () => sendSOSAlert(),
+        },
+        vibrate: true,
+      });
     } finally {
       setSending(false);
     }
@@ -362,10 +385,18 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       await SOSService.cancelSOSAlert(activeAlertId, currentUser.uid);
 
       setActiveAlertId(null);
-      toast.success("SOS alert cancelled");
+      notifications.success({
+        title: "SOS Cancelled",
+        description: "Emergency alert has been cancelled",
+        vibrate: true,
+      });
     } catch (error) {
       console.error("Failed to stop SOS alert:", error);
-      toast.error("Failed to stop SOS alert");
+      notifications.error({
+        title: "Cancel Failed",
+        description: "Unable to cancel SOS alert",
+        vibrate: true,
+      });
     }
   };
 
@@ -386,7 +417,11 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       (window as any).sosLocationInterval = null;
     }
 
-    toast.info("Emergency alert cancelled - location sharing stopped");
+    notifications.info({
+      title: "Alert Cancelled",
+      description: "Emergency alert cancelled and location sharing stopped",
+      vibrate: true,
+    });
   };
 
   const handlePasswordVerification = (password: string) => {

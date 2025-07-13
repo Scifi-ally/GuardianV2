@@ -39,9 +39,9 @@ export function GuardianKeyCard({ className }: GuardianKeyCardProps) {
     if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast.success("Guardian key copied to clipboard!");
+      // Silently copy without notification
     } else {
-      toast.error("Failed to copy guardian key");
+      // Silently handle copy failure
     }
   };
 
@@ -51,10 +51,10 @@ export function GuardianKeyCard({ className }: GuardianKeyCardProps) {
     try {
       setIsGeneratingQR(true);
       setShowQR(true);
-      toast.success("QR code generated!");
+      // Silently generate QR code
     } catch (error) {
       console.error("Failed to generate QR code:", error);
-      toast.error("Failed to generate QR code");
+      // Silently handle QR generation failure
     } finally {
       setIsGeneratingQR(false);
     }
@@ -72,10 +72,10 @@ export function GuardianKeyCard({ className }: GuardianKeyCardProps) {
           color: { dark: "#1f2937", light: "#ffffff" },
         },
       );
-      toast.success("QR code downloaded!");
+      // Silently download QR code
     } catch (error) {
       console.error("Failed to download QR code:", error);
-      toast.error("Failed to download QR code");
+      // Silently handle download failure
     }
   };
 
@@ -91,15 +91,15 @@ export function GuardianKeyCard({ className }: GuardianKeyCardProps) {
           color: { dark: "#1f2937", light: "#ffffff" },
         },
       );
-      toast.success("QR code shared!");
+      // Silently share QR code
     } catch (error) {
       console.error("Failed to share QR code:", error);
       // Copy to clipboard as fallback
       const success = await copyToClipboard(userProfile.guardianKey);
       if (success) {
-        toast.info("Sharing not supported. Guardian key copied to clipboard.");
+        // Silently handle share fallback
       } else {
-        toast.error("Failed to share QR code");
+        // Silently handle share failure
       }
     }
   };

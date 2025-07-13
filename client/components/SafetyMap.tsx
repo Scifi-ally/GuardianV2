@@ -106,7 +106,7 @@ export function SafetyMap({
             document.execCommand("copy");
             document.body.removeChild(textArea);
           }
-          toast.success("Location copied to clipboard!");
+          // Silently copy location
         } catch (error) {
           console.error("Copy failed:", error);
           toast.error("Failed to copy location");

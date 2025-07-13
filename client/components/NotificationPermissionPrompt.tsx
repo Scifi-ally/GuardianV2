@@ -64,7 +64,7 @@ export function NotificationPermissionPrompt({
       );
 
       if (result === "granted") {
-        toast.success("Notifications enabled successfully!");
+        // Silently enable notifications
 
         // Send a test notification
         new Notification("Guardian Safety", {

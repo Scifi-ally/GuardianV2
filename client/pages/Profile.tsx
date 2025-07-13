@@ -24,9 +24,9 @@ import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal";
 import { UserStatsManager } from "@/components/UserStatsManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InteractiveSafetyTutorial } from "@/components/InteractiveSafetyTutorial";
+import { GuardianKeyCard } from "@/components/GuardianKeyCard";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { EmergencyKeyService } from "@/services/emergencyKeyService";
 import { SOSService } from "@/services/sosService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,7 +37,6 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { copyToClipboard } from "@/lib/clipboard";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -84,7 +83,6 @@ const buttonVariants = {
 
 export default function Profile() {
   const { currentUser, userProfile, logout, loading: authLoading } = useAuth();
-  const [guardianKey, setGuardianKey] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
@@ -97,13 +95,11 @@ export default function Profile() {
       currentUser,
       userProfile,
       hasLogout: typeof logout === "function",
-      guardianKey,
       loading,
     });
-  }, [currentUser, userProfile, logout, guardianKey, loading]);
+  }, [currentUser, userProfile, logout, loading]);
 
   useEffect(() => {
-    loadGuardianKey();
     loadActiveAlerts();
   }, [currentUser]);
 
@@ -138,50 +134,7 @@ export default function Profile() {
     }
   };
 
-  const loadGuardianKey = async () => {
-    if (!currentUser) return;
-
-    setLoading(true);
-    try {
-      let key = await EmergencyKeyService.getUserGuardianKey(currentUser.uid);
-
-      if (!key) {
-        const result = await EmergencyKeyService.createGuardianKey(
-          currentUser.uid,
-          userProfile?.displayName || currentUser.displayName || "User",
-          userProfile?.email || currentUser.email || "",
-        );
-
-        if (result.success && result.guardianKey) {
-          key = result.guardianKey;
-          toast.success("Guardian key created successfully!");
-        } else {
-          toast.error("Failed to create guardian key");
-        }
-      }
-
-      setGuardianKey(key || "");
-    } catch (error) {
-      console.error("Error loading guardian key:", error);
-      toast.error("Failed to load guardian key");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCopyKey = async () => {
-    if (!guardianKey) {
-      toast.error("No guardian key to copy");
-      return;
-    }
-
-    const success = await copyToClipboard(guardianKey);
-    if (success) {
-      toast.success("Guardian key copied to clipboard!");
-    } else {
-      toast.error("Failed to copy key");
-    }
-  };
+  // Guardian Key functionality moved to GuardianKeyCard component
 
   const handleEditProfile = () => {
     setEditProfileOpen(true);
@@ -350,61 +303,8 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Guardian Key Section */}
-        <div className="space-y-4">
-          <Alert className="border-gray-200 bg-gray-50">
-            <Key className="h-4 w-4" />
-            <AlertDescription className="text-sm text-gray-700">
-              <strong>Share this unique key with trusted contacts</strong> so
-              they can add you to their emergency network. When they add your
-              key, you'll receive their emergency alerts.
-            </AlertDescription>
-          </Alert>
-
-          <Card className="border shadow-lg bg-white">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-black">
-                <Key className="h-5 w-5 text-black" />
-                Your Guardian Key
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                {loading ? (
-                  <div className="flex-1 h-16 bg-gray-100 rounded-lg animate-pulse" />
-                ) : (
-                  <>
-                    <div className="flex-1 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 min-w-0">
-                      <div className="text-center">
-                        <div className="font-mono text-lg sm:text-2xl tracking-widest font-bold text-black mb-1 break-all">
-                          {guardianKey || "NO-KEY"}
-                        </div>
-                        <p className="text-xs text-gray-600">
-                          Your unique Guardian identifier
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={handleCopyKey}
-                      variant="outline"
-                      size="icon"
-                      disabled={!guardianKey}
-                      className="h-16 w-16 rounded-lg border-gray-300 hover:bg-black hover:text-white"
-                    >
-                      <Copy className="h-6 w-6" />
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              <p className="text-xs text-gray-600 text-center">
-                Keep this key private and only share with people you trust for
-                emergencies. They will receive notifications when you press the
-                SOS button.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Guardian Key Section with QR Code */}
+        <GuardianKeyCard />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { notifications } from "@/services/enhancedNotificationService";
 import {
   Navigation,
   MapPin,
@@ -43,10 +44,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CustomCheckbox } from "@/components/ui/custom-checkbox";
 
 import { LocationIndicator } from "@/components/LocationStatus";
-import {
-  SlideDownNotifications,
-  useSlideDownNotifications,
-} from "@/components/SlideDownNotifications";
+// Removed redundant notification imports
 import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import AINavigationPanel from "@/components/AINavigationPanel";
 import { emergencyContactActionsService } from "@/services/emergencyContactActionsService";
@@ -63,7 +61,7 @@ import { CompactSearchBar } from "@/components/CompactSearchBar";
 
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 
-import { EnhancedSafetyMonitor } from "@/components/EnhancedSafetyMonitor";
+// Removed deprecated component import
 import { PerformanceOptimizer } from "@/components/PerformanceOptimizer";
 
 import {
@@ -253,7 +251,7 @@ function DebugContent() {
 }
 
 export default function Index() {
-  const { addNotification } = useSlideDownNotifications();
+  // Using enhanced notification system instead of deprecated SlideDownNotifications
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
@@ -340,23 +338,16 @@ export default function Index() {
 
   // Route planning function (removed - now integrated into handleSearch)
 
-  const handleRouteSelect = useCallback(
-    (route: any) => {
-      setShowRouteSelection(false);
-      setDestination({
-        lat: route.waypoints[route.waypoints.length - 1].latitude,
-        lng: route.waypoints[route.waypoints.length - 1].longitude,
-      });
-      setIsNavigating(true);
+  const handleRouteSelect = useCallback((route: any) => {
+    setShowRouteSelection(false);
+    setDestination({
+      lat: route.waypoints[route.waypoints.length - 1].latitude,
+      lng: route.waypoints[route.waypoints.length - 1].longitude,
+    });
+    setIsNavigating(true);
 
-      addNotification({
-        type: "success",
-        title: "Navigation Started",
-        message: `Following ${route.title} - ${route.duration}`,
-      });
-    },
-    [addNotification],
-  );
+    // Silently start navigation
+  }, []);
 
   // Initialize real-time data monitoring
   useEffect(() => {
@@ -389,7 +380,7 @@ export default function Index() {
     return () => {
       realTimeDataService.stopTracking();
     };
-  }, [location, addNotification]);
+  }, [location]);
 
   // Auto-populate emergency contact locations when user location and contacts are available
   useEffect(() => {
@@ -408,7 +399,7 @@ export default function Index() {
 
       // Emergency contacts notification removed - no slide down notifications
     }
-  }, [location, userProfile?.emergencyContacts, addNotification]);
+  }, [location, userProfile?.emergencyContacts]);
 
   const handleDirectionsChange = useCallback(
     (directions: google.maps.DirectionsResult | null) => {
@@ -450,10 +441,10 @@ export default function Index() {
 
   const handleSearch = useCallback(async () => {
     if (!fromLocation || !toLocation) {
-      addNotification({
-        type: "warning",
+      notifications.warning({
         title: "Missing Information",
-        message: "Please enter both starting point and destination.",
+        description: "Please enter both starting point and destination.",
+        vibrate: true,
       });
       return;
     }
@@ -522,27 +513,27 @@ export default function Index() {
         setShowRouteSelection(true);
       } catch (routeError) {
         console.error("Route calculation error:", routeError);
-        addNotification({
-          type: "error",
+        notifications.error({
           title: "Route Planning Failed",
-          message: "Unable to calculate routes. Please try again.",
+          description: "Unable to calculate routes. Please try again.",
+          vibrate: true,
         });
       }
 
       setIsNavigating(false); // Reset navigation state
     } catch (error) {
       console.error("Navigation error:", error);
-      addNotification({
-        type: "error",
+      notifications.error({
         title: "Navigation Failed",
-        message:
+        description:
           error instanceof Error
             ? error.message
             : "Could not calculate route. Please try again.",
+        vibrate: true,
       });
       setIsNavigating(false);
     }
-  }, [fromLocation, toLocation, destination, location, addNotification]);
+  }, [fromLocation, toLocation, destination, location]);
 
   const handleUseCurrentLocation = useCallback(async () => {
     try {
@@ -609,18 +600,17 @@ export default function Index() {
       const errorMessage = error?.message || "Unable to get your location";
       setFromLocation("📍 Location unavailable - tap to retry");
 
-      addNotification({
-        type: "error",
+      notifications.error({
         title: "Location Error",
-        message: errorMessage,
+        description: errorMessage,
         action: {
           label: "Try Again",
           onClick: handleUseCurrentLocation,
         },
-        persistent: true,
+        vibrate: true,
       });
     }
-  }, [getCurrentLocation, addNotification]);
+  }, [getCurrentLocation]);
 
   // Route refreshes automatically when destination changes
   // SOS functionality is handled by MagicNavbar component
@@ -664,8 +654,7 @@ export default function Index() {
         )}
 
         {/* Transportation mode simplified to walking by default */}
-        {/* Unified Slidedown Notifications */}
-        <SlideDownNotifications />
+        {/* Notifications handled by UnifiedNotificationSystem */}
 
         {/* Emergency Alerts */}
         <EmergencyAlerts />
@@ -1047,19 +1036,14 @@ export default function Index() {
                                             document.execCommand("copy");
                                             document.body.removeChild(textArea);
                                           }
-                                          addNotification({
-                                            type: "success",
-                                            title: "Location Shared",
-                                            message:
-                                              "Location copied to clipboard!",
-                                          });
+                                          // Silently copy location
                                         } catch (error) {
                                           console.error("Copy failed:", error);
-                                          addNotification({
-                                            type: "error",
+                                          notifications.error({
                                             title: "Share Failed",
-                                            message:
+                                            description:
                                               "Failed to copy location to clipboard",
+                                            vibrate: true,
                                           });
                                         }
                                       }
@@ -1076,18 +1060,13 @@ export default function Index() {
                                           navigator.clipboard?.writeText(
                                             message,
                                           );
-                                          addNotification({
-                                            type: "success",
-                                            title: "Location Shared",
-                                            message:
-                                              "Location copied to clipboard!",
-                                          });
+                                          // Silently copy location
                                         } catch {
-                                          addNotification({
-                                            type: "error",
+                                          notifications.error({
                                             title: "Share Failed",
-                                            message:
+                                            description:
                                               "Failed to copy location to clipboard",
+                                            vibrate: true,
                                           });
                                         }
                                       }
@@ -1105,17 +1084,18 @@ export default function Index() {
                                 } else {
                                   try {
                                     navigator.clipboard?.writeText(message);
-                                    addNotification({
-                                      type: "success",
+                                    notifications.success({
                                       title: "Location Shared",
-                                      message: "Location copied to clipboard!",
+                                      description:
+                                        "Location copied to clipboard!",
+                                      vibrate: true,
                                     });
                                   } catch {
-                                    addNotification({
-                                      type: "error",
+                                    notifications.error({
                                       title: "Share Failed",
-                                      message:
+                                      description:
                                         "Failed to copy location to clipboard",
+                                      vibrate: true,
                                     });
                                   }
                                 }
@@ -1135,11 +1115,16 @@ export default function Index() {
                         onClick={async () => {
                           try {
                             if (!userProfile?.emergencyContacts?.length) {
-                              addNotification({
-                                type: "error",
+                              notifications.error({
                                 title: "Live Tracking Unavailable",
-                                message:
+                                description:
                                   "Please add emergency contacts first to enable live tracking.",
+                                action: {
+                                  label: "Add Contacts",
+                                  onClick: () =>
+                                    (window.location.href = "/contacts"),
+                                },
+                                vibrate: true,
                               });
                               return;
                             }
@@ -1196,18 +1181,19 @@ export default function Index() {
                               },
                             });
 
-                            addNotification({
-                              type: "success",
-                              title: "Live Tracking Started",
-                              message: `Your location is now being shared with ${userProfile.emergencyContacts.length} emergency contacts.`,
-                            });
+                            // Silently start live tracking
                           } catch (error) {
                             console.error("Live tracking error:", error);
-                            addNotification({
-                              type: "error",
+                            notifications.error({
                               title: "Live Tracking Failed",
-                              message:
+                              description:
                                 "Unable to start live tracking. Please check your location permissions.",
+                              action: {
+                                label: "Check Settings",
+                                onClick: () =>
+                                  (window.location.href = "/settings"),
+                              },
+                              vibrate: true,
                             });
                           }
                         }}

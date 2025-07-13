@@ -1,9 +1,7 @@
 import "./global.css";
 
-import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { SlideDownNotifications } from "@/components/SlideDownNotifications";
+import { UnifiedNotificationSystem } from "@/components/UnifiedNotificationSystem";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -253,9 +251,7 @@ const App = () => (
     <AuthProvider>
       <SOSSettingsProvider>
         <TooltipProvider>
-          <SlideDownNotifications />
-          <Toaster />
-          <Sonner />
+          <UnifiedNotificationSystem />
           <BrowserRouter>
             <div className="relative w-full min-h-screen bg-background">
               <AnimatedRoutes />

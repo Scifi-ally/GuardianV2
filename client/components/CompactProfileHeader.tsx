@@ -60,7 +60,7 @@ export function CompactProfileHeader({ className }: CompactProfileHeaderProps) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       setIsEditDialogOpen(false);
-      toast.success("Profile updated successfully!");
+      // Silently update profile
     } catch (error) {
       console.error("Failed to update profile:", error);
       toast.error("Failed to update profile");

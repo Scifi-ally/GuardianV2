@@ -134,15 +134,9 @@ export function useGeolocation() {
 
             // Only show notifications for permission errors
             if (locationError.code === 1) {
-              import("@/components/SlideDownNotifications").then(
-                ({ notificationManager }) => {
-                  notificationManager.addNotification({
-                    type: "warning",
-                    title: "Location Permission",
-                    message: "Enable location access for best experience",
-                    persistent: false,
-                  });
-                },
+              // Show location permission error
+              console.warn(
+                "Location permission denied - some features may be limited",
               );
             }
           },

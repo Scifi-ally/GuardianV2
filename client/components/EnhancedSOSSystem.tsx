@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { notifications } from "@/services/enhancedNotificationService";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -21,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
-import { useSlideDownNotifications } from "@/components/SlideDownNotifications";
+// Removed deprecated notification import
 import { cn } from "@/lib/utils";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { toast } from "sonner";
@@ -82,7 +83,7 @@ export function EnhancedSOSSystem({
 }: EnhancedSOSSystemProps) {
   const { userProfile, currentUser } = useAuth();
   const { location, getCurrentLocation } = useGeolocation();
-  const { addNotification } = useSlideDownNotifications();
+  // Removed deprecated notification hook
 
   const [sosPressed, setSOSPressed] = useState(false);
   const [sosActive, setSOSActive] = useState(false);
@@ -378,18 +379,18 @@ export function EnhancedSOSSystem({
       const success = await copyToClipboard(shareText);
       if (success) {
         toast.success("Emergency message copied to clipboard");
-        addNotification({
-          type: "success",
+        notifications.success({
           title: "Location Shared",
-          message:
+          description:
             "Emergency message copied to clipboard. Please send to your emergency contacts.",
+          vibrate: true,
         });
       } else {
         toast.error("Failed to copy emergency message");
       }
       return success;
     },
-    [addNotification],
+    [],
   );
 
   const startLocationTracking = useCallback(
