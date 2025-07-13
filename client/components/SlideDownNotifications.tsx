@@ -199,12 +199,21 @@ export function SlideDownNotifications({
         return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
       case "error":
         return <AlertTriangle className="w-4 h-4 text-red-600" />;
+      case "sos":
+        return <AlertTriangle className="w-5 h-5 text-red-700 animate-pulse" />;
+      case "critical":
+        return (
+          <AlertTriangle className="w-5 h-5 text-red-800 animate-bounce" />
+        );
       default:
         return <Info className="w-4 h-4 text-blue-600" />;
     }
   };
 
-  const getNotificationBg = (type: string) => {
+  const getNotificationBg = (type: string, priority?: string) => {
+    if (type === "sos" || type === "critical" || priority === "critical") {
+      return "bg-red-100 border-red-300 ring-2 ring-red-200";
+    }
     switch (type) {
       case "success":
         return "bg-green-50 border-green-200";
