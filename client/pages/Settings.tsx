@@ -51,6 +51,7 @@ export default function Settings() {
       shareLocation: true,
       anonymousReporting: true,
       dataSaving: false,
+      highAccuracyMode: false,
     },
     safety: {
       sosCountdown: 3,
@@ -232,6 +233,15 @@ export default function Settings() {
           description: "Reduce data usage for maps and routes",
           type: "switch",
           value: settings.privacy.dataSaving,
+          category: "privacy" as const,
+        },
+        {
+          id: "highAccuracyMode",
+          label: "High Accuracy Location",
+          description:
+            "Use GPS for maximum location precision (uses more battery)",
+          type: "switch",
+          value: settings.privacy.highAccuracyMode || false,
           category: "privacy" as const,
         },
       ],
@@ -577,7 +587,7 @@ Guardian Safety Technologies is committed to protecting your privacy. This polic
 
 🤝 Data Sharing:
 • Never shared with advertising companies
-• Only shared with emergency services during active emergencies
+�� Only shared with emergency services during active emergencies
 • Emergency contacts receive only location data you authorize
 • No sale of personal data to third parties
 
