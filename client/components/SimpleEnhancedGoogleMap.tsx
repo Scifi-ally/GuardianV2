@@ -12,6 +12,11 @@ import {
   sharedLocationService,
   type SharedLocation,
 } from "@/services/sharedLocationService";
+import {
+  enhancedLocationService,
+  type LocationData,
+} from "@/services/enhancedLocationService";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
 
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
@@ -28,6 +33,10 @@ interface GoogleMapProps {
   mapTheme?: "light" | "dark" | "safety" | "night";
   mapType?: "normal" | "satellite" | "terrain";
   zoomLevel?: number;
+  realTimeMode?: boolean;
+  showLocationQuality?: boolean;
+  showMovementAnalysis?: boolean;
+  autoCenter?: boolean;
   onDirectionsChange?: (
     directions: google.maps.DirectionsResult | null,
   ) => void;
