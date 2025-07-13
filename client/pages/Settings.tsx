@@ -76,8 +76,15 @@ export default function Settings() {
     }
   }, []);
 
-  const handleSOSPress = () => {
-    console.log("SOS triggered from settings");
+  const handleSOSPress = async () => {
+    try {
+      const { advancedEmergencyController } = await import(
+        "@/services/advancedEmergencyController"
+      );
+      await advancedEmergencyController.activateSOSWithCountdown("general", 5);
+    } catch (error) {
+      console.error("SOS activation failed:", error);
+    }
   };
 
   // Apply settings to actual services
@@ -496,7 +503,7 @@ Guardian is an AI-powered safety application designed to keep you protected thro
 
 🔒 Privacy & Security:
 • End-to-end encryption for all communications
-• Location data stored securely with military-grade encryption
+��� Location data stored securely with military-grade encryption
 • No data shared with third parties without explicit consent
 • Full control over your privacy settings
 

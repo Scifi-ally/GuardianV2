@@ -32,6 +32,8 @@ import { useMapTheme } from "@/hooks/use-map-theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminDebug } from "@/services/adminDebugService";
 import { useGestures, GestureGuide } from "@/hooks/useGestures";
+import { advancedGestureController } from "@/services/advancedGestureController";
+
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,18 +133,24 @@ export default function Index() {
     // Start emergency battery monitoring
     emergencyBatteryService.startMonitoring();
 
-    // Start emergency readiness monitoring
+    // Start emergency readiness monitoring (silent mode)
     emergencyReadinessService.startPeriodicChecks();
 
-    // Perform initial readiness check after app loads
-    const checkTimer = setTimeout(() => {
-      emergencyReadinessService.displayReadinessReport();
-    }, 5000);
+    // Removed automatic readiness report display to reduce alert noise
 
     return () => {
       emergencyBatteryService.stopMonitoring();
       emergencyReadinessService.stopPeriodicChecks();
-      clearTimeout(checkTimer);
+    };
+  }, []);
+
+  // Initialize advanced gesture system
+  useEffect(() => {
+    // Initialize advanced gesture controller
+    advancedGestureController.initialize().catch(console.error);
+
+    return () => {
+      advancedGestureController.cleanup();
     };
   }, []);
 
@@ -1221,6 +1229,7 @@ export default function Index() {
                           checked={gesturesEnabled}
                           onChange={(checked) => {
                             setGesturesEnabled(checked);
+                            advancedGestureController.toggleGestures(checked);
                             unifiedNotifications.success(
                               checked
                                 ? "Gesture controls enabled"
@@ -1254,8 +1263,6 @@ export default function Index() {
 
         {/* Magic Navbar */}
         <MagicNavbar />
-
-        {/* Debug helper removed - Firebase admin control only */}
       </div>
     </ErrorBoundary>
   );

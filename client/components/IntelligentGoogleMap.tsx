@@ -3,27 +3,21 @@ import { Wrapper } from "@googlemaps/react-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Navigation,
-  Locate,
-  Volume2,
-  VolumeX,
-  MapPin,
-  Shield,
-  AlertTriangle,
-  Maximize2,
-  RotateCcw,
-} from "lucide-react";
+import { Navigation, AlertTriangle } from "lucide-react";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { enhancedFirebaseService } from "@/services/enhancedFirebaseService";
 import { safeAIService } from "@/services/safeAIService";
 import { notifications } from "@/services/enhancedNotificationService";
+import { advancedSafeZonesController } from "@/services/advancedSafeZonesController";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
   "AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE";
+
+// Load Google Maps with basic libraries (visualization removed as per requirements)
+const GOOGLE_MAPS_LIBRARIES: ("geometry" | "places")[] = ["geometry", "places"];
 
 interface IntelligentGoogleMapProps {
   location?: { latitude: number; longitude: number; accuracy?: number };
@@ -38,23 +32,18 @@ interface IntelligentGoogleMapProps {
   showEmergencyServices?: boolean;
 }
 
+// Navigation state interface
 interface NavigationState {
   isNavigating: boolean;
   destination: google.maps.LatLng | null;
-  currentRoute: google.maps.DirectionsResult | null;
+  currentRoute: google.maps.DirectionsRoute | null;
   safetyScore: number;
   estimatedTime: string;
   totalDistance: string;
   nextInstruction?: string;
 }
 
-interface SafetyHeatmapData {
-  location: google.maps.LatLng;
-  weight: number;
-  color: string;
-}
-
-export function IntelligentGoogleMap({
+function IntelligentGoogleMap({
   location,
   onLocationChange,
   onMapLoad,
@@ -68,10 +57,10 @@ export function IntelligentGoogleMap({
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null);
   const [destinationMarker, setDestinationMarker] =
     useState<google.maps.Marker | null>(null);
-  const [directionsRenderer, setDirectionsRenderer] =
-    useState<google.maps.DirectionsRenderer | null>(null);
   const [directionsService, setDirectionsService] =
     useState<google.maps.DirectionsService | null>(null);
+  const [directionsRenderer, setDirectionsRenderer] =
+    useState<google.maps.DirectionsRenderer | null>(null);
   const [navigationState, setNavigationState] = useState<NavigationState>({
     isNavigating: false,
     destination: null,
@@ -83,9 +72,6 @@ export function IntelligentGoogleMap({
   const [isTracking, setIsTracking] = useState(false);
   const [currentHeading, setCurrentHeading] = useState(0);
   const [isNavigationMode, setIsNavigationMode] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [safetyOverlay, setSafetyOverlay] = useState<SafetyHeatmapData[]>([]);
-  const [showControls, setShowControls] = useState(true);
   const [autoZoom, setAutoZoom] = useState(true);
   const [currentMapTheme, setCurrentMapTheme] = useState<"light" | "dark">(
     "light",
@@ -97,7 +83,7 @@ export function IntelligentGoogleMap({
     useState<google.maps.TrafficLayer | null>(null);
 
   // Define map styles for different themes
-  const getMapStyles = (theme: "light" | "dark") => {
+  const getMapStyles = useCallback((theme: "light" | "dark") => {
     if (theme === "dark") {
       return [
         { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
@@ -213,136 +199,87 @@ export function IntelligentGoogleMap({
         },
       ];
     }
-  };
+  }, []);
 
   // Apply theme to existing map
-  const applyMapTheme = (theme: "light" | "dark") => {
-    if (map) {
-      map.setOptions({
-        styles: getMapStyles(theme),
-      });
-      setCurrentMapTheme(theme);
-      console.log("Map theme applied:", theme);
-    }
-  };
+  const applyMapTheme = useCallback(
+    (theme: "light" | "dark") => {
+      if (map) {
+        map.setOptions({
+          styles: getMapStyles(theme),
+        });
+        setCurrentMapTheme(theme);
+        console.log("Map theme applied:", theme);
+      }
+    },
+    [map, getMapStyles],
+  );
 
-  // Apply map type to existing map
-  const applyMapType = (type: "normal" | "satellite") => {
-    if (map) {
-      const mapTypeId =
-        type === "satellite"
-          ? google.maps.MapTypeId.SATELLITE
-          : google.maps.MapTypeId.ROADMAP;
-      map.setMapTypeId(mapTypeId);
-      setCurrentMapType(type);
-      console.log("Map type applied:", type);
-    }
-  };
-
-  // Listen for theme and type changes
+  // Detect system theme and apply
   useEffect(() => {
-    const handleThemeChange = (event: CustomEvent) => {
-      applyMapTheme(event.detail.theme);
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleThemeChange = (e: MediaQueryListEvent) => {
+      applyMapTheme(e.matches ? "dark" : "light");
     };
 
-    const handleTypeChange = (event: CustomEvent) => {
-      applyMapType(event.detail.type);
-    };
+    // Apply initial theme
+    applyMapTheme(mediaQuery.matches ? "dark" : "light");
 
-    window.addEventListener(
-      "mapThemeChange",
-      handleThemeChange as EventListener,
-    );
-    window.addEventListener("mapTypeChange", handleTypeChange as EventListener);
+    // Listen for theme changes
+    mediaQuery.addEventListener("change", handleThemeChange);
 
     return () => {
-      window.removeEventListener(
-        "mapThemeChange",
-        handleThemeChange as EventListener,
-      );
-      window.removeEventListener(
-        "mapTypeChange",
-        handleTypeChange as EventListener,
-      );
+      mediaQuery.removeEventListener("change", handleThemeChange);
     };
-  }, [map]);
+  }, [map, applyMapTheme]);
 
-  // Initialize enhanced map
+  // Initialize map
   useEffect(() => {
     if (!mapRef.current || map) return;
 
-    try {
-      // Get initial theme and type from localStorage
-      const savedTheme =
-        (localStorage.getItem("guardian-map-theme") as "light" | "dark") ||
-        "light";
-      const savedType =
-        (localStorage.getItem("guardian-map-type") as "normal" | "satellite") ||
-        "normal";
+    const newMap = new google.maps.Map(mapRef.current, {
+      zoom: 15,
+      center: location
+        ? { lat: location.latitude, lng: location.longitude }
+        : { lat: 37.7749, lng: -122.4194 }, // Default to San Francisco
+      mapTypeId: currentMapType === "satellite" ? "satellite" : "roadmap",
+      styles: getMapStyles(currentMapTheme),
+      zoomControl: true,
+      mapTypeControl: false,
+      scaleControl: true,
+      streetViewControl: false,
+      rotateControl: true,
+      fullscreenControl: false,
+      gestureHandling: "greedy",
+      clickableIcons: false,
+      disableDefaultUI: false,
+      keyboardShortcuts: true,
+    });
 
-      setCurrentMapTheme(savedTheme);
-      setCurrentMapType(savedType);
+    setMap(newMap);
 
-      const mapTypeId =
-        savedType === "satellite"
-          ? google.maps.MapTypeId.SATELLITE
-          : google.maps.MapTypeId.ROADMAP;
+    // Initialize directions service and renderer
+    const dirService = new google.maps.DirectionsService();
+    const dirRenderer = new google.maps.DirectionsRenderer({
+      suppressMarkers: true,
+      polylineOptions: {
+        strokeColor: "#2563eb",
+        strokeWeight: 5,
+        strokeOpacity: 0.8,
+      },
+    });
 
-      const newMap = new google.maps.Map(mapRef.current, {
-        zoom: 15,
-        center: location
-          ? { lat: location.latitude, lng: location.longitude }
-          : { lat: 37.7749, lng: -122.4194 },
-        mapTypeId: mapTypeId,
-        styles: getMapStyles(savedTheme),
-        disableDefaultUI: true,
-        zoomControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        mapTypeControl: false,
-        gestureHandling: "greedy",
-        clickableIcons: false,
-        backgroundColor: "#f8f9fa",
-        maxZoom: 20,
-        minZoom: 3,
-      });
+    dirRenderer.setMap(newMap);
+    setDirectionsService(dirService);
+    setDirectionsRenderer(dirRenderer);
 
-      // Initialize direction services
-      const directionsServiceInstance = new google.maps.DirectionsService();
-      const directionsRendererInstance = new google.maps.DirectionsRenderer({
-        map: newMap,
-        suppressMarkers: true,
-        polylineOptions: {
-          strokeColor: "#2563eb", // Blue color for routes
-          strokeWeight: 6,
-          strokeOpacity: 0.8,
-          geodesic: true,
-          icons: [
-            {
-              icon: {
-                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                fillColor: "#2563eb",
-                fillOpacity: 1,
-                scale: 3,
-                strokeColor: "#ffffff",
-                strokeWeight: 1,
-              },
-              offset: "0%",
-              repeat: "80px",
-            },
-          ],
-        },
-        panel: null,
-        draggable: false,
-      });
+    // Initialize safe zones controller
+    advancedSafeZonesController.initialize(newMap);
 
-      setDirectionsService(directionsServiceInstance);
-      setDirectionsRenderer(directionsRendererInstance);
-      setMap(newMap);
-      onMapLoad?.(newMap);
-    } catch (error) {
-      console.error("❌ Failed to initialize map:", error);
-    }
+    // Call onMapLoad callback
+    onMapLoad?.(newMap);
+
+    console.log("🗺️ Map initialized successfully");
   }, [mapRef.current, location]);
 
   // Handle map settings changes (traffic, safe zones, etc.)
@@ -365,11 +302,8 @@ export function IntelligentGoogleMap({
       }
     }
 
-    // Safe Zones (would show markers for police stations, safe areas)
-    if (showSafeZones) {
-      // In a real implementation, this would fetch safe zone data
-      console.log("Safe zones enabled");
-    }
+    // Safe Zones - Advanced Controller
+    advancedSafeZonesController.toggleSafeZones(showSafeZones);
 
     // Emergency Services (would show markers for hospitals, police, fire stations)
     if (showEmergencyServices) {
@@ -438,24 +372,41 @@ export function IntelligentGoogleMap({
                 optimizeWaypoints: true,
               },
               (result, status) => {
-                if (status === google.maps.DirectionsStatus.OK && result) {
+                if (status === "OK" && result) {
                   resolve(result);
                 } else {
-                  reject(new Error(`Directions failed: ${status}`));
+                  reject(new Error(`Route calculation failed: ${status}`));
                 }
               },
             );
           },
         );
 
+        if (result.routes.length === 0) {
+          throw new Error("No routes found");
+        }
+
+        const route = result.routes[0];
+        const leg = route.legs[0];
+
+        // Set navigation state
+        setNavigationState({
+          isNavigating: true,
+          destination,
+          currentRoute: route,
+          safetyScore: routeAnalysis?.overallSafety || 75,
+          estimatedTime: leg.duration?.text || "",
+          totalDistance: leg.distance?.text || "",
+          nextInstruction: leg.steps[0]?.instructions || "",
+        });
+
+        setIsNavigationMode(true);
+        setIsTracking(true);
+
         // Display route
         directionsRenderer.setDirections(result);
 
         // Create destination marker
-        if (destinationMarker) {
-          destinationMarker.setMap(null);
-        }
-
         const destMarker = new google.maps.Marker({
           position: destination,
           map,
@@ -463,28 +414,9 @@ export function IntelligentGoogleMap({
           icon: createDestinationIcon(),
           zIndex: 9999,
         });
-
         setDestinationMarker(destMarker);
 
-        // Update navigation state
-        const route = result.routes[0];
-        const leg = route.legs[0];
-
-        setNavigationState({
-          isNavigating: true,
-          destination,
-          currentRoute: result,
-          safetyScore: routeAnalysis.overallSafety,
-          estimatedTime: leg.duration?.text || "Unknown",
-          totalDistance: leg.distance?.text || "Unknown",
-          nextInstruction: leg.steps[0]?.instructions || "",
-        });
-
-        // Enable navigation mode
-        setIsNavigationMode(true);
-        setIsTracking(true);
-
-        // Auto-zoom to route if enabled
+        // Adjust map view for navigation
         if (autoZoom) {
           const bounds = new google.maps.LatLngBounds();
           bounds.extend({ lat: location.latitude, lng: location.longitude });
@@ -583,38 +515,6 @@ export function IntelligentGoogleMap({
     return unsubscribe;
   }, [map, isNavigationMode, autoZoom, onLocationChange]);
 
-  // Generate safety heatmap
-  const generateSafetyHeatmap = useCallback(async () => {
-    if (!map) return;
-
-    const bounds = map.getBounds();
-    if (!bounds) return;
-
-    const heatmapData: SafetyHeatmapData[] = [];
-    const gridSize = 0.005; // ~500m grid
-
-    const sw = bounds.getSouthWest();
-    const ne = bounds.getNorthEast();
-
-    for (let lat = sw.lat(); lat <= ne.lat(); lat += gridSize) {
-      for (let lng = sw.lng(); lng <= ne.lng(); lng += gridSize) {
-        // Mock safety score (in production, this would be real AI analysis)
-        const hour = new Date().getHours();
-        const baseScore = 70 + (hour >= 6 && hour <= 18 ? 15 : -10);
-        const variation = Math.floor((lat * lng * 1000) % 30) - 15;
-        const score = Math.max(30, Math.min(95, baseScore + variation));
-
-        heatmapData.push({
-          location: new google.maps.LatLng(lat, lng),
-          weight: (100 - score) / 100, // Higher weight for less safe areas
-          color: score >= 70 ? "#22c55e" : score >= 50 ? "#eab308" : "#ef4444",
-        });
-      }
-    }
-
-    setSafetyOverlay(heatmapData);
-  }, [map]);
-
   // Helper functions
   const animateMarkerToPosition = (
     marker: google.maps.Marker,
@@ -653,15 +553,6 @@ export function IntelligentGoogleMap({
           <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 2}" fill="rgba(37, 99, 235, 0.2)" stroke="${pulseColor}" stroke-width="2"/>
           <circle cx="${size / 2}" cy="${size / 2}" r="${size / 3}" fill="${pulseColor}" stroke="white" stroke-width="2"/>
           <circle cx="${size / 2}" cy="${size / 2}" r="${size / 6}" fill="white"/>
-          ${
-            isNavigating
-              ? `
-            <path d="M${size / 2} 4 L${size / 2 + 4} ${size / 2 + 2} L${size / 2} ${size / 2 - 1} L${size / 2 - 4} ${size / 2 + 2} Z"
-                  fill="${pulseColor}" stroke="white" stroke-width="1"
-                  transform="rotate(${currentHeading} ${size / 2} ${size / 2})"/>
-          `
-              : ""
-          }
         </svg>
       `)}`,
       scaledSize: new google.maps.Size(size, size),
@@ -672,45 +563,28 @@ export function IntelligentGoogleMap({
   const createDestinationIcon = () => {
     return {
       url: `data:image/svg+xml,${encodeURIComponent(`
-        <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 0C7.16 0 0 7.16 0 16C0 28 16 40 16 40S32 28 32 16C32 7.16 24.84 0 16 0Z" fill="#dc2626"/>
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" fill="#dc2626" stroke="white" stroke-width="3"/>
           <circle cx="16" cy="16" r="6" fill="white"/>
           <circle cx="16" cy="16" r="3" fill="#dc2626"/>
         </svg>
       `)}`,
-      scaledSize: new google.maps.Size(32, 40),
-      anchor: new google.maps.Point(16, 40),
+      scaledSize: new google.maps.Size(32, 32),
+      anchor: new google.maps.Point(16, 16),
     };
   };
 
-  const recenterMap = () => {
-    if (map && location) {
-      const position = new google.maps.LatLng(
-        location.latitude,
-        location.longitude,
-      );
-      map.panTo(position);
-      map.setZoom(isNavigationMode ? 18 : 15);
-    }
-  };
-
-  const toggleNavigationMode = () => {
-    if (isNavigationMode) {
-      stopNavigation();
-    } else {
-      setIsNavigationMode(true);
-      setIsTracking(true);
-      startEnhancedTracking();
-    }
-  };
-
+  // Check if API key is available
   if (!GOOGLE_MAPS_API_KEY) {
     return (
       <div className="w-full h-full bg-red-100 rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <AlertTriangle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-          <p className="text-sm text-red-600 font-semibold">
-            Google Maps API key required
+        <div className="text-center p-4">
+          <AlertTriangle className="h-8 w-8 text-red-600 mx-auto mb-2" />
+          <h3 className="text-red-800 font-medium">
+            Google Maps API Key Missing
+          </h3>
+          <p className="text-red-600 text-sm">
+            Please add VITE_GOOGLE_MAPS_API_KEY to your environment variables.
           </p>
         </div>
       </div>
@@ -719,7 +593,7 @@ export function IntelligentGoogleMap({
 
   return (
     <div className={cn("relative w-full h-full", className)}>
-      <Wrapper apiKey={GOOGLE_MAPS_API_KEY} libraries={["geometry", "places"]}>
+      <Wrapper apiKey={GOOGLE_MAPS_API_KEY} libraries={GOOGLE_MAPS_LIBRARIES}>
         <div ref={mapRef} className="w-full h-full" />
 
         {/* Navigation Status - Top Left */}
@@ -758,87 +632,10 @@ export function IntelligentGoogleMap({
             </CardContent>
           </Card>
         )}
-
-        {/* Safety Score - Top Right */}
-        {!navigationState.isNavigating && location && (
-          <Card className="absolute top-4 right-4 z-[1000] bg-white/95 backdrop-blur-sm shadow-lg">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-green-500" />
-                <div className="text-xs">
-                  <div className="text-muted-foreground">Area Safety</div>
-                  <div className="font-medium text-green-600">Safe Zone</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Map Controls - Bottom Right */}
-        {showControls && (
-          <div className="absolute bottom-20 right-4 z-[1000] flex flex-col gap-2">
-            <Button
-              onClick={recenterMap}
-              size="sm"
-              variant="outline"
-              className="bg-white/95 backdrop-blur-sm shadow-lg h-10 w-10 p-0"
-            >
-              <Locate className="h-4 w-4" />
-            </Button>
-
-            {navigationState.isNavigating && (
-              <>
-                <Button
-                  onClick={() => setIsMuted(!isMuted)}
-                  size="sm"
-                  variant="outline"
-                  className="bg-white/95 backdrop-blur-sm shadow-lg h-10 w-10 p-0"
-                >
-                  {isMuted ? (
-                    <VolumeX className="h-4 w-4" />
-                  ) : (
-                    <Volume2 className="h-4 w-4" />
-                  )}
-                </Button>
-
-                <Button
-                  onClick={() => setAutoZoom(!autoZoom)}
-                  size="sm"
-                  variant={autoZoom ? "default" : "outline"}
-                  className="bg-white/95 backdrop-blur-sm shadow-lg h-10 w-10 p-0"
-                >
-                  <Maximize2 className="h-4 w-4" />
-                </Button>
-
-                <Button
-                  onClick={stopNavigation}
-                  size="sm"
-                  variant="destructive"
-                  className="h-10 w-10 p-0"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Real-time Location Status - Bottom Left */}
-        {isTracking && (
-          <Card className="absolute bottom-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm shadow-lg">
-            <CardContent className="p-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-medium">Live Tracking</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </Wrapper>
-
-      {/* Component ready for navigation */}
     </div>
   );
 }
 
+export { IntelligentGoogleMap };
 export default IntelligentGoogleMap;

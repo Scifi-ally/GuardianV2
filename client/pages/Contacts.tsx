@@ -5,8 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default function Contacts() {
-  const handleSOSPress = () => {
-    console.log("SOS triggered from contacts");
+  const handleSOSPress = async () => {
+    try {
+      const { advancedEmergencyController } = await import(
+        "@/services/advancedEmergencyController"
+      );
+      await advancedEmergencyController.activateSOSWithCountdown("general", 5);
+    } catch (error) {
+      console.error("SOS activation failed:", error);
+    }
   };
 
   const contacts = [

@@ -147,11 +147,12 @@ class EmergencyReadinessService {
       const emergencyContacts = userProfile.emergencyContacts || [];
 
       if (emergencyContacts.length === 0) {
+        // Downgraded from critical to warning to reduce alert noise
         checks.push({
           category: "Emergency Contacts",
-          status: "critical",
-          message: "No emergency contacts configured",
-          action: "Add at least 2 emergency contacts",
+          status: "warning",
+          message: "Emergency contacts can be configured for additional safety",
+          action: "Add emergency contacts when ready",
         });
       } else if (emergencyContacts.length === 1) {
         checks.push({

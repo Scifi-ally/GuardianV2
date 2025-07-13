@@ -182,8 +182,15 @@ export default function EnhancedNavigationPage() {
     setMapInstance(map);
   }, []);
 
-  const handleSOSPress = () => {
-    console.log("SOS triggered from enhanced navigation");
+  const handleSOSPress = async () => {
+    try {
+      const { advancedEmergencyController } = await import(
+        "@/services/advancedEmergencyController"
+      );
+      await advancedEmergencyController.activateSOSWithCountdown("general", 5);
+    } catch (error) {
+      console.error("SOS activation failed:", error);
+    }
   };
 
   const transportModes = [

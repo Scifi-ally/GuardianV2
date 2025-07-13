@@ -15,6 +15,7 @@ import {
   Navigation,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { enhancedEmergencyService } from "@/services/enhancedEmergencyService";
 
 interface EmergencyService {
   id: string;
@@ -74,161 +75,112 @@ export function RealTimeMapFeatures({
   const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
   const [circles, setCircles] = useState<google.maps.Circle[]>([]);
 
-  // Load emergency services near current location
+  // Load emergency services near current location using enhanced service
   const loadEmergencyServices = useCallback(async () => {
     if (!currentLocation) return;
 
     try {
-      // Generate realistic emergency services based on actual location
-      const services: EmergencyService[] = [];
+      // Initialize enhanced emergency service for current location
+      await enhancedEmergencyService.initializeForLocation({
+        lat: currentLocation.latitude,
+        lng: currentLocation.longitude,
+      });
 
-      // Police stations (1-2 nearby)
-      for (let i = 0; i < 2; i++) {
-        const angle = (i * 120 + Math.random() * 60) * (Math.PI / 180);
-        const distanceKm = 0.5 + Math.random() * 2; // 0.5-2.5 km
-        const offset = distanceKm * 0.009; // roughly km to degrees
+      // Get nearby emergency services
+      const nearbyServices =
+        enhancedEmergencyService.getNearbyEmergencyServices(10); // 10km radius
 
-        services.push({
-          id: `police_${i + 1}`,
-          name: `Police Station ${i + 1}`,
-          type: "police",
-          lat: currentLocation.latitude + Math.cos(angle) * offset,
-          lng: currentLocation.longitude + Math.sin(angle) * offset,
-          distance: Math.round(distanceKm * 1000), // Convert to meters
-          phone: "911",
-          isOpen: true,
-        });
-      }
-
-      // Hospitals (1-2 nearby)
-      for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
-        const angle = (i * 180 + Math.random() * 90) * (Math.PI / 180);
-        const distanceKm = 1 + Math.random() * 3; // 1-4 km
-        const offset = distanceKm * 0.009;
-
-        services.push({
-          id: `hospital_${i + 1}`,
-          name: `Medical Center ${i + 1}`,
-          type: "hospital",
-          lat: currentLocation.latitude + Math.cos(angle) * offset,
-          lng: currentLocation.longitude + Math.sin(angle) * offset,
-          distance: Math.round(distanceKm * 1000),
-          phone: "911",
-          isOpen: true,
-        });
-      }
-
-      // Fire stations (1-2 nearby)
-      for (let i = 0; i < 2; i++) {
-        const angle = (i * 140 + Math.random() * 80) * (Math.PI / 180);
-        const distanceKm = 0.8 + Math.random() * 2.2; // 0.8-3 km
-        const offset = distanceKm * 0.009;
-
-        services.push({
-          id: `fire_${i + 1}`,
-          name: `Fire Station ${i + 1}`,
-          type: "fire",
-          lat: currentLocation.latitude + Math.cos(angle) * offset,
-          lng: currentLocation.longitude + Math.sin(angle) * offset,
-          distance: Math.round(distanceKm * 1000),
-          phone: "911",
-          isOpen: true,
-        });
-      }
-
-      // Pharmacies (1-3 nearby)
-      for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
-        const angle = Math.random() * 2 * Math.PI;
-        const distanceKm = 0.2 + Math.random() * 1.5; // 0.2-1.7 km
-        const offset = distanceKm * 0.009;
-
-        services.push({
-          id: `pharmacy_${i + 1}`,
-          name: `Pharmacy ${i + 1}`,
-          type: "pharmacy",
-          lat: currentLocation.latitude + Math.cos(angle) * offset,
-          lng: currentLocation.longitude + Math.sin(angle) * offset,
-          distance: Math.round(distanceKm * 1000),
-          phone: `(555) ${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
-          isOpen: Math.random() > 0.2, // 80% chance of being open
-        });
-      }
+      // Convert to component format
+      const services: EmergencyService[] = nearbyServices.map((service) => ({
+        id: service.id,
+        name: service.name,
+        type: service.type === "emergency" ? "hospital" : service.type, // Map emergency to hospital
+        lat: service.position.lat,
+        lng: service.position.lng,
+        distance: Math.round((service.distance || 0) * 1000), // Convert km to meters
+        phone: service.phone,
+        isOpen: service.availability !== "offline",
+      }));
 
       setEmergencyServices(services);
       onFeatureUpdate?.("emergency", services);
     } catch (error) {}
   }, [currentLocation, onFeatureUpdate]);
 
-  // Load safety areas
+  // Load safety areas using enhanced heatmap service
   const loadSafetyAreas = useCallback(async () => {
     if (!currentLocation) return;
 
     try {
-      // Generate dynamic safety areas based on current location and time
-      const areas: SafetyArea[] = [];
-      const currentHour = new Date().getHours();
-      const isNightTime = currentHour < 6 || currentHour > 22;
+      console.log("🛡️ Loading enhanced safety areas...");
 
-      // Safe zones (2-4 areas)
-      const safeZoneTypes = [
-        "Shopping District",
-        "Business Center",
-        "Residential Area",
-        "Community Center",
-        "School Zone",
-      ];
-      for (let i = 0; i < Math.floor(Math.random() * 3) + 2; i++) {
-        const angle = (i * 90 + Math.random() * 45) * (Math.PI / 180);
-        const distance = 0.008 + Math.random() * 0.012; // 0.8-2km radius
+      // Generate comprehensive safety heatmap
+      const bounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(
+          currentLocation.latitude - 0.01,
+          currentLocation.longitude - 0.01,
+        ),
+        new google.maps.LatLng(
+          currentLocation.latitude + 0.01,
+          currentLocation.longitude + 0.01,
+        ),
+      );
+      const heatmapPoints =
+        await comprehensiveHeatmapService.generateFullAreaHeatmap(bounds, 16);
 
-        // Adjust safety score based on time and area type
-        let baseScore = 85 + Math.random() * 10;
-        if (isNightTime) baseScore -= 5; // Lower scores at night
+      // Convert heatmap points to safety areas
+      const areas: SafetyArea[] = heatmapPoints.map((point, index) => {
+        const safetyScore = point.safetyScore;
 
-        areas.push({
-          id: `safe_${i + 1}`,
-          name: safeZoneTypes[i % safeZoneTypes.length],
-          type: "safe_zone",
-          lat: currentLocation.latitude + Math.cos(angle) * distance,
-          lng: currentLocation.longitude + Math.sin(angle) * distance,
-          radius: 400 + Math.random() * 600, // 400-1000m radius
-          score: Math.round(baseScore),
-          lastUpdated: Date.now(),
-        });
-      }
+        let type: "safe_zone" | "danger_zone" | "neutral" = "neutral";
+        let name = "Area";
 
-      // Danger zones (0-2 areas, more likely at night)
-      const dangerChance = isNightTime ? 0.7 : 0.3;
-      if (Math.random() < dangerChance) {
-        const dangerTypes = [
-          "Construction Zone",
-          "High Crime Area",
-          "Poor Lighting Zone",
-          "Isolated Area",
-        ];
-        for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
-          const angle = Math.random() * 2 * Math.PI;
-          const distance = 0.005 + Math.random() * 0.015;
-
-          let dangerScore = 25 + Math.random() * 25; // 25-50
-          if (isNightTime) dangerScore -= 10; // Even lower at night
-
-          areas.push({
-            id: `danger_${i + 1}`,
-            name: dangerTypes[i % dangerTypes.length],
-            type: "danger_zone",
-            lat: currentLocation.latitude + Math.cos(angle) * distance,
-            lng: currentLocation.longitude + Math.sin(angle) * distance,
-            radius: 200 + Math.random() * 400, // 200-600m radius
-            score: Math.max(15, Math.round(dangerScore)),
-            lastUpdated: Date.now(),
-          });
+        if (safetyScore >= 70) {
+          type = "safe_zone";
+          name = `Safe Zone ${index + 1}`;
+        } else if (safetyScore <= 40) {
+          type = "danger_zone";
+          name = `Caution Zone ${index + 1}`;
+        } else {
+          name = `Neutral Zone ${index + 1}`;
         }
-      }
+
+        return {
+          id: `enhanced_${index}`,
+          name,
+          type,
+          lat: point.location.lat(),
+          lng: point.location.lng(),
+          radius: 300 + safetyScore * 3, // Larger radius for safer areas
+          score: Math.round(safetyScore),
+          lastUpdated: Date.now(),
+        };
+      });
 
       setSafetyAreas(areas);
       onFeatureUpdate?.("safety", areas);
-    } catch (error) {}
+
+      console.log(`✅ Loaded ${areas.length} enhanced safety areas`);
+    } catch (error) {
+      console.error("Failed to load enhanced safety areas:", error);
+
+      // Fallback to basic areas
+      const basicAreas: SafetyArea[] = [
+        {
+          id: "fallback_safe",
+          name: "Current Area",
+          type: "neutral",
+          lat: currentLocation.latitude,
+          lng: currentLocation.longitude,
+          radius: 500,
+          score: 70,
+          lastUpdated: Date.now(),
+        },
+      ];
+
+      setSafetyAreas(basicAreas);
+      onFeatureUpdate?.("safety", basicAreas);
+    }
   }, [currentLocation, onFeatureUpdate]);
 
   // Load traffic information

@@ -74,7 +74,7 @@ class RealTimeService extends EventEmitter {
     this.updateInterval = setInterval(() => {
       this.updateStats();
       this.updateLocationFromBrowser();
-      this.checkForRealTimeAlerts();
+      this.checkForAlerts();
     }, 30000);
 
     this.isConnected = true;
@@ -84,18 +84,19 @@ class RealTimeService extends EventEmitter {
   private updateStats() {
     if (!this.stats) return;
 
+    // Simulate real-time stats updates
     const previousStats = { ...this.stats };
 
-    // Real usage tracking
-    if (this.currentLocation) {
-      // Count actual trips when location changes significantly
+    // Gradually increase safe trips (simulate real usage)
+    if (Math.random() > 0.7) {
       this.stats.safeTrips += 1;
     }
 
-    // Update safety score based on current location if available
-    if (this.currentLocation?.safetyScore) {
-      this.stats.safetyScore = this.currentLocation.safetyScore;
-    }
+    // Simulate safety score fluctuations based on location and time
+    const timeOfDay = new Date().getHours();
+    const baseScore = timeOfDay >= 22 || timeOfDay <= 6 ? 85 : 95; // Lower at night
+    const variation = (Math.random() - 0.5) * 10; // ±5 points
+    this.stats.safetyScore = Math.max(70, Math.min(100, baseScore + variation));
 
     // Update timestamp
     this.stats.lastUpdated = new Date();
@@ -113,7 +114,7 @@ class RealTimeService extends EventEmitter {
     // Get current location from browser
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
+        (position) => {
           const newLocation: RealTimeLocation = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
@@ -121,14 +122,8 @@ class RealTimeService extends EventEmitter {
             timestamp: position.timestamp,
           };
 
-          // Add safety score using real analysis
-          try {
-            newLocation.safetyScore =
-              await this.calculateLocationSafety(newLocation);
-          } catch (error) {
-            console.warn("Safety calculation failed:", error);
-            newLocation.safetyScore = 75; // fallback
-          }
+          // Add safety score based on location (mock calculation)
+          newLocation.safetyScore = this.calculateLocationSafety(newLocation);
 
           this.currentLocation = newLocation;
           this.emit("locationUpdated", newLocation);
@@ -146,84 +141,60 @@ class RealTimeService extends EventEmitter {
     this.emit("locationUpdated", location);
   }
 
-  private async calculateLocationSafety(
-    location: RealTimeLocation,
-  ): Promise<number> {
-    try {
-      // Use real safety analysis from Gemini service
-      const { geminiNewsAnalysisService } = await import(
-        "./geminiNewsAnalysisService"
-      );
-      const analysis = await geminiNewsAnalysisService.analyzeAreaSafety(
-        location.latitude,
-        location.longitude,
-      );
-      return analysis.score;
-    } catch (error) {
-      console.warn("Real-time safety analysis failed, using fallback:", error);
+  private calculateLocationSafety(location: RealTimeLocation): number {
+    // Mock safety calculation based on coordinates
+    // In real app, this would call safety API
+    const lat = location.latitude;
+    const lng = location.longitude;
 
-      // Fallback: time-based basic safety calculation
-      const hour = new Date().getHours();
-      const isDaytime = hour >= 6 && hour <= 20;
-      const baseScore = isDaytime ? 75 : 65;
+    // Simple algorithm: closer to city center = higher safety (mock)
+    const distance = Math.sqrt(
+      Math.pow(lat - 37.7749, 2) + Math.pow(lng + 122.4194, 2),
+    );
+    const baseSafety = Math.max(60, 100 - distance * 1000);
 
-      // Minor variation for realism
-      const variation = (Math.random() - 0.5) * 10;
-      return Math.max(50, Math.min(95, baseScore + variation));
-    }
+    // Add random variation
+    const variation = (Math.random() - 0.5) * 20;
+    return Math.max(50, Math.min(100, baseSafety + variation));
   }
 
-  private async checkForRealTimeAlerts() {
-    if (!this.currentLocation) return;
+  private checkForAlerts() {
+    // Simulate random alerts (replace with real alert checking)
+    if (Math.random() > 0.95) {
+      // 5% chance of new alert
+      const alertTypes = ["warning", "info"] as const;
+      const alertType =
+        alertTypes[Math.floor(Math.random() * alertTypes.length)];
 
-    try {
-      // Check for real news-based alerts in current area
-      const { geminiNewsAnalysisService } = await import(
-        "./geminiNewsAnalysisService"
-      );
-      const newsAnalysis = await geminiNewsAnalysisService.getLatestNews(
-        this.currentLocation.latitude,
-        this.currentLocation.longitude,
-        5, // 5km radius
-      );
+      const alert: RealTimeAlert = {
+        id: `alert_${Date.now()}`,
+        type: alertType,
+        title: alertType === "warning" ? "Area Advisory" : "Safety Update",
+        message:
+          alertType === "warning"
+            ? "Increased police activity in your area. Stay alert."
+            : "Local safety conditions have improved.",
+        location: this.currentLocation || undefined,
+        timestamp: new Date(),
+        expiresAt: new Date(Date.now() + 3600000), // 1 hour
+      };
 
-      // Create alerts from significant news events
-      for (const news of newsAnalysis) {
-        if (news.safetyRating < 6 && news.distance < 2) {
-          // High risk within 2km
-          const alert: RealTimeAlert = {
-            id: `news_${news.id}`,
-            type: "warning",
-            title: "Safety Alert",
-            message: `${news.title} - ${news.summary}`,
-            location: this.currentLocation,
-            timestamp: new Date(news.publishedAt),
-            expiresAt: new Date(Date.now() + 6 * 3600000), // 6 hours
-          };
+      this.alerts.push(alert);
+      this.emit("alertReceived", alert);
 
-          // Check if we already have this alert
-          const existingAlert = this.alerts.find((a) => a.id === alert.id);
-          if (!existingAlert) {
-            this.alerts.push(alert);
-            this.emit("alertReceived", alert);
-          }
-        }
+      // Update active alerts count
+      if (this.stats) {
+        this.stats.activeAlerts = this.alerts.filter(
+          (a) => !a.expiresAt || a.expiresAt > new Date(),
+        ).length;
+        this.emit("statsUpdated", this.stats);
       }
-    } catch (error) {
-      console.warn("Failed to check for real-time alerts:", error);
     }
 
     // Clean up expired alerts
     this.alerts = this.alerts.filter(
       (alert) => !alert.expiresAt || alert.expiresAt > new Date(),
     );
-
-    // Update alert count
-    if (this.stats) {
-      this.stats.activeAlerts = this.alerts.filter(
-        (a) => !a.expiresAt || a.expiresAt > new Date(),
-      ).length;
-    }
   }
 
   // Public methods
@@ -290,8 +261,22 @@ class RealTimeService extends EventEmitter {
 
     this.liveTrackingInterval = setInterval(
       () => {
-        // Get fresh location data from browser
-        this.updateLocationFromBrowser();
+        // In a real app, this would get fresh location data
+        // For now, simulate slight location changes
+        if (this.currentLocation) {
+          const updatedLocation = {
+            ...this.currentLocation,
+            timestamp: Date.now(),
+            // Simulate minor location variance
+            latitude:
+              this.currentLocation.latitude + (Math.random() - 0.5) * 0.0001,
+            longitude:
+              this.currentLocation.longitude + (Math.random() - 0.5) * 0.0001,
+          };
+
+          this.updateLocation(updatedLocation);
+          this.emit("liveTrackingUpdate", updatedLocation);
+        }
       },
       2 * 60 * 1000,
     ); // 2 minutes
@@ -372,10 +357,6 @@ class RealTimeService extends EventEmitter {
     if (this.updateInterval) {
       clearInterval(this.updateInterval);
       this.updateInterval = null;
-    }
-    if (this.liveTrackingInterval) {
-      clearInterval(this.liveTrackingInterval);
-      this.liveTrackingInterval = null;
     }
     this.isConnected = false;
     this.emit("disconnected");
