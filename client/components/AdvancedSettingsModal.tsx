@@ -42,36 +42,18 @@ interface AdvancedSettingsModalProps {
 }
 
 interface SettingsState {
-  // Privacy Settings
-  profileVisibility: boolean;
+  // Location Settings
   locationTracking: boolean;
-  activityStatus: boolean;
-  contactsAccess: boolean;
 
   // Notification Settings
   pushNotifications: boolean;
-  emailNotifications: boolean;
-  smsNotifications: boolean;
   emergencyAlerts: boolean;
-  weeklyReports: boolean;
-
-  // Security Settings
-  twoFactorAuth: boolean;
-  sessionTimeout: number;
-  autoLock: boolean;
-  biometricAuth: boolean;
 
   // Emergency Settings
   emergencyTimeout: number;
   silentMode: boolean;
   autoShareLocation: boolean;
   emergencyRecording: boolean;
-
-  // Performance Settings
-  backgroundRefresh: boolean;
-  dataUsage: boolean;
-  crashReports: boolean;
-  analytics: boolean;
 }
 
 export function AdvancedSettingsModal({
