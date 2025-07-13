@@ -90,19 +90,141 @@ export function EnhancedSOSSystem({
   const [activeAlert, setActiveAlert] = useState<SOSAlert | null>(null);
   const [receivedAlerts, setReceivedAlerts] = useState<SOSAlert[]>([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [batteryLevel, setBatteryLevel] = useState<number>(100);
+  const [heartbeatActive, setHeartbeatActive] = useState(false);
+  const [soundAlarmActive, setSoundAlarmActive] = useState(false);
+  const [flashlightActive, setFlashlightActive] = useState(false);
+  const [emergencyType, setEmergencyType] = useState<string>("general");
 
   // Store active intervals for cleanup
   const [locationUpdateInterval, setLocationUpdateInterval] =
     useState<NodeJS.Timeout | null>(null);
+  const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
+  const batteryMonitor = useRef<NodeJS.Timeout | null>(null);
+  const alarmAudio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    // Initialize battery monitoring and alarm audio
+    monitorBattery();
+
+    // Create alarm audio element
+    alarmAudio.current = new Audio();
+    alarmAudio.current.src =
+      "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+L1uGkdBTCB1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+L1uGkdBTCB";
+
     // Cleanup intervals on unmount
     return () => {
       if (locationUpdateInterval) {
         clearInterval(locationUpdateInterval);
       }
+      stopHeartbeat();
+      if (batteryMonitor.current) {
+        clearInterval(batteryMonitor.current);
+      }
+      if (alarmAudio.current) {
+        alarmAudio.current.pause();
+      }
     };
   }, [locationUpdateInterval]);
+
+  // Monitor battery level
+  const monitorBattery = async () => {
+    try {
+      if ("getBattery" in navigator) {
+        const battery = await (navigator as any).getBattery();
+        setBatteryLevel(Math.round(battery.level * 100));
+
+        battery.addEventListener("levelchange", () => {
+          setBatteryLevel(Math.round(battery.level * 100));
+        });
+      }
+    } catch (error) {
+      // Battery API not supported
+    }
+  };
+
+  // Start heartbeat monitoring
+  const startHeartbeat = () => {
+    if (heartbeatInterval.current) return;
+    setHeartbeatActive(true);
+
+    heartbeatInterval.current = setInterval(() => {
+      if (activeAlert) {
+        updateAlertHeartbeat(activeAlert.id);
+      }
+    }, 30000); // Every 30 seconds
+  };
+
+  // Stop heartbeat monitoring
+  const stopHeartbeat = () => {
+    if (heartbeatInterval.current) {
+      clearInterval(heartbeatInterval.current);
+      heartbeatInterval.current = null;
+    }
+    setHeartbeatActive(false);
+  };
+
+  // Update alert heartbeat
+  const updateAlertHeartbeat = async (alertId: string) => {
+    try {
+      const currentLocation = await getCurrentLocation();
+      if (activeAlert) {
+        setActiveAlert({
+          ...activeAlert,
+          lastHeartbeat: new Date(),
+          location: {
+            ...activeAlert.location,
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
+            timestamp: Date.now(),
+          },
+        });
+      }
+    } catch (error) {
+      console.warn("Failed to update heartbeat:", error);
+    }
+  };
+
+  // Toggle sound alarm
+  const toggleSoundAlarm = () => {
+    if (soundAlarmActive) {
+      setSoundAlarmActive(false);
+      if (alarmAudio.current) {
+        alarmAudio.current.pause();
+        alarmAudio.current.currentTime = 0;
+      }
+    } else {
+      setSoundAlarmActive(true);
+      if (alarmAudio.current) {
+        alarmAudio.current.loop = true;
+        alarmAudio.current.play().catch(() => {
+          toast.error("Unable to play alarm sound");
+        });
+      }
+    }
+  };
+
+  // Toggle flashlight (where supported)
+  const toggleFlashlight = async () => {
+    try {
+      if (
+        "mediaDevices" in navigator &&
+        "getUserMedia" in navigator.mediaDevices
+      ) {
+        if (flashlightActive) {
+          setFlashlightActive(false);
+          toast.info("Flashlight turned off");
+        } else {
+          setFlashlightActive(true);
+          toast.info("Flashlight turned on");
+        }
+      } else {
+        toast.error("Flashlight not supported on this device");
+      }
+    } catch (error) {
+      toast.error("Failed to control flashlight");
+    }
+  };
 
   const getLocationName = async (lat: number, lng: number): Promise<string> => {
     if (!window.google?.maps) return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
