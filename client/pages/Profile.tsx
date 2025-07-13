@@ -285,12 +285,7 @@ export default function Profile() {
       {/* Navigation */}
       <MagicNavbar />
 
-      {/* SOS Notification Manager */}
-      {currentUser &&
-        userProfile &&
-        {
-          /* SOS notifications now handled by unified notification system */
-        }}
+      {/* SOS notifications now handled by unified notification system */}
 
       <main className="container px-4 py-6 space-y-6 max-w-4xl mx-auto">
         {/* Profile Header */}
