@@ -1345,6 +1345,48 @@ export default function Index() {
                       />
                     </motion.div>
 
+                    <motion.div
+                      className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      <div>
+                        <p className="text-sm font-medium">Gesture Controls</p>
+                        <p className="text-xs text-muted-foreground">
+                          Emergency gestures & navigation
+                        </p>
+                      </div>
+                      <CustomCheckbox
+                        checked={gesturesEnabled}
+                        onChange={(checked) => {
+                          setGesturesEnabled(checked);
+                          unifiedNotifications.info(
+                            checked
+                              ? "Gesture controls enabled"
+                              : "Gesture controls disabled",
+                            {
+                              message: checked
+                                ? "5 rapid taps or shake for SOS, 3-finger hold for panic mode"
+                                : "Emergency gesture detection turned off",
+                            },
+                          );
+                        }}
+                        size="sm"
+                      />
+                    </motion.div>
+
+                    {/* Gesture Guide */}
+                    {gesturesEnabled && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-2"
+                      >
+                        <GestureGuide />
+                      </motion.div>
+                    )}
+
                     {/* Debug Console Content */}
                     {routeSettings.showDebug && (
                       <motion.div
