@@ -27,7 +27,7 @@ import {
 } from "@/components/SlidingPanel";
 import { EmergencyDetection } from "@/components/EmergencyDetection";
 import { SafetyMap } from "@/components/SafetyMap";
-import { GoogleMap as EnhancedGoogleMap } from "@/components/SimpleEnhancedGoogleMap";
+import { IntelligentGoogleMap } from "@/components/IntelligentGoogleMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { RealTimeSOSTracker } from "@/components/RealTimeSOSTracker";
@@ -35,7 +35,7 @@ import { EnhancedSOSButton } from "@/components/EnhancedSOSButton";
 
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { SOSAlertManager } from "@/components/SOSAlertManager";
-import { BackgroundSafetyMonitor } from "@/components/BackgroundSafetyMonitor";
+import { ComprehensiveSafetySystem } from "@/components/ComprehensiveSafetySystem";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MapServiceInfo } from "@/components/MapServiceInfo";
 
