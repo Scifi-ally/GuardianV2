@@ -128,17 +128,14 @@ export class EnhancedLocationService {
             return;
           }
 
-          // Only use demo location as last resort
-          const demoLocation: LocationData = {
-            latitude: 37.7749,
-            longitude: -122.4194,
-            accuracy: 1000,
-            timestamp: Date.now(),
-          };
-
-          console.log("📍 Using demo location as fallback");
-          this.lastKnownLocation = demoLocation;
-          resolve(demoLocation);
+          // CRITICAL: Never provide false coordinates during emergencies
+          const error = new Error(
+            "Location access denied. Emergency features require location permission. Please enable location access in your browser settings.",
+          );
+          console.error(
+            "🚨 EMERGENCY SAFETY WARNING: Location permission denied - emergency responders will not be able to locate you",
+          );
+          reject(error);
         },
         {
           enableHighAccuracy: true,
