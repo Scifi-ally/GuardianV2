@@ -314,10 +314,10 @@ export function AdvancedSettingsModal({
 
   const renderCategoryContent = () => {
     switch (activeCategory) {
-      case "privacy":
+      case "location":
         return (
           <motion.div
-            key="privacy"
+            key="location"
             variants={contentVariants}
             initial="hidden"
             animate="visible"
@@ -325,28 +325,10 @@ export function AdvancedSettingsModal({
             className="space-y-4"
           >
             <SettingItem
-              icon={Eye}
-              title="Profile Visibility"
-              description="Control who can see your profile information"
-              settingKey="profileVisibility"
-            />
-            <SettingItem
               icon={MapPin}
               title="Location Tracking"
-              description="Allow the app to track your location for safety features"
+              description="Enable high-accuracy GPS tracking for safety features and emergency response"
               settingKey="locationTracking"
-            />
-            <SettingItem
-              icon={Users}
-              title="Activity Status"
-              description="Share your online status with emergency contacts"
-              settingKey="activityStatus"
-            />
-            <SettingItem
-              icon={Smartphone}
-              title="Contacts Access"
-              description="Allow access to your device contacts for emergency features"
-              settingKey="contactsAccess"
             />
           </motion.div>
         );
