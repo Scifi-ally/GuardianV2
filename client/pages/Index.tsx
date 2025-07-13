@@ -266,7 +266,7 @@ export default function Index() {
   const { gesturesEnabled, setGesturesEnabled } = useGestures({
     onSOSActivated: () => {
       unifiedNotifications.sos({
-        title: "🚨 Gesture SOS Activated",
+        title: "�� Gesture SOS Activated",
         message:
           "Emergency SOS triggered by rapid taps or shake - immediate assistance needed!",
       });
@@ -603,818 +603,828 @@ export default function Index() {
   // Route refreshes automatically when destination changes
   // SOS functionality is handled by MagicNavbar component
 
-    return (
+  return (
     <ErrorBoundary>
       <div className="min-h-screen bg-background">
         <PerformanceOptimizer />
-      <ClickableFixes />
-      {/* Compact Navigation Header - Reduced Height */}
-      {/* Compact Search Bar */}
-      <CompactSearchBar
-        fromLocation={fromLocation}
-        setFromLocation={setFromLocation}
-        toLocation={toLocation}
-        setToLocation={setToLocation}
-        onSearch={handleSearch}
-        onUseCurrentLocation={handleUseCurrentLocation}
-        location={location}
-        isSearching={isNavigating}
-      />
-
-      {/* Clear Route Button */}
-      {destination && (
-        <div className="container mx-auto px-3 py-1">
-          <Button
-            onClick={() => {
-              setDestination(undefined);
-              setIsNavigating(false);
-              setRouteInstructions([]);
-              setTurnByTurnInstructions([]);
-              setRouteSummary(null);
-            }}
-            size="sm"
-            variant="outline"
-            className="w-full h-8 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700"
-          >
-            Clear Route
-          </Button>
-        </div>
-      )}
-
-      {/* Transportation mode simplified to walking by default */}
-      {/* Unified Slidedown Notifications */}
-      <SlideDownNotifications />
-
-      {/* Emergency Alerts */}
-      <EmergencyAlerts />
-
-      {/* AI Navigation Panel */}
-      <AINavigationPanel
-        isVisible={showAIPanel}
-        onClose={() => setShowAIPanel(false)}
-      />
-
-      {/* Location Permission Prompt removed */}
-
-      {/* Enhanced Google Map with Safety Score Coloring */}
-      <div className="absolute inset-0 top-0 z-10">
-        <IntelligentGoogleMap
-          key="main-map"
+        <ClickableFixes />
+        {/* Compact Navigation Header - Reduced Height */}
+        {/* Compact Search Bar */}
+        <CompactSearchBar
+          fromLocation={fromLocation}
+          setFromLocation={setFromLocation}
+          toLocation={toLocation}
+          setToLocation={setToLocation}
+          onSearch={handleSearch}
+          onUseCurrentLocation={handleUseCurrentLocation}
           location={location}
-          mapTheme={mapTheme}
-          mapType={mapType}
-          showTraffic={routeSettings.showTraffic}
-          showSafeZones={routeSettings.showSafeZones}
-          showEmergencyServices={routeSettings.showEmergencyServices}
-          showSafeAreaCircles={routeSettings.showSafeAreaCircles}
-          showDebug={routeSettings.showDebug}
-          zoomLevel={routeSettings.zoomLevel}
-          destination={destination}
-          trackUserLocation={true}
-          travelMode={travelMode}
-          onDirectionsChange={handleDirectionsChange}
-          showSharedLocations={true}
-          currentUserId={userProfile?.uid}
-          emergencyContacts={emergencyContacts.map((contact) => ({
-            id: contact.id,
-            name: contact.name,
-            phone: contact.phone || "",
-            guardianKey: contact.guardianKey,
-            location: {
-              lat: 37.7749 + Math.random() * 0.01,
-              lng: -122.4194 + Math.random() * 0.01,
-            },
-          }))}
-          onLocationUpdate={(newLocation) => {}}
+          isSearching={isNavigating}
         />
-      </div>
 
-      {/* Notification Permission Prompt */}
-      <NotificationPermissionPrompt
-        onClose={() => setShowNotificationPrompt(false)}
-        autoShow={true}
-      />
-
-      {/* Route Selection Modal */}
-      {showRouteSelection && routeOptions && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
-            <RouteSelection
-              safestRoute={routeOptions.safestRoute}
-              quickestRoute={routeOptions.quickestRoute}
-              recommendedRoute={routeOptions.recommendedRoute}
-              onRouteSelect={handleRouteSelect}
-              onClose={() => setShowRouteSelection(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Slide Up Panel with Tabs for Navigation, Contacts, and Settings */}
-      <SlideUpPanel
-        minHeight={200}
-        maxHeight={Math.floor(window.innerHeight * 0.8)}
-        initialHeight={Math.floor(window.innerHeight * 0.45)}
-        bottomOffset={80}
-        collapsedHeight={60}
-        onTouchOutside={() => {}}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          <Tabs
-            defaultValue={isNavigating ? "navigation" : "safety"}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-3 h-12 bg-slate-100/80 backdrop-blur-sm rounded-xl p-1 shadow-sm">
-              <TabsTrigger
-                value="navigation"
-                className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Navigation className="h-4 w-4 mr-1.5" />
-                ROUTES
-              </TabsTrigger>
-              <TabsTrigger
-                value="safety"
-                className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Navigation2 className="h-4 w-4 mr-1.5" />
-                SAFETY
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="settings"
-                className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-              >
-                <Settings className="h-4 w-4 mr-1.5" />
-                SETTINGS
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent
-              value="safety"
-              className="mt-6 space-y-6 transform transition-all duration-300 ease-out slide-up"
+        {/* Clear Route Button */}
+        {destination && (
+          <div className="container mx-auto px-3 py-1">
+            <Button
+              onClick={() => {
+                setDestination(undefined);
+                setIsNavigating(false);
+                setRouteInstructions([]);
+                setTurnByTurnInstructions([]);
+                setRouteSummary(null);
+              }}
+              size="sm"
+              variant="outline"
+              className="w-full h-8 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700"
             >
-              <motion.div
-                className="space-y-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
-                    <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
-                      <div className="p-2 bg-blue-500 rounded-xl shadow-md">
-                        <Target className="h-5 w-5 text-white" />
-                      </div>
-                      LOCATION SHARING
-                      <LocationSharingInfoButton />
-                    </h3>
-                    <p className="text-sm text-slate-600 font-mono mb-4">
-                      Share your location with trusted contacts for enhanced
-                      safety
-                    </p>
-                  </div>
+              Clear Route
+            </Button>
+          </div>
+        )}
 
-                  <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100/50 shadow-sm">
-                    <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
-                      <div className="p-2 bg-red-500 rounded-xl shadow-md">
-                        <AlertTriangle className="h-5 w-5 text-white" />
+        {/* Transportation mode simplified to walking by default */}
+        {/* Unified Slidedown Notifications */}
+        <SlideDownNotifications />
+
+        {/* Emergency Alerts */}
+        <EmergencyAlerts />
+
+        {/* AI Navigation Panel */}
+        <AINavigationPanel
+          isVisible={showAIPanel}
+          onClose={() => setShowAIPanel(false)}
+        />
+
+        {/* Location Permission Prompt removed */}
+
+        {/* Enhanced Google Map with Safety Score Coloring */}
+        <div className="absolute inset-0 top-0 z-10">
+          <IntelligentGoogleMap
+            key="main-map"
+            location={location}
+            mapTheme={mapTheme}
+            mapType={mapType}
+            showTraffic={routeSettings.showTraffic}
+            showSafeZones={routeSettings.showSafeZones}
+            showEmergencyServices={routeSettings.showEmergencyServices}
+            showSafeAreaCircles={routeSettings.showSafeAreaCircles}
+            showDebug={routeSettings.showDebug}
+            zoomLevel={routeSettings.zoomLevel}
+            destination={destination}
+            trackUserLocation={true}
+            travelMode={travelMode}
+            onDirectionsChange={handleDirectionsChange}
+            showSharedLocations={true}
+            currentUserId={userProfile?.uid}
+            emergencyContacts={emergencyContacts.map((contact) => ({
+              id: contact.id,
+              name: contact.name,
+              phone: contact.phone || "",
+              guardianKey: contact.guardianKey,
+              location: {
+                lat: 37.7749 + Math.random() * 0.01,
+                lng: -122.4194 + Math.random() * 0.01,
+              },
+            }))}
+            onLocationUpdate={(newLocation) => {}}
+          />
+        </div>
+
+        {/* Notification Permission Prompt */}
+        <NotificationPermissionPrompt
+          onClose={() => setShowNotificationPrompt(false)}
+          autoShow={true}
+        />
+
+        {/* Route Selection Modal */}
+        {showRouteSelection && routeOptions && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+              <RouteSelection
+                safestRoute={routeOptions.safestRoute}
+                quickestRoute={routeOptions.quickestRoute}
+                recommendedRoute={routeOptions.recommendedRoute}
+                onRouteSelect={handleRouteSelect}
+                onClose={() => setShowRouteSelection(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Slide Up Panel with Tabs for Navigation, Contacts, and Settings */}
+        <SlideUpPanel
+          minHeight={200}
+          maxHeight={Math.floor(window.innerHeight * 0.8)}
+          initialHeight={Math.floor(window.innerHeight * 0.45)}
+          bottomOffset={80}
+          collapsedHeight={60}
+          onTouchOutside={() => {}}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            <Tabs
+              defaultValue={isNavigating ? "navigation" : "safety"}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-3 h-12 bg-slate-100/80 backdrop-blur-sm rounded-xl p-1 shadow-sm">
+                <TabsTrigger
+                  value="navigation"
+                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                >
+                  <Navigation className="h-4 w-4 mr-1.5" />
+                  ROUTES
+                </TabsTrigger>
+                <TabsTrigger
+                  value="safety"
+                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                >
+                  <Navigation2 className="h-4 w-4 mr-1.5" />
+                  SAFETY
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="settings"
+                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                >
+                  <Settings className="h-4 w-4 mr-1.5" />
+                  SETTINGS
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent
+                value="safety"
+                className="mt-6 space-y-6 transform transition-all duration-300 ease-out slide-up"
+              >
+                <motion.div
+                  className="space-y-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
+                      <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
+                        <div className="p-2 bg-blue-500 rounded-xl shadow-md">
+                          <Target className="h-5 w-5 text-white" />
+                        </div>
+                        LOCATION SHARING
+                        <LocationSharingInfoButton />
+                      </h3>
+                      <p className="text-sm text-slate-600 font-mono mb-4">
+                        Share your location with trusted contacts for enhanced
+                        safety
+                      </p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100/50 shadow-sm">
+                      <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
+                        <div className="p-2 bg-red-500 rounded-xl shadow-md">
+                          <AlertTriangle className="h-5 w-5 text-white" />
+                        </div>
+                        EMERGENCY SOS
+                      </h3>
+                      <p className="text-sm text-slate-600 font-mono mb-4">
+                        Use the red SOS button in the bottom navigation to send
+                        emergency alerts
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-red-600">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span>
+                          Press and hold for 3 seconds to activate emergency
+                          mode
+                        </span>
                       </div>
-                      EMERGENCY SOS
-                    </h3>
-                    <p className="text-sm text-slate-600 font-mono mb-4">
-                      Use the red SOS button in the bottom navigation to send
-                      emergency alerts
-                    </p>
-                    <div className="flex items-center gap-2 text-sm text-red-600">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span>
-                        Press and hold for 3 seconds to activate emergency mode
-                      </span>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            </TabsContent>
+                </motion.div>
+              </TabsContent>
 
-            <TabsContent
-              value="navigation"
-              className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-right"
-            >
-              {isNavigating && turnByTurnInstructions.length > 0 ? (
-                // Navigation Instructions
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Navigation className="h-5 w-5 text-primary" />
-                      Turn-by-Turn Navigation
-                    </h3>
-                    <Badge className="bg-primary/20 text-primary">Active</Badge>
-                  </div>
+              <TabsContent
+                value="navigation"
+                className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-right"
+              >
+                {isNavigating && turnByTurnInstructions.length > 0 ? (
+                  // Navigation Instructions
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Navigation className="h-5 w-5 text-primary" />
+                        Turn-by-Turn Navigation
+                      </h3>
+                      <Badge className="bg-primary/20 text-primary">
+                        Active
+                      </Badge>
+                    </div>
 
-                  {/* Route Summary */}
-                  {routeSummary && (
-                    <Card className="bg-primary/5 border-primary/20">
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {travelMode === "WALKING" && (
-                              <Footprints className="h-4 w-4 text-primary" />
-                            )}
-                            {travelMode === "DRIVING" && (
-                              <Car className="h-4 w-4 text-primary" />
-                            )}
-                            {travelMode === "BICYCLING" && (
-                              <Bike className="h-4 w-4 text-primary" />
-                            )}
-                            <span className="text-sm font-medium">
-                              Route Summary ({travelMode.toLowerCase()})
-                            </span>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {routeSummary.distance} • {routeSummary.duration}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {turnByTurnInstructions.map((step, index) => (
-                      <Card
-                        key={index}
-                        className={cn(
-                          "transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md",
-                          index === 0
-                            ? "border-primary bg-primary/5 animate-in slide-in-from-left-2"
-                            : "bg-muted/30 animate-in slide-in-from-left-1",
-                        )}
-                        style={{ animationDelay: `${index * 100}ms` }}
-                      >
+                    {/* Route Summary */}
+                    {routeSummary && (
+                      <Card className="bg-primary/5 border-primary/20">
                         <CardContent className="p-3">
-                          <div className="flex items-start gap-3">
-                            <div
-                              className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold",
-                                index === 0
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted text-muted-foreground",
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {travelMode === "WALKING" && (
+                                <Footprints className="h-4 w-4 text-primary" />
                               )}
-                            >
-                              {index === 0 ? "📍" : index + 1}
+                              {travelMode === "DRIVING" && (
+                                <Car className="h-4 w-4 text-primary" />
+                              )}
+                              {travelMode === "BICYCLING" && (
+                                <Bike className="h-4 w-4 text-primary" />
+                              )}
+                              <span className="text-sm font-medium">
+                                Route Summary ({travelMode.toLowerCase()})
+                              </span>
                             </div>
-                            <div className="flex-1">
-                              <p
-                                className={cn(
-                                  "text-sm leading-relaxed",
-                                  index === 0
-                                    ? "font-medium text-primary"
-                                    : "text-foreground",
-                                )}
-                              >
-                                {step.instruction}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs text-muted-foreground">
-                                  {step.distance}
-                                </span>
-                                {step.duration && (
-                                  <>
-                                    <span className="text-xs text-muted-foreground">
-                                      •
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {step.duration}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
+                            <div className="text-xs text-muted-foreground">
+                              {routeSummary.distance} • {routeSummary.duration}
                             </div>
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
+                    )}
 
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsNavigating(false);
-                      setRouteInstructions([]);
-                    }}
-                    className="w-full"
-                  >
-                    End Navigation
-                  </Button>
-                </div>
-              ) : (
-                // Route Planning
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Route Planning</h3>
-                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {turnByTurnInstructions.map((step, index) => (
+                        <Card
+                          key={index}
+                          className={cn(
+                            "transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md",
+                            index === 0
+                              ? "border-primary bg-primary/5 animate-in slide-in-from-left-2"
+                              : "bg-muted/30 animate-in slide-in-from-left-1",
+                          )}
+                          style={{ animationDelay: `${index * 100}ms` }}
+                        >
+                          <CardContent className="p-3">
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={cn(
+                                  "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold",
+                                  index === 0
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground",
+                                )}
+                              >
+                                {index === 0 ? "📍" : index + 1}
+                              </div>
+                              <div className="flex-1">
+                                <p
+                                  className={cn(
+                                    "text-sm leading-relaxed",
+                                    index === 0
+                                      ? "font-medium text-primary"
+                                      : "text-foreground",
+                                  )}
+                                >
+                                  {step.instruction}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-xs text-muted-foreground">
+                                    {step.distance}
+                                  </span>
+                                  {step.duration && (
+                                    <>
+                                      <span className="text-xs text-muted-foreground">
+                                        •
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {step.duration}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
                     <Button
                       variant="outline"
-                      className="h-12 sm:h-14 flex-col gap-1 text-xs sm:text-sm px-4 py-2 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-                      onClick={async () => {
-                        if (location && userProfile) {
-                          try {
-                            // Start sharing location on the map
-                            const sessionId =
-                              sharedLocationService.startLocationSharing(
+                      onClick={() => {
+                        setIsNavigating(false);
+                        setRouteInstructions([]);
+                      }}
+                      className="w-full"
+                    >
+                      End Navigation
+                    </Button>
+                  </div>
+                ) : (
+                  // Route Planning
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Route Planning</h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      <Button
+                        variant="outline"
+                        className="h-12 sm:h-14 flex-col gap-1 text-xs sm:text-sm px-4 py-2 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                        onClick={async () => {
+                          if (location && userProfile) {
+                            try {
+                              // Start sharing location on the map
+                              const sessionId =
+                                sharedLocationService.startLocationSharing(
+                                  userProfile.uid,
+                                  userProfile.displayName || "You",
+                                  userProfile.photoURL,
+                                );
+
+                              // Update initial location
+                              sharedLocationService.updateUserLocation(
                                 userProfile.uid,
                                 userProfile.displayName || "You",
+                                location.latitude,
+                                location.longitude,
+                                location.accuracy || 100,
                                 userProfile.photoURL,
                               );
 
-                            // Update initial location
-                            sharedLocationService.updateUserLocation(
-                              userProfile.uid,
-                              userProfile.displayName || "You",
-                              location.latitude,
-                              location.longitude,
-                              location.accuracy || 100,
-                              userProfile.photoURL,
-                            );
+                              // Get location name for sharing message
+                              let locationMessage = "My current location";
 
-                            // Get location name for sharing message
-                            let locationMessage = "My current location";
+                              if (window.google?.maps) {
+                                const geocoder = new google.maps.Geocoder();
+                                const latlng = {
+                                  lat: location.latitude,
+                                  lng: location.longitude,
+                                };
 
-                            if (window.google?.maps) {
-                              const geocoder = new google.maps.Geocoder();
-                              const latlng = {
-                                lat: location.latitude,
-                                lng: location.longitude,
-                              };
+                                geocoder.geocode(
+                                  { location: latlng },
+                                  (results, status) => {
+                                    if (
+                                      status === "OK" &&
+                                      results &&
+                                      results[0]
+                                    ) {
+                                      const result = results[0];
+                                      const components =
+                                        result.address_components;
 
-                              geocoder.geocode(
-                                { location: latlng },
-                                (results, status) => {
-                                  if (
-                                    status === "OK" &&
-                                    results &&
-                                    results[0]
-                                  ) {
-                                    const result = results[0];
-                                    const components =
-                                      result.address_components;
+                                      let shortName = "";
+                                      let neighborhood = "";
+                                      let city = "";
 
-                                    let shortName = "";
-                                    let neighborhood = "";
-                                    let city = "";
-
-                                    components.forEach((component) => {
-                                      const types = component.types;
-                                      if (
-                                        types.includes("establishment") ||
-                                        types.includes("point_of_interest")
-                                      ) {
-                                        shortName = component.long_name;
-                                      } else if (
-                                        types.includes("neighborhood") ||
-                                        types.includes("sublocality")
-                                      ) {
-                                        neighborhood = component.long_name;
-                                      } else if (types.includes("locality")) {
-                                        city = component.long_name;
-                                      }
-                                    });
-
-                                    if (shortName) {
-                                      locationMessage = `My location: ${shortName}`;
-                                    } else if (neighborhood && city) {
-                                      locationMessage = `My location: ${neighborhood}, ${city}`;
-                                    } else if (city) {
-                                      locationMessage = `My location: ${city}`;
-                                    }
-
-                                    const message = `${locationMessage} (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`;
-
-                                    if (navigator.share) {
-                                      navigator.share({
-                                        title: "My Location",
-                                        text: message,
-                                      });
-                                    } else {
-                                      // Copy to clipboard with fallback
-                                      try {
+                                      components.forEach((component) => {
+                                        const types = component.types;
                                         if (
-                                          navigator.clipboard &&
-                                          window.isSecureContext
+                                          types.includes("establishment") ||
+                                          types.includes("point_of_interest")
                                         ) {
-                                          navigator.clipboard.writeText(
+                                          shortName = component.long_name;
+                                        } else if (
+                                          types.includes("neighborhood") ||
+                                          types.includes("sublocality")
+                                        ) {
+                                          neighborhood = component.long_name;
+                                        } else if (types.includes("locality")) {
+                                          city = component.long_name;
+                                        }
+                                      });
+
+                                      if (shortName) {
+                                        locationMessage = `My location: ${shortName}`;
+                                      } else if (neighborhood && city) {
+                                        locationMessage = `My location: ${neighborhood}, ${city}`;
+                                      } else if (city) {
+                                        locationMessage = `My location: ${city}`;
+                                      }
+
+                                      const message = `${locationMessage} (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`;
+
+                                      if (navigator.share) {
+                                        navigator.share({
+                                          title: "My Location",
+                                          text: message,
+                                        });
+                                      } else {
+                                        // Copy to clipboard with fallback
+                                        try {
+                                          if (
+                                            navigator.clipboard &&
+                                            window.isSecureContext
+                                          ) {
+                                            navigator.clipboard.writeText(
+                                              message,
+                                            );
+                                          } else {
+                                            const textArea =
+                                              document.createElement(
+                                                "textarea",
+                                              );
+                                            textArea.value = message;
+                                            textArea.style.position = "fixed";
+                                            textArea.style.left = "-999999px";
+                                            textArea.style.top = "-999999px";
+                                            document.body.appendChild(textArea);
+                                            textArea.focus();
+                                            textArea.select();
+                                            document.execCommand("copy");
+                                            document.body.removeChild(textArea);
+                                          }
+                                          addNotification({
+                                            type: "success",
+                                            title: "Location Shared",
+                                            message:
+                                              "Location copied to clipboard!",
+                                          });
+                                        } catch (error) {
+                                          console.error("Copy failed:", error);
+                                          addNotification({
+                                            type: "error",
+                                            title: "Share Failed",
+                                            message:
+                                              "Failed to copy location to clipboard",
+                                          });
+                                        }
+                                      }
+                                    } else {
+                                      // Fallback to coordinates
+                                      const message = `My current location: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
+                                      if (navigator.share) {
+                                        navigator.share({
+                                          title: "My Location",
+                                          text: message,
+                                        });
+                                      } else {
+                                        try {
+                                          navigator.clipboard?.writeText(
                                             message,
                                           );
-                                        } else {
-                                          const textArea =
-                                            document.createElement("textarea");
-                                          textArea.value = message;
-                                          textArea.style.position = "fixed";
-                                          textArea.style.left = "-999999px";
-                                          textArea.style.top = "-999999px";
-                                          document.body.appendChild(textArea);
-                                          textArea.focus();
-                                          textArea.select();
-                                          document.execCommand("copy");
-                                          document.body.removeChild(textArea);
+                                          addNotification({
+                                            type: "success",
+                                            title: "Location Shared",
+                                            message:
+                                              "Location copied to clipboard!",
+                                          });
+                                        } catch {
+                                          addNotification({
+                                            type: "error",
+                                            title: "Share Failed",
+                                            message:
+                                              "Failed to copy location to clipboard",
+                                          });
                                         }
-                                        addNotification({
-                                          type: "success",
-                                          title: "Location Shared",
-                                          message:
-                                            "Location copied to clipboard!",
-                                        });
-                                      } catch (error) {
-                                        console.error("Copy failed:", error);
-                                        addNotification({
-                                          type: "error",
-                                          title: "Share Failed",
-                                          message:
-                                            "Failed to copy location to clipboard",
-                                        });
                                       }
                                     }
-                                  } else {
-                                    // Fallback to coordinates
-                                    const message = `My current location: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
-                                    if (navigator.share) {
-                                      navigator.share({
-                                        title: "My Location",
-                                        text: message,
-                                      });
-                                    } else {
-                                      try {
-                                        navigator.clipboard?.writeText(message);
-                                        addNotification({
-                                          type: "success",
-                                          title: "Location Shared",
-                                          message:
-                                            "Location copied to clipboard!",
-                                        });
-                                      } catch {
-                                        addNotification({
-                                          type: "error",
-                                          title: "Share Failed",
-                                          message:
-                                            "Failed to copy location to clipboard",
-                                        });
-                                      }
-                                    }
-                                  }
-                                },
-                              );
-                            } else {
-                              // Fallback when Google Maps not available
-                              const message = `My current location: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
-                              if (navigator.share) {
-                                navigator.share({
-                                  title: "My Location",
-                                  text: message,
-                                });
+                                  },
+                                );
                               } else {
-                                try {
-                                  navigator.clipboard?.writeText(message);
-                                  addNotification({
-                                    type: "success",
-                                    title: "Location Shared",
-                                    message: "Location copied to clipboard!",
+                                // Fallback when Google Maps not available
+                                const message = `My current location: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
+                                if (navigator.share) {
+                                  navigator.share({
+                                    title: "My Location",
+                                    text: message,
                                   });
-                                } catch {
-                                  addNotification({
-                                    type: "error",
-                                    title: "Share Failed",
-                                    message:
-                                      "Failed to copy location to clipboard",
-                                  });
+                                } else {
+                                  try {
+                                    navigator.clipboard?.writeText(message);
+                                    addNotification({
+                                      type: "success",
+                                      title: "Location Shared",
+                                      message: "Location copied to clipboard!",
+                                    });
+                                  } catch {
+                                    addNotification({
+                                      type: "error",
+                                      title: "Share Failed",
+                                      message:
+                                        "Failed to copy location to clipboard",
+                                    });
+                                  }
                                 }
                               }
+                            } catch (error) {
+                              console.error("Location sharing failed:", error);
                             }
-                          } catch (error) {
-                            console.error("Location sharing failed:", error);
                           }
-                        }
-                      }}
-                    >
-                      <MapPin className="h-4 w-4" />
-                      Share Location
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-12 sm:h-14 flex-col gap-1 text-xs sm:text-sm px-4 py-2 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-                      onClick={async () => {
-                        try {
-                          if (!userProfile?.emergencyContacts?.length) {
-                            addNotification({
-                              type: "error",
-                              title: "Live Tracking Unavailable",
-                              message:
-                                "Please add emergency contacts first to enable live tracking.",
-                            });
-                            return;
-                          }
+                        }}
+                      >
+                        <MapPin className="h-4 w-4" />
+                        Share Location
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-12 sm:h-14 flex-col gap-1 text-xs sm:text-sm px-4 py-2 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                        onClick={async () => {
+                          try {
+                            if (!userProfile?.emergencyContacts?.length) {
+                              addNotification({
+                                type: "error",
+                                title: "Live Tracking Unavailable",
+                                message:
+                                  "Please add emergency contacts first to enable live tracking.",
+                              });
+                              return;
+                            }
 
-                          const currentLocation = await getCurrentLocation();
+                            const currentLocation = await getCurrentLocation();
 
-                          // Start live tracking with real-time service
-                          realTimeService.startLiveTracking({
-                            latitude: currentLocation.latitude,
-                            longitude: currentLocation.longitude,
-                            accuracy: currentLocation.accuracy,
-                            timestamp: Date.now(),
-                          });
-
-                          // Also start live tracking on the map
-                          if (userProfile) {
-                            const sessionId =
-                              sharedLocationService.startLiveTracking(
-                                userProfile.uid,
-                                userProfile.displayName || "You",
-                                userProfile.photoURL,
-                              );
-
-                            // Update initial location for live tracking
-                            sharedLocationService.updateUserLocation(
-                              userProfile.uid,
-                              userProfile.displayName || "You",
-                              currentLocation.latitude,
-                              currentLocation.longitude,
-                              currentLocation.accuracy,
-                              userProfile.photoURL,
-                              true, // isLiveTracking
-                            );
-                          }
-
-                          // Notify emergency contacts about live tracking
-                          const locationUrl = `https://maps.google.com/?q=${currentLocation.latitude},${currentLocation.longitude}`;
-                          await emergencyContactActionsService.sendEmergencyMessage(
-                            `���� LIVE TRACKING STARTED: I'm sharing my real-time location with you. Current location: ${locationUrl}. You'll receive updates every 2 minutes.`,
-                          );
-
-                          // Add to real-time alerts
-                          realTimeService.addAlert({
-                            id: `live-tracking-${Date.now()}`,
-                            type: "info",
-                            title: "Live Tracking Active",
-                            message: `Sharing location with ${userProfile.emergencyContacts.length} emergency contacts`,
-                            timestamp: new Date(),
-                            location: {
+                            // Start live tracking with real-time service
+                            realTimeService.startLiveTracking({
                               latitude: currentLocation.latitude,
                               longitude: currentLocation.longitude,
                               accuracy: currentLocation.accuracy,
                               timestamp: Date.now(),
-                            },
-                          });
+                            });
 
-                          addNotification({
-                            type: "success",
-                            title: "Live Tracking Started",
-                            message: `Your location is now being shared with ${userProfile.emergencyContacts.length} emergency contacts.`,
-                          });
-                        } catch (error) {
-                          console.error("Live tracking error:", error);
-                          addNotification({
-                            type: "error",
-                            title: "Live Tracking Failed",
-                            message:
-                              "Unable to start live tracking. Please check your location permissions.",
-                          });
-                        }
-                      }}
-                    >
-                      <Navigation className="h-4 w-4" />
-                      Live Tracking
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
+                            // Also start live tracking on the map
+                            if (userProfile) {
+                              const sessionId =
+                                sharedLocationService.startLiveTracking(
+                                  userProfile.uid,
+                                  userProfile.displayName || "You",
+                                  userProfile.photoURL,
+                                );
 
-            <TabsContent
-              value="settings"
-              className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-left"
-            >
-              <div className="space-y-4">
-                {/* Current Location with Name */}
-                {location && (
-                  <div className="bg-white border border-black/10 rounded-lg p-3">
-                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                      <Navigation2 className="h-4 w-4" />
-                      Current Location
-                    </h4>
-                    <SmartLocationDisplay
-                      latitude={location.latitude}
-                      longitude={location.longitude}
-                      showCoordinates={false}
-                      className="mb-2"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Real-time safety analysis active
-                    </p>
+                              // Update initial location for live tracking
+                              sharedLocationService.updateUserLocation(
+                                userProfile.uid,
+                                userProfile.displayName || "You",
+                                currentLocation.latitude,
+                                currentLocation.longitude,
+                                currentLocation.accuracy,
+                                userProfile.photoURL,
+                                true, // isLiveTracking
+                              );
+                            }
+
+                            // Notify emergency contacts about live tracking
+                            const locationUrl = `https://maps.google.com/?q=${currentLocation.latitude},${currentLocation.longitude}`;
+                            await emergencyContactActionsService.sendEmergencyMessage(
+                              `���� LIVE TRACKING STARTED: I'm sharing my real-time location with you. Current location: ${locationUrl}. You'll receive updates every 2 minutes.`,
+                            );
+
+                            // Add to real-time alerts
+                            realTimeService.addAlert({
+                              id: `live-tracking-${Date.now()}`,
+                              type: "info",
+                              title: "Live Tracking Active",
+                              message: `Sharing location with ${userProfile.emergencyContacts.length} emergency contacts`,
+                              timestamp: new Date(),
+                              location: {
+                                latitude: currentLocation.latitude,
+                                longitude: currentLocation.longitude,
+                                accuracy: currentLocation.accuracy,
+                                timestamp: Date.now(),
+                              },
+                            });
+
+                            addNotification({
+                              type: "success",
+                              title: "Live Tracking Started",
+                              message: `Your location is now being shared with ${userProfile.emergencyContacts.length} emergency contacts.`,
+                            });
+                          } catch (error) {
+                            console.error("Live tracking error:", error);
+                            addNotification({
+                              type: "error",
+                              title: "Live Tracking Failed",
+                              message:
+                                "Unable to start live tracking. Please check your location permissions.",
+                            });
+                          }
+                        }}
+                      >
+                        <Navigation className="h-4 w-4" />
+                        Live Tracking
+                      </Button>
+                    </div>
                   </div>
                 )}
+              </TabsContent>
 
-                {/* Map Style Settings */}
-                <div>
-                  <h4 className="text-sm font-medium mb-3">Map Display</h4>
-                  <div className="space-y-2">
-                    <motion.div
-                      className="flex items-center justify-between p-3 sm:p-4 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={toggleTheme}
-                    >
-                      <div>
-                        <p className="text-sm font-medium">Map Theme</p>
-                        <p className="text-xs text-muted-foreground">
-                          Light or dark
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border text-lg">
-                        {mapTheme === "light" ? "🌞" : "🌙"}
-                      </div>
-                    </motion.div>
-
-                    <motion.div
-                      className="flex items-center justify-between p-3 sm:p-4 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={toggleMapType}
-                    >
-                      <div>
-                        <p className="text-sm font-medium">Map Type</p>
-                        <p className="text-xs text-muted-foreground">
-                          Standard or satellite
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border text-lg">
-                        {mapType === "normal" ? "🗺️" : "🛰️"}
-                      </div>
-                    </motion.div>
-
-                    <motion.div
-                      className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      <div>
-                        <p className="text-sm font-medium">Traffic</p>
-                        <p className="text-xs text-muted-foreground">
-                          Real-time conditions
-                        </p>
-                      </div>
-                      <CustomCheckbox
-                        checked={routeSettings.showTraffic}
-                        onChange={(checked) =>
-                          setRouteSettings((prev) => ({
-                            ...prev,
-                            showTraffic: checked,
-                          }))
-                        }
-                        size="sm"
+              <TabsContent
+                value="settings"
+                className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-left"
+              >
+                <div className="space-y-4">
+                  {/* Current Location with Name */}
+                  {location && (
+                    <div className="bg-white border border-black/10 rounded-lg p-3">
+                      <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <Navigation2 className="h-4 w-4" />
+                        Current Location
+                      </h4>
+                      <SmartLocationDisplay
+                        latitude={location.latitude}
+                        longitude={location.longitude}
+                        showCoordinates={false}
+                        className="mb-2"
                       />
-                    </motion.div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Real-time safety analysis active
+                      </p>
+                    </div>
+                  )}
 
-                    <motion.div
-                      className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      <div>
-                        <p className="text-sm font-medium">Safe Zones</p>
-                        <p className="text-xs text-muted-foreground">
-                          Police & safe areas
-                        </p>
-                      </div>
-                      <CustomCheckbox
-                        checked={routeSettings.showSafeZones}
-                        onChange={(checked) =>
-                          setRouteSettings((prev) => ({
-                            ...prev,
-                            showSafeZones: checked,
-                          }))
-                        }
-                        size="sm"
-                      />
-                    </motion.div>
-
-                    <motion.div
-                      className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      <div>
-                        <p className="text-sm font-medium">
-                          Emergency Services
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Hospitals & services
-                        </p>
-                      </div>
-                      <CustomCheckbox
-                        checked={routeSettings.showEmergencyServices}
-                        onChange={(checked) =>
-                          setRouteSettings((prev) => ({
-                            ...prev,
-                            showEmergencyServices: checked,
-                          }))
-                        }
-                        size="sm"
-                      />
-                    </motion.div>
-
-                    <motion.div
-                      className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      <div>
-                        <p className="text-sm font-medium">Debug Console</p>
-                        <p className="text-xs text-muted-foreground">
-                          Developer info & logs
-                        </p>
-                      </div>
-                      <CustomCheckbox
-                        checked={routeSettings.showDebug}
-                        onChange={(checked) =>
-                          setRouteSettings((prev) => ({
-                            ...prev,
-                            showDebug: checked,
-                          }))
-                        }
-                        size="sm"
-                      />
-                    </motion.div>
-
-                    <motion.div
-                      className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      <div>
-                        <p className="text-sm font-medium">Gesture Controls</p>
-                        <p className="text-xs text-muted-foreground">
-                          Emergency gestures & navigation
-                        </p>
-                      </div>
-                      <CustomCheckbox
-                        checked={gesturesEnabled}
-                        onChange={(checked) => {
-                          setGesturesEnabled(checked);
-                          unifiedNotifications.info(
-                            checked
-                              ? "Gesture controls enabled"
-                              : "Gesture controls disabled",
-                            {
-                              message: checked
-                                ? "5 rapid taps or shake for SOS, 3-finger hold for panic mode"
-                                : "Emergency gesture detection turned off",
-                            },
-                          );
-                        }}
-                        size="sm"
-                      />
-                    </motion.div>
-
-                    {/* Gesture Guide */}
-                    {gesturesEnabled && (
+                  {/* Map Style Settings */}
+                  <div>
+                    <h4 className="text-sm font-medium mb-3">Map Display</h4>
+                    <div className="space-y-2">
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-2"
+                        className="flex items-center justify-between p-3 sm:p-4 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={toggleTheme}
                       >
-                        <GestureGuide />
+                        <div>
+                          <p className="text-sm font-medium">Map Theme</p>
+                          <p className="text-xs text-muted-foreground">
+                            Light or dark
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border text-lg">
+                          {mapTheme === "light" ? "🌞" : "🌙"}
+                        </div>
                       </motion.div>
-                    )}
 
-                    {/* Debug Console Content */}
-                    {routeSettings.showDebug && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200"
+                        className="flex items-center justify-between p-3 sm:p-4 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={toggleMapType}
                       >
-                        <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                          <Activity className="h-4 w-4" />
-                          Debug Information
-                        </h4>
-                        <DebugContent />
+                        <div>
+                          <p className="text-sm font-medium">Map Type</p>
+                          <p className="text-xs text-muted-foreground">
+                            Standard or satellite
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border text-lg">
+                          {mapType === "normal" ? "🗺️" : "🛰️"}
+                        </div>
                       </motion.div>
-                    )}
+
+                      <motion.div
+                        className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <div>
+                          <p className="text-sm font-medium">Traffic</p>
+                          <p className="text-xs text-muted-foreground">
+                            Real-time conditions
+                          </p>
+                        </div>
+                        <CustomCheckbox
+                          checked={routeSettings.showTraffic}
+                          onChange={(checked) =>
+                            setRouteSettings((prev) => ({
+                              ...prev,
+                              showTraffic: checked,
+                            }))
+                          }
+                          size="sm"
+                        />
+                      </motion.div>
+
+                      <motion.div
+                        className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <div>
+                          <p className="text-sm font-medium">Safe Zones</p>
+                          <p className="text-xs text-muted-foreground">
+                            Police & safe areas
+                          </p>
+                        </div>
+                        <CustomCheckbox
+                          checked={routeSettings.showSafeZones}
+                          onChange={(checked) =>
+                            setRouteSettings((prev) => ({
+                              ...prev,
+                              showSafeZones: checked,
+                            }))
+                          }
+                          size="sm"
+                        />
+                      </motion.div>
+
+                      <motion.div
+                        className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <div>
+                          <p className="text-sm font-medium">
+                            Emergency Services
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Hospitals & services
+                          </p>
+                        </div>
+                        <CustomCheckbox
+                          checked={routeSettings.showEmergencyServices}
+                          onChange={(checked) =>
+                            setRouteSettings((prev) => ({
+                              ...prev,
+                              showEmergencyServices: checked,
+                            }))
+                          }
+                          size="sm"
+                        />
+                      </motion.div>
+
+                      <motion.div
+                        className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <div>
+                          <p className="text-sm font-medium">Debug Console</p>
+                          <p className="text-xs text-muted-foreground">
+                            Developer info & logs
+                          </p>
+                        </div>
+                        <CustomCheckbox
+                          checked={routeSettings.showDebug}
+                          onChange={(checked) =>
+                            setRouteSettings((prev) => ({
+                              ...prev,
+                              showDebug: checked,
+                            }))
+                          }
+                          size="sm"
+                        />
+                      </motion.div>
+
+                      <motion.div
+                        className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <div>
+                          <p className="text-sm font-medium">
+                            Gesture Controls
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Emergency gestures & navigation
+                          </p>
+                        </div>
+                        <CustomCheckbox
+                          checked={gesturesEnabled}
+                          onChange={(checked) => {
+                            setGesturesEnabled(checked);
+                            unifiedNotifications.info(
+                              checked
+                                ? "Gesture controls enabled"
+                                : "Gesture controls disabled",
+                              {
+                                message: checked
+                                  ? "5 rapid taps or shake for SOS, 3-finger hold for panic mode"
+                                  : "Emergency gesture detection turned off",
+                              },
+                            );
+                          }}
+                          size="sm"
+                        />
+                      </motion.div>
+
+                      {/* Gesture Guide */}
+                      {gesturesEnabled && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-2"
+                        >
+                          <GestureGuide />
+                        </motion.div>
+                      )}
+
+                      {/* Debug Console Content */}
+                      {routeSettings.showDebug && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200"
+                        >
+                          <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                            <Activity className="h-4 w-4" />
+                            Debug Information
+                          </h4>
+                          <DebugContent />
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </motion.div>
-      </SlideUpPanel>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        </SlideUpPanel>
 
-      {/* Magic Navbar */}
-      <MagicNavbar />
-    </div>
+        {/* Magic Navbar */}
+        <MagicNavbar />
+      </div>
+    </ErrorBoundary>
   );
 }
