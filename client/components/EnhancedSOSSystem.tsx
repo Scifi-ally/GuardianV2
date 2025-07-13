@@ -127,6 +127,58 @@ export function EnhancedSOSSystem({
     };
   }, [locationUpdateInterval]);
 
+  // Battery level monitoring for critical alerts
+  useEffect(() => {
+    if (activeAlert && batteryLevel < 15 && !activeAlert.autoEscalated) {
+      // Auto-escalate when battery is critically low
+      setActiveAlert({
+        ...activeAlert,
+        priority: "critical",
+        autoEscalated: true,
+        batteryCritical: true,
+      });
+
+      toast.error(
+        `Critical: Battery at ${batteryLevel}% - Emergency escalated`,
+        {
+          duration: 10000,
+        },
+      );
+
+      // Auto-enable sound alarm for critical battery
+      if (!soundAlarmActive && soundEnabled) {
+        toggleSoundAlarm();
+      }
+    }
+  }, [batteryLevel, activeAlert, soundAlarmActive, soundEnabled]);
+
+  // Heartbeat failure detection
+  useEffect(() => {
+    if (activeAlert && heartbeatActive) {
+      const heartbeatTimeout = setTimeout(() => {
+        // If no heartbeat update in 2 minutes, escalate
+        const timeSinceLastHeartbeat =
+          Date.now() - activeAlert.lastHeartbeat.getTime();
+        if (timeSinceLastHeartbeat > 120000) {
+          // 2 minutes
+          toast.error("Warning: No response detected - Escalating emergency", {
+            duration: 10000,
+          });
+
+          if (activeAlert) {
+            setActiveAlert({
+              ...activeAlert,
+              priority: "critical",
+              autoEscalated: true,
+            });
+          }
+        }
+      }, 130000); // Check after 2 minutes 10 seconds
+
+      return () => clearTimeout(heartbeatTimeout);
+    }
+  }, [activeAlert?.lastHeartbeat, heartbeatActive]);
+
   // Monitor battery level
   const monitorBattery = async () => {
     try {
