@@ -37,7 +37,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { realTimeService } from "@/services/realTimeService";
-import { toast } from "sonner";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
+import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { buttonAnimations, cardAnimations } from "@/lib/animations";
 
 export default function Settings() {
@@ -106,7 +107,10 @@ export default function Settings() {
       const success = realTimeService.saveSettings(settingsWithTimestamp);
       if (success) {
         setLastSaved(new Date());
-        toast.success("Settings saved", { duration: 1000 });
+        unifiedNotifications.success("Settings saved");
+
+        // Apply settings to services immediately
+        applySettingsToServices(newSettings);
       } else {
         toast.error("Failed to save settings");
       }
