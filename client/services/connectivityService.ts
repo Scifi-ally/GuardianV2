@@ -85,19 +85,16 @@ class ConnectivityService {
     const tests: ConnectivityTest[] = [];
     const startTime = performance.now();
 
-    // Test 1: Basic Internet Connectivity
+    // Test 1: Internal Connectivity Check
     try {
-      const response = await fetch("https://httpbin.org/get", {
-        method: "GET",
-        mode: "cors",
-        signal: AbortSignal.timeout(5000),
-      });
+      // Use internal connectivity check instead of external service
+      const isOnline = navigator.onLine;
 
-      if (response.ok) {
+      if (isOnline) {
         tests.push({
-          service: "Internet Connection",
+          service: "Connection Status",
           status: "success",
-          message: "Internet connection is working",
+          message: "Device reports online status",
           latency: performance.now() - startTime,
         });
       } else {

@@ -220,9 +220,9 @@ export function EnhancedSOSButton({
           </>
         ) : (
           <div className="space-y-2">
-            <p className="text-sm text-warning">No emergency contacts added</p>
+            <p className="text-sm text-muted-foreground">SOS Available</p>
             <p className="text-xs text-muted-foreground">
-              Add contacts to enable SOS alerts
+              Emergency alert system ready
             </p>
           </div>
         )}

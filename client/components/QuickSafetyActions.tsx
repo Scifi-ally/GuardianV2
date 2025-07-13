@@ -139,7 +139,7 @@ export function QuickSafetyActions() {
       !userProfile?.emergencyContacts ||
       userProfile.emergencyContacts.length === 0
     ) {
-      toast.error("No emergency contacts configured");
+      // Silently handle no emergency contacts
       return;
     }
 
@@ -169,9 +169,7 @@ export function QuickSafetyActions() {
       !userProfile?.emergencyContacts ||
       userProfile.emergencyContacts.length === 0
     ) {
-      toast.error(
-        "No emergency contacts configured. Please add emergency contacts in settings.",
-      );
+      // Silently handle no emergency contacts
       return;
     } else {
       const primaryContact = userProfile.emergencyContacts[0];

@@ -91,11 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setAuthAction("Creating your account...");
 
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
+      // Add timeout wrapper for Firebase auth calls
+      const userCredential = (await Promise.race([
+        createUserWithEmailAndPassword(auth, email, password),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("auth/network-request-failed")),
+            15000,
+          ),
+        ),
+      ])) as any;
       const user = userCredential.user;
 
       setAuthAction("Setting up your profile...");
@@ -158,11 +163,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setAuthAction("Signing you in...");
 
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
+      // Add timeout wrapper for Firebase auth calls
+      const userCredential = (await Promise.race([
+        signInWithEmailAndPassword(auth, email, password),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("auth/network-request-failed")),
+            15000,
+          ),
+        ),
+      ])) as any;
 
       setAuthAction("Loading your profile...");
       try {
@@ -190,10 +200,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const updatedProfile = { ...userProfile, ...data };
 
-      // Update in Firestore
+      // Filter out undefined values before sending to Firestore
+      const filteredData = Object.fromEntries(
+        Object.entries(data).filter(
+          ([_, value]) => value !== undefined && value !== null,
+        ),
+      );
+
+      // Update in Firestore only if there's valid data
       try {
-        await updateDoc(doc(db, "users", currentUser.uid), data);
-        console.log("Profile updated in Firestore");
+        if (Object.keys(filteredData).length > 0) {
+          await updateDoc(doc(db, "users", currentUser.uid), filteredData);
+          console.log("Profile updated in Firestore");
+        } else {
+          console.log("No valid data to update in Firestore");
+        }
       } catch (firestoreError) {
         console.warn(
           "Firestore update failed, using localStorage:",
@@ -428,11 +449,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRealtimeFeaturesEnabled(true);
       setLastSyncTime(new Date());
 
-      notifications.success({
-        title: "Real-time Features Enabled",
-        description: "Location tracking and voice commands are now active",
-        vibrate: true,
-      });
+      // Real-time features toast removed - silent operation
     } catch (error) {
       console.error("Failed to enable real-time features:", error);
       notifications.error({
@@ -447,10 +464,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     voiceCommandService.disableVoiceCommands();
     setRealtimeFeaturesEnabled(false);
 
-    notifications.success({
-      title: "Real-time Features Disabled",
-      description: "Location tracking and voice commands have been turned off",
-    });
+    // Real-time features disabled toast removed - silent operation
   }
 
   // Monitor connection status and sync when online

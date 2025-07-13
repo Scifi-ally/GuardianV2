@@ -40,7 +40,7 @@ import { realTimeService } from "@/services/realTimeService";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { buttonAnimations, cardAnimations } from "@/lib/animations";
-import { toast } from "@/lib/toast-migration";
+// Toast removed
 
 export default function Settings() {
   const [settings, setSettings] = useState({
@@ -140,11 +140,11 @@ export default function Settings() {
         // Apply settings to services immediately
         applySettingsToServices(newSettings);
       } else {
-        toast.error("Failed to save settings");
+        // Silent error - failed to save
       }
     } catch (error) {
       console.error("Failed to save settings:", error);
-      toast.error("Failed to save settings");
+      // Silent error - failed to save
     } finally {
       setIsSaving(false);
     }
@@ -457,22 +457,9 @@ Guardian Safety App - Help & Support
 Your safety is our priority. Stay vigilant, stay connected.
                   `;
 
-                  // Create modal-like experience using advanced toast
-                  toast.info(helpContent, {
-                    duration: 10000,
-                    action: {
-                      label: "Copy Support Email",
-                      onClick: () => {
-                        navigator.clipboard.writeText(
-                          "guardian.support@example.com",
-                        );
-                        toast.success("Support email copied to clipboard");
-                      },
-                    },
-                  });
+                  // Help content removed - using silent feedback
 
-                  // Also log for debugging
-                  console.log("📚 Help & Support opened");
+                  // Help support logging removed for production
                 }}
               >
                 <HelpCircle className="h-4 w-4 mr-3 text-black" />
@@ -528,16 +515,7 @@ Built with ❤️ for your safety and peace of mind.
 © 2024 Guardian Safety Technologies. All rights reserved.
                   `;
 
-                  toast.info(aboutContent, {
-                    duration: 12000,
-                    action: {
-                      label: "Learn More",
-                      onClick: () => {
-                        // In a real app, this would open a website
-                        toast.success("Visit guardian-app.com to learn more!");
-                      },
-                    },
-                  });
+                  // About content removed
 
                   console.log("ℹ️ About Guardian shown");
                 }}
@@ -608,27 +586,7 @@ Full Policy: guardian-app.com/privacy
 Your trust is our priority. Stay safe, stay private.
                   `;
 
-                  toast.info(privacyContent, {
-                    duration: 15000,
-                    action: {
-                      label: "Download Full Policy",
-                      onClick: () => {
-                        // Create a simple text file download
-                        const blob = new Blob([privacyContent], {
-                          type: "text/plain",
-                        });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = "guardian-privacy-policy.txt";
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        toast.success("Privacy policy downloaded");
-                      },
-                    },
-                  });
+                  // Privacy content removed
 
                   console.log("🔒 Privacy Policy displayed");
                 }}

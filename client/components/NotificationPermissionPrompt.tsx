@@ -47,7 +47,7 @@ export function NotificationPermissionPrompt({
 
   const handleRequestNotifications = async () => {
     if (!("Notification" in window)) {
-      toast.error("Notifications are not supported in this browser");
+      // Notifications are not supported - silent
       return;
     }
 
@@ -75,13 +75,11 @@ export function NotificationPermissionPrompt({
 
         handleClose();
       } else if (result === "denied") {
-        toast.error(
-          "Notifications blocked. Enable in browser settings if needed.",
-        );
+        // Notifications blocked - silent
       }
     } catch (error) {
       console.error("Notification permission error:", error);
-      toast.error("Failed to request notification permission");
+      // Failed to request notification permission silently
     } finally {
       setIsRequesting(false);
     }
@@ -99,12 +97,7 @@ export function NotificationPermissionPrompt({
   };
 
   const openNotificationSettings = () => {
-    toast.info(
-      "To enable notifications:\n1. Click the 🔔 icon in address bar\n2. Select 'Allow'\n3. Refresh if needed",
-      {
-        duration: 8000,
-      },
-    );
+    // Notification settings info silently
   };
 
   // Don't show if notifications are already granted or browser doesn't support

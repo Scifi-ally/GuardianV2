@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { cn } from "@/lib/utils";
+import { useAdminDebug } from "@/services/adminDebugService";
 
 interface LocationDebugPanelProps {
   showDebug?: boolean;
@@ -27,6 +28,7 @@ export function LocationDebugPanel({
   showDebug = false,
   onToggleDebug,
 }: LocationDebugPanelProps) {
+  const { shouldShowLocationDebug, isDebugEnabled } = useAdminDebug();
   const {
     location,
     error,
@@ -85,21 +87,8 @@ export function LocationDebugPanel({
 
   const quality = getLocationQuality();
 
-  if (!showDebug) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onToggleDebug?.(true)}
-          className="bg-background/80 backdrop-blur-sm"
-        >
-          <Eye className="w-4 h-4 mr-2" />
-          Location Debug
-        </Button>
-      </div>
-    );
-  }
+  // Debug panel disabled - coordinates, accuracy and offline status removed from map
+  return null;
 
   return (
     <AnimatePresence>

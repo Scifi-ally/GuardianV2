@@ -421,59 +421,32 @@ class EmergencyContactActionsService extends EventEmitter {
   ): Promise<boolean> {
     const title = isEmergency ? "🚨 EMERGENCY ALERT" : "📱 Guardian Message";
 
-    // Method 1: Try Web Share API
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title,
-          text: message,
-        });
-        action.method = "share";
-        return true;
-      } catch (error) {
-        console.log("Web Share failed, trying clipboard");
-      }
-    }
-
-    // Method 2: Copy to clipboard
+    // Internal-only emergency handling - no external sharing
     try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(message);
-        action.method = "clipboard";
-        return true;
-      } else {
-        // Fallback for non-secure contexts
-        const textArea = document.createElement("textarea");
-        textArea.value = message;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textArea);
-        action.method = "clipboard";
-        return true;
-      }
-    } catch (error) {
-      console.error("Clipboard failed:", error);
-    }
+      // Store message internally for emergency contacts
+      const emergencyData = {
+        title,
+        message,
+        timestamp: new Date(),
+        contactId: action.contactId,
+        type: isEmergency ? "emergency" : "message",
+      };
 
-    // Method 3: Show alert as last resort
-    try {
-      // Copy to clipboard and show toast notification
-      navigator.clipboard.writeText(message);
-      toast.error(`${title}`, {
-        description: "Message copied to clipboard - please send manually",
-        duration: 5000,
-      });
-      action.method = "clipboard";
+      // Store in session for internal use
+      const existingMessages = JSON.parse(
+        sessionStorage.getItem("emergency-messages") || "[]",
+      );
+      existingMessages.push(emergencyData);
+      sessionStorage.setItem(
+        "emergency-messages",
+        JSON.stringify(existingMessages),
+      );
+
+      action.method = "internal";
+      console.log("Emergency message stored internally:", title);
       return true;
     } catch (error) {
-      toast.error("Emergency alert failed", {
-        description: "Unable to send emergency message",
-      });
+      console.error("Internal emergency storage failed:", error);
       return false;
     }
   }

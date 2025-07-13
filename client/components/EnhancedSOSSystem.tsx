@@ -127,7 +127,7 @@ export function EnhancedSOSSystem({
         batteryCritical: true,
       });
 
-      unifiedNotifications.batteryWarning(batteryLevel);
+      // Battery warning removed - silent handling
     }
   }, [batteryLevel, activeAlert]);
 

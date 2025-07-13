@@ -30,6 +30,7 @@ import { MagicNavbar } from "@/components/MagicNavbar";
 // Removed redundant useGeolocation - handled by LocationAwareMap
 import { useMapTheme } from "@/hooks/use-map-theme";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminDebug } from "@/services/adminDebugService";
 import { useGestures, GestureGuide } from "@/hooks/useGestures";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { ComprehensiveSafetySystem } from "@/components/ComprehensiveSafetySystem";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+// Debug helper removed - Firebase admin control only
 
 import { CustomCheckbox } from "@/components/ui/custom-checkbox";
 
@@ -72,7 +74,7 @@ import {
   shouldShowNotification,
 } from "@/services/notificationSettingsService";
 
-import { ClickableFixes } from "@/components/ClickableFixes";
+// ClickableFixes removed - debug component
 import { areaBasedSafety } from "@/services/areaBasedSafety";
 import { realTimeDataService } from "@/services/realTimeDataService";
 import {
@@ -80,58 +82,7 @@ import {
   useLocationName,
 } from "@/components/SmartLocationDisplay";
 
-// Debug Content Component
-function DebugContent() {
-  const [systemInfo] = useState({
-    userAgent:
-      navigator.userAgent.slice(0, 100) +
-      (navigator.userAgent.length > 100 ? "..." : ""),
-    platform: navigator.platform,
-    language: navigator.language,
-    online: navigator.onLine,
-    screenSize: `${screen.width}x${screen.height}`,
-    viewportSize: `${window.innerWidth}x${window.innerHeight}`,
-  });
-
-  return (
-    <div className="space-y-4">
-      {/* System Information */}
-      <div className="space-y-2">
-        <h5 className="text-xs font-semibold text-slate-700">System Info</h5>
-        <div className="space-y-1 text-xs text-slate-600">
-          <div>
-            <span className="font-medium">Platform:</span> {systemInfo.platform}
-          </div>
-          <div>
-            <span className="font-medium">Language:</span> {systemInfo.language}
-          </div>
-          <div>
-            <span className="font-medium">Screen:</span> {systemInfo.screenSize}
-          </div>
-          <div>
-            <span className="font-medium">Viewport:</span>{" "}
-            {systemInfo.viewportSize}
-          </div>
-          <div>
-            <span className="font-medium">Connection:</span>{" "}
-            <span
-              className={systemInfo.online ? "text-green-600" : "text-red-600"}
-            >
-              {systemInfo.online ? "Online" : "Offline"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Note */}
-      <div className="border-t pt-3">
-        <p className="text-xs text-slate-500">
-          Location tracking handled by LocationAwareMap component
-        </p>
-      </div>
-    </div>
-  );
-}
+// AdminDebugContent removed - Firebase admin control only
 
 export default function Index() {
   // Real-time data management
@@ -232,12 +183,20 @@ export default function Index() {
     showEmergencyServices: false,
     showSafeAreaCircles: false,
     zoomLevel: 15,
-    showDebug: false,
   });
 
   // Location handling moved to LocationAwareMap
-  const { mapTheme, mapType, toggleTheme, toggleMapType } = useMapTheme();
+  const {
+    mapTheme,
+    mapType,
+    toggleTheme,
+    toggleMapType,
+    setMapTheme,
+    setMapType,
+  } = useMapTheme();
   const { userProfile } = useAuth();
+  const { shouldShowLocationDebug, shouldShowSystemInfo, isDebugEnabled } =
+    useAdminDebug();
 
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
@@ -555,7 +514,7 @@ export default function Index() {
     <ErrorBoundary>
       <div className="min-h-screen bg-background">
         <PerformanceOptimizer />
-        <ClickableFixes />
+        {/* ClickableFixes removed - debug component */}
         {/* Compact Navigation Header - Reduced Height */}
         {/* Compact Search Bar */}
         <CompactSearchBar
@@ -620,9 +579,12 @@ export default function Index() {
             onMapLoad={(map) => {
               console.log("🗺️ Map loaded successfully");
             }}
-            showDebug={routeSettings.showDebug}
+            showDebug={shouldShowLocationDebug}
             zoomLevel={routeSettings.zoomLevel}
             destination={destination}
+            showTraffic={routeSettings.showTraffic}
+            showSafeZones={routeSettings.showSafeZones}
+            showEmergencyServices={routeSettings.showEmergencyServices}
             trackUserLocation={true}
             travelMode={travelMode}
             onDirectionsChange={handleDirectionsChange}
@@ -642,8 +604,7 @@ export default function Index() {
           />
         </div>
 
-        {/* Real-Time Status Indicator */}
-        <RealTimeStatusIndicator compact={true} className="z-50" />
+        {/* Real-Time Status Indicator removed - no accuracy/offline display */}
 
         {/* Notification Permission Prompt */}
         <NotificationPermissionPrompt
@@ -951,98 +912,78 @@ export default function Index() {
 
                                       const message = `${locationMessage} (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`;
 
-                                      if (navigator.share) {
-                                        navigator.share({
-                                          title: "My Location",
-                                          text: message,
-                                        });
-                                      } else {
-                                        // Copy to clipboard with fallback
-                                        try {
-                                          if (
-                                            navigator.clipboard &&
-                                            window.isSecureContext
-                                          ) {
-                                            navigator.clipboard.writeText(
-                                              message,
-                                            );
-                                          } else {
-                                            const textArea =
-                                              document.createElement(
-                                                "textarea",
-                                              );
-                                            textArea.value = message;
-                                            textArea.style.position = "fixed";
-                                            textArea.style.left = "-999999px";
-                                            textArea.style.top = "-999999px";
-                                            document.body.appendChild(textArea);
-                                            textArea.focus();
-                                            textArea.select();
-                                            document.execCommand("copy");
-                                            document.body.removeChild(textArea);
-                                          }
-                                          // Silently copy location
-                                        } catch (error) {
-                                          console.error("Copy failed:", error);
-                                          notifications.error({
-                                            title: "Share Failed",
-                                            description:
-                                              "Failed to copy location to clipboard",
-                                            vibrate: true,
-                                          });
-                                        }
+                                      // Store location internally
+                                      try {
+                                        const locationData = {
+                                          message,
+                                          timestamp: new Date(),
+                                          latitude: location.latitude,
+                                          longitude: location.longitude,
+                                        };
+                                        sessionStorage.setItem(
+                                          "shared-location",
+                                          JSON.stringify(locationData),
+                                        );
+                                        console.log(
+                                          "Location stored internally:",
+                                          message,
+                                        );
+                                      } catch (error) {
+                                        console.error(
+                                          "Location storage failed:",
+                                          error,
+                                        );
                                       }
                                     } else {
-                                      // Fallback to coordinates
+                                      // Store coordinates internally
                                       const message = `My current location: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
-                                      if (navigator.share) {
-                                        navigator.share({
-                                          title: "My Location",
-                                          text: message,
-                                        });
-                                      } else {
-                                        try {
-                                          navigator.clipboard?.writeText(
-                                            message,
-                                          );
-                                          // Silently copy location
-                                        } catch {
-                                          notifications.error({
-                                            title: "Share Failed",
-                                            description:
-                                              "Failed to copy location to clipboard",
-                                            vibrate: true,
-                                          });
-                                        }
+                                      try {
+                                        const locationData = {
+                                          message,
+                                          timestamp: new Date(),
+                                          latitude: location.latitude,
+                                          longitude: location.longitude,
+                                        };
+                                        sessionStorage.setItem(
+                                          "shared-location",
+                                          JSON.stringify(locationData),
+                                        );
+                                        console.log(
+                                          "Location stored internally:",
+                                          message,
+                                        );
+                                      } catch (error) {
+                                        console.error(
+                                          "Location storage failed:",
+                                          error,
+                                        );
                                       }
                                     }
                                   },
                                 );
                               } else {
-                                // Fallback when Google Maps not available
+                                // Store location internally when Google Maps not available
                                 const message = `My current location: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
-                                if (navigator.share) {
-                                  navigator.share({
-                                    title: "My Location",
-                                    text: message,
-                                  });
-                                } else {
-                                  try {
-                                    navigator.clipboard?.writeText(message);
-                                    notifications.success({
-                                      title: "Location Shared",
-                                      description:
-                                        "Location copied to clipboard!",
-                                      vibrate: true,
-                                    });
-                                  } catch {
-                                    notifications.error({
-                                      title: "Share Failed",
-                                      description:
-                                        "Failed to copy location to clipboard",
-                                      vibrate: true,
-                                    });
-                                  }
+                                try {
+                                  const locationData = {
+                                    message,
+                                    timestamp: new Date(),
+                                    latitude: location.latitude,
+                                    longitude: location.longitude,
+                                  };
+                                  sessionStorage.setItem(
+                                    "shared-location",
+                                    JSON.stringify(locationData),
+                                  );
+                                  console.log(
+                                    "Location stored internally:",
+                                    message,
+                                  );
+                                } catch (error) {
+                                  console.error(
+                                    "Location storage failed:",
+                                    error,
+                                  );
                                 }
                               }
                             } catch (error) {
@@ -1060,12 +1001,7 @@ export default function Index() {
                         onClick={async () => {
                           try {
                             if (!userProfile?.emergencyContacts?.length) {
-                              notifications.error({
-                                title: "Live Tracking Unavailable",
-                                description:
-                                  "Please add emergency contacts first to enable live tracking.",
-                                vibrate: true,
-                              });
+                              // Silent handling - no toast notification
                               return;
                             }
 
@@ -1127,12 +1063,7 @@ export default function Index() {
                             // Silently start live tracking
                           } catch (error) {
                             console.error("Live tracking error:", error);
-                            notifications.error({
-                              title: "Live Tracking Failed",
-                              description:
-                                "Unable to start live tracking. Please check your location permissions.",
-                              vibrate: true,
-                            });
+                            // Live tracking error toast removed - silent handling
                           }
                         }}
                       >
@@ -1172,39 +1103,49 @@ export default function Index() {
                   <div>
                     <h4 className="text-sm font-medium mb-3">Map Display</h4>
                     <div className="space-y-2">
-                      <motion.div
-                        className="flex items-center justify-between p-3 sm:p-4 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={toggleTheme}
-                      >
+                      <div className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
                         <div>
                           <p className="text-sm font-medium">Map Theme</p>
                           <p className="text-xs text-muted-foreground">
-                            Light or dark
+                            {mapTheme === "light" ? "Light mode" : "Dark mode"}
                           </p>
                         </div>
-                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border text-lg">
-                          {mapTheme === "light" ? "🌞" : "��"}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {mapTheme === "light" ? "🌞" : "🌙"}
+                          </span>
+                          <CustomCheckbox
+                            checked={mapTheme === "dark"}
+                            onChange={(checked) => {
+                              setMapTheme(checked ? "dark" : "light");
+                            }}
+                            size="sm"
+                          />
                         </div>
-                      </motion.div>
+                      </div>
 
-                      <motion.div
-                        className="flex items-center justify-between p-3 sm:p-4 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation"
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={toggleMapType}
-                      >
+                      <div className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
                         <div>
                           <p className="text-sm font-medium">Map Type</p>
                           <p className="text-xs text-muted-foreground">
-                            Standard or satellite
+                            {mapType === "normal"
+                              ? "Standard view"
+                              : "Satellite view"}
                           </p>
                         </div>
-                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border text-lg">
-                          {mapType === "normal" ? "🗺️" : "🛰️"}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {mapType === "normal" ? "🗺️" : "🛰️"}
+                          </span>
+                          <CustomCheckbox
+                            checked={mapType === "satellite"}
+                            onChange={(checked) => {
+                              setMapType(checked ? "satellite" : "normal");
+                            }}
+                            size="sm"
+                          />
                         </div>
-                      </motion.div>
+                      </div>
 
                       <div className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.01] active:scale-[0.99]">
                         <div>
@@ -1265,24 +1206,7 @@ export default function Index() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.01] active:scale-[0.99]">
-                        <div>
-                          <p className="text-sm font-medium">Debug Console</p>
-                          <p className="text-xs text-muted-foreground">
-                            Developer info & logs
-                          </p>
-                        </div>
-                        <CustomCheckbox
-                          checked={routeSettings.showDebug}
-                          onChange={(checked) =>
-                            setRouteSettings((prev) => ({
-                              ...prev,
-                              showDebug: checked,
-                            }))
-                          }
-                          size="sm"
-                        />
-                      </div>
+                      {/* Admin debug mode indicator removed */}
 
                       <div className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation hover:scale-[1.01] active:scale-[0.99]">
                         <div>
@@ -1319,16 +1243,7 @@ export default function Index() {
                         </div>
                       )}
 
-                      {/* Debug Console Content */}
-                      {routeSettings.showDebug && (
-                        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200 opacity-100 transition-opacity duration-300">
-                          <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                            <Activity className="h-4 w-4" />
-                            Debug Information
-                          </h4>
-                          <DebugContent />
-                        </div>
-                      )}
+                      {/* Admin debug console removed */}
                     </div>
                   </div>
                 </div>
@@ -1339,6 +1254,8 @@ export default function Index() {
 
         {/* Magic Navbar */}
         <MagicNavbar />
+
+        {/* Debug helper removed - Firebase admin control only */}
       </div>
     </ErrorBoundary>
   );

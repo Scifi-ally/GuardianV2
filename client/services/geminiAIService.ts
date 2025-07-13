@@ -1,3 +1,4 @@
+// Gemini AI service disabled - using internal logic only
 import { notifications } from "@/services/enhancedNotificationService";
 
 interface LocationContext {
@@ -77,15 +78,10 @@ class GeminiAIService {
   }
 
   constructor() {
-    // Try multiple potential API keys - in production this would come from environment
-    const potentialKeys = [
-      "AIzaSyCXYW5NmxOb5oUonMXwAsv9hsOvPG-A5-E", // Firebase key
-      import.meta.env.VITE_GEMINI_API_KEY,
-      import.meta.env.REACT_APP_GEMINI_API_KEY,
-    ].filter(Boolean);
-
-    this.apiKey = potentialKeys[0] || "";
-    this.isConfigured = !!this.apiKey;
+    // External AI disabled - using internal analysis only
+    this.apiKey = "";
+    this.isConfigured = false;
+    this.serviceDisabled = true; // Always disabled for internal-only operation
 
     // Check if key is valid on first use
     if (this.isConfigured) {

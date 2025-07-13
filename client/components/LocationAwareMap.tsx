@@ -22,12 +22,17 @@ interface LocationAwareMapProps {
     latitude: number;
     longitude: number;
   } | null;
+  showTraffic?: boolean;
+  showSafeZones?: boolean;
 }
 
 export function LocationAwareMap({
   onLocationChange,
   onMapLoad,
   className,
+  showTraffic = false,
+  showSafeZones = false,
+  showEmergencyServices = false,
 }: LocationAwareMapProps) {
   const {
     location,
@@ -122,6 +127,9 @@ export function LocationAwareMap({
           location={currentLocation}
           onLocationChange={onLocationChange}
           onMapLoad={onMapLoad}
+          showTraffic={showTraffic}
+          showSafeZones={showSafeZones}
+          showEmergencyServices={showEmergencyServices}
           className="w-full h-full"
         />
 

@@ -33,6 +33,9 @@ interface IntelligentGoogleMapProps {
   }) => void;
   onMapLoad?: (map: google.maps.Map) => void;
   className?: string;
+  showTraffic?: boolean;
+  showSafeZones?: boolean;
+  showEmergencyServices?: boolean;
 }
 
 interface NavigationState {
@@ -56,6 +59,9 @@ export function IntelligentGoogleMap({
   onLocationChange,
   onMapLoad,
   className,
+  showTraffic = false,
+  showSafeZones = false,
+  showEmergencyServices = false,
 }: IntelligentGoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -81,51 +87,214 @@ export function IntelligentGoogleMap({
   const [safetyOverlay, setSafetyOverlay] = useState<SafetyHeatmapData[]>([]);
   const [showControls, setShowControls] = useState(true);
   const [autoZoom, setAutoZoom] = useState(true);
+  const [currentMapTheme, setCurrentMapTheme] = useState<"light" | "dark">(
+    "light",
+  );
+  const [currentMapType, setCurrentMapType] = useState<"normal" | "satellite">(
+    "normal",
+  );
+  const [trafficLayer, setTrafficLayer] =
+    useState<google.maps.TrafficLayer | null>(null);
+
+  // Define map styles for different themes
+  const getMapStyles = (theme: "light" | "dark") => {
+    if (theme === "dark") {
+      return [
+        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        {
+          featureType: "administrative.locality",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "poi",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "poi.park",
+          elementType: "geometry",
+          stylers: [{ color: "#263c3f" }],
+        },
+        {
+          featureType: "poi.park",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#6b9a76" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#38414e" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry.stroke",
+          stylers: [{ color: "#212a37" }],
+        },
+        {
+          featureType: "road",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#9ca5b3" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#746855" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry.stroke",
+          stylers: [{ color: "#1f2835" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#f3d19c" }],
+        },
+        {
+          featureType: "transit",
+          elementType: "geometry",
+          stylers: [{ color: "#2f3948" }],
+        },
+        {
+          featureType: "transit.station",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#17263c" }],
+        },
+        {
+          featureType: "water",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#515c6d" }],
+        },
+        {
+          featureType: "water",
+          elementType: "labels.text.stroke",
+          stylers: [{ color: "#17263c" }],
+        },
+      ];
+    } else {
+      return [
+        {
+          featureType: "all",
+          elementType: "geometry.fill",
+          stylers: [{ color: "#f8f9fa" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#ffffff" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#e9ecef" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#adb5bd" }],
+        },
+        {
+          featureType: "poi",
+          elementType: "labels",
+          stylers: [{ visibility: "simplified" }],
+        },
+        {
+          featureType: "transit",
+          elementType: "labels",
+          stylers: [{ visibility: "simplified" }],
+        },
+      ];
+    }
+  };
+
+  // Apply theme to existing map
+  const applyMapTheme = (theme: "light" | "dark") => {
+    if (map) {
+      map.setOptions({
+        styles: getMapStyles(theme),
+      });
+      setCurrentMapTheme(theme);
+      console.log("Map theme applied:", theme);
+    }
+  };
+
+  // Apply map type to existing map
+  const applyMapType = (type: "normal" | "satellite") => {
+    if (map) {
+      const mapTypeId =
+        type === "satellite"
+          ? google.maps.MapTypeId.SATELLITE
+          : google.maps.MapTypeId.ROADMAP;
+      map.setMapTypeId(mapTypeId);
+      setCurrentMapType(type);
+      console.log("Map type applied:", type);
+    }
+  };
+
+  // Listen for theme and type changes
+  useEffect(() => {
+    const handleThemeChange = (event: CustomEvent) => {
+      applyMapTheme(event.detail.theme);
+    };
+
+    const handleTypeChange = (event: CustomEvent) => {
+      applyMapType(event.detail.type);
+    };
+
+    window.addEventListener(
+      "mapThemeChange",
+      handleThemeChange as EventListener,
+    );
+    window.addEventListener("mapTypeChange", handleTypeChange as EventListener);
+
+    return () => {
+      window.removeEventListener(
+        "mapThemeChange",
+        handleThemeChange as EventListener,
+      );
+      window.removeEventListener(
+        "mapTypeChange",
+        handleTypeChange as EventListener,
+      );
+    };
+  }, [map]);
 
   // Initialize enhanced map
   useEffect(() => {
     if (!mapRef.current || map) return;
 
     try {
+      // Get initial theme and type from localStorage
+      const savedTheme =
+        (localStorage.getItem("guardian-map-theme") as "light" | "dark") ||
+        "light";
+      const savedType =
+        (localStorage.getItem("guardian-map-type") as "normal" | "satellite") ||
+        "normal";
+
+      setCurrentMapTheme(savedTheme);
+      setCurrentMapType(savedType);
+
+      const mapTypeId =
+        savedType === "satellite"
+          ? google.maps.MapTypeId.SATELLITE
+          : google.maps.MapTypeId.ROADMAP;
+
       const newMap = new google.maps.Map(mapRef.current, {
         zoom: 15,
         center: location
           ? { lat: location.latitude, lng: location.longitude }
           : { lat: 37.7749, lng: -122.4194 },
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        styles: [
-          // Enhanced map styling for better visibility
-          {
-            featureType: "all",
-            elementType: "geometry.fill",
-            stylers: [{ color: "#f8f9fa" }],
-          },
-          {
-            featureType: "road",
-            elementType: "geometry",
-            stylers: [{ color: "#ffffff" }],
-          },
-          {
-            featureType: "road.highway",
-            elementType: "geometry",
-            stylers: [{ color: "#e9ecef" }],
-          },
-          {
-            featureType: "water",
-            elementType: "geometry",
-            stylers: [{ color: "#adb5bd" }],
-          },
-          {
-            featureType: "poi",
-            elementType: "labels",
-            stylers: [{ visibility: "simplified" }],
-          },
-          {
-            featureType: "transit",
-            elementType: "labels",
-            stylers: [{ visibility: "simplified" }],
-          },
-        ],
+        mapTypeId: mapTypeId,
+        styles: getMapStyles(savedTheme),
         disableDefaultUI: true,
         zoomControl: false,
         streetViewControl: false,
@@ -175,6 +344,39 @@ export function IntelligentGoogleMap({
       console.error("❌ Failed to initialize map:", error);
     }
   }, [mapRef.current, location]);
+
+  // Handle map settings changes (traffic, safe zones, etc.)
+  useEffect(() => {
+    if (!map) return;
+
+    // Traffic Layer
+    if (showTraffic) {
+      if (!trafficLayer) {
+        const newTrafficLayer = new google.maps.TrafficLayer();
+        newTrafficLayer.setMap(map);
+        setTrafficLayer(newTrafficLayer);
+        console.log("Traffic layer enabled");
+      }
+    } else {
+      if (trafficLayer) {
+        trafficLayer.setMap(null);
+        setTrafficLayer(null);
+        console.log("Traffic layer disabled");
+      }
+    }
+
+    // Safe Zones (would show markers for police stations, safe areas)
+    if (showSafeZones) {
+      // In a real implementation, this would fetch safe zone data
+      console.log("Safe zones enabled");
+    }
+
+    // Emergency Services (would show markers for hospitals, police, fire stations)
+    if (showEmergencyServices) {
+      // In a real implementation, this would fetch emergency services data
+      console.log("Emergency services enabled");
+    }
+  }, [map, showTraffic, showSafeZones, showEmergencyServices, trafficLayer]);
 
   // Create and update user location marker
   useEffect(() => {

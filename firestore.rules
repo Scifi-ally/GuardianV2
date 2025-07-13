@@ -263,6 +263,27 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+        // Admin collection - for admin-only configuration
+    match /admin/{configId} {
+      // Allow all authenticated users to read admin configs (for debug settings)
+      allow read: if isAuthenticated();
+
+      // Only allow admin users to write admin configs
+      // Replace 'YOUR_ADMIN_UID' with actual admin UIDs
+      allow write: if isAuthenticated() &&
+        (request.auth.token.admin == true ||
+         request.auth.uid in ['YOUR_ADMIN_UID_1', 'YOUR_ADMIN_UID_2']);
+
+      // Validate debug config structure for debugConfig document
+      allow write: if configId == 'debugConfig' &&
+        isAuthenticated() &&
+        (request.auth.token.admin == true ||
+         request.auth.uid in ['YOUR_ADMIN_UID_1', 'YOUR_ADMIN_UID_2']) &&
+        request.resource.data.keys().hasAll(['enabled', 'features']) &&
+        request.resource.data.enabled is bool &&
+        request.resource.data.features is map;
+    }
+
     // Block any other collections not explicitly defined
     match /{document=**} {
       allow read, write: if false;

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import SafeMotion from "@/components/SafeMotion";
 import {
   MapPin,
   User,
@@ -83,33 +84,28 @@ export function SimpleBottomNav({
       const emergencyContacts =
         userProfile?.emergencyContacts?.map((c) => c.id) || [];
       await startPanicMode(emergencyContacts);
-      toast.success(
-        "Panic mode activated! Emergency contacts will be alerted.",
-        {
-          duration: 5000,
-        },
-      );
+      // Panic mode activated silently
     } catch (error) {
       console.error("Failed to activate panic mode:", error);
-      toast.error("Failed to activate panic mode");
+      // Panic mode failed silently
     }
   }, [startPanicMode, userProfile]);
 
   const deactivatePanicMode = useCallback(async () => {
     try {
       await activateSafeMode();
-      toast.success("Safe mode activated. All-clear message sent.");
+      // Safe mode activated silently
     } catch (error) {
       console.error("Failed to deactivate panic mode:", error);
       stopPanicMode();
-      toast.info("Panic mode deactivated");
+      // Panic mode deactivated silently
     }
   }, [activateSafeMode, stopPanicMode]);
 
   const handlePanicAction = useCallback(
     async (action: "alert" | "record" | "safe") => {
       if (!panicModeActive) {
-        toast.error("Panic mode must be active to use this feature");
+        // Panic mode requirement check silently
         return;
       }
 
@@ -117,17 +113,17 @@ export function SimpleBottomNav({
         switch (action) {
           case "alert":
             await alertContacts();
-            toast.success("Alert sent to emergency contacts!");
+            // Alert sent to emergency contacts silently
             break;
           case "record":
             if (isRecording) {
               stopRecording();
               setIsRecording(false);
-              toast.success("Recording stopped and saved");
+              // Recording stopped and saved silently
             } else {
               await startRecording(recordingType);
               setIsRecording(true);
-              toast.success(`${recordingType} recording started`);
+              // Recording started silently
             }
             break;
           case "safe":
@@ -136,7 +132,7 @@ export function SimpleBottomNav({
         }
       } catch (error) {
         console.error(`Panic action ${action} failed:`, error);
-        toast.error(`Failed to ${action}`);
+        // Action failed silently
       }
     },
     [
@@ -155,7 +151,7 @@ export function SimpleBottomNav({
       {/* Panic Mode Overlay */}
       <AnimatePresence>
         {panicModeActive && (
-          <motion.div
+          <SafeMotion
             className="fixed bottom-20 left-4 right-4 z-40"
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -304,7 +300,7 @@ export function SimpleBottomNav({
                 </motion.div>
               </CardContent>
             </Card>
-          </motion.div>
+          </SafeMotion>
         )}
       </AnimatePresence>
 

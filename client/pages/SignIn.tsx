@@ -49,8 +49,18 @@ export default function SignIn() {
         setError("This account has been disabled. Please contact support.");
       } else if (error.code === "auth/too-many-requests") {
         setError("Too many failed attempts. Please try again later.");
+      } else if (
+        error.code === "auth/network-request-failed" ||
+        error.message?.includes("network") ||
+        error.message?.includes("timeout")
+      ) {
+        setError(
+          "Network connection failed. Please check your internet connection and try again.",
+        );
       } else {
-        setError("Failed to sign in. Please check your credentials.");
+        setError(
+          `Failed to sign in: ${error.message || "Please check your credentials and try again."}`,
+        );
       }
     } finally {
       setLoading(false);

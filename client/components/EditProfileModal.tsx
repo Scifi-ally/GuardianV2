@@ -77,7 +77,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Please fix the errors in the form");
+      // Please fix the errors in the form silently
       return;
     }
 
@@ -89,7 +89,7 @@ export function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
       onClose();
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
+      // Failed to update profile silently
     } finally {
       setLoading(false);
     }

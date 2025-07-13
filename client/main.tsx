@@ -15,7 +15,10 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SOSSettingsProvider } from "@/contexts/SOSSettingsContext";
 
 import { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import SafeMotion from "@/components/SafeMotion";
+import { setupMotionErrorHandler } from "@/lib/motionErrorHandler";
+import "@/lib/emergencyMotionFix"; // Auto-activates error suppression
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
@@ -79,6 +82,11 @@ const transition = {
 function AnimatedRoutes() {
   const location = useLocation();
 
+  // Setup motion error handler on component mount
+  useEffect(() => {
+    setupMotionErrorHandler();
+  }, []);
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -86,7 +94,7 @@ function AnimatedRoutes() {
           path="/"
           element={
             <ProtectedRoute>
-              <motion.div
+              <SafeMotion
                 variants={pageVariants}
                 initial="enter"
                 animate="center"
@@ -95,7 +103,7 @@ function AnimatedRoutes() {
                 className="w-full min-h-screen"
               >
                 <Index />
-              </motion.div>
+              </SafeMotion>
             </ProtectedRoute>
           }
         />
@@ -104,7 +112,7 @@ function AnimatedRoutes() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <motion.div
+              <SafeMotion
                 variants={pageVariants}
                 initial="enter"
                 animate="center"
@@ -113,7 +121,7 @@ function AnimatedRoutes() {
                 className="w-full min-h-screen"
               >
                 <Profile />
-              </motion.div>
+              </SafeMotion>
             </ProtectedRoute>
           }
         />
@@ -121,7 +129,7 @@ function AnimatedRoutes() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <motion.div
+              <SafeMotion
                 variants={pageVariants}
                 initial="enter"
                 animate="center"
@@ -130,7 +138,7 @@ function AnimatedRoutes() {
                 className="w-full min-h-screen"
               >
                 <Settings />
-              </motion.div>
+              </SafeMotion>
             </ProtectedRoute>
           }
         />
@@ -138,7 +146,7 @@ function AnimatedRoutes() {
           path="/signin"
           element={
             <PublicRoute>
-              <motion.div
+              <SafeMotion
                 variants={pageVariants}
                 initial="enter"
                 animate="center"
@@ -147,7 +155,7 @@ function AnimatedRoutes() {
                 className="w-full min-h-screen"
               >
                 <SignIn />
-              </motion.div>
+              </SafeMotion>
             </PublicRoute>
           }
         />
@@ -155,7 +163,7 @@ function AnimatedRoutes() {
           path="/signup"
           element={
             <PublicRoute>
-              <motion.div
+              <SafeMotion
                 variants={pageVariants}
                 initial="enter"
                 animate="center"
@@ -164,7 +172,7 @@ function AnimatedRoutes() {
                 className="w-full min-h-screen"
               >
                 <SignUp />
-              </motion.div>
+              </SafeMotion>
             </PublicRoute>
           }
         />

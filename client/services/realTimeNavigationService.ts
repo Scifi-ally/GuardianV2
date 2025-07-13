@@ -125,7 +125,7 @@ export class RealTimeNavigationService {
       // Get initial route
       const route = await this.getOptimalRoute(origin, destination);
       if (!route) {
-        toast.error("Unable to find route");
+        // Unable to find route - silent
         return false;
       }
 
@@ -162,12 +162,12 @@ export class RealTimeNavigationService {
       this.announceStart();
 
       this.notifyListeners();
-      toast.success("Navigation started");
+      // Navigation started silently
 
       return true;
     } catch (error) {
       console.error("❌ Failed to start navigation:", error);
-      toast.error("Failed to start navigation");
+      // Failed to start navigation silently
       return false;
     }
   }
@@ -450,13 +450,7 @@ export class RealTimeNavigationService {
     this.state.isRerouting = true;
     this.notifyListeners();
 
-    toast.success(`Faster route found! Save ${savedMinutes} minutes`, {
-      action: {
-        label: "Accept Route",
-        onClick: () => this.acceptReroute(newRoute),
-      },
-      duration: 10000,
-    });
+    // Faster route found - silent
   }
 
   // Accept rerouting
@@ -585,7 +579,7 @@ export class RealTimeNavigationService {
 
     this.stopTracking();
     this.notifyListeners();
-    toast.success("You have arrived!");
+    // You have arrived silently
   }
 
   // Stop navigation
@@ -598,7 +592,7 @@ export class RealTimeNavigationService {
       this.directionsRenderer.setMap(null);
     }
 
-    toast.info("Navigation stopped");
+    // Navigation stopped silently
   }
 
   // Stop all tracking

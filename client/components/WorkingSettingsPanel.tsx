@@ -202,41 +202,7 @@ export function WorkingSettingsPanel({
             />
           </motion.div>
 
-          {/* Debug Console */}
-          <motion.div
-            className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30"
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-          >
-            <div>
-              <p className="text-sm font-medium">Debug Console</p>
-              <p className="text-xs text-muted-foreground">
-                Developer info & logs
-              </p>
-            </div>
-            <Checkbox
-              checked={settings.showDebug}
-              onChange={(value) => updateSetting("showDebug", value)}
-              label="Debug Console"
-            />
-          </motion.div>
-
-          {/* Debug Console Content */}
-          {settings.showDebug && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200"
-            >
-              <h4 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                Debug Information
-              </h4>
-              <DebugContent />
-            </motion.div>
-          )}
+          {/* Debug Console removed for production */}
         </div>
       </div>
     </div>

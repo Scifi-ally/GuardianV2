@@ -253,13 +253,8 @@ export function RealTimeLocationShare() {
           <h4 className="text-sm font-medium">Quick Share</h4>
           {!userProfile?.emergencyContacts ||
           userProfile.emergencyContacts.length === 0 ? (
-            <Card className="bg-muted/20">
-              <CardContent className="p-3">
-                <div className="text-center text-sm text-muted-foreground">
-                  Add emergency contacts to enable location sharing
-                </div>
-              </CardContent>
-            </Card>
+            // Emergency contacts message removed
+            <div></div>
           ) : (
             <div className="grid gap-2">
               {quickPresets.map((preset, index) => (

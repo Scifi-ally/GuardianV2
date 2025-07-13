@@ -176,9 +176,9 @@ export function UserStatsManager() {
       );
 
       setStats((prev) => ({ ...prev, locationPermission: true }));
-      toast.success("Location permission granted!");
+      // Location permission granted silently
     } catch (error) {
-      toast.error("Location permission denied");
+      // Location permission denied silently
     }
   };
 
@@ -187,12 +187,12 @@ export function UserStatsManager() {
       const permission = await Notification.requestPermission();
       if (permission === "granted") {
         setStats((prev) => ({ ...prev, notificationPermission: true }));
-        toast.success("Notification permission granted!");
+        // Notification permission granted silently
       } else {
-        toast.error("Notification permission denied");
+        // Notification permission denied silently
       }
     } catch (error) {
-      toast.error("Failed to request notification permission");
+      // Failed to request notification permission silently
     }
   };
 
@@ -215,7 +215,7 @@ export function UserStatsManager() {
       JSON.stringify(updatedStats),
     );
 
-    toast.success(`Profile visibility set to ${newVisibility}`);
+    // Profile visibility set silently
   };
 
   const getVisibilityIcon = () => {
@@ -346,7 +346,7 @@ export function UserStatsManager() {
                     `user-stats-${currentUser?.uid}`,
                     JSON.stringify(updatedStats),
                   );
-                  toast.success(`Profile visibility set to ${value}`);
+                  // Profile visibility set silently
                 }}
               >
                 <SelectTrigger className="w-32 h-8 text-xs">

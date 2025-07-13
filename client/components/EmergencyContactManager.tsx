@@ -600,11 +600,9 @@ export function EmergencyContactManager({
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
               >
-                <p className="font-medium text-gray-700">
-                  No Emergency Contacts Yet
-                </p>
+                <p className="font-medium text-gray-700">Emergency Contacts</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Add trusted contacts using their Guardian keys
+                  Manage your trusted contacts
                 </p>
               </motion.div>
               <motion.div

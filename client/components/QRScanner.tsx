@@ -161,11 +161,11 @@ export function QRScanner({ isOpen, onClose, onScanResult }: QRScannerProps) {
   const handleQRAction = (type: string, parsedData: any) => {
     switch (type) {
       case "guardian_key":
-        toast.success(`Guardian Key detected: ${parsedData.guardianKey}`);
+        // Guardian Key detected silently
         break;
 
       case "location":
-        toast.success("Location QR detected - Opening map...");
+        // Location QR detected silently
         setTimeout(() => {
           navigate("/", {
             state: {
@@ -180,11 +180,11 @@ export function QRScanner({ isOpen, onClose, onScanResult }: QRScannerProps) {
         break;
 
       case "emergency_contact":
-        toast.success(`Emergency contact detected: ${parsedData.name}`);
+        // Emergency contact detected silently
         break;
 
       default:
-        toast.info("QR code scanned successfully");
+      // QR code scanned successfully silently
     }
   };
 

@@ -9,7 +9,7 @@ import {
   RefreshCw,
   Shield,
 } from "lucide-react";
-import { toast } from "sonner";
+// Toast removed - using silent feedback only
 
 interface LocationPermissionPromptProps {
   permissionStatus: "prompt" | "granted" | "denied" | "unsupported";
@@ -28,18 +28,16 @@ export function LocationPermissionPrompt({
     setIsRequesting(true);
     try {
       await onLocationRequest();
-      toast.success("Location access granted!");
+      // Silent success - no toast needed
     } catch (error: any) {
       console.error("Location permission error:", error);
 
       if (error.message?.includes("denied")) {
-        toast.error(
-          "Location access denied. Please enable in browser settings.",
-        );
+        // Silent error handling
       } else if (error.message?.includes("timeout")) {
-        toast.error("Location request timed out. Please try again.");
+        // Silent timeout handling
       } else {
-        toast.error("Unable to access location. Please check permissions.");
+        // Silent error handling
       }
     } finally {
       setIsRequesting(false);
@@ -47,12 +45,7 @@ export function LocationPermissionPrompt({
   };
 
   const openLocationSettings = () => {
-    toast.info(
-      "To enable location:\n1. Click the location icon in address bar\n2. Select 'Allow'\n3. Refresh the page",
-      {
-        duration: 8000,
-      },
-    );
+    // Silent instruction - UI feedback only
   };
 
   if (permissionStatus === "granted") {
@@ -81,8 +74,9 @@ export function LocationPermissionPrompt({
           title: "Location Not Supported",
           description: "Your browser doesn't support location services",
           buttonText: "Learn More",
-          buttonAction: () =>
-            toast.info("Please use a modern browser with location support"),
+          buttonAction: () => () => {
+            /* Silent fallback */
+          },
           buttonVariant: "outline" as const,
           showRetry: false,
         };

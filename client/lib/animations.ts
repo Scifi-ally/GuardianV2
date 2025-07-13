@@ -1,15 +1,19 @@
 import { Variants } from "framer-motion";
 
-// Common easing functions
+// Common easing functions - using only string values to prevent interpolation errors
 export const easing = {
   easeInOut: [0.4, 0, 0.2, 1],
   easeOut: [0, 0, 0.2, 1],
   easeIn: [0.4, 0, 1, 1],
   bounce: [0.68, -0.55, 0.265, 1.55],
   elastic: [0.175, 0.885, 0.32, 1.275],
-  spring: { type: "spring", stiffness: 400, damping: 25 },
-  springBounce: { type: "spring", stiffness: 300, damping: 20 },
-  springSmooth: { type: "spring", stiffness: 200, damping: 30 },
+} as const;
+
+// Spring configurations as separate constants
+export const springConfigs = {
+  spring: { type: "spring" as const, stiffness: 400, damping: 25 },
+  springBounce: { type: "spring" as const, stiffness: 300, damping: 20 },
+  springSmooth: { type: "spring" as const, stiffness: 200, damping: 30 },
 } as const;
 
 // Page transition animations
@@ -25,7 +29,7 @@ export const pageTransitions: Variants = {
     y: 0,
     transition: {
       duration: 0.4,
-      ease: easing.easeOut,
+      ease: "easeOut",
     },
   },
   exit: {
@@ -34,7 +38,7 @@ export const pageTransitions: Variants = {
     y: -10,
     transition: {
       duration: 0.3,
-      ease: easing.easeIn,
+      ease: "easeIn",
     },
   },
 };
@@ -52,7 +56,7 @@ export const scrollAnimations: Variants = {
     scale: 1,
     transition: {
       duration: 0.6,
-      ease: easing.easeOut,
+      ease: "easeOut",
     },
   },
 };
@@ -81,7 +85,7 @@ export const staggerItem: Variants = {
     scale: 1,
     transition: {
       duration: 0.5,
-      ease: easing.easeOut,
+      ease: "easeOut",
     },
   },
 };
@@ -120,23 +124,19 @@ export const cardAnimations: Variants = {
 export const buttonAnimations: Variants = {
   rest: {
     scale: 1,
-    transition: {
-      duration: 0.2,
-      ease: easing.springSmooth,
-    },
+    transition: springConfigs.springSmooth,
   },
   hover: {
     scale: 1.05,
-    transition: {
-      duration: 0.2,
-      ease: easing.springSmooth,
-    },
+    transition: springConfigs.springSmooth,
   },
   tap: {
     scale: 0.95,
     transition: {
       duration: 0.1,
-      ease: easing.springSmooth,
+      type: "spring",
+      stiffness: 200,
+      damping: 30,
     },
   },
 };
@@ -286,43 +286,34 @@ export const notificationAnimations: Variants = {
     scale: 0.95,
     transition: {
       duration: 0.3,
-      ease: easing.easeIn,
+      ease: "easeIn",
     },
   },
 };
 
-// Emergency/SOS animations
+// Emergency/SOS animations - Fixed to prevent interpolation errors
 export const emergencyAnimations: Variants = {
   pulse: {
     scale: [1, 1.1, 1],
-    boxShadow: [
-      "0 0 0 0 rgba(239, 68, 68, 0.4)",
-      "0 0 0 10px rgba(239, 68, 68, 0)",
-      "0 0 0 0 rgba(239, 68, 68, 0)",
-    ],
     transition: {
       duration: 1.5,
       repeat: Infinity,
-      ease: easing.easeInOut,
+      ease: "easeInOut",
     },
   },
   shake: {
     x: [0, -5, 5, -5, 5, 0],
     transition: {
       duration: 0.5,
-      ease: easing.easeInOut,
+      ease: "easeInOut",
     },
   },
   glow: {
-    boxShadow: [
-      "0 0 20px rgba(239, 68, 68, 0.5)",
-      "0 0 40px rgba(239, 68, 68, 0.8)",
-      "0 0 20px rgba(239, 68, 68, 0.5)",
-    ],
+    opacity: [0.5, 1, 0.5],
     transition: {
       duration: 2,
       repeat: Infinity,
-      ease: easing.easeInOut,
+      ease: "easeInOut",
     },
   },
 };

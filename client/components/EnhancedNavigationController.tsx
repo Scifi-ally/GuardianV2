@@ -152,7 +152,7 @@ export function EnhancedNavigationController({
           if (currentLocation) {
             await startNavigationToPoint(latLng);
           } else {
-            toast.error("Current location not available");
+            // Current location not available - silent
           }
           break;
 
@@ -205,7 +205,7 @@ export function EnhancedNavigationController({
       }
     } catch (error) {
       console.error("Navigation start failed:", error);
-      toast.error("Failed to start navigation");
+      // Failed to start navigation silently
     } finally {
       setIsAnalyzing(false);
     }
@@ -279,7 +279,7 @@ export function EnhancedNavigationController({
       return analysis;
     } catch (error) {
       console.error("Route analysis failed:", error);
-      toast.error("Failed to analyze route safety");
+      // Failed to analyze route safety silently
       return null;
     }
   };
@@ -302,7 +302,7 @@ export function EnhancedNavigationController({
       }
     } catch (error) {
       console.error("Safety analysis failed:", error);
-      toast.error("Failed to analyze location safety");
+      // Failed to analyze location safety silently
     } finally {
       setIsAnalyzing(false);
     }

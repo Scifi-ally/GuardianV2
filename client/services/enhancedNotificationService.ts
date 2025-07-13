@@ -16,6 +16,8 @@ export interface EmergencyNotificationOptions {
 
 class EnhancedNotificationService {
   private isVibrationSupported = "vibrate" in navigator;
+  private activeToasts = new Set<string>();
+  private toastTimeouts = new Map<string, NodeJS.Timeout>();
 
   private triggerVibration(pattern: number | number[] = 200) {
     if (this.isVibrationSupported) {
@@ -23,61 +25,106 @@ class EnhancedNotificationService {
     }
   }
 
+  private generateToastKey(title: string, type: string): string {
+    return `${type}:${title}`;
+  }
+
+  private canShowToast(title: string, type: string): boolean {
+    const key = this.generateToastKey(title, type);
+    return !this.activeToasts.has(key);
+  }
+
+  private markToastActive(
+    title: string,
+    type: string,
+    duration: number = 4000,
+  ) {
+    const key = this.generateToastKey(title, type);
+    this.activeToasts.add(key);
+
+    // Clear any existing timeout for this key
+    if (this.toastTimeouts.has(key)) {
+      clearTimeout(this.toastTimeouts.get(key)!);
+    }
+
+    // Set timeout to remove from active set
+    const timeout = setTimeout(() => {
+      this.activeToasts.delete(key);
+      this.toastTimeouts.delete(key);
+    }, duration);
+
+    this.toastTimeouts.set(key, timeout);
+  }
+
   // Success notifications
   success(options: NotificationOptions) {
+    if (!this.canShowToast(options.title, "success")) {
+      return null;
+    }
+
     if (options.vibrate) {
       this.triggerVibration([100, 50, 100]);
     }
 
-    return toast.success(options.title, {
-      description: options.description,
-      duration: options.duration || 4000,
-    });
+    this.markToastActive(options.title, "success", options.duration);
+    // Success notification silently
+    return null;
   }
 
   // Error notifications
   error(options: NotificationOptions) {
+    if (!this.canShowToast(options.title, "error")) {
+      return null;
+    }
+
     if (options.vibrate) {
       this.triggerVibration([200, 100, 200]);
     }
 
-    return toast.error(options.title, {
-      description: options.description,
-      duration: options.duration || 6000,
-    });
+    this.markToastActive(options.title, "error", options.duration);
+    // Error notification silently
+    return null;
   }
 
   // Warning notifications
   warning(options: NotificationOptions) {
+    if (!this.canShowToast(options.title, "warning")) {
+      return null;
+    }
+
     if (options.vibrate) {
       this.triggerVibration([150, 75, 150]);
     }
 
-    return toast.warning(options.title, {
-      description: options.description,
-      duration: options.duration || 5000,
-    });
+    this.markToastActive(options.title, "warning", options.duration);
+    // Warning notification silently
+    return null;
   }
 
   // Info notifications
   info(options: NotificationOptions) {
+    if (!this.canShowToast(options.title, "info")) {
+      return null;
+    }
+
     if (options.vibrate) {
       this.triggerVibration(100);
     }
 
-    return toast.info(options.title, {
-      description: options.description,
-      duration: options.duration || 4000,
-    });
+    this.markToastActive(options.title, "info", options.duration);
+    // Info notification silently
+    return null;
   }
 
   // Emergency notifications with enhanced features
   emergency(options: EmergencyNotificationOptions) {
+    // Always allow emergency notifications (don't deduplicate)
     if (options.vibrate !== false) {
       // Strong emergency vibration pattern
       this.triggerVibration([500, 200, 500, 200, 500]);
     }
 
+    // Emergency notification preserved for SOS
     return toast.emergency(options.title, {
       description: options.description,
     });
@@ -171,11 +218,8 @@ class EnhancedNotificationService {
       vibrate?: boolean;
     },
   ) {
-    const result = await toast.promise(promise, {
-      loading: options.loading,
-      success: options.success,
-      error: options.error,
-    });
+    // Promise toast silently
+    const result = await promise;
 
     if (options.vibrate) {
       this.triggerVibration(100);
@@ -186,11 +230,11 @@ class EnhancedNotificationService {
 
   // Dismiss notifications
   dismiss(toastId?: string | number) {
-    toast.dismiss(toastId);
+    // Dismiss silently
   }
 
   dismissAll() {
-    toast.dismissAll();
+    // Dismiss all silently
   }
 }
 

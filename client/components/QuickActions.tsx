@@ -153,11 +153,7 @@ export function QuickActions() {
     setIsLoading("text");
     try {
       if (!userProfile?.emergencyContacts?.length) {
-        notifications.error({
-          title: "No Emergency Contacts",
-          description: "Add emergency contacts to send quick alerts",
-          vibrate: true,
-        });
+        // Silently handle no emergency contacts
         return;
       }
 

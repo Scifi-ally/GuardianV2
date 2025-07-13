@@ -34,13 +34,10 @@ export class NewsAnalysisService {
     new Map();
   private readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
-  // News sources that could be integrated
+  // Internal-only news sources - no external APIs
   private newsSources: NewsSource[] = [
-    { name: "NewsAPI", url: "https://newsapi.org/v2/everything" },
-    { name: "Local News RSS", url: "/api/local-news" },
-    { name: "Police Reports API", url: "/api/police-reports" },
-    { name: "Traffic API", url: "/api/traffic-incidents" },
-    { name: "Weather Alerts", url: "/api/weather-alerts" },
+    { name: "Internal Safety Data", url: "/internal/safety-data" },
+    { name: "Local Cache", url: "/internal/cache" },
   ];
 
   static getInstance(): NewsAnalysisService {

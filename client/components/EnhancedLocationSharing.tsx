@@ -68,7 +68,7 @@ export function EnhancedLocationSharing() {
 
   const shareLocationWithContact = async (share: LocationShare) => {
     if (!location) {
-      toast.error("Location not available. Please enable location services.");
+      // Location not available - silent
       return;
     }
 
@@ -92,7 +92,7 @@ export function EnhancedLocationSharing() {
 
           // Update share status
           updateShareStatus(share.id);
-          toast.success(`Location shared with ${share.recipientName}`);
+          // Location shared silently
           return;
         } catch (shareError) {
           console.log("Native sharing failed, trying clipboard fallback");
@@ -118,27 +118,18 @@ export function EnhancedLocationSharing() {
         }
 
         updateShareStatus(share.id);
-        toast.success(
-          `Location message copied to clipboard for ${share.recipientName}. Paste and send manually.`,
-          {
-            description: `Contact: ${share.recipientPhone}`,
-            duration: 5000,
-          },
-        );
+        // Location message copied to clipboard silently
       } catch (clipboardError) {
         console.error("Clipboard failed:", clipboardError);
         // Show the message in an alert as last resort
-        toast.info("Share location manually", {
-          description: `Send this message to ${share.recipientName}`,
-          duration: 5000,
-        });
+        // Share location manually - silent
         navigator.clipboard?.writeText(message);
         updateShareStatus(share.id);
-        toast.info(`Location details shown for ${share.recipientName}`);
+        // Location details shown silently
       }
     } catch (error) {
       console.error("Failed to share location:", error);
-      toast.error("Failed to share location");
+      // Failed to share location silently
     } finally {
       setIsSharing(false);
     }
@@ -175,19 +166,19 @@ export function EnhancedLocationSharing() {
         5 * 60 * 1000,
       );
 
-      toast.success(`Continuous sharing started with ${share.recipientName}`);
+      // Continuous sharing started silently
     } else {
       // Stop continuous sharing
       setLocationShares((prev) =>
         prev.map((s) => (s.id === shareId ? { ...s, isActive: false } : s)),
       );
-      toast.info(`Stopped sharing with ${share.recipientName}`);
+      // Stopped sharing silently
     }
   };
 
   const activateSOSSharing = async () => {
     if (!location || !userProfile?.emergencyContacts?.length) {
-      toast.error("No emergency contacts or location available");
+      // No emergency contacts or location available - silent
       return;
     }
 
@@ -221,12 +212,7 @@ export function EnhancedLocationSharing() {
         sharedWithCount: sharedWith.length,
       }));
 
-      toast.success(
-        `Emergency location shared with ${sharedWith.length} contacts`,
-        {
-          duration: 10000,
-        },
-      );
+      // Emergency location shared silently
 
       // Continue sharing every 30 seconds during SOS
       const sosInterval = setInterval(async () => {
@@ -246,7 +232,7 @@ export function EnhancedLocationSharing() {
       }, 30000);
     } catch (error) {
       console.error("SOS sharing failed:", error);
-      toast.error("Failed to activate SOS sharing");
+      // Failed to activate SOS sharing silently
     }
   };
 
@@ -257,7 +243,7 @@ export function EnhancedLocationSharing() {
       sharedWithCount: 0,
       autoSharing: false,
     });
-    toast.info("SOS sharing deactivated");
+    // SOS sharing deactivated silently
   };
 
   const shareWithAll = async () => {
@@ -273,20 +259,8 @@ export function EnhancedLocationSharing() {
   };
 
   if (!userProfile?.emergencyContacts?.length) {
-    return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="font-semibold mb-2">No Emergency Contacts</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Add emergency contacts in your profile to enable location sharing.
-          </p>
-          <Button variant="outline" size="sm">
-            Add Contacts
-          </Button>
-        </CardContent>
-      </Card>
-    );
+    // Silently handle no emergency contacts
+    return null;
   }
 
   return (

@@ -111,12 +111,12 @@ export default function EnhancedNavigationPage() {
   const handleNavigationStart = useCallback(
     async (destination: google.maps.LatLng, routeAnalysis: any) => {
       if (!currentLocation) {
-        toast.error("Current location not available");
+        // Current location not available - silent
         return;
       }
 
       try {
-        console.log("🚀 Starting enhanced navigation...");
+        console.log("�� Starting enhanced navigation...");
 
         // Start AI-enhanced navigation
         const route = await aiEnhancedNavigation.startNavigation(
@@ -145,7 +145,7 @@ export default function EnhancedNavigationPage() {
         console.log("✅ Enhanced navigation started");
       } catch (error) {
         console.error("❌ Navigation failed:", error);
-        toast.error("Failed to start navigation");
+        // Failed to start navigation silently
       }
     },
     [currentLocation],
@@ -170,7 +170,7 @@ export default function EnhancedNavigationPage() {
       estimatedTime: "0 min",
     }));
 
-    toast.success("Navigation stopped");
+    // Navigation stopped silently
   }, []);
 
   const handleLocationUpdate = useCallback((location: any) => {

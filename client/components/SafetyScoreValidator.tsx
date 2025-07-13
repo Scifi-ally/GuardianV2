@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import {
   getSafetyLevel,
-  debugColorScheme,
+  // debugColorScheme removed for production
   getSafetyCssClass,
 } from "@/utils/safetyColors";
 
@@ -302,14 +302,7 @@ export function SafetyScoreValidator() {
           </div>
         )}
 
-        <Button
-          onClick={() => debugColorScheme()}
-          variant="outline"
-          size="sm"
-          className="w-full h-6 text-xs"
-        >
-          Debug Color Scheme (Check Console)
-        </Button>
+        {/* Debug color scheme removed for production */}
       </CardContent>
     </Card>
   );

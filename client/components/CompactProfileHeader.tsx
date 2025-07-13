@@ -63,7 +63,7 @@ export function CompactProfileHeader({ className }: CompactProfileHeaderProps) {
       // Silently update profile
     } catch (error) {
       console.error("Failed to update profile:", error);
-      toast.error("Failed to update profile");
+      // Failed to update profile silently
     } finally {
       setIsSaving(false);
     }

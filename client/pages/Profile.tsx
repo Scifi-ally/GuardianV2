@@ -24,7 +24,7 @@ import { EditProfileModal } from "@/components/EditProfileModal";
 import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal";
 import { UserStatsManager } from "@/components/UserStatsManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { InteractiveSafetyTutorial } from "@/components/InteractiveSafetyTutorial";
+import SafetyGuide from "@/components/SafetyGuide";
 import { GuardianKeyCard } from "@/components/GuardianKeyCard";
 import { QRScanner } from "@/components/QRScanner";
 import { ProfileLoading } from "@/components/ProfessionalLoading";
@@ -39,7 +39,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
+// Toast removed
 import { motion, AnimatePresence } from "framer-motion";
 
 const containerVariants = {
@@ -94,15 +94,7 @@ export default function Profile() {
   const [showSafetyTutorial, setShowSafetyTutorial] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
 
-  // Debug logging
-  useEffect(() => {
-    console.log("🔍 Profile Debug:", {
-      currentUser,
-      userProfile,
-      hasLogout: typeof logout === "function",
-      loading,
-    });
-  }, [currentUser, userProfile, logout, loading]);
+  // Debug logging removed for production
 
   // Guardian Key functionality moved to GuardianKeyCard component
 
@@ -119,17 +111,17 @@ export default function Profile() {
     try {
       if (typeof logout !== "function") {
         console.error("❌ Logout is not a function:", logout);
-        toast.error("Logout function not available");
+        // Silent error - logout function not available
         return;
       }
 
       console.log("✅ Calling logout function...");
       await logout();
       console.log("✅ Logout completed");
-      toast.success("Logged out successfully");
+      // Silent success - logged out
     } catch (error) {
       console.error("❌ Failed to logout:", error);
-      toast.error("Failed to logout");
+      // Silent error - failed to logout
     }
   };
 
@@ -346,7 +338,7 @@ export default function Profile() {
           />
         )}
         {showSafetyTutorial && (
-          <InteractiveSafetyTutorial
+          <SafetyGuide
             isOpen={showSafetyTutorial}
             onClose={() => setShowSafetyTutorial(false)}
           />
@@ -374,7 +366,7 @@ export default function Profile() {
           } else if (parsedData.guardianKey) {
             // Guardian key QR code
             setShowQRScanner(false);
-            toast.success(`Guardian Key scanned: ${parsedData.guardianKey}`);
+            // Silent success - QR scanned
           }
         }}
       />

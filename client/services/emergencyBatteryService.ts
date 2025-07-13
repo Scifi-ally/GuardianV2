@@ -169,7 +169,9 @@ class EmergencyBatteryService {
 
     localStorage.removeItem("guardian-emergency-power-mode");
 
-    unifiedNotifications.success("🔋 Normal Power Mode Restored");
+    unifiedNotifications.success("Normal Power Mode Restored", {
+      title: "🔋 Battery Status",
+    });
   }
 
   getBatteryInfo(): BatteryInfo | null {

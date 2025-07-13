@@ -10,10 +10,7 @@ export function UnifiedNotificationSystem() {
   // Handle emergency gesture (shake to call for help)
   const handleEmergencyGesture = () => {
     if (!userProfile?.emergencyContacts?.length) {
-      notifications.error({
-        title: "No Emergency Contacts",
-        description: "Please add emergency contacts in settings",
-      });
+      // Silently handle no emergency contacts
       return;
     }
 

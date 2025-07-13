@@ -168,11 +168,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       const emergencyContacts = userProfile.emergencyContacts || [];
 
       if (emergencyContacts.length === 0) {
-        notifications.error({
-          title: "No Emergency Contacts",
-          description: "Add emergency contacts before sending SOS alerts",
-          vibrate: true,
-        });
+        // Silent handling - no toast notification
         setSending(false);
         return;
       }

@@ -30,49 +30,44 @@ class UnifiedNotificationService {
 
     switch (notificationType) {
       case "success":
-        return notifications
-          .success({
-            title: options.title,
-            description: options.message,
-            duration: options.duration,
-            vibrate: true,
-          })
-          .toString();
+        const successResult = notifications.success({
+          title: options.title,
+          description: options.message,
+          duration: options.duration,
+          vibrate: true,
+        });
+        return successResult ? successResult.toString() : "success";
       case "error":
-        return notifications
-          .error({
-            title: options.title,
-            description: options.message,
-            duration: options.duration,
-            vibrate: true,
-          })
-          .toString();
+        const errorResult = notifications.error({
+          title: options.title,
+          description: options.message,
+          duration: options.duration,
+          vibrate: true,
+        });
+        return errorResult ? errorResult.toString() : "error";
       case "warning":
-        return notifications
-          .warning({
-            title: options.title,
-            description: options.message,
-            duration: options.duration,
-            vibrate: true,
-          })
-          .toString();
+        const warningResult = notifications.warning({
+          title: options.title,
+          description: options.message,
+          duration: options.duration,
+          vibrate: true,
+        });
+        return warningResult ? warningResult.toString() : "warning";
       case "sos":
       case "critical":
-        return notifications
-          .emergency({
-            title: options.title,
-            description: options.message,
-          })
-          .toString();
+        const emergencyResult = notifications.emergency({
+          title: options.title,
+          description: options.message,
+        });
+        return emergencyResult ? emergencyResult.toString() : "emergency";
       default:
-        return notifications
-          .warning({
-            title: options.title,
-            description: options.message,
-            duration: options.duration,
-            vibrate: true,
-          })
-          .toString();
+        const defaultResult = notifications.warning({
+          title: options.title,
+          description: options.message,
+          duration: options.duration,
+          vibrate: true,
+        });
+        return defaultResult ? defaultResult.toString() : "info";
     }
   }
 
