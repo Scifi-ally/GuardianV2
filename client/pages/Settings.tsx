@@ -45,8 +45,6 @@ export default function Settings() {
   const [settings, setSettings] = useState({
     notifications: {
       push: true,
-      email: true,
-      sms: false,
       emergencyOnly: false,
     },
     privacy: {
@@ -157,22 +155,7 @@ export default function Settings() {
           value: settings.notifications.push,
           category: "notifications" as const,
         },
-        {
-          id: "email",
-          label: "Email Alerts",
-          description: "Emergency notifications via email",
-          type: "switch",
-          value: settings.notifications.email,
-          category: "notifications" as const,
-        },
-        {
-          id: "sms",
-          label: "SMS Alerts",
-          description: "Text message notifications",
-          type: "switch",
-          value: settings.notifications.sms,
-          category: "notifications" as const,
-        },
+        // Email/SMS removed - requires backend integration
         {
           id: "emergencyOnly",
           label: "Emergency Only",
