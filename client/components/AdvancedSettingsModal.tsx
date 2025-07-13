@@ -418,8 +418,20 @@ export function AdvancedSettingsModal({
             <SettingItem
               icon={MapPin}
               title="Location Tracking"
-              description="Enable high-accuracy GPS tracking for safety features and emergency response"
+              description="Enable GPS tracking for safety features and emergency response"
               settingKey="locationTracking"
+            />
+            <SettingItem
+              icon={Zap}
+              title="High Accuracy GPS"
+              description="Use maximum GPS precision for better emergency location accuracy"
+              settingKey="highAccuracyGPS"
+            />
+            <SettingItem
+              icon={Smartphone}
+              title="Background Updates"
+              description="Continue location tracking even when app is in background"
+              settingKey="backgroundLocationUpdates"
             />
           </motion.div>
         );
@@ -446,6 +458,12 @@ export function AdvancedSettingsModal({
               description="Critical safety and emergency notifications with sound"
               settingKey="emergencyAlerts"
             />
+            <SettingItem
+              icon={Shield}
+              title="Critical Alerts Only"
+              description="Show only life-threatening emergency alerts to reduce distractions"
+              settingKey="criticalAlertsOnly"
+            />
           </motion.div>
         );
 
@@ -462,7 +480,7 @@ export function AdvancedSettingsModal({
             <SettingItem
               icon={Shield}
               title="Emergency Timeout"
-              description="Delay before triggering emergency alert"
+              description="Delay before triggering emergency alert (1-30 seconds)"
               settingKey="emergencyTimeout"
               type="slider"
               min={1}
@@ -472,20 +490,38 @@ export function AdvancedSettingsModal({
             <SettingItem
               icon={Bell}
               title="Silent Mode"
-              description="Trigger alerts without sound or vibration"
+              description="Trigger alerts without sound or vibration for discrete emergencies"
               settingKey="silentMode"
             />
             <SettingItem
               icon={MapPin}
               title="Auto Share Location"
-              description="Automatically share location during emergencies"
+              description="Automatically share precise location during emergencies"
               settingKey="autoShareLocation"
             />
             <SettingItem
               icon={Smartphone}
               title="Emergency Recording"
-              description="Automatically start recording during emergencies"
+              description="Automatically start audio/video recording during emergencies"
               settingKey="emergencyRecording"
+            />
+            <SettingItem
+              icon={Users}
+              title="Panic Gesture Detection"
+              description="Detect shake patterns and rapid taps for emergency activation"
+              settingKey="panicGestureEnabled"
+            />
+            <SettingItem
+              icon={Phone}
+              title="Auto Call Emergency Services"
+              description="Automatically call 911/emergency services (use with caution)"
+              settingKey="autoCallEmergencyServices"
+            />
+            <SettingItem
+              icon={Zap}
+              title="Battery Optimized Mode"
+              description="Extend battery life during extended emergency situations"
+              settingKey="batteryOptimizedMode"
             />
           </motion.div>
         );
