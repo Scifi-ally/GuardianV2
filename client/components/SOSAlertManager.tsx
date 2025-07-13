@@ -20,6 +20,7 @@ import { useGeolocation, useHapticFeedback } from "@/hooks/use-device-apis";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { SlidingPanel, PanelContainer } from "@/components/SlidingPanel";
 import { cn } from "@/lib/utils";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
 
 interface SOSAlertManagerProps {
   className?: string;
