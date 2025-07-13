@@ -272,22 +272,90 @@ export function InvisibleSOS() {
     }
   };
 
-  const triggerInvisibleSOS = (method: string, confidence: number) => {
-    const activation: SOSActivation = {
-      method,
-      timestamp: new Date(),
-      confidence,
-      location: { lat: 37.7749, lng: -122.4194 }, // Would use real location
-    };
+  const triggerInvisibleSOS = async (method: string, confidence: number) => {
+    try {
+      // Get real location for emergency
+      const location = await getCurrentLocation();
 
-    setRecentActivations((prev) => [activation, ...prev.slice(0, 4)]);
-    setIsSOSMode(true);
+      const activation: SOSActivation = {
+        method,
+        timestamp: new Date(),
+        confidence,
+        location: { lat: location.latitude, lng: location.longitude },
+      };
 
-    // Show invisible SOS mode
-    setTimeout(() => setIsSOSMode(false), 5000);
+      setRecentActivations((prev) => [activation, ...prev.slice(0, 4)]);
+      setIsSOSMode(true);
 
-    // In real app, this would trigger emergency protocols
-    console.log("🚨 INVISIBLE SOS ACTIVATED:", activation);
+      // Show invisible SOS mode
+      setTimeout(() => setIsSOSMode(false), 5000);
+
+      // ACTUAL EMERGENCY RESPONSE - not just console.log!
+      unifiedNotifications.sos({
+        title: "🚨 INVISIBLE SOS ACTIVATED",
+        message: `Emergency detected via ${method}. Confidence: ${confidence}%. Person may be in danger and unable to openly call for help!`,
+        location: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          address: `Emergency location (${method} detection)`,
+        },
+        action: {
+          label: "Navigate to Location",
+          onClick: () => {
+            const url = `https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+            window.open(url, "_blank");
+          },
+        },
+        secondaryAction: {
+          label: "Call Emergency",
+          onClick: () => {
+            try {
+              window.location.href = "tel:911";
+            } catch (error) {
+              unifiedNotifications.critical(
+                "Call 911 immediately - Invisible SOS activated",
+              );
+            }
+          },
+        },
+      });
+
+      // Copy emergency message to clipboard for sharing
+      if (userProfile) {
+        const message = `🚨 INVISIBLE SOS ALERT\n\nEmergency detected for ${userProfile.name || "User"} via ${method}\nConfidence: ${confidence}%\nTime: ${new Date().toLocaleString()}\nLocation: ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}\n\nThis person may be in danger and unable to openly call for help. Please check on them immediately!`;
+
+        navigator.clipboard?.writeText(message);
+
+        unifiedNotifications.critical("Emergency message copied to clipboard", {
+          title: "Share with Emergency Contacts",
+          message: "Send this message to emergency contacts immediately",
+        });
+      }
+
+      // Vibrate device for attention
+      if (navigator.vibrate) {
+        navigator.vibrate([1000, 500, 1000, 500, 1000]);
+      }
+    } catch (error) {
+      console.error("Failed to get location for invisible SOS:", error);
+      // Fallback without location
+      unifiedNotifications.critical(
+        "INVISIBLE SOS ACTIVATED - EMERGENCY DETECTED",
+        {
+          message: `Method: ${method}, Confidence: ${confidence}%. Get help immediately!`,
+          action: {
+            label: "Call 911",
+            onClick: () => {
+              try {
+                window.location.href = "tel:911";
+              } catch (error) {
+                unifiedNotifications.critical("Call 911 immediately");
+              }
+            },
+          },
+        },
+      );
+    }
   };
 
   const handleGenericClick = useCallback((event: MouseEvent) => {
