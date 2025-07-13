@@ -38,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { ComprehensiveSafetySystem } from "@/components/ComprehensiveSafetySystem";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import { CustomCheckbox } from "@/components/ui/custom-checkbox";
 
@@ -602,9 +603,10 @@ export default function Index() {
   // Route refreshes automatically when destination changes
   // SOS functionality is handled by MagicNavbar component
 
-  return (
-    <div className="min-h-screen bg-background">
-      <PerformanceOptimizer />
+    return (
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <PerformanceOptimizer />
       <ClickableFixes />
       {/* Compact Navigation Header - Reduced Height */}
       {/* Compact Search Bar */}
