@@ -247,7 +247,10 @@ export function SlideDownNotifications({
         <div
           className={cn(
             "rounded-lg border shadow-lg backdrop-blur-md",
-            getNotificationBg(latestNotification.type),
+            getNotificationBg(
+              latestNotification.type,
+              latestNotification.priority,
+            ),
           )}
         >
           {/* Main notification */}
@@ -270,16 +273,53 @@ export function SlideDownNotifications({
                     {latestNotification.message}
                   </p>
 
-                  {latestNotification.action && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={latestNotification.action.onClick}
-                      className="h-7 text-xs"
-                    >
-                      {latestNotification.action.label}
-                    </Button>
+                  {/* Priority badge for critical notifications */}
+                  {(latestNotification.priority === "critical" ||
+                    latestNotification.type === "sos") && (
+                    <Badge variant="destructive" className="text-xs mb-2">
+                      {latestNotification.type === "sos"
+                        ? "EMERGENCY"
+                        : "CRITICAL"}
+                    </Badge>
                   )}
+
+                  {/* Location info for SOS notifications */}
+                  {latestNotification.location && (
+                    <div className="text-xs text-gray-600 mb-2 p-2 bg-white/50 rounded">
+                      📍{" "}
+                      {latestNotification.location.address ||
+                        `${latestNotification.location.latitude.toFixed(6)}, ${latestNotification.location.longitude.toFixed(6)}`}
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    {latestNotification.action && (
+                      <Button
+                        size="sm"
+                        variant={
+                          latestNotification.type === "sos" ||
+                          latestNotification.type === "critical"
+                            ? "default"
+                            : "outline"
+                        }
+                        onClick={latestNotification.action.onClick}
+                        className="h-7 text-xs"
+                      >
+                        {latestNotification.action.label}
+                      </Button>
+                    )}
+                    {latestNotification.secondaryAction && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={latestNotification.secondaryAction.onClick}
+                        className="h-7 text-xs"
+                      >
+                        {latestNotification.secondaryAction.label}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
