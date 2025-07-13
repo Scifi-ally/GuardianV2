@@ -15,7 +15,6 @@ import {
 import { motion } from "framer-motion";
 
 // Import our unique components
-import { InvisibleSOS } from "./InvisibleSOS";
 import { GuardianBuddySystem } from "./GuardianBuddySystem";
 import { SafetyAura } from "./SafetyAura";
 
@@ -205,7 +204,13 @@ export function UniqueGuardianFeatures() {
                       you can't openly call for help.
                     </p>
                   </div>
-                  <InvisibleSOS />
+                  <div className="p-4 border rounded-lg bg-red-50">
+                    <p className="text-sm text-gray-600">
+                      Invisible SOS feature has been consolidated into the
+                      enhanced SOS system. Access these features through the
+                      main SOS button or gesture controls.
+                    </p>
+                  </div>
                 </div>
               </TabsContent>
 
