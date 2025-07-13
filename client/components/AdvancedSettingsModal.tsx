@@ -255,6 +255,72 @@ export function AdvancedSettingsModal({
             unifiedNotifications.info("Emergency recording disabled");
           }
           break;
+
+        case "highAccuracyGPS":
+          if (value as boolean) {
+            enhancedLocationService.setHighAccuracyMode(true);
+            unifiedNotifications.success(
+              "High accuracy GPS enabled - Maximum precision",
+            );
+          } else {
+            enhancedLocationService.setHighAccuracyMode(false);
+            unifiedNotifications.info("Standard GPS accuracy enabled");
+          }
+          break;
+
+        case "backgroundLocationUpdates":
+          if (value as boolean) {
+            unifiedNotifications.success("Background location updates enabled");
+          } else {
+            unifiedNotifications.warning(
+              "Background updates disabled - Emergency response may be limited",
+            );
+          }
+          break;
+
+        case "criticalAlertsOnly":
+          if (value as boolean) {
+            unifiedNotifications.info(
+              "Showing only critical life-threatening alerts",
+            );
+          } else {
+            unifiedNotifications.success("Showing all safety notifications");
+          }
+          break;
+
+        case "panicGestureEnabled":
+          if (value as boolean) {
+            unifiedNotifications.success(
+              "Panic gesture detection enabled - Shake device rapidly or tap 5 times",
+            );
+          } else {
+            unifiedNotifications.info("Panic gesture detection disabled");
+          }
+          break;
+
+        case "autoCallEmergencyServices":
+          if (value as boolean) {
+            unifiedNotifications.warning(
+              "Auto-call emergency services enabled - Use with extreme caution!",
+              {
+                message:
+                  "This will automatically call 911 during emergencies. Ensure this is appropriate for your situation.",
+              },
+            );
+          } else {
+            unifiedNotifications.info("Manual emergency calling mode");
+          }
+          break;
+
+        case "batteryOptimizedMode":
+          if (value as boolean) {
+            unifiedNotifications.success(
+              "Battery optimization enabled for extended emergency situations",
+            );
+          } else {
+            unifiedNotifications.info("Full performance mode enabled");
+          }
+          break;
       }
 
       // Save to localStorage immediately
