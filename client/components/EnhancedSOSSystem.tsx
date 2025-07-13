@@ -42,6 +42,18 @@ interface SOSAlert {
   timestamp: Date;
   status: "active" | "cancelled" | "resolved";
   responses: SOSResponse[];
+  emergencyType:
+    | "general"
+    | "medical"
+    | "personal_safety"
+    | "natural_disaster"
+    | "accident";
+  priority: "low" | "medium" | "high" | "critical";
+  autoEscalated: boolean;
+  lastHeartbeat: Date;
+  batteryCritical: boolean;
+  soundAlarmEnabled: boolean;
+  flashlightEnabled: boolean;
 }
 
 interface SOSResponse {
