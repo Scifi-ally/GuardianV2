@@ -656,7 +656,7 @@ export default function Index() {
 
       {/* Enhanced Google Map with Safety Score Coloring */}
       <div className="absolute inset-0 top-0 z-10">
-        <EnhancedGoogleMap
+        <IntelligentGoogleMap
           key="main-map"
           location={location}
           mapTheme={mapTheme}
