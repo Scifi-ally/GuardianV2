@@ -51,6 +51,8 @@ import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import AINavigationPanel from "@/components/AINavigationPanel";
 import { emergencyContactActionsService } from "@/services/emergencyContactActionsService";
 import { realTimeService } from "@/services/realTimeService";
+import { emergencyBatteryService } from "@/services/emergencyBatteryService";
+import { emergencyReadinessService } from "@/services/emergencyReadinessService";
 import { sharedLocationService } from "@/services/sharedLocationService";
 import { LocationPermissionPrompt } from "@/components/LocationPermissionPrompt";
 import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
