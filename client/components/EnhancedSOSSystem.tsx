@@ -523,15 +523,38 @@ export function EnhancedSOSSystem({
         }
       }
 
-      toast.success(
-        "🚨 Emergency alert sent! Location shared and tracking active.",
-        {
-          duration: 5000,
-        },
-      );
+      // Show SOS notification with location and actions
+      if (activeAlert) {
+        unifiedNotifications.sos({
+          title: "🚨 Emergency Alert Sent",
+          message: "Location shared and tracking active. Help is on the way.",
+          location: {
+            latitude: activeAlert.location.latitude,
+            longitude: activeAlert.location.longitude,
+            address: activeAlert.location.address,
+          },
+          action: {
+            label: "View Location",
+            onClick: () => {
+              if (activeAlert?.location && onStartNavigation) {
+                onStartNavigation(activeAlert.location);
+              }
+            },
+          },
+          secondaryAction: {
+            label: "Share Update",
+            onClick: async () => {
+              await shareLocationInternally(
+                activeAlert.location,
+                "Emergency update: Still need assistance",
+              );
+            },
+          },
+        });
+      }
     } catch (error) {
       console.error("Error sending SOS alert:", error);
-      toast.error(
+      unifiedNotifications.error(
         `Failed to send emergency alert: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
@@ -597,12 +620,20 @@ export function EnhancedSOSSystem({
       setActiveAlert(null);
       setSOSActive(false);
 
-      toast.success(
-        "SOS cancelled - all monitoring stopped, cancellation message copied to clipboard",
-      );
+      unifiedNotifications.success("SOS cancelled - all monitoring stopped", {
+        action: {
+          label: "Send Update",
+          onClick: () => {
+            navigator.clipboard?.writeText(cancelMessage);
+            unifiedNotifications.info(
+              "Cancellation message copied to clipboard",
+            );
+          },
+        },
+      });
     } catch (error) {
       console.error("Failed to stop SOS alert:", error);
-      toast.error("Failed to cancel SOS alert");
+      unifiedNotifications.error("Failed to cancel SOS alert");
     }
   };
 
@@ -640,7 +671,7 @@ export function EnhancedSOSSystem({
                   </p>
                   <p>
                     📱 Battery: {batteryLevel}%{" "}
-                    {activeAlert.batteryCritical && "⚠️ Critical"}
+                    {activeAlert.batteryCritical && "��️ Critical"}
                   </p>
                   <p>
                     🚨 Type:{" "}
@@ -716,7 +747,7 @@ export function EnhancedSOSSystem({
                     onClick={() => {
                       if (activeAlert?.location && onStartNavigation) {
                         onStartNavigation(activeAlert.location);
-                        toast.success(
+                        unifiedNotifications.success(
                           "Navigation started to emergency location",
                         );
                       }
@@ -737,7 +768,7 @@ export function EnhancedSOSSystem({
                       );
                       const msg = `📍 Current Location: ${name}\nCoordinates: ${current.latitude.toFixed(6)}, ${current.longitude.toFixed(6)}\nTime: ${new Date().toLocaleString()}`;
                       await copyToClipboard(msg);
-                      toast.success("Current location copied");
+                      unifiedNotifications.success("Current location copied");
                     }}
                     variant="outline"
                     size="sm"
