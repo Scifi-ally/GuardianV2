@@ -83,19 +83,31 @@ export default function Settings() {
   // Apply settings to actual services
   const applySettingsToServices = (newSettings: typeof settings) => {
     try {
-      // Apply location/safety settings
-      if (newSettings.safety.autoAlert) {
+      // Apply high accuracy location mode
+      if (newSettings.privacy.highAccuracyMode) {
         enhancedLocationService.setHighAccuracyMode(true);
+        unifiedNotifications.info("High accuracy location enabled", {
+          message:
+            "GPS tracking precision increased. This will use more battery.",
+        });
+      } else {
+        enhancedLocationService.setHighAccuracyMode(false);
       }
 
-      // Apply privacy settings
+      // Apply data saving mode
       if (newSettings.privacy.dataSaving) {
-        enhancedLocationService.setTrackingInterval(10000); // Longer interval for data saving
+        enhancedLocationService.setTrackingInterval(15000); // Longer interval for data saving
+        unifiedNotifications.info("Data saving mode enabled", {
+          message: "Location updates reduced to save battery and data.",
+        });
       } else {
         enhancedLocationService.setTrackingInterval(5000); // Normal interval
       }
 
-      unifiedNotifications.info("Settings applied to all services");
+      // Apply sound settings to notification service
+      if (!newSettings.safety.soundEnabled) {
+        unifiedNotifications.info("Sound alerts disabled");
+      }
     } catch (error) {
       console.error("Failed to apply settings:", error);
       unifiedNotifications.warning("Some settings may not have been applied");
