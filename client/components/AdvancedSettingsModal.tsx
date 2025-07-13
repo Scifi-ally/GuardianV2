@@ -399,43 +399,6 @@ export function AdvancedSettingsModal({
           </motion.div>
         );
 
-      case "performance":
-        return (
-          <motion.div
-            key="performance"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="space-y-4"
-          >
-            <SettingItem
-              icon={Zap}
-              title="Background Refresh"
-              description="Keep the app updated when not in use"
-              settingKey="backgroundRefresh"
-            />
-            <SettingItem
-              icon={Smartphone}
-              title="Data Usage Optimization"
-              description="Reduce data usage for better performance"
-              settingKey="dataUsage"
-            />
-            <SettingItem
-              icon={AlertTriangle}
-              title="Crash Reports"
-              description="Send anonymous crash reports to improve the app"
-              settingKey="crashReports"
-            />
-            <SettingItem
-              icon={Settings}
-              title="Analytics"
-              description="Share anonymous usage data to improve features"
-              settingKey="analytics"
-            />
-          </motion.div>
-        );
-
       default:
         return null;
     }
