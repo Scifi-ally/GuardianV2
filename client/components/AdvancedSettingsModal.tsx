@@ -61,7 +61,7 @@ export function AdvancedSettingsModal({
   onClose,
 }: AdvancedSettingsModalProps) {
   const [loading, setLoading] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("privacy");
+  const [activeCategory, setActiveCategory] = useState("location");
   const [settings, setSettings] = useState<SettingsState>({
     // Location Settings
     locationTracking: true,
