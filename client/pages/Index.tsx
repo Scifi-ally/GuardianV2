@@ -262,6 +262,26 @@ export default function Index() {
     { lat: number; lng: number } | undefined
   >(undefined);
 
+  // Initialize emergency services
+  useEffect(() => {
+    // Start emergency battery monitoring
+    emergencyBatteryService.startMonitoring();
+
+    // Start emergency readiness monitoring
+    emergencyReadinessService.startPeriodicChecks();
+
+    // Perform initial readiness check after app loads
+    const checkTimer = setTimeout(() => {
+      emergencyReadinessService.displayReadinessReport();
+    }, 5000);
+
+    return () => {
+      emergencyBatteryService.stopMonitoring();
+      emergencyReadinessService.stopPeriodicChecks();
+      clearTimeout(checkTimer);
+    };
+  }, []);
+
   // Initialize gesture system for enhanced usability
   const { gesturesEnabled, setGesturesEnabled } = useGestures({
     onSOSActivated: () => {
