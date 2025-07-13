@@ -5,17 +5,38 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Universal outline removal - highest priority */
-* {
-  outline: none !important;
+/* CRITICAL SAFETY FIX: Restore focus indicators for emergency accessibility */
+/* Emergency situations require visible focus indicators for keyboard navigation */
+
+/* Standard focus indicators for accessibility */
+*:focus {
+  outline: 2px solid hsl(var(--ring, 222.2 84% 4.9%)) !important;
+  outline-offset: 2px !important;
 }
 
-*:focus,
-*:focus-visible,
-*:focus-within,
-*:active {
-  outline: none !important;
-  box-shadow: none !important;
+/* High visibility focus for emergency situations */
+*:focus-visible {
+  outline: 3px solid #ff6b35 !important;
+  outline-offset: 2px !important;
+}
+
+/* Special emergency button focus - maximum visibility */
+[data-emergency="true"]:focus,
+[data-emergency="true"]:focus-visible,
+.emergency-focus:focus,
+.emergency-focus:focus-visible {
+  outline: 4px solid #ff0000 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 8px rgba(255, 0, 0, 0.3) !important;
+}
+
+/* Ensure SOS buttons are always highly visible when focused */
+button[aria-label*="SOS"]:focus,
+button[aria-label*="Emergency"]:focus,
+.sos-button:focus {
+  outline: 4px solid #ff0000 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 8px rgba(255, 0, 0, 0.3) !important;
 }
 
 @layer base {
