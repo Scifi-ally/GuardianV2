@@ -21,7 +21,6 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
-import { toast } from "sonner";
 
 interface LocationShare {
   id: string;
