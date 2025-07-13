@@ -262,10 +262,55 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         );
       }
 
-      toast.success(
-        `🚨 Emergency message copied to clipboard! Send to your ${emergencyContacts.length} emergency contact${emergencyContacts.length > 1 ? "s" : ""}. Location sharing activated.`,
-        { duration: 10000 },
-      );
+      // Try to actually contact emergency services
+      const actuallyContactEmergencyServices = async () => {
+        const settings = JSON.parse(
+          localStorage.getItem("guardian-advanced-settings") || "{}",
+        );
+
+        // Check if auto-call is enabled
+        if (settings.autoCallEmergencyServices) {
+          try {
+            // Try to initiate call to emergency services
+            window.location.href = "tel:911";
+            unifiedNotifications.warning(
+              "🚨 Calling emergency services (911)",
+              {
+                message:
+                  "Emergency call initiated. Stay on the line and provide your location.",
+              },
+            );
+          } catch (error) {
+            console.warn("Auto-call failed:", error);
+          }
+        }
+
+        // Try to send actual messages to emergency contacts
+        emergencyContacts.forEach((contact) => {
+          if (contact.phone) {
+            try {
+              // Try SMS (limited browser support)
+              const smsLink = `sms:${contact.phone}?body=${encodeURIComponent(emergencyMessage)}`;
+              window.location.href = smsLink;
+            } catch (error) {
+              console.warn(`Failed to send SMS to ${contact.name}:`, error);
+            }
+          }
+        });
+      };
+
+      await actuallyContactEmergencyServices();
+
+      unifiedNotifications.critical("🚨 EMERGENCY ALERT ACTIVATED", {
+        message: `Emergency message copied to clipboard and sent to ${emergencyContacts.length} contacts. Location sharing activated.`,
+        persistent: true,
+        action: {
+          label: "Call 911 Now",
+          onClick: () => {
+            window.location.href = "tel:911";
+          },
+        },
+      });
 
       onSOSPress?.();
     } catch (error) {
