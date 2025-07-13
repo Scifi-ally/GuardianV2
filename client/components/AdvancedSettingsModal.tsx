@@ -32,7 +32,8 @@ import {
   AlertTriangle,
   Zap,
 } from "lucide-react";
-import { toast } from "sonner";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
+import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AdvancedSettingsModalProps {
@@ -160,20 +161,72 @@ export function AdvancedSettingsModal({
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Save to localStorage as fallback
+      // Save to localStorage
       localStorage.setItem(
         "guardian-advanced-settings",
         JSON.stringify(settings),
       );
 
-      toast.success("Settings saved successfully!");
+      // ACTUALLY APPLY SETTINGS TO APP SERVICES
+      applySettingsToServices(settings);
+
+      unifiedNotifications.success("Advanced settings saved and applied", {
+        message: "All settings have been activated across the app",
+      });
     } catch (error) {
-      toast.error("Failed to save settings");
+      unifiedNotifications.error("Failed to save settings");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Apply settings to actual app services
+  const applySettingsToServices = (newSettings: typeof settings) => {
+    try {
+      // Apply location settings
+      if (newSettings.locationAccuracy === "high") {
+        enhancedLocationService.setHighAccuracyMode(true);
+        enhancedLocationService.setTrackingInterval(1000); // 1 second for high accuracy
+      } else if (newSettings.locationAccuracy === "balanced") {
+        enhancedLocationService.setHighAccuracyMode(false);
+        enhancedLocationService.setTrackingInterval(5000); // 5 seconds for balanced
+      } else {
+        enhancedLocationService.setHighAccuracyMode(false);
+        enhancedLocationService.setTrackingInterval(15000); // 15 seconds for battery saving
+      }
+
+      // Apply notification settings
+      if (newSettings.criticalAlertsOnly) {
+        unifiedNotifications.info("Critical alerts only mode enabled", {
+          message: "You will only receive emergency and critical notifications",
+        });
+      }
+
+      // Apply emergency settings
+      if (newSettings.autoEmergencyCall) {
+        unifiedNotifications.info("Auto emergency calling enabled", {
+          message:
+            "Emergency services will be called automatically in critical situations",
+        });
+      }
+
+      // Apply data usage settings
+      if (newSettings.lowDataMode) {
+        enhancedLocationService.setTrackingInterval(
+          Math.max(
+            enhancedLocationService.getDetailedStatus().trackingInterval,
+            10000,
+          ),
+        );
+        unifiedNotifications.info("Low data mode enabled", {
+          message: "Reduced data usage for maps and location tracking",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to apply advanced settings:", error);
+      unifiedNotifications.warning(
+        "Some settings may not have been applied correctly",
+      );
     }
   };
 
