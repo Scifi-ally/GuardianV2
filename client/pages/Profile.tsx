@@ -19,11 +19,10 @@ import {
 } from "lucide-react";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
-import { SOSNotificationManager } from "@/components/SOSNotification";
 import { EditProfileModal } from "@/components/EditProfileModal";
 import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal";
 import { UserStatsManager } from "@/components/UserStatsManager";
-import { ProfileErrorBoundary } from "@/components/ProfileErrorBoundary";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InteractiveSafetyTutorial } from "@/components/InteractiveSafetyTutorial";
 
 import { useAuth } from "@/contexts/AuthContext";
