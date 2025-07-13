@@ -387,8 +387,8 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         <div className="absolute inset-0 bg-background/80 backdrop-blur-lg border-t border-border" />
 
         {/* Navigation items */}
-        <div className="relative px-4 py-3">
-          <div className="flex items-center justify-center gap-8 max-w-sm mx-auto">
+        <div className="relative px-8 py-3">
+          <div className="flex items-center justify-between w-full max-w-md mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = activeIndex === index;
@@ -407,7 +407,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                     }
                     disabled={sending}
                     className={cn(
-                      "relative flex flex-col items-center px-4 py-3 transition-all duration-300 min-w-[60px]",
+                      "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px]",
                       sosPressed
                         ? "bg-warning/20 rounded-2xl animate-pulse"
                         : activeAlertId
@@ -467,7 +467,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   onTouchEnd={handleMapMouseUp}
                   disabled={sending}
                   className={cn(
-                    "relative flex flex-col items-center px-4 py-3 transition-all duration-300 min-w-[60px]",
+                    "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px]",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
                     item.id === "map" &&
                       showEnhancedMapHint &&
