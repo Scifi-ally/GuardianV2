@@ -346,32 +346,14 @@ export function AdvancedSettingsModal({
             <SettingItem
               icon={Smartphone}
               title="Push Notifications"
-              description="Receive notifications on this device"
+              description="Receive notifications on this device for safety updates"
               settingKey="pushNotifications"
-            />
-            <SettingItem
-              icon={Bell}
-              title="Email Notifications"
-              description="Receive updates via email"
-              settingKey="emailNotifications"
-            />
-            <SettingItem
-              icon={Smartphone}
-              title="SMS Notifications"
-              description="Receive critical alerts via SMS"
-              settingKey="smsNotifications"
             />
             <SettingItem
               icon={AlertTriangle}
               title="Emergency Alerts"
-              description="Critical safety notifications"
+              description="Critical safety and emergency notifications with sound"
               settingKey="emergencyAlerts"
-            />
-            <SettingItem
-              icon={Bell}
-              title="Weekly Reports"
-              description="Receive weekly safety activity reports"
-              settingKey="weeklyReports"
             />
           </motion.div>
         );
