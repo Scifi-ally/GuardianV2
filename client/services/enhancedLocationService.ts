@@ -5,6 +5,10 @@ interface LocationData {
   timestamp: number;
   heading?: number;
   speed?: number;
+  altitude?: number;
+  altitudeAccuracy?: number;
+  quality: "excellent" | "good" | "fair" | "poor";
+  source: "gps" | "network" | "passive";
 }
 
 interface LocationError {
@@ -23,6 +27,12 @@ export class EnhancedLocationService {
   private retryCount = 0;
   private readonly MAX_RETRIES = 3;
   private retryTimeout: NodeJS.Timeout | null = null;
+  private locationHistory: LocationData[] = [];
+  private readonly MAX_HISTORY = 50;
+  private isHighAccuracyMode = false;
+  private trackingInterval: number = 5000; // 5 seconds default
+  private lastUpdateTime = 0;
+  private readonly MIN_UPDATE_INTERVAL = 1000; // Minimum 1 second between updates
 
   static getInstance(): EnhancedLocationService {
     if (!EnhancedLocationService.instance) {
