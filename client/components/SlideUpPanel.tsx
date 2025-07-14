@@ -169,8 +169,8 @@ export function SlideUpPanel({
       ref={panelRef}
       className={cn(
         "fixed left-0 right-0 z-40 bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl overflow-hidden",
-        "border-t border-border/30",
-        "before:absolute before:inset-0 before:bg-gradient-to-t before:from-transparent before:via-transparent before:to-white/5 before:pointer-events-none",
+        "border-t-2 border-border/60",
+        "before:absolute before:inset-0 before:bg-gradient-to-t before:from-transparent before:via-transparent before:to-foreground/5 before:pointer-events-none",
         className,
       )}
       style={{
@@ -205,9 +205,11 @@ export function SlideUpPanel({
         whileTap={{ scale: 0.95 }}
       >
         <motion.div
-          className="bg-muted rounded-full"
+          className="bg-foreground/30 rounded-full shadow-sm"
           animate={{
-            backgroundColor: isDragging ? "#000000" : "hsl(var(--muted))",
+            backgroundColor: isDragging
+              ? "hsl(var(--foreground))"
+              : "hsl(var(--foreground) / 0.4)",
             width: isDragging || isCollapsed ? 64 : 48,
             height: isDragging || isCollapsed ? 6 : 4,
           }}

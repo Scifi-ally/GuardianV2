@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Wrapper } from "@googlemaps/react-wrapper";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -47,6 +48,7 @@ export function GoogleMapsNavigationView({
   onLocationChange,
   onMapLoad,
 }: GoogleMapsNavigationViewProps) {
+  const { theme } = useTheme();
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null);
@@ -63,6 +65,60 @@ export function GoogleMapsNavigationView({
   const [isMuted, setIsMuted] = useState(false);
   const [currentRoute, setCurrentRoute] =
     useState<google.maps.DirectionsResult | null>(null);
+
+  // Get map styles based on theme
+  const getMapStyles = useCallback(() => {
+    const isDark =
+      theme === "dark" ||
+      (theme === "system" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+    if (isDark) {
+      return [
+        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        {
+          featureType: "administrative.locality",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#38414e" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#17263c" }],
+        },
+      ];
+    } else {
+      return [
+        {
+          featureType: "all",
+          elementType: "geometry.fill",
+          stylers: [{ color: "#f5f5f5" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#ffffff" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#dadada" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#c9c9c9" }],
+        },
+      ];
+    }
+  }, [theme]);
 
   // Initialize map with Google Maps styling
   useEffect(() => {
@@ -81,54 +137,8 @@ export function GoogleMapsNavigationView({
           ? { lat: currentLocation.latitude, lng: currentLocation.longitude }
           : { lat: 37.7749, lng: -122.4194 },
         mapTypeId: google.maps.MapTypeId.ROADMAP,
-        // Google Maps-like styling
-        styles: [
-          {
-            featureType: "all",
-            elementType: "geometry.fill",
-            stylers: [{ color: "#f5f5f5" }],
-          },
-          {
-            featureType: "road",
-            elementType: "geometry",
-            stylers: [{ color: "#ffffff" }],
-          },
-          {
-            featureType: "road.highway",
-            elementType: "geometry",
-            stylers: [{ color: "#dadada" }],
-          },
-          {
-            featureType: "road.highway",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }],
-          },
-          {
-            featureType: "road.arterial",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }],
-          },
-          {
-            featureType: "road.local",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }],
-          },
-          {
-            featureType: "transit",
-            elementType: "all",
-            stylers: [{ visibility: "off" }],
-          },
-          {
-            featureType: "poi",
-            elementType: "all",
-            stylers: [{ visibility: "off" }],
-          },
-          {
-            featureType: "water",
-            elementType: "geometry",
-            stylers: [{ color: "#c9c9c9" }],
-          },
-        ],
+        // Theme-based styling
+        styles: getMapStyles(),
         // Remove all default controls for clean Google Maps look
         disableDefaultUI: true,
         zoomControl: false,
@@ -184,7 +194,16 @@ export function GoogleMapsNavigationView({
       // Notify parent component that map is loaded
       onMapLoad?.(newMap);
     } catch (error) {}
-  }, [mapRef.current, currentLocation]);
+  }, [mapRef.current, currentLocation, getMapStyles]);
+
+  // Update map styles when theme changes
+  useEffect(() => {
+    if (map) {
+      map.setOptions({
+        styles: getMapStyles(),
+      });
+    }
+  }, [theme, map, getMapStyles]);
 
   // Create user location marker (only once)
   useEffect(() => {
@@ -487,123 +506,6 @@ export function GoogleMapsNavigationView({
     <div className="relative w-full h-full">
       <Wrapper apiKey={GOOGLE_MAPS_API_KEY} libraries={["geometry", "places"]}>
         <div ref={mapRef} className="w-full h-full" />
-
-        {/* Safety Score Indicator - Top Left */}
-        <div className="absolute top-4 left-4 z-[1000]">
-          <Card className="bg-white/95 backdrop-blur-sm p-3 shadow-lg">
-            <div className="flex items-center gap-2">
-              <Shield
-                className={cn(
-                  "h-4 w-4",
-                  safetyScore >= 80
-                    ? "text-green-500"
-                    : safetyScore >= 60
-                      ? "text-yellow-500"
-                      : safetyScore >= 40
-                        ? "text-orange-500"
-                        : "text-red-500",
-                )}
-              />
-              <div>
-                <div className="text-xs text-gray-500">Safety</div>
-                <div
-                  className={cn(
-                    "text-sm font-bold",
-                    safetyScore >= 80
-                      ? "text-green-600"
-                      : safetyScore >= 60
-                        ? "text-yellow-600"
-                        : safetyScore >= 40
-                          ? "text-orange-600"
-                          : "text-red-600",
-                  )}
-                >
-                  {safetyScore}%
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Navigation Controls - Top Right */}
-        <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-          {isNavigating && (
-            <Button
-              onClick={() => setIsMuted(!isMuted)}
-              size="sm"
-              variant="outline"
-              className="bg-white/95 backdrop-blur-sm border-gray-200 shadow-lg h-10 w-10 p-0"
-            >
-              {isMuted ? (
-                <VolumeX className="h-4 w-4" />
-              ) : (
-                <Volume2 className="h-4 w-4" />
-              )}
-            </Button>
-          )}
-
-          <Button
-            onClick={toggleNavigationMode}
-            size="sm"
-            variant={isNavigationMode ? "default" : "outline"}
-            className={cn(
-              "bg-white/95 backdrop-blur-sm border-gray-200 shadow-lg h-10 w-10 p-0",
-              isNavigationMode && "bg-blue-500 text-white hover:bg-blue-600",
-            )}
-          >
-            <Navigation className="h-4 w-4" />
-          </Button>
-
-          <Button
-            onClick={recenterMap}
-            size="sm"
-            variant="outline"
-            className="bg-white/95 backdrop-blur-sm border-gray-200 shadow-lg h-10 w-10 p-0"
-          >
-            <Locate className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Navigation Status - Bottom Right */}
-        {isNavigating && (
-          <div className="absolute bottom-4 right-4 z-[1000]">
-            <Card className="bg-white/95 backdrop-blur-sm p-2 shadow-lg">
-              <div className="flex items-center gap-2">
-                <div
-                  className={cn(
-                    "w-2 h-2 rounded-full",
-                    isTracking ? "bg-green-500 animate-pulse" : "bg-gray-400",
-                  )}
-                />
-                <span className="text-xs font-medium">
-                  {isNavigationMode ? "Navigation" : "Overview"}
-                </span>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        {/* Speed and ETA - Bottom Left (during navigation) */}
-        {isNavigating && currentRoute && (
-          <div className="absolute bottom-4 left-4 z-[1000]">
-            <Card className="bg-white/95 backdrop-blur-sm p-3 shadow-lg">
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <div className="text-xs text-gray-500">ETA</div>
-                  <div className="text-sm font-bold">
-                    {currentRoute.routes[0].legs[0].duration?.text || "—"}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs text-gray-500">Distance</div>
-                  <div className="text-sm font-bold">
-                    {currentRoute.routes[0].legs[0].distance?.text || "—"}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
       </Wrapper>
     </div>
   );

@@ -1032,14 +1032,23 @@ export class AdvancedAISafetyEngine {
             : "neutral",
       familyPresence: Math.min(
         100,
-        hour >= 10 && hour <= 16 ? 30 + (seed % 50) : 10 + (seed % 20),
+        hour >= 10 && hour <= 16
+          ? 30 + (Math.floor(Math.random() * 100) % 50)
+          : 10 + (Math.floor(Math.random() * 100) % 20),
       ), // More families during day
       elderlyPresence: Math.min(
         100,
-        hour >= 8 && hour <= 11 ? 25 + (seed % 40) : 5 + (seed % 15),
+        hour >= 8 && hour <= 11
+          ? 25 + (Math.floor(Math.random() * 100) % 40)
+          : 5 + (Math.floor(Math.random() * 100) % 15),
       ), // Morning activities
-      securityPersonnel: Math.floor((seed % 5) + (currentDensity > 70 ? 2 : 0)), // More security in busy areas
-      socialCohesion: Math.min(100, 40 + (seed % 60)), // Community interaction level
+      securityPersonnel: Math.floor(
+        (Math.floor(Math.random() * 100) % 5) + (currentDensity > 70 ? 2 : 0),
+      ), // More security in busy areas
+      socialCohesion: Math.min(
+        100,
+        40 + (Math.floor(Math.random() * 100) % 60),
+      ), // Community interaction level
     };
   }
 

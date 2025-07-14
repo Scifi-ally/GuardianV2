@@ -19,6 +19,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import QrScanner from "qr-scanner";
+import { mobileCameraService } from "@/services/mobileCameraService";
 
 interface QRScannerProps {
   isOpen: boolean;
@@ -37,15 +39,14 @@ export function QRScanner({ isOpen, onClose, onScanResult }: QRScannerProps) {
   } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const qrScannerRef = useRef<QrScanner | null>(null);
 
   const navigate = useNavigate();
   const { userProfile } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
-      requestCameraPermission();
+      checkCameraAndRequestPermission();
     } else {
       stopScanning();
     }
@@ -55,25 +56,60 @@ export function QRScanner({ isOpen, onClose, onScanResult }: QRScannerProps) {
     };
   }, [isOpen]);
 
+  const checkCameraAndRequestPermission = async () => {
+    try {
+      const capabilities = await mobileCameraService.getCameraCapabilities();
+
+      if (!capabilities.canScanQR) {
+        setHasPermission(false);
+        setError("Camera not available on this device or permissions denied");
+        return;
+      }
+
+      await requestCameraPermission();
+    } catch (err) {
+      console.error("Error checking camera capabilities:", err);
+      setHasPermission(false);
+      setError("Unable to access camera. Please check permissions.");
+    }
+  };
+
   const requestCameraPermission = async () => {
     try {
       setError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment", // Prefer back camera
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
 
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
+      if (!videoRef.current) {
+        setError("Video element not ready");
+        return;
       }
 
+      // Request permissions through mobile service
+      const permissions = await mobileCameraService.requestCameraPermissions();
+
+      if (!permissions.camera) {
+        setHasPermission(false);
+        setError(
+          "Camera permission is required to scan QR codes. Please allow camera access in your device settings.",
+        );
+        return;
+      }
+
+      // Get optimal settings for QR scanning
+      const scannerSettings = mobileCameraService.getQRScannerSettings();
+
+      // Create QR Scanner instance with mobile-optimized settings
+      qrScannerRef.current = new QrScanner(
+        videoRef.current,
+        (result) =>
+          handleScanSuccess(typeof result === "string" ? result : result.data),
+        scannerSettings,
+      );
+
+      await qrScannerRef.current.start();
       setHasPermission(true);
-      startScanning();
+      setIsScanning(true);
+
+      console.log("QR Scanner started successfully");
     } catch (err) {
       console.error("Camera permission denied:", err);
       setHasPermission(false);
@@ -83,63 +119,26 @@ export function QRScanner({ isOpen, onClose, onScanResult }: QRScannerProps) {
     }
   };
 
-  const startScanning = () => {
-    setIsScanning(true);
-
-    // Start scanning every 100ms
-    scanIntervalRef.current = setInterval(() => {
-      scanFrame();
-    }, 100);
+  const startScanning = async () => {
+    if (qrScannerRef.current) {
+      try {
+        await qrScannerRef.current.start();
+        setIsScanning(true);
+      } catch (err) {
+        console.error("Failed to start scanning:", err);
+        setError("Failed to start camera scanning");
+      }
+    }
   };
 
   const stopScanning = () => {
     setIsScanning(false);
 
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
+    if (qrScannerRef.current) {
+      qrScannerRef.current.stop();
+      qrScannerRef.current.destroy();
+      qrScannerRef.current = null;
     }
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  };
-
-  const scanFrame = () => {
-    if (!videoRef.current || videoRef.current.readyState !== 4) return;
-
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    context.drawImage(videoRef.current, 0, 0);
-
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
-    // Simple pattern detection for QR-like codes
-    // This is a basic implementation - in production you'd use a proper QR scanning library
-    const qrText = detectQRPattern(imageData);
-    if (qrText) {
-      handleScanSuccess(qrText);
-    }
-  };
-
-  // Basic QR pattern detection (simplified)
-  const detectQRPattern = (imageData: ImageData): string | null => {
-    // TODO: Implement real QR scanning using a library like zxing-js or qr-scanner
-    // This is a basic implementation for demonstration purposes
-
-    // For now, we don't use mock data - real scanning would be implemented here
-    // Users can use the "Test Mode" button to manually input QR data for testing
-
-    return null; // No mock data, real scanning only
   };
 
   const handleScanSuccess = (data: string) => {
@@ -389,7 +388,10 @@ export function QRScanner({ isOpen, onClose, onScanResult }: QRScannerProps) {
                           <Button
                             onClick={() => {
                               setScanResult(null);
-                              startScanning();
+                              setIsScanning(false);
+                              setTimeout(() => {
+                                startScanning();
+                              }, 100);
                             }}
                             size="sm"
                             variant="outline"

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Wrapper } from "@googlemaps/react-wrapper";
+import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,9 @@ import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { enhancedFirebaseService } from "@/services/enhancedFirebaseService";
 import { safeAIService } from "@/services/safeAIService";
 import { notifications } from "@/services/enhancedNotificationService";
+import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { advancedSafeZonesController } from "@/services/advancedSafeZonesController";
+import { emergencyServicesLocator } from "@/services/emergencyServicesLocator";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -30,6 +33,12 @@ interface IntelligentGoogleMapProps {
   showTraffic?: boolean;
   showSafeZones?: boolean;
   showEmergencyServices?: boolean;
+  mapType?: "normal" | "satellite";
+  destination?: {
+    latitude: number;
+    longitude: number;
+  } | null;
+  zoomLevel?: number;
 }
 
 // Navigation state interface
@@ -51,6 +60,9 @@ function IntelligentGoogleMap({
   showTraffic = false,
   showSafeZones = false,
   showEmergencyServices = false,
+  mapType = "normal",
+  destination,
+  zoomLevel = 15,
 }: IntelligentGoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -73,12 +85,18 @@ function IntelligentGoogleMap({
   const [currentHeading, setCurrentHeading] = useState(0);
   const [isNavigationMode, setIsNavigationMode] = useState(false);
   const [autoZoom, setAutoZoom] = useState(true);
+  const { theme: globalTheme } = useTheme();
   const [currentMapTheme, setCurrentMapTheme] = useState<"light" | "dark">(
     "light",
   );
   const [currentMapType, setCurrentMapType] = useState<"normal" | "satellite">(
-    "normal",
+    mapType,
   );
+
+  // Update currentMapType when mapType prop changes
+  useEffect(() => {
+    setCurrentMapType(mapType);
+  }, [mapType]);
   const [trafficLayer, setTrafficLayer] =
     useState<google.maps.TrafficLayer | null>(null);
 
@@ -215,23 +233,30 @@ function IntelligentGoogleMap({
     [map, getMapStyles],
   );
 
-  // Detect system theme and apply
+  // Sync with global theme
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleThemeChange = (e: MediaQueryListEvent) => {
-      applyMapTheme(e.matches ? "dark" : "light");
-    };
+    if (globalTheme === "dark") {
+      applyMapTheme("dark");
+    } else if (globalTheme === "light") {
+      applyMapTheme("light");
+    } else {
+      // System theme
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      applyMapTheme(mediaQuery.matches ? "dark" : "light");
+    }
+  }, [globalTheme, map, applyMapTheme]);
 
-    // Apply initial theme
-    applyMapTheme(mediaQuery.matches ? "dark" : "light");
-
-    // Listen for theme changes
-    mediaQuery.addEventListener("change", handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener("change", handleThemeChange);
-    };
-  }, [map, applyMapTheme]);
+  // Update map type when currentMapType changes
+  useEffect(() => {
+    if (map) {
+      const newMapTypeId =
+        currentMapType === "satellite"
+          ? google.maps.MapTypeId.SATELLITE
+          : google.maps.MapTypeId.ROADMAP;
+      map.setMapTypeId(newMapTypeId);
+      console.log("Map type updated to:", currentMapType);
+    }
+  }, [currentMapType, map]);
 
   // Initialize map
   useEffect(() => {
@@ -244,15 +269,15 @@ function IntelligentGoogleMap({
         : { lat: 37.7749, lng: -122.4194 }, // Default to San Francisco
       mapTypeId: currentMapType === "satellite" ? "satellite" : "roadmap",
       styles: getMapStyles(currentMapTheme),
-      zoomControl: true,
+      zoomControl: false,
       mapTypeControl: false,
-      scaleControl: true,
+      scaleControl: false,
       streetViewControl: false,
-      rotateControl: true,
+      rotateControl: false,
       fullscreenControl: false,
       gestureHandling: "greedy",
       clickableIcons: false,
-      disableDefaultUI: false,
+      disableDefaultUI: true,
       keyboardShortcuts: true,
     });
 
@@ -276,11 +301,76 @@ function IntelligentGoogleMap({
     // Initialize safe zones controller
     advancedSafeZonesController.initialize(newMap);
 
+    // Initialize emergency services locator with Google Maps
+    console.log("🏥 Initializing emergency services locator with Google Maps");
+    emergencyServicesLocator.setGoogleMapsService(newMap);
+
     // Call onMapLoad callback
     onMapLoad?.(newMap);
 
-    console.log("🗺️ Map initialized successfully");
+    console.log("🗺️ Map initialized successfully with emergency services");
   }, [mapRef.current, location]);
+
+  // Handle navigation to destination
+  useEffect(() => {
+    if (
+      !map ||
+      !directionsService ||
+      !directionsRenderer ||
+      !location ||
+      !destination
+    ) {
+      return;
+    }
+
+    console.log("🗺️ Starting navigation to destination:", destination);
+
+    const request: google.maps.DirectionsRequest = {
+      origin: new google.maps.LatLng(location.latitude, location.longitude),
+      destination: new google.maps.LatLng(
+        destination.latitude,
+        destination.longitude,
+      ),
+      travelMode: google.maps.TravelMode.DRIVING,
+    };
+
+    directionsService.route(request, (result, status) => {
+      if (status === google.maps.DirectionsStatus.OK && result) {
+        console.log("✅ Route calculated successfully");
+        directionsRenderer.setDirections(result);
+
+        // Update navigation state
+        setNavigationState({
+          isNavigating: true,
+          destination: new google.maps.LatLng(
+            destination.latitude,
+            destination.longitude,
+          ),
+          currentRoute: result.routes[0],
+          safetyScore: 75, // Default safety score
+          estimatedTime: result.routes[0].legs[0].duration?.text || "",
+          totalDistance: result.routes[0].legs[0].distance?.text || "",
+          nextInstruction:
+            result.routes[0].legs[0].steps[0]?.instructions || "",
+        });
+
+        // Center map on route
+        if (result.routes[0].bounds) {
+          map.fitBounds(result.routes[0].bounds);
+        }
+
+        // Show success notification
+        unifiedNotifications.success("Route calculated", {
+          message: `Distance: ${result.routes[0].legs[0].distance?.text}, Time: ${result.routes[0].legs[0].duration?.text}`,
+        });
+      } else {
+        console.error("❌ Route calculation failed:", status);
+        unifiedNotifications.error("Route calculation failed", {
+          message: "Unable to calculate route to destination",
+        });
+      }
+    });
+  }, [map, directionsService, directionsRenderer, location, destination]);
 
   // Handle map settings changes (traffic, safe zones, etc.)
   useEffect(() => {
@@ -595,43 +685,6 @@ function IntelligentGoogleMap({
     <div className={cn("relative w-full h-full", className)}>
       <Wrapper apiKey={GOOGLE_MAPS_API_KEY} libraries={GOOGLE_MAPS_LIBRARIES}>
         <div ref={mapRef} className="w-full h-full" />
-
-        {/* Navigation Status - Top Left */}
-        {navigationState.isNavigating && (
-          <Card className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm shadow-lg">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Navigation className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium">Navigating</span>
-                <Badge
-                  variant={
-                    navigationState.safetyScore >= 70
-                      ? "default"
-                      : "destructive"
-                  }
-                  className={
-                    navigationState.safetyScore >= 70
-                      ? "bg-green-600"
-                      : "bg-orange-600"
-                  }
-                >
-                  {navigationState.safetyScore}/100
-                </Badge>
-              </div>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <div>
-                  Distance: {navigationState.totalDistance} •{" "}
-                  {navigationState.estimatedTime}
-                </div>
-                {navigationState.nextInstruction && (
-                  <div className="font-medium text-foreground">
-                    {navigationState.nextInstruction.replace(/<[^>]*>/g, "")}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </Wrapper>
     </div>
   );

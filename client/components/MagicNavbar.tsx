@@ -442,10 +442,10 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {/* Background with blur effect */}
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-lg border-t border-border" />
+        <div className="absolute inset-0 bg-background/95 backdrop-blur-lg border-t border-border/50 rounded-t-3xl shadow-2xl" />
 
         {/* Navigation items */}
-        <div className="relative px-8 py-3">
+        <div className="relative px-8 py-4 rounded-t-3xl">
           <div className="flex items-center justify-between w-full max-w-md mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
@@ -486,18 +486,18 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                     className={cn(
                       "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px] emergency-focus",
                       sosPressed
-                        ? "bg-warning/20 rounded-2xl animate-pulse"
+                        ? "bg-warning/20 rounded-3xl animate-pulse"
                         : activeAlertId
-                          ? "bg-red-500 text-white rounded-2xl animate-pulse"
-                          : "bg-emergency/20 rounded-2xl",
+                          ? "bg-red-500 text-white rounded-3xl animate-pulse"
+                          : "bg-emergency/20 rounded-3xl",
                       sending && "opacity-50 cursor-not-allowed",
                     )}
                   >
                     {sosPressed && (
-                      <div className="absolute inset-0 rounded-2xl border-2 border-warning animate-ping" />
+                      <div className="absolute inset-0 rounded-3xl border-2 border-warning animate-ping" />
                     )}
                     {(sending || activeAlertId) && (
-                      <div className="absolute inset-0 rounded-2xl border-2 border-red-500 animate-pulse" />
+                      <div className="absolute inset-0 rounded-3xl border-2 border-red-500 animate-pulse" />
                     )}
                     <div className="relative z-10 flex flex-col items-center">
                       {sosPressed ? (
@@ -567,7 +567,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   {/* Background circle for active/special items */}
                   <div
                     className={cn(
-                      "absolute inset-2 rounded-2xl transition-all duration-300",
+                      "absolute inset-2 rounded-3xl transition-all duration-300",
                       isActive && !isSpecial && "bg-primary/10 scale-110",
                       isSpecial && "bg-emergency/10 scale-125 animate-pulse",
                     )}
@@ -576,7 +576,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   {/* Icon container */}
                   <div
                     className={cn(
-                      "relative z-10 p-1.5 rounded-xl transition-all duration-300",
+                      "relative z-10 p-1.5 rounded-2xl transition-all duration-300",
                       isSpecial &&
                         "bg-emergency text-emergency-foreground shadow-lg",
                       isActive && !isSpecial && "bg-primary/20",
@@ -610,7 +610,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   {/* Special item glow effect */}
                   {isSpecial && (
                     <motion.div
-                      className="absolute inset-0 rounded-2xl bg-emergency/20 opacity-50"
+                      className="absolute inset-0 rounded-3xl bg-emergency/20 opacity-50"
                       animate={{
                         opacity: [0.2, 0.5, 0.2],
                         scale: [1, 1.05, 1],
@@ -635,7 +635,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-blue-600 text-white text-xs rounded-lg whitespace-nowrap"
+              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-blue-600 text-white text-xs rounded-2xl whitespace-nowrap"
             >
               🚀 Enhanced Navigation
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-600" />

@@ -66,7 +66,7 @@ export function activateEmergencyMotionFix() {
 
   // Handle unhandled promise rejections
   const originalUnhandledRejection = window.onunhandledrejection;
-  window.onunhandledrejection = (event) => {
+  window.onunhandledrejection = function (event: PromiseRejectionEvent) {
     if (
       event.reason &&
       (event.reason.message?.includes("a is not a function") ||
@@ -82,7 +82,7 @@ export function activateEmergencyMotionFix() {
 
     // Call original handler
     if (originalUnhandledRejection) {
-      originalUnhandledRejection(event);
+      originalUnhandledRejection.call(this, event);
     }
   };
 }

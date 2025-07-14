@@ -29,6 +29,7 @@ import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
 // Removed redundant useGeolocation - handled by LocationAwareMap
 import { useMapTheme } from "@/hooks/use-map-theme";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminDebug } from "@/services/adminDebugService";
 import { useGestures, GestureGuide } from "@/hooks/useGestures";
@@ -47,8 +48,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 // Debug helper removed - Firebase admin control only
 
 import { CustomCheckbox } from "@/components/ui/custom-checkbox";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 
-import { LocationIndicator } from "@/components/LocationStatus";
 // Removed redundant notification imports
 import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import AINavigationPanel from "@/components/AINavigationPanel";
@@ -59,6 +60,11 @@ import { realTimeService } from "@/services/realTimeService";
 import { emergencyBatteryService } from "@/services/emergencyBatteryService";
 import { emergencyReadinessService } from "@/services/emergencyReadinessService";
 import { sharedLocationService } from "@/services/sharedLocationService";
+import { batteryOptimizationService } from "@/services/batteryOptimizationService";
+import { emergencyErrorHandler } from "@/services/emergencyErrorHandler";
+import { offlineEmergencyService } from "@/services/offlineEmergencyService";
+import { productionPerformanceService } from "@/services/productionPerformanceService";
+import { productionSafeguardsService } from "@/services/productionSafeguardsService";
 import { LocationPermissionPrompt } from "@/components/LocationPermissionPrompt";
 import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
 import { RouteSelection } from "@/components/RouteSelection";
@@ -67,6 +73,8 @@ import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { CompactSearchBar } from "@/components/CompactSearchBar";
 
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
+import { EmergencyServicesPanel } from "@/components/EmergencyServicesPanel";
+import { SafetyDebugPanel } from "@/components/SafetyDebugPanel";
 
 // Removed deprecated component import
 import { PerformanceOptimizer } from "@/components/PerformanceOptimizer";
@@ -125,16 +133,46 @@ export default function Index() {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showAIFeaturesPanel, setShowAIFeaturesPanel] = useState(true);
   const [destination, setDestination] = useState<
-    { lat: number; lng: number } | undefined
+    { latitude: number; longitude: number } | undefined
   >(undefined);
 
-  // Initialize emergency services
+  // Initialize emergency services and battery optimization
   useEffect(() => {
     // Start emergency battery monitoring
     emergencyBatteryService.startMonitoring();
 
     // Start emergency readiness monitoring (silent mode)
     emergencyReadinessService.startPeriodicChecks();
+
+    // Initialize battery optimization service
+    batteryOptimizationService.initialize();
+
+    // Initialize production services
+    console.log("🏭 Production services initialized:", {
+      performance: "active",
+      safeguards: "monitoring",
+      accessibility: "ready",
+    });
+
+    // Initialize emergency systems
+    try {
+      // Update offline emergency data with current user
+      if (userProfile) {
+        offlineEmergencyService.updateUserProfile(userProfile);
+        if (userProfile.emergencyContacts) {
+          offlineEmergencyService.updateEmergencyContacts(
+            userProfile.emergencyContacts,
+          );
+        }
+      }
+    } catch (error) {
+      emergencyErrorHandler.handleEmergencyError({
+        type: "system",
+        severity: "medium",
+        message: "Failed to initialize emergency systems",
+        context: "app_startup",
+      });
+    }
 
     // Removed automatic readiness report display to reduce alert noise
 
@@ -202,9 +240,67 @@ export default function Index() {
     setMapTheme,
     setMapType,
   } = useMapTheme();
+
+  // Global theme management
+  const { theme, setTheme, systemTheme } = useTheme();
+
+  // Battery optimization state
+  const [batterySaverMode, setBatterySaverMode] = useState(false);
+
+  // Listen for battery optimization changes
+  useEffect(() => {
+    const handleOptimizationUpdate = (settings: any) => {
+      if (settings.disableNonSafetyFeatures) {
+        // Disable non-safety features
+        setRouteSettings((prev) => ({
+          ...prev,
+          showTraffic: false,
+          showSafeAreaCircles: false,
+        }));
+
+        // Disable AI features panel
+        setShowAIFeaturesPanel(false);
+      }
+    };
+
+    batteryOptimizationService.on(
+      "optimizations:update",
+      handleOptimizationUpdate,
+    );
+
+    return () => {
+      batteryOptimizationService.off(
+        "optimizations:update",
+        handleOptimizationUpdate,
+      );
+    };
+  }, []);
+
+  // Debug theme changes and force application
+  useEffect(() => {
+    console.log("Current theme:", theme, "System theme:", systemTheme);
+
+    // Force theme application to document
+    const html = document.documentElement;
+    html.classList.remove("light", "dark");
+
+    if (theme === "system") {
+      const systemThemeValue = systemTheme || "light";
+      html.classList.add(systemThemeValue);
+      console.log("Applied system theme:", systemThemeValue);
+    } else if (theme) {
+      html.classList.add(theme);
+      console.log("Applied theme:", theme);
+    }
+  }, [theme, systemTheme]);
   const { userProfile } = useAuth();
-  const { shouldShowLocationDebug, shouldShowSystemInfo, isDebugEnabled } =
-    useAdminDebug();
+  const {
+    shouldShowLocationDebug,
+    shouldShowSystemInfo,
+    isDebugEnabled,
+    shouldShowSafetyCalculationBasis,
+    safetyDebugData,
+  } = useAdminDebug();
 
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
@@ -222,8 +318,8 @@ export default function Index() {
   const handleRouteSelect = useCallback((route: any) => {
     setShowRouteSelection(false);
     setDestination({
-      lat: route.waypoints[route.waypoints.length - 1].latitude,
-      lng: route.waypoints[route.waypoints.length - 1].longitude,
+      latitude: route.waypoints[route.waypoints.length - 1].latitude,
+      longitude: route.waypoints[route.waypoints.length - 1].longitude,
     });
     setIsNavigating(true);
 
@@ -287,8 +383,8 @@ export default function Index() {
     if (qrTargetLocation) {
       // Set destination from QR code
       setDestination({
-        lat: qrTargetLocation.lat,
-        lng: qrTargetLocation.lng,
+        latitude: qrTargetLocation.lat,
+        longitude: qrTargetLocation.lng,
       });
 
       // Set toLocation for display
@@ -378,11 +474,12 @@ export default function Index() {
         );
 
         if (geocodeResult.length > 0) {
-          destinationCoords = {
-            lat: geocodeResult[0].geometry.location.lat(),
-            lng: geocodeResult[0].geometry.location.lng(),
+          const coords = {
+            latitude: geocodeResult[0].geometry.location.lat(),
+            longitude: geocodeResult[0].geometry.location.lng(),
           };
-          setDestination(destinationCoords);
+          destinationCoords = coords;
+          setDestination(coords);
         }
       }
 
@@ -397,8 +494,8 @@ export default function Index() {
             "@/services/areaBasedSafety"
           );
           const { area } = await areaBasedSafety.getSafetyScore({
-            latitude: destinationCoords.lat,
-            longitude: destinationCoords.lng,
+            latitude: destinationCoords.latitude,
+            longitude: destinationCoords.longitude,
           });
 
           // Route safety notification removed - no slide down notifications
@@ -413,7 +510,10 @@ export default function Index() {
 
         const routes = await routeCalculationService.calculateRoutes(
           { latitude: location.latitude, longitude: location.longitude },
-          { latitude: destinationCoords.lat, longitude: destinationCoords.lng },
+          {
+            latitude: destinationCoords.latitude,
+            longitude: destinationCoords.longitude,
+          },
         );
 
         setRouteOptions(routes);
@@ -555,6 +655,10 @@ export default function Index() {
                 setRouteInstructions([]);
                 setTurnByTurnInstructions([]);
                 setRouteSummary(null);
+
+                unifiedNotifications.success("Route cleared", {
+                  message: "Navigation route has been removed",
+                });
               }}
               size="sm"
               variant="outline"
@@ -593,20 +697,14 @@ export default function Index() {
             showTraffic={routeSettings.showTraffic}
             showSafeZones={routeSettings.showSafeZones}
             showEmergencyServices={routeSettings.showEmergencyServices}
-            trackUserLocation={true}
-            travelMode={travelMode}
-            onDirectionsChange={handleDirectionsChange}
+            mapType={mapType}
             showSharedLocations={true}
             currentUserId={userProfile?.uid}
             emergencyContacts={emergencyContacts.map((contact) => ({
               id: contact.id,
               name: contact.name,
-              phone: contact.phone || "",
-              guardianKey: contact.guardianKey,
-              location: {
-                lat: 37.7749 + Math.random() * 0.01,
-                lng: -122.4194 + Math.random() * 0.01,
-              },
+              latitude: 37.7749 + Math.random() * 0.01,
+              longitude: -122.4194 + Math.random() * 0.01,
             }))}
             onLocationUpdate={(newLocation) => {}}
           />
@@ -1081,6 +1179,31 @@ export default function Index() {
                     </div>
                   </div>
                 )}
+
+                {/* Emergency Services Section */}
+                <div className="mt-6 border-t pt-4">
+                  <EmergencyServicesPanel
+                    location={location}
+                    onNavigateToService={(service) => {
+                      // Set destination to emergency service location
+                      setDestination({
+                        latitude: service.location.lat,
+                        longitude: service.location.lng,
+                      });
+
+                      // Start navigation
+                      setIsNavigating(true);
+
+                      // Show notification
+                      unifiedNotifications.success(
+                        `Navigating to ${service.name}`,
+                        {
+                          message: `Route to ${service.type} has been set`,
+                        },
+                      );
+                    }}
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent
@@ -1107,125 +1230,120 @@ export default function Index() {
                     </div>
                   )}
 
+                  {/* App Theme Settings */}
+                  <div>
+                    <h4 className="text-sm font-medium mb-3">App Theme</h4>
+                    <div className="space-y-2">
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                        <ToggleSwitch
+                          checked={theme === "dark"}
+                          onChange={(checked) => {
+                            const newTheme = checked ? "dark" : "light";
+                            setTheme(newTheme);
+                            console.log("Theme changed to:", newTheme);
+                            unifiedNotifications.success(
+                              `Switched to ${newTheme} mode`,
+                              {
+                                message: `App theme is now ${newTheme} mode`,
+                              },
+                            );
+                          }}
+                          label="Dark Mode"
+                          description={
+                            theme === "light"
+                              ? "Light mode active"
+                              : theme === "dark"
+                                ? "Dark mode active"
+                                : "System theme"
+                          }
+                          size="md"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Map Style Settings */}
                   <div>
                     <h4 className="text-sm font-medium mb-3">Map Display</h4>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
-                        <div>
-                          <p className="text-sm font-medium">Map Theme</p>
-                          <p className="text-xs text-muted-foreground">
-                            {mapTheme === "light" ? "Light mode" : "Dark mode"}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">
-                            {mapTheme === "light" ? "🌞" : "🌙"}
-                          </span>
-                          <CustomCheckbox
-                            checked={mapTheme === "dark"}
-                            onChange={(checked) => {
-                              setMapTheme(checked ? "dark" : "light");
-                            }}
-                            size="sm"
-                          />
-                        </div>
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                        <ToggleSwitch
+                          checked={mapType === "satellite"}
+                          onChange={(checked) => {
+                            const newMapType = checked ? "satellite" : "normal";
+                            setMapType(newMapType);
+                            console.log("Map type changed to:", newMapType);
+                            unifiedNotifications.success(
+                              `${newMapType === "satellite" ? "Satellite" : "Standard"} view enabled`,
+                              {
+                                message: `Map view updated to ${newMapType} mode`,
+                              },
+                            );
+                          }}
+                          label="Satellite View"
+                          description={
+                            mapType === "normal"
+                              ? "Standard street view"
+                              : "Satellite imagery"
+                          }
+                          size="md"
+                        />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
-                        <div>
-                          <p className="text-sm font-medium">Map Type</p>
-                          <p className="text-xs text-muted-foreground">
-                            {mapType === "normal"
-                              ? "Standard view"
-                              : "Satellite view"}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">
-                            {mapType === "normal" ? "🗺️" : "🛰️"}
-                          </span>
-                          <CustomCheckbox
-                            checked={mapType === "satellite"}
-                            onChange={(checked) => {
-                              setMapType(checked ? "satellite" : "normal");
-                            }}
-                            size="sm"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.01] active:scale-[0.99]">
-                        <div>
-                          <p className="text-sm font-medium">Traffic</p>
-                          <p className="text-xs text-muted-foreground">
-                            Real-time conditions
-                          </p>
-                        </div>
-                        <CustomCheckbox
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                        <ToggleSwitch
                           checked={routeSettings.showTraffic}
-                          onChange={(checked) =>
+                          onChange={(checked) => {
                             setRouteSettings((prev) => ({
                               ...prev,
                               showTraffic: checked,
-                            }))
-                          }
-                          size="sm"
+                            }));
+                            unifiedNotifications.success(
+                              checked
+                                ? "Traffic layer enabled"
+                                : "Traffic layer disabled",
+                              {
+                                message: checked
+                                  ? "Real-time traffic data is now visible"
+                                  : "Traffic data hidden from map",
+                              },
+                            );
+                          }}
+                          label="Traffic Layer"
+                          description="Real-time traffic conditions"
+                          size="md"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.01] active:scale-[0.99]">
-                        <div>
-                          <p className="text-sm font-medium">Safe Zones</p>
-                          <p className="text-xs text-muted-foreground">
-                            Police & safe areas
-                          </p>
-                        </div>
-                        <CustomCheckbox
-                          checked={routeSettings.showSafeZones}
-                          onChange={(checked) =>
-                            setRouteSettings((prev) => ({
-                              ...prev,
-                              showSafeZones: checked,
-                            }))
-                          }
-                          size="sm"
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between p-2 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 hover:scale-[1.01] active:scale-[0.99]">
-                        <div>
-                          <p className="text-sm font-medium">
-                            Emergency Services
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Hospitals & services
-                          </p>
-                        </div>
-                        <CustomCheckbox
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                        <ToggleSwitch
                           checked={routeSettings.showEmergencyServices}
-                          onChange={(checked) =>
+                          onChange={(checked) => {
                             setRouteSettings((prev) => ({
                               ...prev,
                               showEmergencyServices: checked,
-                            }))
-                          }
-                          size="sm"
+                            }));
+                            unifiedNotifications.success(
+                              checked
+                                ? "Emergency services enabled"
+                                : "Emergency services disabled",
+                              {
+                                message: checked
+                                  ? "Hospitals and emergency services are now visible"
+                                  : "Emergency service markers hidden from map",
+                              },
+                            );
+                          }}
+                          label="Emergency Services"
+                          description="Hospitals & emergency services"
+                          size="md"
                         />
                       </div>
 
                       {/* Admin debug mode indicator removed */}
 
-                      <div className="flex items-center justify-between p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30 cursor-pointer min-h-[60px] touch-manipulation hover:scale-[1.01] active:scale-[0.99]">
-                        <div>
-                          <p className="text-sm font-medium">
-                            Gesture Controls
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Emergency gestures & navigation
-                          </p>
-                        </div>
-                        <CustomCheckbox
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                        <ToggleSwitch
                           checked={gesturesEnabled}
                           onChange={(checked) => {
                             setGesturesEnabled(checked);
@@ -1241,7 +1359,35 @@ export default function Index() {
                               },
                             );
                           }}
-                          size="sm"
+                          label="Gesture Controls"
+                          description="Emergency gestures & navigation"
+                          size="md"
+                        />
+                      </div>
+
+                      {/* Battery Optimization */}
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                        <ToggleSwitch
+                          checked={batterySaverMode}
+                          onChange={(checked) => {
+                            setBatterySaverMode(checked);
+                            batteryOptimizationService.enableBatterySaverMode(
+                              checked,
+                            );
+                            unifiedNotifications.success(
+                              checked
+                                ? "Battery saver enabled"
+                                : "Battery saver disabled",
+                              {
+                                message: checked
+                                  ? "Reduced animations and background activity to save battery"
+                                  : "Full functionality restored",
+                              },
+                            );
+                          }}
+                          label="Battery Saver"
+                          description="Reduce animations and background activity to extend battery life"
+                          size="md"
                         />
                       </div>
 
@@ -1249,6 +1395,13 @@ export default function Index() {
                       {gesturesEnabled && (
                         <div className="mt-2 opacity-100 transition-opacity duration-200">
                           <GestureGuide />
+                        </div>
+                      )}
+
+                      {/* Safety Score Debug Panel (Admin-controlled) */}
+                      {shouldShowSafetyCalculationBasis && (
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <SafetyDebugPanel />
                         </div>
                       )}
 

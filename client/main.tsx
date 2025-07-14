@@ -1,9 +1,11 @@
 import "./global.css";
+import "./styles/production-polish.css";
 
 import { createRoot } from "react-dom/client";
 import { UnifiedNotificationSystem } from "@/components/UnifiedNotificationSystem";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "next-themes";
 import {
   BrowserRouter,
   Routes,
@@ -185,18 +187,20 @@ function AnimatedRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <SOSSettingsProvider>
-        <TooltipProvider>
-          <UnifiedNotificationSystem />
-          <BrowserRouter>
-            <div className="relative w-full min-h-screen bg-background">
-              <AnimatedRoutes />
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </SOSSettingsProvider>
-    </AuthProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <AuthProvider>
+        <SOSSettingsProvider>
+          <TooltipProvider>
+            <UnifiedNotificationSystem />
+            <BrowserRouter>
+              <div className="relative w-full min-h-screen bg-background">
+                <AnimatedRoutes />
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </SOSSettingsProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

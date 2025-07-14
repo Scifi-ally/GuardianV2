@@ -121,12 +121,9 @@ export class AdvancedEmergencyController {
     unifiedNotifications.critical(
       `🚨 Activating ${type} emergency in ${countdownSeconds}s`,
       {
-        message: "Tap to cancel",
+        message:
+          "Tap to cancel - Touch anywhere to cancel emergency activation",
         persistent: true,
-        action: {
-          label: "Cancel",
-          onClick: () => this.cancelSOS(),
-        },
       },
     );
   }
@@ -164,12 +161,8 @@ export class AdvancedEmergencyController {
 
       // Notify completion
       unifiedNotifications.critical("🚨 EMERGENCY ACTIVATED", {
-        message: `${type.toUpperCase()} emergency services contacted`,
+        message: `${type.toUpperCase()} emergency services contacted - Touch to deactivate if safe`,
         persistent: true,
-        action: {
-          label: "Deactivate",
-          onClick: () => this.deactivateEmergency(),
-        },
       });
 
       console.log(`✅ Emergency activation completed for ${type}`);

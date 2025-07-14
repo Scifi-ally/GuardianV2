@@ -50,6 +50,46 @@
   }
 }
 
+/* Text overflow utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Emergency services specific text fixes */
+.emergency-service-card {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.emergency-service-title {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.emergency-service-address {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
+}
+
 @keyframes safe-bounce {
   0%,
   20%,
@@ -125,25 +165,25 @@ button[aria-label*="Emergency"]:focus,
   */
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    --foreground: 0 0% 3%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 0 0% 3%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 0 0% 3%;
 
     --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary-foreground: 0 0% 9%;
 
     --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 30%;
 
     --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 0%;
+    --accent-foreground: 0 0% 9%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
@@ -175,33 +215,33 @@ button[aria-label*="Emergency"]:focus,
   }
 
   .dark {
-    --background: 320 15% 8%;
-    --foreground: 320 15% 95%;
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
 
-    --card: 320 15% 10%;
-    --card-foreground: 320 15% 95%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 320 15% 10%;
-    --popover-foreground: 320 15% 95%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 280 85% 70%;
-    --primary-foreground: 320 15% 8%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
 
-    --secondary: 320 10% 15%;
-    --secondary-foreground: 320 15% 95%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 320 10% 15%;
-    --muted-foreground: 320 10% 65%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 70%;
 
-    --accent: 320 10% 15%;
-    --accent-foreground: 320 15% 95%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 320 10% 20%;
-    --input: 320 10% 20%;
-    --ring: 280 85% 70%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -232,10 +272,10 @@ button[aria-label*="Emergency"]:focus,
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-geist-mono);
-    font-size: 14px; /* Better for mobile and desktop */
+    font-size: 15px; /* Slightly larger for better readability */
     line-height: 1.6; /* Improved readability for monospace */
-    font-weight: 400;
-    letter-spacing: 0; /* No letter spacing for monospace */
+    font-weight: 450; /* Slightly heavier for better contrast */
+    letter-spacing: -0.01em; /* Tighter spacing for better readability */
   }
 
   /* Improved text scale for better hierarchy with monospace */
@@ -909,6 +949,53 @@ button[aria-label*="Emergency"]:focus,
 /* Warning toast special animation */
 [data-sonner-toast][data-type="warning"] {
   animation: toast-slide-in-top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Battery Optimization Modes */
+@layer utilities {
+  /* Low battery mode - reduce animations */
+  .low-battery-mode * {
+    animation-duration: 0.1s !important;
+    transition-duration: 0.1s !important;
+  }
+
+  .low-battery-mode .animate-pulse,
+  .low-battery-mode .animate-spin,
+  .low-battery-mode .animate-bounce {
+    animation: none !important;
+  }
+
+  /* Critical battery mode - disable most animations and effects */
+  .critical-battery-mode * {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+  }
+
+  .critical-battery-mode .blur,
+  .critical-battery-mode .backdrop-blur-sm,
+  .critical-battery-mode .backdrop-blur-md,
+  .critical-battery-mode .backdrop-blur-lg,
+  .critical-battery-mode .backdrop-blur-xl {
+    backdrop-filter: none !important;
+  }
+
+  /* Force simpler styles in critical mode */
+  .critical-battery-mode .shadow-lg,
+  .critical-battery-mode .shadow-xl,
+  .critical-battery-mode .shadow-2xl {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .critical-battery-mode .bg-gradient-to-r,
+  .critical-battery-mode .bg-gradient-to-b,
+  .critical-battery-mode .bg-gradient-to-l,
+  .critical-battery-mode .bg-gradient-to-t {
+    background-image: none !important;
+    background-color: var(--background) !important;
+  }
 }
 
 /* Enhanced UI Component Animations */

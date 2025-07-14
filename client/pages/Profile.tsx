@@ -157,10 +157,13 @@ export default function Profile() {
 
           <div className="space-y-3">
             <Button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                // Force profile refresh without page reload
+                window.dispatchEvent(new Event("profileRefresh"));
+              }}
               className="w-full bg-blue-600 text-white hover:bg-blue-700"
             >
-              Reload Page
+              Refresh Data
             </Button>
 
             <Button

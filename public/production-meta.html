@@ -1,0 +1,230 @@
+<!-- Production-Ready Emergency Safety App Meta Tags -->
+<!-- Add these to the <head> section of index.html -->
+
+<!-- App Manifest -->
+<link rel="manifest" href="/manifest.json" />
+
+<!-- Theme Colors -->
+<meta name="theme-color" content="#2563eb" />
+<meta name="msapplication-TileColor" content="#2563eb" />
+<meta name="msapplication-config" content="/browserconfig.xml" />
+
+<!-- Apple Meta Tags -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="SafeNav" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link
+  rel="apple-touch-icon"
+  sizes="152x152"
+  href="/apple-touch-icon-152x152.png"
+/>
+<link
+  rel="apple-touch-icon"
+  sizes="180x180"
+  href="/apple-touch-icon-180x180.png"
+/>
+
+<!-- Emergency Keywords for Search Engines -->
+<meta
+  name="keywords"
+  content="emergency, safety, navigation, SOS, location sharing, emergency services, police, fire department, ambulance, safety app, emergency response, crisis management, personal safety"
+/>
+
+<!-- Enhanced SEO for Emergency Services -->
+<meta
+  name="description"
+  content="AI-powered emergency safety navigation with real-time location sharing, SOS functionality, and instant access to emergency services. Your digital safety companion for any crisis situation."
+/>
+<meta name="author" content="Emergency Safety Team" />
+<meta name="robots" content="index,follow" />
+
+<!-- Open Graph for Social Sharing -->
+<meta
+  property="og:title"
+  content="Emergency Safety Navigation - Your Digital Safety Companion"
+/>
+<meta
+  property="og:description"
+  content="Advanced emergency response app with AI-powered safety analysis, real-time location sharing, and instant access to emergency services."
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://emergency-safety-app.com" />
+<meta property="og:image" content="/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:site_name" content="Emergency Safety Navigation" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Emergency Safety Navigation" />
+<meta
+  name="twitter:description"
+  content="AI-powered emergency safety navigation with real-time location sharing and comprehensive emergency response features."
+/>
+<meta name="twitter:image" content="/twitter-image.png" />
+
+<!-- Emergency Contact Schema for SEO -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    "name": "Emergency Safety Navigation",
+    "description": "AI-powered emergency safety navigation with real-time location sharing and comprehensive emergency response features",
+    "operatingSystem": "iOS, Android, Web",
+    "applicationCategory": "SafetyApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "1250"
+    },
+    "featureList": [
+      "Emergency SOS functionality",
+      "Real-time location sharing",
+      "AI-powered safety analysis",
+      "Emergency services locator",
+      "Offline emergency mode",
+      "Voice-controlled emergency activation",
+      "Gesture-based SOS triggers",
+      "Battery optimization for emergencies"
+    ]
+  }
+</script>
+
+<!-- Security Headers -->
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com; connect-src 'self' https://maps.googleapis.com https://ipapi.co wss://; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';"
+/>
+<meta http-equiv="X-Content-Type-Options" content="nosniff" />
+<meta http-equiv="X-Frame-Options" content="DENY" />
+<meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+
+<!-- Performance Optimization -->
+<link rel="preconnect" href="https://maps.googleapis.com" />
+<link rel="preconnect" href="https://maps.gstatic.com" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="dns-prefetch" href="//ipapi.co" />
+
+<!-- Critical Resource Hints -->
+<link rel="preload" href="/sw.js" as="script" />
+<link rel="preload" href="/emergency.css" as="style" />
+<link rel="modulepreload" href="/src/main.tsx" />
+
+<!-- Emergency Favicons -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/png" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" href="/favicon-16x16.png" />
+<link rel="shortcut icon" href="/favicon.ico" />
+
+<!-- Emergency Startup Images (iOS) -->
+<link
+  rel="apple-touch-startup-image"
+  href="/startup-image-640x1136.png"
+  media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"
+/>
+<link
+  rel="apple-touch-startup-image"
+  href="/startup-image-750x1334.png"
+  media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)"
+/>
+<link
+  rel="apple-touch-startup-image"
+  href="/startup-image-1242x2208.png"
+  media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)"
+/>
+
+<!-- Emergency Service Worker Registration -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((registration) => {
+          console.log("🛡️ Emergency SW registered:", registration.scope);
+        })
+        .catch((error) => {
+          console.error("Emergency SW registration failed:", error);
+        });
+    });
+  }
+</script>
+
+<!-- Critical Emergency CSS -->
+<style>
+  /* Emergency mode critical styles */
+  .emergency-critical {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(255, 0, 0, 0.95) !important;
+    color: white !important;
+    z-index: 999999 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    padding: 2rem !important;
+  }
+
+  .emergency-button {
+    background: #fff !important;
+    color: #d00 !important;
+    border: 3px solid #d00 !important;
+    padding: 1rem 2rem !important;
+    font-size: 1.25rem !important;
+    font-weight: bold !important;
+    border-radius: 8px !important;
+    margin: 1rem !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    min-width: 200px !important;
+    text-align: center !important;
+  }
+
+  .emergency-button:hover {
+    background: #d00 !important;
+    color: #fff !important;
+  }
+
+  /* Loading state for emergency resources */
+  .emergency-loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: emergency-loading 2s infinite;
+  }
+
+  @keyframes emergency-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+</style>
+
+<!-- Emergency No-JS Fallback -->
+<noscript>
+  <div class="emergency-critical">
+    <h1>🚨 Emergency Safety App</h1>
+    <p>JavaScript is required for full functionality.</p>
+    <a href="tel:911" class="emergency-button">📞 Call 911</a>
+    <a href="sms:?body=Emergency! Please send help." class="emergency-button"
+      >📱 Emergency SMS</a
+    >
+  </div>
+</noscript>

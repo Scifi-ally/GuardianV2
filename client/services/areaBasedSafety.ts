@@ -1,3 +1,5 @@
+import { safetyDebugService } from "./safetyDebugService";
+
 interface SafetyArea {
   id: string;
   bounds: {
@@ -98,6 +100,25 @@ class AreaBasedSafetyService {
         weatherImpact: aiAnalysis.weatherImpact,
       });
 
+      const factors = {
+        crimeRate: Math.max(0, Math.min(100, 70 + aiAnalysis.newsImpact)),
+        lighting:
+          aiAnalysis.environmentalFactors.find((f) => f.type === "lighting")
+            ?.value || 70,
+        footTraffic: aiAnalysis.crowdingFactor + 50,
+        emergencyServices: aiAnalysis.infrastructureScore + 70,
+        communityReports: aiAnalysis.confidence,
+      };
+
+      // Log safety calculation for debug purposes
+      safetyDebugService.logSafetyCalculation(
+        location,
+        70, // Base score
+        factors,
+        aiAnalysis.finalScore,
+        aiAnalysis,
+      );
+
       const newArea: SafetyArea = {
         id: areaId,
         bounds: {
@@ -108,15 +129,7 @@ class AreaBasedSafetyService {
         },
         safetyScore: aiAnalysis.finalScore,
         lastUpdated: new Date(),
-        factors: {
-          crimeRate: Math.max(0, Math.min(100, 70 + aiAnalysis.newsImpact)),
-          lighting:
-            aiAnalysis.environmentalFactors.find((f) => f.type === "lighting")
-              ?.value || 70,
-          footTraffic: aiAnalysis.crowdingFactor + 50,
-          emergencyServices: aiAnalysis.infrastructureScore + 70,
-          communityReports: aiAnalysis.confidence,
-        },
+        factors,
       };
 
       return newArea;
@@ -131,6 +144,17 @@ class AreaBasedSafetyService {
     areaId: string,
     location: LocationCoordinates,
   ): SafetyArea {
+    const baseScore = this.generateSafetyScore(location);
+    const factors = this.generateSafetyFactors(location);
+
+    // Log safety calculation for debug purposes
+    safetyDebugService.logSafetyCalculation(
+      location,
+      baseScore,
+      factors,
+      baseScore, // Final score same as base score for basic calculation
+    );
+
     return {
       id: areaId,
       bounds: {
@@ -139,9 +163,9 @@ class AreaBasedSafetyService {
         east: location.longitude + this.GRID_SIZE / 2,
         west: location.longitude - this.GRID_SIZE / 2,
       },
-      safetyScore: this.generateSafetyScore(location),
+      safetyScore: baseScore,
       lastUpdated: new Date(),
-      factors: this.generateSafetyFactors(location),
+      factors,
     };
   }
 
@@ -257,8 +281,8 @@ class AreaBasedSafetyService {
     );
   }
 
-  public isAreaSafe(location: LocationCoordinates): boolean {
-    const { area } = this.getSafetyScore(location);
+  public async isAreaSafe(location: LocationCoordinates): Promise<boolean> {
+    const { area } = await this.getSafetyScore(location);
     return area.safetyScore >= 60;
   }
 

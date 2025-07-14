@@ -101,7 +101,7 @@ class ConnectivityService {
         tests.push({
           service: "Internet Connection",
           status: "warning",
-          message: `HTTP ${response.status}: ${response.statusText}`,
+          message: "Device reports offline status",
         });
       }
     } catch (error) {

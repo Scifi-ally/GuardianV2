@@ -5,6 +5,7 @@ import { MapPin, Locate, AlertCircle, Settings } from "lucide-react";
 import { IntelligentGoogleMap } from "@/components/IntelligentGoogleMap";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { enhancedFirebaseService } from "@/services/enhancedFirebaseService";
+import { emergencyServicesLocator } from "@/services/emergencyServicesLocator";
 import { cn } from "@/lib/utils";
 
 interface LocationAwareMapProps {
@@ -24,6 +25,16 @@ interface LocationAwareMapProps {
   } | null;
   showTraffic?: boolean;
   showSafeZones?: boolean;
+  mapType?: "normal" | "satellite";
+  showSharedLocations?: boolean;
+  currentUserId?: string;
+  emergencyContacts?: Array<{
+    id: string;
+    name: string;
+    latitude: number;
+    longitude: number;
+    avatar?: string;
+  }>;
 }
 
 export function LocationAwareMap({
@@ -33,6 +44,9 @@ export function LocationAwareMap({
   showTraffic = false,
   showSafeZones = false,
   showEmergencyServices = false,
+  mapType = "normal",
+  destination,
+  zoomLevel,
 }: LocationAwareMapProps) {
   const {
     location,
@@ -49,6 +63,11 @@ export function LocationAwareMap({
     longitude: number;
   } | null>(null);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+  const [locationOverride, setLocationOverride] = useState<{
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+  } | null>(null);
 
   // Load last known location from Firebase on mount and when user changes
   useEffect(() => {
@@ -117,7 +136,7 @@ export function LocationAwareMap({
     }
   };
 
-  const currentLocation = location || lastKnownLocation;
+  const currentLocation = locationOverride || location || lastKnownLocation;
 
   // Show map if we have location permission and current location
   if (permissionStatus === "granted" && currentLocation) {
@@ -130,44 +149,11 @@ export function LocationAwareMap({
           showTraffic={showTraffic}
           showSafeZones={showSafeZones}
           showEmergencyServices={showEmergencyServices}
+          mapType={mapType}
+          destination={destination}
+          zoomLevel={zoomLevel}
           className="w-full h-full"
         />
-
-        {/* Location status indicator */}
-        <Card className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm shadow-lg">
-          <CardContent className="p-2">
-            <div className="flex items-center gap-2">
-              <div
-                className={cn(
-                  "w-2 h-2 rounded-full",
-                  isTracking && location
-                    ? "bg-green-500 animate-pulse"
-                    : lastKnownLocation
-                      ? "bg-orange-500"
-                      : "bg-gray-400",
-                )}
-              />
-              <span className="text-xs font-medium">
-                {isTracking && location
-                  ? "Live Location"
-                  : lastKnownLocation
-                    ? "Last Known Location"
-                    : "Location Off"}
-              </span>
-              {!isTracking && (
-                <Button
-                  onClick={handleGetCurrentLocation}
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 px-2 text-xs"
-                  disabled={isRequestingLocation}
-                >
-                  <Locate className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -196,12 +182,15 @@ export function LocationAwareMap({
               </p>
               <div className="space-y-3">
                 <Button
-                  onClick={() => window.location.reload()}
+                  onClick={() => {
+                    // Retry permission request instead of reload
+                    handleRequestLocation();
+                  }}
                   className="w-full"
                   variant="outline"
                 >
                   <Settings className="h-4 w-4 mr-2" />
-                  Refresh After Enabling
+                  Retry Permission
                 </Button>
                 {lastKnownLocation && (
                   <div className="text-xs text-muted-foreground">
@@ -248,8 +237,14 @@ export function LocationAwareMap({
                   </p>
                   <Button
                     onClick={() => {
-                      // Show map with last known location by updating permission status
-                      window.location.reload();
+                      // Use last known location immediately
+                      if (lastKnownLocation) {
+                        setLocationOverride({
+                          latitude: lastKnownLocation.latitude,
+                          longitude: lastKnownLocation.longitude,
+                          accuracy: 1000, // Approximate accuracy for stored location
+                        });
+                      }
                     }}
                     variant="outline"
                     size="sm"

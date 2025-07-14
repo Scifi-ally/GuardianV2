@@ -5,6 +5,7 @@
 
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { safetyDebugService } from "./safetyDebugService";
 
 interface DebugConfig {
   enabled: boolean;
@@ -22,6 +23,8 @@ interface DebugConfig {
     accuracyIndicator: boolean;
     connectionIndicator: boolean;
     performanceMetrics: boolean;
+    safetyScoreDebug: boolean;
+    safetyCalculationBasis: boolean;
   };
 }
 
@@ -40,6 +43,8 @@ class AdminDebugService {
       accuracyIndicator: false,
       connectionIndicator: false,
       performanceMetrics: false,
+      safetyScoreDebug: false,
+      safetyCalculationBasis: false,
     },
   };
 
@@ -62,9 +67,19 @@ class AdminDebugService {
               ...this.debugConfig,
               ...data,
               enabledAt: data.enabledAt
-                ? new Date(data.enabledAt.seconds * 1000)
+                ? data.enabledAt instanceof Date
+                  ? data.enabledAt
+                  : new Date((data.enabledAt as any).seconds * 1000)
                 : undefined,
             };
+
+            // Enable/disable safety debug based on admin config
+            if (this.shouldShowSafetyScoreDebug()) {
+              safetyDebugService.enableDebugMode(true, "admin_controlled");
+            } else {
+              safetyDebugService.enableDebugMode(false, "admin_controlled");
+            }
+
             this.notifyListeners();
           } else {
             // No debug config found, ensure it's disabled
@@ -159,6 +174,30 @@ class AdminDebugService {
   }
 
   /**
+   * Check if safety score debug should be shown
+   */
+  public shouldShowSafetyScoreDebug(): boolean {
+    return this.isFeatureEnabled("safetyScoreDebug");
+  }
+
+  /**
+   * Check if safety calculation basis should be shown
+   */
+  public shouldShowSafetyCalculationBasis(): boolean {
+    return this.isFeatureEnabled("safetyCalculationBasis");
+  }
+
+  /**
+   * Enable safety score debug mode (admin-controlled)
+   */
+  public enableSafetyDebugMode(enabled: boolean): boolean {
+    if (this.isDebugEnabled() && this.shouldShowSafetyScoreDebug()) {
+      return safetyDebugService.enableDebugMode(enabled, "admin_controlled");
+    }
+    return false;
+  }
+
+  /**
    * Get current debug configuration
    */
   public getDebugConfig(): DebugConfig {
@@ -219,6 +258,8 @@ export function useAdminDebug() {
       accuracyIndicator: false,
       connectionIndicator: false,
       performanceMetrics: false,
+      safetyScoreDebug: false,
+      safetyCalculationBasis: false,
     },
   });
 
@@ -234,6 +275,12 @@ export function useAdminDebug() {
     shouldShowCoordinates: adminDebugService.shouldShowCoordinates(),
     shouldShowAccuracy: adminDebugService.shouldShowAccuracy(),
     shouldShowConnectionStatus: adminDebugService.shouldShowConnectionStatus(),
+    shouldShowSafetyScoreDebug: adminDebugService.shouldShowSafetyScoreDebug(),
+    shouldShowSafetyCalculationBasis:
+      adminDebugService.shouldShowSafetyCalculationBasis(),
+    safetyDebugData: adminDebugService.shouldShowSafetyCalculationBasis()
+      ? safetyDebugService.getDebugDisplayData()
+      : null,
     debugConfig,
   };
 }

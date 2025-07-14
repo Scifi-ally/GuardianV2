@@ -414,12 +414,6 @@ export class AdvancedGestureController {
     unifiedNotifications.critical("🚨 Emergency Gesture Detected", {
       message: "Activating emergency in 3 seconds...",
       persistent: true,
-      action: {
-        label: "Cancel",
-        onClick: () => {
-          unifiedNotifications.success("Emergency gesture cancelled");
-        },
-      },
     });
 
     // Start emergency with short countdown

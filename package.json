@@ -18,7 +18,15 @@
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "build:mobile": "npm run build && npx cap sync",
+    "android:dev": "npm run build:mobile && npx cap run android",
+    "ios:dev": "npm run build:mobile && npx cap run ios",
+    "android:build": "npm run build:mobile && npx cap build android",
+    "ios:build": "npm run build:mobile && npx cap build ios",
+    "mobile:sync": "npx cap sync",
+    "mobile:open:android": "npx cap open android",
+    "mobile:open:ios": "npx cap open ios"
   },
   "dependencies": {
     "@googlemaps/react-wrapper": "^1.2.0",

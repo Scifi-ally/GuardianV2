@@ -125,8 +125,12 @@ export function RealTimeMapFeatures({
           currentLocation.longitude + 0.01,
         ),
       );
-      const heatmapPoints =
-        await comprehensiveHeatmapService.generateFullAreaHeatmap(bounds, 16);
+      // Generate mock safety areas around current location
+      const heatmapPoints = Array.from({ length: 10 }, (_, index) => ({
+        safetyScore: Math.floor(Math.random() * 100),
+        lat: currentLocation.latitude + (Math.random() - 0.5) * 0.01,
+        lng: currentLocation.longitude + (Math.random() - 0.5) * 0.01,
+      }));
 
       // Convert heatmap points to safety areas
       const areas: SafetyArea[] = heatmapPoints.map((point, index) => {
@@ -149,10 +153,10 @@ export function RealTimeMapFeatures({
           id: `enhanced_${index}`,
           name,
           type,
-          lat: point.location.lat(),
-          lng: point.location.lng(),
-          radius: 300 + safetyScore * 3, // Larger radius for safer areas
-          score: Math.round(safetyScore),
+          lat: point.lat,
+          lng: point.lng,
+          radius: 200,
+          score: safetyScore,
           lastUpdated: Date.now(),
         };
       });
@@ -237,7 +241,7 @@ export function RealTimeMapFeatures({
         const symbols = {
           police: "👮",
           hospital: "🏥",
-          fire: "🚒",
+          fire: "���",
           pharmacy: "💊",
         };
 

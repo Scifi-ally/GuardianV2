@@ -1,8 +1,8 @@
-// Debug helper removed - Firebase admin control only
-export default function DevAdminDebugHelper() {
-  return null;
-}
+import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Settings,
   Eye,

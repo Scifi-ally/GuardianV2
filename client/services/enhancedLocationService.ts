@@ -1,6 +1,7 @@
 import { notifications } from "@/services/enhancedNotificationService";
 import { enhancedFirebaseService } from "@/services/enhancedFirebaseService";
 import { geminiAIService } from "@/services/geminiAIService";
+import { batteryOptimizationService } from "./batteryOptimizationService";
 import { GeoPoint } from "firebase/firestore";
 
 export interface EnhancedLocationData {
@@ -142,14 +143,18 @@ class EnhancedLocationService {
         throw new Error("Location permission denied");
       }
 
-      // Acquire wake lock for background tracking
-      await this.acquireWakeLock();
+      // Acquire wake lock for background tracking (skip in battery saver mode)
+      if (!batteryOptimizationService.shouldDisableBackgroundUpdates()) {
+        await this.acquireWakeLock();
+      }
 
-      // Start tracking
+      // Start tracking with battery optimization
+      const batteryOptimized =
+        batteryOptimizationService.shouldReduceLocationAccuracy();
       const options: PositionOptions = {
-        enableHighAccuracy: this.config.highAccuracy,
-        maximumAge: this.config.maxAge,
-        timeout: this.config.timeout,
+        enableHighAccuracy: batteryOptimized ? false : this.config.highAccuracy,
+        maximumAge: batteryOptimized ? 300000 : this.config.maxAge, // 5 minutes in battery saver
+        timeout: batteryOptimized ? 60000 : this.config.timeout, // Longer timeout in battery saver
       };
 
       this.watchId = navigator.geolocation.watchPosition(
