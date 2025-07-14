@@ -264,7 +264,7 @@ export default function Settings() {
   ];
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-white safe-bottom-spacing">
       <main className="container px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">

@@ -11,6 +11,7 @@ import {
   Navigation as NavigationIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useSOSSettings } from "@/contexts/SOSSettingsContext";
@@ -44,6 +45,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
   const { currentUser, userProfile } = useAuth();
   const { location: userLocation, getCurrentLocation } = useGeolocation();
   const { sosSettings, verifyPassword } = useSOSSettings();
+  const isMobile = useIsMobile();
   const [activeIndex, setActiveIndex] = useState(0);
   const [sosPressed, setSOSPressed] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -438,14 +440,22 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       )}
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-50"
+        className={cn(
+          "fixed bottom-0 left-0 right-0 z-50 safe-area-inset-bottom",
+          isMobile ? "pb-2" : "pb-4",
+        )}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {/* Background with blur effect */}
         <div className="absolute inset-0 bg-background/95 backdrop-blur-lg border-t border-border/50 rounded-t-3xl shadow-2xl" />
 
         {/* Navigation items */}
-        <div className="relative px-8 py-4 rounded-t-3xl">
+        <div
+          className={cn(
+            "relative rounded-t-3xl",
+            isMobile ? "px-4 py-3" : "px-8 py-4",
+          )}
+        >
           <div className="flex items-center justify-between w-full max-w-md mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
@@ -484,7 +494,10 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                       }
                     }}
                     className={cn(
-                      "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px] emergency-focus",
+                      "relative flex flex-col items-center transition-all duration-300 flex-1 touch-emergency emergency-focus sos-button",
+                      isMobile
+                        ? "px-3 py-2 max-w-[90px] min-h-[60px]"
+                        : "px-6 py-3 max-w-[80px]",
                       sosPressed
                         ? "bg-warning/20 rounded-3xl animate-pulse"
                         : activeAlertId
@@ -544,7 +557,10 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   onTouchEnd={handleMapMouseUp}
                   disabled={sending}
                   className={cn(
-                    "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px]",
+                    "relative flex flex-col items-center transition-all duration-300 flex-1 touch-optimization",
+                    isMobile
+                      ? "px-3 py-2 max-w-[90px] min-h-[50px]"
+                      : "px-6 py-3 max-w-[80px]",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
                     item.id === "map" &&
                       showEnhancedMapHint &&

@@ -35,6 +35,8 @@ interface LocationAwareMapProps {
     longitude: number;
     avatar?: string;
   }>;
+  onMapClick?: (location: { lat: number; lng: number }) => void;
+  enableNavigationClick?: boolean;
 }
 
 export function LocationAwareMap({
@@ -47,6 +49,8 @@ export function LocationAwareMap({
   mapType = "normal",
   destination,
   zoomLevel,
+  onMapClick,
+  enableNavigationClick = false,
 }: LocationAwareMapProps) {
   const {
     location,
@@ -152,6 +156,8 @@ export function LocationAwareMap({
           mapType={mapType}
           destination={destination}
           zoomLevel={zoomLevel}
+          onMapClick={onMapClick}
+          enableNavigationClick={enableNavigationClick}
           className="w-full h-full"
         />
       </div>

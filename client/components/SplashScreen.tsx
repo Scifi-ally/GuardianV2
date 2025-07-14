@@ -16,6 +16,11 @@ export function SplashScreen({
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
+  const handleSkip = () => {
+    setIsComplete(true);
+    onComplete?.();
+  };
+
   const steps = [
     { icon: Shield, label: "Initializing Security", delay: 0 },
     { icon: MapPin, label: "Loading Location Services", delay: 800 },
@@ -173,6 +178,21 @@ export function SplashScreen({
               transition={{ delay: 2, duration: 0.5 }}
             >
               <LoadingAnimation size="sm" variant="dots" />
+            </motion.div>
+
+            {/* Skip Button */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5, duration: 0.5 }}
+              className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+            >
+              <button
+                onClick={handleSkip}
+                className="px-6 py-2 text-sm text-gray-600 hover:text-black transition-colors border border-gray-300 rounded-lg hover:border-black bg-white/80 backdrop-blur-sm"
+              >
+                Skip & Continue →
+              </button>
             </motion.div>
           </div>
         </motion.div>

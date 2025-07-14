@@ -18,16 +18,20 @@ import {
   Zap,
   QrCode,
 } from "lucide-react";
-import { MagicNavbar } from "@/components/MagicNavbar";
+
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
 import { EditProfileModal } from "@/components/EditProfileModal";
-import { AdvancedSettingsModal } from "@/components/AdvancedSettingsModal";
+import { EnhancedAdvancedSettings } from "@/components/EnhancedAdvancedSettings";
 import { UserStatsManager } from "@/components/UserStatsManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import SafetyGuide from "@/components/SafetyGuide";
 import { GuardianKeyCard } from "@/components/GuardianKeyCard";
 import { QRScanner } from "@/components/QRScanner";
 import { ProfileLoading } from "@/components/ProfessionalLoading";
+import {
+  LazyComponentWrapper,
+  LoadingSkeleton,
+  dynamicLoadingService,
+} from "@/services/dynamicLoadingService";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -91,8 +95,12 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
-  const [showSafetyTutorial, setShowSafetyTutorial] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
+
+  // Preload components for optimal performance
+  useEffect(() => {
+    dynamicLoadingService.preloadForRoute("/profile");
+  }, []);
 
   // Debug logging removed for production
 
@@ -130,8 +138,7 @@ export default function Profile() {
   // Show loading state while auth is initializing
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-white pb-24">
-        <MagicNavbar />
+      <div className="min-h-screen bg-white safe-bottom-spacing">
         <main className="container px-4 py-6 space-y-6 max-w-4xl mx-auto">
           <ProfileLoading />
         </main>
@@ -199,10 +206,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-24">
-      {/* Navigation */}
-      <MagicNavbar />
-
+    <div className="min-h-screen bg-white safe-bottom-spacing">
       {/* SOS notifications now handled by unified notification system */}
 
       <main className="container px-4 py-6 space-y-6 max-w-4xl mx-auto">
@@ -271,10 +275,10 @@ export default function Profile() {
         {/* Guardian Key Section with QR Code */}
         <GuardianKeyCard />
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+        {/* QR Scanner - Moved to bottom */}
+        <div className="flex justify-center">
           <Card
-            className="text-center p-4 bg-white border hover:shadow-lg transition-shadow cursor-pointer group"
+            className="text-center p-4 bg-white border hover:shadow-lg transition-shadow cursor-pointer group max-w-sm"
             onClick={() => setShowQRScanner(true)}
           >
             <div className="text-2xl font-bold text-blue-500 group-hover:text-blue-600 transition-colors">
@@ -285,20 +289,6 @@ export default function Profile() {
             </div>
             <div className="mt-1">
               <span className="text-xs text-blue-600">Scan QR codes</span>
-            </div>
-          </Card>
-          <Card
-            className="text-center p-4 bg-white border hover:shadow-lg transition-shadow cursor-pointer group"
-            onClick={() => setShowSafetyTutorial(true)}
-          >
-            <div className="text-2xl font-bold text-green-500 group-hover:text-green-600 transition-colors">
-              <Shield className="h-8 w-8 mx-auto" />
-            </div>
-            <div className="text-sm text-gray-600 group-hover:text-green-500 transition-colors">
-              Safety Guide
-            </div>
-            <div className="mt-1">
-              <span className="text-xs text-green-600">Learn features</span>
             </div>
           </Card>
         </div>
@@ -335,15 +325,9 @@ export default function Profile() {
           />
         )}
         {advancedSettingsOpen && (
-          <AdvancedSettingsModal
+          <EnhancedAdvancedSettings
             isOpen={advancedSettingsOpen}
             onClose={() => setAdvancedSettingsOpen(false)}
-          />
-        )}
-        {showSafetyTutorial && (
-          <SafetyGuide
-            isOpen={showSafetyTutorial}
-            onClose={() => setShowSafetyTutorial(false)}
           />
         )}
       </AnimatePresence>

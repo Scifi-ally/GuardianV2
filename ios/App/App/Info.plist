@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Emergency Safety App</string>
+	<string>Guardian Safety</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,5 +45,104 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	
+	<!-- Essential Privacy Usage Descriptions for Emergency Safety App -->
+	
+	<!-- Location Services - Critical for Emergency Response -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Guardian Safety needs access to your location to provide emergency services with your exact position during emergencies and to calculate safety scores for your area.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Guardian Safety requires continuous location access to track your safety in real-time, share your location with emergency contacts, and provide immediate assistance during emergencies.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Guardian Safety monitors your location continuously to ensure your safety and can automatically alert emergency contacts if you're in danger.</string>
+	
+	<!-- Camera Access - Emergency Documentation -->
+	<key>NSCameraUsageDescription</key>
+	<string>Guardian Safety uses your camera to capture emergency evidence, scan QR codes for location sharing, and document incidents for safety reports.</string>
+	
+	<!-- Microphone Access - Emergency Recording -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Guardian Safety needs microphone access to record emergency audio, capture voice notes during incidents, and enable voice-activated emergency features.</string>
+	
+	<!-- Photo Library - Emergency Evidence -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Guardian Safety accesses your photo library to save emergency evidence, safety reports, and share location images with emergency contacts.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Guardian Safety saves emergency photos and safety documentation to your photo library for future reference and evidence.</string>
+	
+	<!-- Contacts - Emergency Network -->
+	<key>NSContactsUsageDescription</key>
+	<string>Guardian Safety accesses your contacts to easily add emergency contacts and send safety alerts to your trusted network during emergencies.</string>
+	
+	<!-- Motion & Fitness - Fall Detection -->
+	<key>NSMotionUsageDescription</key>
+	<string>Guardian Safety monitors your device motion to detect potential falls, accidents, or unusual movement patterns that may indicate an emergency.</string>
+	
+	<!-- Face ID / Touch ID - Secure Access -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Guardian Safety uses Face ID to provide secure, quick access to emergency features while keeping your safety information protected.</string>
+	
+	<!-- Health Data - Emergency Medical Info -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>Guardian Safety can access your health data to provide emergency responders with critical medical information during emergencies.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Guardian Safety updates your health data with emergency incident information and safety metrics for medical reference.</string>
+	
+	<!-- Bluetooth - Emergency Beacons -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Guardian Safety uses Bluetooth to detect emergency beacons, connect with safety devices, and communicate with nearby emergency responders.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Guardian Safety broadcasts emergency signals via Bluetooth to help emergency responders locate you and connect with safety devices.</string>
+	
+	<!-- App Transport Security - Emergency Communications -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+	
+	<!-- Background App Refresh - Emergency Monitoring -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-fetch</string>
+		<string>background-processing</string>
+		<string>location</string>
+		<string>audio</string>
+		<string>voip</string>
+	</array>
+	
+	<!-- Deep Linking for Emergency -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.guardian.safety</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>guardiansafety</string>
+			</array>
+		</dict>
+	</array>
+	
+	<!-- Security Features -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	
+	<!-- Emergency Features -->
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+
 </dict>
 </plist>

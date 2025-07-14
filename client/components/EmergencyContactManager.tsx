@@ -541,7 +541,7 @@ export function EmergencyContactManager({
                     </p>
                   </div>
 
-                  <div className="flex gap-2 pt-4">
+                  <div className="button-stack-safe pt-4 space-y-2">
                     <Button
                       type="submit"
                       disabled={
@@ -551,7 +551,7 @@ export function EmergencyContactManager({
                         !contactName ||
                         guardianKey.length !== 8
                       }
-                      className="flex-1 bg-black text-white hover:bg-gray-800 disabled:bg-gray-300"
+                      className="w-full bg-black text-white hover:bg-gray-800 disabled:bg-gray-300"
                     >
                       {loading || isValidating ? (
                         <div className="flex items-center gap-2">
@@ -570,6 +570,7 @@ export function EmergencyContactManager({
                       variant="outline"
                       onClick={() => setIsAddDialogOpen(false)}
                       disabled={loading}
+                      className="w-full"
                     >
                       Cancel
                     </Button>

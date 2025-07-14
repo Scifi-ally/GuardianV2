@@ -49,7 +49,7 @@ export default function EnhancedProfile() {
   const emergencyContacts = userProfile?.emergencyContacts || [];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background safe-bottom-spacing">
       <MagicNavbar />
 
       <main className="container px-4 py-6 space-y-6 pb-32">

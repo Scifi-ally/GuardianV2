@@ -6,6 +6,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SlideUpPanelProps {
   children: React.ReactNode;
@@ -35,6 +36,7 @@ export function SlideUpPanel({
   const [isCollapsed, setIsCollapsed] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -194,9 +196,15 @@ export function SlideUpPanel({
       <motion.div
         ref={handleRef}
         className={cn(
-          "flex flex-col items-center cursor-grab active:cursor-grabbing transition-all duration-200",
+          "flex flex-col items-center cursor-grab active:cursor-grabbing transition-all duration-200 touch-manipulation",
           isDragging && "cursor-grabbing",
-          isCollapsed ? "py-2" : "py-3",
+          isCollapsed
+            ? isMobile
+              ? "py-3"
+              : "py-2"
+            : isMobile
+              ? "py-4"
+              : "py-3",
         )}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
@@ -210,7 +218,14 @@ export function SlideUpPanel({
             backgroundColor: isDragging
               ? "hsl(var(--foreground))"
               : "hsl(var(--foreground) / 0.4)",
-            width: isDragging || isCollapsed ? 64 : 48,
+            width:
+              isDragging || isCollapsed
+                ? isMobile
+                  ? 80
+                  : 64
+                : isMobile
+                  ? 60
+                  : 48,
             height: isDragging || isCollapsed ? 6 : 4,
           }}
           transition={{ type: "spring", damping: 20, stiffness: 300 }}
@@ -237,7 +252,10 @@ export function SlideUpPanel({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="px-6 pb-6 h-full overflow-y-auto custom-scrollbar"
+            className={cn(
+              "h-full overflow-y-auto custom-scrollbar safe-area-inset-bottom",
+              isMobile ? "px-4 pb-4" : "px-6 pb-6",
+            )}
           >
             <motion.div
               className="space-y-4"

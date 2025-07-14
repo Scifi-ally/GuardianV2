@@ -1,44 +1,68 @@
-interface NewsSource {
-  name: string;
-  url: string;
-  apiKey?: string;
-}
+/**
+ * News Analysis Service with Gemini AI
+ * Analyzes local news for safety factors specific to Indian conditions
+ */
 
-interface NewsArticle {
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+export interface NewsIncident {
+  id: string;
   title: string;
   description: string;
-  content: string;
-  publishedAt: string;
-  source: string;
-  location?: {
+  location: {
     lat: number;
     lng: number;
-    address: string;
+    area: string;
+    city: string;
+    state: string;
   };
-  safetyRelevance: number; // 0-100 how relevant to safety
-  sentiment: "positive" | "neutral" | "negative";
-  categories: string[];
+  timestamp: Date;
+  incidentType:
+    | "crime"
+    | "accident"
+    | "violence"
+    | "theft"
+    | "harassment"
+    | "terrorism"
+    | "communal"
+    | "natural_disaster"
+    | "traffic_incident"
+    | "political_unrest";
+  severity: "low" | "medium" | "high" | "critical";
+  safetyImpact: number; // 0-100 score
+  affectedRadius: number; // in meters
+  verified: boolean;
+  sources: string[];
+  tags: string[];
 }
 
-interface SafetyImpact {
-  score: number; // 0-100
-  confidence: number; // 0-100
-  factors: string[];
-  timeDecay: number; // How much impact decreases over time
-  radius: number; // Kilometers of impact
+export interface SafetyNewsAnalysis {
+  overallSafetyScore: number;
+  incidents: NewsIncident[];
+  areaAnalysis: {
+    crimeRate: number;
+    recentIncidents: number;
+    communalTension: number;
+    trafficSafety: number;
+    politicalStability: number;
+    womenSafety: number;
+    timeBasedRisk: number;
+  };
+  recommendations: string[];
+  lastUpdated: Date;
 }
 
-export class NewsAnalysisService {
+class NewsAnalysisService {
   private static instance: NewsAnalysisService;
-  private cache: Map<string, { data: SafetyImpact; timestamp: number }> =
-    new Map();
+  private genAI: GoogleGenerativeAI | null = null;
+  private model: any = null;
+  private newsCache: Map<string, SafetyNewsAnalysis> = new Map();
+  private lastCacheUpdate: Map<string, number> = new Map();
   private readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
-  // Internal-only news sources - no external APIs
-  private newsSources: NewsSource[] = [
-    { name: "Internal Safety Data", url: "/internal/safety-data" },
-    { name: "Local Cache", url: "/internal/cache" },
-  ];
+  constructor() {
+    this.initializeGemini();
+  }
 
   static getInstance(): NewsAnalysisService {
     if (!NewsAnalysisService.instance) {
@@ -47,309 +71,467 @@ export class NewsAnalysisService {
     return NewsAnalysisService.instance;
   }
 
-  async analyzeAreaSafety(lat: number, lng: number): Promise<SafetyImpact> {
-    const cacheKey = `${lat.toFixed(4)}_${lng.toFixed(4)}`;
-    const cached = this.cache.get(cacheKey);
+  private async initializeGemini() {
+    try {
+      // In production, use environment variable
+      const apiKey = process.env.VITE_GEMINI_API_KEY || "your-gemini-api-key";
+      if (apiKey && apiKey !== "your-gemini-api-key") {
+        this.genAI = new GoogleGenerativeAI(apiKey);
+        this.model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+        console.log("✅ Gemini AI initialized for news analysis");
+      } else {
+        console.warn("⚠️ Gemini API key not found, using simulated data");
+      }
+    } catch (error) {
+      console.error("❌ Failed to initialize Gemini AI:", error);
+    }
+  }
 
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      return cached.data;
+  // Analyze safety news for a specific location
+  async analyzeSafetyNews(
+    location: { lat: number; lng: number },
+    radiusKm: number = 10,
+  ): Promise<SafetyNewsAnalysis> {
+    const locationKey = `${location.lat.toFixed(4)}-${location.lng.toFixed(4)}-${radiusKm}`;
+
+    // Check cache first
+    if (this.isCacheValid(locationKey)) {
+      return this.newsCache.get(locationKey)!;
     }
 
     try {
-      // In a real implementation, this would fetch from multiple news APIs
-      const analysis = await this.performAIAnalysis(lat, lng);
+      // Get location context
+      const locationContext = await this.getLocationContext(location);
 
-      this.cache.set(cacheKey, {
-        data: analysis,
-        timestamp: Date.now(),
-      });
+      // Fetch and analyze news
+      const newsData = await this.fetchLocalNews(location, radiusKm);
+      const analysis = await this.analyzeNewsWithGemini(
+        newsData,
+        locationContext,
+      );
+
+      // Cache the results
+      this.newsCache.set(locationKey, analysis);
+      this.lastCacheUpdate.set(locationKey, Date.now());
 
       return analysis;
     } catch (error) {
-      console.warn("News analysis failed, using fallback:", error);
-      return this.getFallbackAnalysis(lat, lng);
+      console.error("News analysis failed:", error);
+      return this.getFallbackAnalysis(location);
     }
   }
 
-  private async performAIAnalysis(
-    lat: number,
-    lng: number,
-  ): Promise<SafetyImpact> {
-    // Simulate real AI analysis of news data
-    // In production, this would:
-    // 1. Fetch recent news within radius of location
-    // 2. Use NLP to analyze safety relevance
-    // 3. Apply geospatial weighting
-    // 4. Calculate time-decay factors
+  // Get location context for Indian areas
+  private async getLocationContext(location: { lat: number; lng: number }) {
+    // Determine if location is in major Indian cities
+    const majorCities = [
+      { name: "Mumbai", lat: 19.076, lng: 72.8777, crimeFactor: 0.7 },
+      { name: "Delhi", lat: 28.7041, lng: 77.1025, crimeFactor: 0.8 },
+      { name: "Bangalore", lat: 12.9716, lng: 77.5946, crimeFactor: 0.6 },
+      { name: "Hyderabad", lat: 17.385, lng: 78.4867, crimeFactor: 0.5 },
+      { name: "Chennai", lat: 13.0827, lng: 80.2707, crimeFactor: 0.4 },
+      { name: "Kolkata", lat: 22.5726, lng: 88.3639, crimeFactor: 0.7 },
+      { name: "Pune", lat: 18.5204, lng: 73.8567, crimeFactor: 0.5 },
+      { name: "Ahmedabad", lat: 23.0225, lng: 72.5714, crimeFactor: 0.6 },
+    ];
 
-    const articles = await this.fetchRelevantNews(lat, lng);
-    const analysis = this.analyzeArticles(articles, lat, lng);
+    let nearestCity = null;
+    let minDistance = Infinity;
 
-    return analysis;
+    for (const city of majorCities) {
+      const distance = this.calculateDistance(location, city);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestCity = city;
+      }
+    }
+
+    return {
+      nearestCity: nearestCity?.name || "Unknown",
+      distanceToCity: Math.round(minDistance),
+      baseCrimeFactor: nearestCity?.crimeFactor || 0.5,
+      isMetroArea: minDistance < 50,
+      isRuralArea: minDistance > 100,
+    };
   }
 
-  private async fetchRelevantNews(
-    lat: number,
-    lng: number,
-  ): Promise<NewsArticle[]> {
-    // Simulate fetching news from multiple sources
-    // This would integrate with real news APIs like:
-    // - NewsAPI.org
-    // - Local police RSS feeds
-    // - Traffic incident APIs
-    // - Weather alert systems
-    // - Social media safety reports
+  // Fetch local news (simulated - in production use news APIs)
+  private async fetchLocalNews(
+    location: { lat: number; lng: number },
+    radiusKm: number,
+  ) {
+    // In production, integrate with:
+    // - News API
+    // - Indian news sources (Times of India, Hindustan Times, etc.)
+    // - Local police crime data
+    // - Social media monitoring
 
-    return this.simulateNewsData(lat, lng);
+    // Simulated news data based on location context
+    const locationContext = await this.getLocationContext(location);
+
+    return this.generateSimulatedNews(location, locationContext, radiusKm);
   }
 
-  private simulateNewsData(lat: number, lng: number): NewsArticle[] {
-    const now = new Date();
-    const articles: NewsArticle[] = [];
+  // Generate simulated news for demonstration
+  private generateSimulatedNews(
+    location: { lat: number; lng: number },
+    context: any,
+    radiusKm: number,
+  ) {
+    const currentHour = new Date().getHours();
+    const incidents = [];
 
-    // Simulate various types of news that affect safety
-    const newsTypes = [
+    // Generate location-specific incidents
+    const incidentTypes = [
       {
-        type: "crime",
-        titles: [
-          "Local Crime Report: Increased Patrols in Area",
-          "Community Safety Initiative Launched",
-          "Recent Break-in Incidents Reported",
-          "Police Arrest Suspects in Local Case",
-        ],
-        impact: -15,
+        type: "theft",
+        probability: context.baseCrimeFactor * 0.3,
+        severity: "medium",
+      },
+      { type: "accident", probability: 0.4, severity: "medium" },
+      {
+        type: "harassment",
+        probability: context.baseCrimeFactor * 0.2,
+        severity: "high",
       },
       {
-        type: "traffic",
-        titles: [
-          "Major Traffic Incident Cleared",
-          "New Traffic Safety Measures Implemented",
-          "Road Construction Causes Delays",
-          "Improved Street Lighting Installation",
-        ],
-        impact: -5,
+        type: "violence",
+        probability: context.baseCrimeFactor * 0.15,
+        severity: "high",
       },
+      { type: "traffic_incident", probability: 0.6, severity: "low" },
       {
-        type: "community",
-        titles: [
-          "Community Watch Program Expanded",
-          "Local Business Safety Partnership",
-          "Neighborhood Improvement Project Completed",
-          "Emergency Response Times Improved",
-        ],
-        impact: 10,
-      },
-      {
-        type: "weather",
-        titles: [
-          "Severe Weather Alert Issued",
-          "Flooding Risk in Low Areas",
-          "Clear Weather Expected",
-          "Storm Damage Assessment Complete",
-        ],
-        impact: -8,
+        type: "communal",
+        probability: context.isMetroArea ? 0.1 : 0.05,
+        severity: "critical",
       },
     ];
 
-    // Generate 3-8 relevant articles based on location
-    const numArticles = 3 + Math.floor(Math.abs(lat * lng * 100) % 6);
+    // Time-based risk factors
+    const nightRiskMultiplier = currentHour >= 22 || currentHour <= 5 ? 2 : 1;
+    const rushHourMultiplier =
+      (currentHour >= 8 && currentHour <= 10) ||
+      (currentHour >= 17 && currentHour <= 20)
+        ? 1.5
+        : 1;
 
-    for (let i = 0; i < numArticles; i++) {
-      const newsType =
-        newsTypes[Math.floor(Math.abs(lat * lng * i * 100) % newsTypes.length)];
-      const titleIndex = Math.floor(
-        Math.abs(lng * lat * i * 50) % newsType.titles.length,
-      );
+    for (const incidentType of incidentTypes) {
+      const adjustedProbability =
+        incidentType.probability * nightRiskMultiplier;
 
-      const hoursAgo = Math.floor(Math.abs(lat * lng * i * 24) % 72);
-      const publishedAt = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
-
-      articles.push({
-        title: newsType.titles[titleIndex],
-        description: `Local incident affecting area safety and community well-being.`,
-        content: `Detailed report about ${newsType.type} incident in the local area.`,
-        publishedAt: publishedAt.toISOString(),
-        source: `Local News ${i + 1}`,
-        location: {
-          lat: lat + (Math.random() - 0.5) * 0.01, // Within ~1km
-          lng: lng + (Math.random() - 0.5) * 0.01,
-          address: `Local Area ${i + 1}`,
-        },
-        safetyRelevance: 60 + Math.floor(Math.random() * 40),
-        sentiment:
-          newsType.impact > 0
-            ? "positive"
-            : newsType.impact < -10
-              ? "negative"
-              : "neutral",
-        categories: [newsType.type, "safety", "local"],
-      });
+      if (Math.random() < adjustedProbability) {
+        incidents.push({
+          type: incidentType.type,
+          severity: incidentType.severity,
+          timestamp: new Date(
+            Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000,
+          ), // Within last week
+          location: {
+            lat: location.lat + (Math.random() - 0.5) * (radiusKm / 111), // Rough lat conversion
+            lng: location.lng + (Math.random() - 0.5) * (radiusKm / 111),
+          },
+        });
+      }
     }
 
-    return articles;
-  }
-
-  private analyzeArticles(
-    articles: NewsArticle[],
-    lat: number,
-    lng: number,
-  ): SafetyImpact {
-    let totalImpact = 0;
-    let confidence = 70; // Base confidence
-    const factors: string[] = [];
-    let maxRadius = 1; // km
-
-    articles.forEach((article) => {
-      // Calculate distance impact
-      const distance = this.calculateDistance(
-        lat,
-        lng,
-        article.location?.lat || lat,
-        article.location?.lng || lng,
-      );
-
-      // Time decay - recent news has more impact
-      const hoursOld =
-        (Date.now() - new Date(article.publishedAt).getTime()) /
-        (1000 * 60 * 60);
-      const timeDecay = Math.exp(-hoursOld / 24); // Exponential decay over 24 hours
-
-      // Distance decay - closer events have more impact
-      const distanceDecay = Math.exp(-distance / 2); // Significant impact within 2km
-
-      // Calculate weighted impact
-      let impact = 0;
-
-      switch (article.sentiment) {
-        case "positive":
-          impact = article.safetyRelevance * 0.3; // Positive news improves safety
-          factors.push(`✓ ${article.title.substring(0, 30)}...`);
-          break;
-        case "negative":
-          impact = -article.safetyRelevance * 0.5; // Negative news reduces safety
-          factors.push(`⚠ ${article.title.substring(0, 30)}...`);
-          break;
-        default:
-          impact = article.safetyRelevance * 0.1; // Neutral news slight impact
-          break;
-      }
-
-      const weightedImpact = impact * timeDecay * distanceDecay;
-      totalImpact += weightedImpact;
-
-      // Increase confidence for more relevant articles
-      if (article.safetyRelevance > 80) {
-        confidence += 5;
-      }
-
-      // Extend radius for significant incidents
-      if (Math.abs(weightedImpact) > 10) {
-        maxRadius = Math.max(maxRadius, 3);
-      }
-    });
-
-    // Normalize to 0-100 scale
-    const normalizedScore = Math.max(0, Math.min(100, 75 + totalImpact));
-
     return {
-      score: Math.round(normalizedScore),
-      confidence: Math.min(95, confidence),
-      factors: factors.slice(0, 5), // Top 5 factors
-      timeDecay: 0.9, // How quickly impact decreases
-      radius: maxRadius,
+      incidents,
+      context,
+      searchRadius: radiusKm,
+      location,
     };
   }
 
-  private getFallbackAnalysis(lat: number, lng: number): SafetyImpact {
-    // Fallback when news APIs are unavailable
-    const hash = Math.abs((lat * 1000 + lng * 1000) * 123) % 100;
+  // Analyze news with Gemini AI
+  private async analyzeNewsWithGemini(
+    newsData: any,
+    locationContext: any,
+  ): Promise<SafetyNewsAnalysis> {
+    if (!this.model) {
+      return this.getFallbackAnalysis(newsData.location);
+    }
 
-    return {
-      score: 60 + (hash % 30), // 60-90 range
-      confidence: 45, // Lower confidence for fallback
-      factors: ["Limited news data available"],
-      timeDecay: 0.8,
-      radius: 1.5,
+    try {
+      const prompt = this.createIndianSafetyPrompt(newsData, locationContext);
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const analysisText = response.text();
+
+      return this.parseGeminiResponse(analysisText, newsData);
+    } catch (error) {
+      console.error("Gemini analysis failed:", error);
+      return this.getFallbackAnalysis(newsData.location);
+    }
+  }
+
+  // Create India-specific safety analysis prompt
+  private createIndianSafetyPrompt(
+    newsData: any,
+    locationContext: any,
+  ): string {
+    return `
+Analyze the safety situation for this Indian location based on the following data:
+
+Location Context:
+- Nearest City: ${locationContext.nearestCity}
+- Distance to City: ${locationContext.distanceToCity}km
+- Is Metro Area: ${locationContext.isMetroArea}
+- Base Crime Factor: ${locationContext.baseCrimeFactor}
+
+Recent Incidents:
+${newsData.incidents
+  .map(
+    (incident: any) => `
+- Type: ${incident.type}
+- Severity: ${incident.severity}
+- Time: ${incident.timestamp}
+- Location: ${incident.location.lat}, ${incident.location.lng}
+`,
+  )
+  .join("")}
+
+Please provide a comprehensive safety analysis considering:
+
+1. Crime patterns specific to Indian urban/rural contexts
+2. Women's safety concerns (eve-teasing, harassment, safety in public transport)
+3. Communal tension indicators
+4. Traffic safety (considering Indian driving conditions)
+5. Political stability and protests
+6. Time-based risks (late night, early morning, festivals)
+7. Area-specific risks (markets, IT parks, residential areas)
+8. Monsoon/seasonal safety factors
+9. Economic factors affecting crime rates
+10. Local police presence and response times
+
+Rate each factor from 0-100 (100 being safest) and provide specific recommendations for Indians traveling in this area.
+
+Respond in JSON format with:
+{
+  "overallSafetyScore": number,
+  "areaAnalysis": {
+    "crimeRate": number,
+    "recentIncidents": number,
+    "communalTension": number,
+    "trafficSafety": number,
+    "politicalStability": number,
+    "womenSafety": number,
+    "timeBasedRisk": number
+  },
+  "recommendations": [string array],
+  "riskFactors": [string array]
+}
+`;
+  }
+
+  // Parse Gemini response
+  private parseGeminiResponse(
+    response: string,
+    newsData: any,
+  ): SafetyNewsAnalysis {
+    try {
+      // Extract JSON from response
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+
+        return {
+          overallSafetyScore: parsed.overallSafetyScore || 75,
+          incidents: this.convertToNewsIncidents(newsData.incidents),
+          areaAnalysis: parsed.areaAnalysis || this.getDefaultAreaAnalysis(),
+          recommendations: parsed.recommendations || [],
+          lastUpdated: new Date(),
+        };
+      }
+    } catch (error) {
+      console.error("Failed to parse Gemini response:", error);
+    }
+
+    return this.getFallbackAnalysis(newsData.location);
+  }
+
+  // Convert raw incidents to NewsIncident format
+  private convertToNewsIncidents(rawIncidents: any[]): NewsIncident[] {
+    return rawIncidents.map((incident, index) => ({
+      id: `incident_${index}_${Date.now()}`,
+      title: this.generateIncidentTitle(incident.type),
+      description: this.generateIncidentDescription(
+        incident.type,
+        incident.severity,
+      ),
+      location: {
+        lat: incident.location.lat,
+        lng: incident.location.lng,
+        area: "Local Area",
+        city: "City",
+        state: "State",
+      },
+      timestamp: new Date(incident.timestamp),
+      incidentType: incident.type as any,
+      severity: incident.severity as any,
+      safetyImpact: this.calculateSafetyImpact(
+        incident.type,
+        incident.severity,
+      ),
+      affectedRadius: this.calculateAffectedRadius(
+        incident.type,
+        incident.severity,
+      ),
+      verified: Math.random() > 0.3, // 70% verification rate
+      sources: ["Local News", "Police Reports"],
+      tags: this.generateTags(incident.type),
+    }));
+  }
+
+  // Helper methods
+  private generateIncidentTitle(type: string): string {
+    const titles = {
+      theft: "Mobile/Vehicle Theft Reported",
+      accident: "Road Accident Reported",
+      harassment: "Harassment Incident",
+      violence: "Violence/Assault Case",
+      traffic_incident: "Traffic Jam/Accident",
+      communal: "Communal Tension Alert",
     };
+    return titles[type as keyof typeof titles] || "Safety Incident";
+  }
+
+  private generateIncidentDescription(type: string, severity: string): string {
+    return `${severity.charAt(0).toUpperCase() + severity.slice(1)} severity ${type} incident reported in the area. Please exercise caution.`;
+  }
+
+  private calculateSafetyImpact(type: string, severity: string): number {
+    const baseImpact = {
+      theft: 30,
+      accident: 40,
+      harassment: 60,
+      violence: 80,
+      traffic_incident: 20,
+      communal: 90,
+      terrorism: 100,
+    };
+
+    const severityMultiplier = {
+      low: 0.5,
+      medium: 1,
+      high: 1.5,
+      critical: 2,
+    };
+
+    return Math.min(
+      (baseImpact[type as keyof typeof baseImpact] || 50) *
+        (severityMultiplier[severity as keyof typeof severityMultiplier] || 1),
+      100,
+    );
+  }
+
+  private calculateAffectedRadius(type: string, severity: string): number {
+    const baseRadius = {
+      theft: 200,
+      accident: 500,
+      harassment: 300,
+      violence: 800,
+      traffic_incident: 1000,
+      communal: 2000,
+      terrorism: 5000,
+    };
+
+    return baseRadius[type as keyof typeof baseRadius] || 500;
+  }
+
+  private generateTags(type: string): string[] {
+    const tagMap = {
+      theft: ["property-crime", "security", "valuables"],
+      accident: ["traffic", "emergency", "medical"],
+      harassment: ["women-safety", "security", "personal-safety"],
+      violence: ["assault", "personal-safety", "emergency"],
+      traffic_incident: ["traffic", "congestion", "delays"],
+      communal: ["social-tension", "avoid-area", "emergency"],
+    };
+
+    return tagMap[type as keyof typeof tagMap] || ["safety"];
+  }
+
+  private getDefaultAreaAnalysis() {
+    return {
+      crimeRate: 75,
+      recentIncidents: 80,
+      communalTension: 90,
+      trafficSafety: 70,
+      politicalStability: 85,
+      womenSafety: 65,
+      timeBasedRisk: 75,
+    };
+  }
+
+  private getFallbackAnalysis(location: {
+    lat: number;
+    lng: number;
+  }): SafetyNewsAnalysis {
+    return {
+      overallSafetyScore: 75,
+      incidents: [],
+      areaAnalysis: this.getDefaultAreaAnalysis(),
+      recommendations: [
+        "Stay alert in crowded areas",
+        "Avoid isolated areas after dark",
+        "Keep emergency contacts handy",
+        "Use well-lit and populated routes",
+      ],
+      lastUpdated: new Date(),
+    };
+  }
+
+  private isCacheValid(key: string): boolean {
+    const lastUpdate = this.lastCacheUpdate.get(key);
+    if (!lastUpdate) return false;
+
+    return Date.now() - lastUpdate < this.CACHE_DURATION;
   }
 
   private calculateDistance(
-    lat1: number,
-    lng1: number,
-    lat2: number,
-    lng2: number,
+    point1: { lat: number; lng: number },
+    point2: { lat: number; lng: number },
   ): number {
     const R = 6371; // Earth's radius in km
-    const dLat = this.deg2rad(lat2 - lat1);
-    const dLng = this.deg2rad(lng2 - lng1);
+    const dLat = ((point2.lat - point1.lat) * Math.PI) / 180;
+    const dLng = ((point2.lng - point1.lng) * Math.PI) / 180;
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(lat1)) *
-        Math.cos(this.deg2rad(lat2)) *
+      Math.cos((point1.lat * Math.PI) / 180) *
+        Math.cos((point2.lat * Math.PI) / 180) *
         Math.sin(dLng / 2) *
         Math.sin(dLng / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
 
-  private deg2rad(deg: number): number {
-    return deg * (Math.PI / 180);
-  }
-
-  // Method to integrate with real news APIs
-  async integrateRealNewsAPIs(): Promise<boolean> {
+  // Get real-time safety score for a location
+  async getLocationSafetyScore(location: {
+    lat: number;
+    lng: number;
+  }): Promise<number> {
     try {
-      // Check if news APIs are available and configured
-      const apiKey = import.meta.env.VITE_NEWS_API_KEY;
-
-      if (!apiKey) {
-        console.warn("News API key not configured. Using simulated data.");
-        return false;
-      }
-
-      // Test API connectivity
-      const response = await fetch(
-        `https://newsapi.org/v2/everything?q=safety&apiKey=${apiKey}&pageSize=1`,
-      );
-
-      if (response.ok) {
-        console.log("News API integration successful");
-        return true;
-      } else {
-        console.warn("News API test failed, using simulated data");
-        return false;
-      }
+      const analysis = await this.analyzeSafetyNews(location, 5);
+      return analysis.overallSafetyScore;
     } catch (error) {
-      console.warn("News API integration failed:", error);
-      return false;
+      console.error("Failed to get location safety score:", error);
+      return 75; // Default safe score
     }
   }
 
-  // Method to clear cache
-  clearCache(): void {
-    this.cache.clear();
-  }
-
-  // Method to get cache statistics
-  getCacheStats(): { size: number; oldestEntry: number } {
-    const now = Date.now();
-    let oldestEntry = now;
-
-    this.cache.forEach((value) => {
-      if (value.timestamp < oldestEntry) {
-        oldestEntry = value.timestamp;
-      }
-    });
-
-    return {
-      size: this.cache.size,
-      oldestEntry: oldestEntry === now ? 0 : now - oldestEntry,
-    };
+  // Get safety incidents within radius
+  async getSafetyIncidents(
+    location: { lat: number; lng: number },
+    radiusKm: number,
+  ): Promise<NewsIncident[]> {
+    try {
+      const analysis = await this.analyzeSafetyNews(location, radiusKm);
+      return analysis.incidents;
+    } catch (error) {
+      console.error("Failed to get safety incidents:", error);
+      return [];
+    }
   }
 }
 
-// Export singleton instance
 export const newsAnalysisService = NewsAnalysisService.getInstance();
-
-// Type definitions for external use
-export type { NewsArticle, SafetyImpact };

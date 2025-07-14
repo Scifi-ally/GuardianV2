@@ -26,7 +26,10 @@ import {
 } from "lucide-react";
 import { LocationAwareMap } from "@/components/LocationAwareMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
-import { MagicNavbar } from "@/components/MagicNavbar";
+import { NavigationControls } from "@/components/NavigationControls";
+import { enhancedNavigationService } from "@/services/enhancedNavigationService";
+import { dynamicLoadingService } from "@/services/dynamicLoadingService";
+
 // Removed redundant useGeolocation - handled by LocationAwareMap
 import { useMapTheme } from "@/hooks/use-map-theme";
 import { useAuth } from "@/contexts/AuthContext";
@@ -70,6 +73,10 @@ import { RouteSelection } from "@/components/RouteSelection";
 import { routeCalculationService } from "@/services/routeCalculationService";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { CompactSearchBar } from "@/components/CompactSearchBar";
+import { EnhancedSearchBar } from "@/components/EnhancedSearchBar";
+import { navigationFixService } from "@/services/navigationFixService";
+import { NavigationTroubleshooter } from "@/components/NavigationTroubleshooter";
+import { NavigationHeader } from "@/components/NavigationHeader";
 
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 import { EmergencyServicesPanel } from "@/components/EmergencyServicesPanel";
@@ -223,6 +230,14 @@ export default function Index() {
     zoomLevel: 15,
   });
 
+  // Navigation controls state
+  const [showNavigationControls, setShowNavigationControls] = useState(false);
+  const [navigationDestination, setNavigationDestination] = useState<{
+    lat: number;
+    lng: number;
+    name?: string;
+  } | null>(null);
+
   // Location handling moved to LocationAwareMap
   const {
     mapTheme,
@@ -289,19 +304,43 @@ export default function Index() {
 
   const handleRouteSelect = useCallback((route: any) => {
     setShowRouteSelection(false);
+    const destinationPoint = route.waypoints[route.waypoints.length - 1];
     setDestination({
-      latitude: route.waypoints[route.waypoints.length - 1].latitude,
-      longitude: route.waypoints[route.waypoints.length - 1].longitude,
+      latitude: destinationPoint.latitude,
+      longitude: destinationPoint.longitude,
     });
     setIsNavigating(true);
 
-    // Silently start navigation
+    // Set navigation destination and show controls
+    setNavigationDestination({
+      lat: destinationPoint.latitude,
+      lng: destinationPoint.longitude,
+      name: route.name || "Selected Destination",
+    });
+    setShowNavigationControls(true);
+
+    // Initialize enhanced navigation service
+    if (window.google && window.google.maps) {
+      // Wait for map to be ready, then initialize navigation service
+      setTimeout(() => {
+        const mapElement = document.querySelector(".google-maps-container");
+        if (mapElement) {
+          // The enhanced navigation service will be initialized by the LocationAwareMap component
+          unifiedNotifications.success("Route Selected", {
+            message: "Ready to start navigation - choose your travel mode",
+          });
+        }
+      }, 500);
+    }
   }, []);
 
-  // Initialize real-time data monitoring
+  // Initialize real-time data monitoring and dynamic loading
   useEffect(() => {
     const initializeTracking = async () => {
       try {
+        // Initialize dynamic loading service
+        dynamicLoadingService.adaptivePreload();
+
         // Start real-time tracking with error handling
         await realTimeDataService.startTracking();
 
@@ -596,25 +635,37 @@ export default function Index() {
         <PerformanceOptimizer />
         {/* ClickableFixes removed - debug component */}
         {/* Compact Navigation Header - Reduced Height */}
-        {/* Compact Search Bar */}
-        <CompactSearchBar
-          fromLocation={fromLocation}
-          setFromLocation={setFromLocation}
-          toLocation={toLocation}
-          setToLocation={setToLocation}
-          onSearch={handleSearch}
-          onUseCurrentLocation={handleUseCurrentLocation}
-          location={
-            location
-              ? {
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                  accuracy: 10, // Default accuracy
-                  timestamp: Date.now(), // Current timestamp
-                }
-              : null
-          }
-          isSearching={isNavigating}
+        {/* Navigation Header with Enhanced Search */}
+        <NavigationHeader
+          onPlaceSelect={(place) => {
+            console.log("🎯 Place selected:", place);
+            setToLocation(place.name);
+            setDestination({
+              latitude: place.location.lat,
+              longitude: place.location.lng,
+            });
+          }}
+          onNavigationStart={(destination) => {
+            console.log("🧭 Starting navigation to:", destination);
+            setIsNavigating(true);
+            setDestination({
+              latitude: destination.lat,
+              longitude: destination.lng,
+            });
+          }}
+          onMenuClick={() => {
+            console.log("Menu clicked");
+            // Add menu functionality
+          }}
+          onSettingsClick={() => {
+            console.log("Settings clicked");
+            // Add settings functionality
+          }}
+          onSOSClick={() => {
+            console.log("SOS clicked");
+            // Add SOS functionality
+          }}
+          location={location}
         />
 
         {/* Clear Route Button */}
@@ -679,6 +730,19 @@ export default function Index() {
               longitude: -122.4194 + Math.random() * 0.01,
             }))}
             onLocationUpdate={(newLocation) => {}}
+            enableNavigationClick={true}
+            onMapClick={(clickLocation) => {
+              // Set clicked location as navigation destination
+              setNavigationDestination({
+                lat: clickLocation.lat,
+                lng: clickLocation.lng,
+                name: "Map Location",
+              });
+              setShowNavigationControls(true);
+              unifiedNotifications.success("Destination Set", {
+                message: "Tap to start navigation to this location",
+              });
+            }}
           />
         </div>
 
@@ -710,7 +774,7 @@ export default function Index() {
           minHeight={200}
           maxHeight={Math.floor(window.innerHeight * 0.8)}
           initialHeight={Math.floor(window.innerHeight * 0.45)}
-          bottomOffset={80}
+          bottomOffset={96}
           collapsedHeight={60}
           onTouchOutside={() => {}}
         >
@@ -1328,8 +1392,14 @@ export default function Index() {
           </motion.div>
         </SlideUpPanel>
 
+        {/* Navigation Controls */}
+        <NavigationControls
+          isVisible={showNavigationControls}
+          onClose={() => setShowNavigationControls(false)}
+          destination={navigationDestination}
+        />
+
         {/* Magic Navbar */}
-        <MagicNavbar />
       </div>
     </ErrorBoundary>
   );
