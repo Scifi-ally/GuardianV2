@@ -5,7 +5,6 @@ import {
   Bell,
   Shield,
   MapPin,
-  Moon,
   Sun,
   Smartphone,
   Volume2,
@@ -49,7 +48,6 @@ export default function Settings() {
       emergencyOnly: false,
     },
     privacy: {
-      shareLocation: true,
       anonymousReporting: true,
       dataSaving: false,
       highAccuracyMode: false,
@@ -60,7 +58,6 @@ export default function Settings() {
       vibrationEnabled: true,
     },
     appearance: {
-      darkMode: false,
       language: "en",
     },
   });
@@ -219,14 +216,6 @@ export default function Settings() {
       icon: Lock,
       items: [
         {
-          id: "shareLocation",
-          label: "Location Sharing",
-          description: "Allow sharing location with contacts",
-          type: "switch",
-          value: settings.privacy.shareLocation,
-          category: "privacy" as const,
-        },
-        {
           id: "anonymousReporting",
           label: "Anonymous Reporting",
           description: "Submit safety reports anonymously",
@@ -257,14 +246,6 @@ export default function Settings() {
       title: "Appearance",
       icon: Sun,
       items: [
-        {
-          id: "darkMode",
-          label: "Dark Mode",
-          description: "Use dark theme",
-          type: "switch",
-          value: settings.appearance.darkMode,
-          category: "appearance" as const,
-        },
         {
           id: "language",
           label: "Language",
@@ -493,8 +474,8 @@ Guardian Safety App v1.0.0
 Guardian is an AI-powered safety application designed to keep you protected through intelligent location tracking, real-time threat analysis, and seamless emergency response.
 
 ✨ Key Features:
-• Real-time location sharing with trusted contacts
 • AI-powered safety score analysis for any location
+• Emergency contact notification system
 • Smart context-aware safety recommendations
 • One-tap emergency contact alerting
 • Intelligent route planning for safer travel
@@ -507,7 +488,7 @@ Guardian is an AI-powered safety application designed to keep you protected thro
 • No data shared with third parties without explicit consent
 • Full control over your privacy settings
 
-🏆 Recognition:
+�� Recognition:
 • Winner: Best Safety Innovation 2024
 • Featured in Top Security Apps by Tech Safety Review
 • Trusted by 100,000+ users worldwide

@@ -758,13 +758,58 @@ class EnhancedLocationService {
 
   // Permission handling
   private async requestPermission(): Promise<PermissionState> {
-    if ("permissions" in navigator) {
-      const permission = await navigator.permissions.query({
-        name: "geolocation",
+    try {
+      // First check current permission status
+      if ("permissions" in navigator) {
+        const permission = await navigator.permissions.query({
+          name: "geolocation",
+        });
+
+        if (permission.state === "granted") {
+          return "granted";
+        }
+
+        if (permission.state === "denied") {
+          // Show user-friendly message for denied permission
+          notifications.error({
+            title: "Location Access Required",
+            description:
+              "Please enable location access in your browser settings to use Guardian Safety features.",
+          });
+          return "denied";
+        }
+      }
+
+      // For 'prompt' state or unknown, try to trigger the permission prompt
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            resolve("granted");
+          },
+          (error) => {
+            if (error.code === 1) {
+              // PERMISSION_DENIED
+              notifications.error({
+                title: "Location Permission Required",
+                description:
+                  "Guardian Safety needs location access to provide emergency services. Please click 'Allow' when prompted.",
+              });
+              resolve("denied");
+            } else {
+              resolve("granted"); // Other errors don't mean permission denied
+            }
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 60000,
+          },
+        );
       });
-      return permission.state;
+    } catch (error) {
+      console.warn("Permission request failed:", error);
+      return "granted"; // Assume granted for older browsers
     }
-    return "granted"; // Assume granted for older browsers
   }
 
   async getPermissionStatus(): Promise<string> {

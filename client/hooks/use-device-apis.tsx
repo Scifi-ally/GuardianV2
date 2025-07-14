@@ -23,8 +23,7 @@ export function useDeviceMotion() {
     acceleration: null,
     rotationRate: null,
   });
-  const [isShaking, setIsShaking] = useState(false);
-  const lastShakeTime = useRef<number>(0);
+  // Removed shake detection functionality
 
   useEffect(() => {
     const handleMotion = (event: DeviceMotionEvent) => {
@@ -43,19 +42,7 @@ export function useDeviceMotion() {
             : null,
         });
 
-        // Shake detection
-        const totalAcceleration = Math.sqrt(
-          (acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2,
-        );
-
-        if (totalAcceleration > 15) {
-          const now = Date.now();
-          if (now - lastShakeTime.current > 1000) {
-            setIsShaking(true);
-            lastShakeTime.current = now;
-            setTimeout(() => setIsShaking(false), 2000);
-          }
-        }
+        // Removed shake detection for safety
       }
     };
 
@@ -78,7 +65,7 @@ export function useDeviceMotion() {
     return true;
   };
 
-  return { motion, isShaking, requestPermission };
+  return { motion, requestPermission };
 }
 
 export function useGeolocation() {
@@ -195,25 +182,37 @@ export function useGeolocation() {
 
   const requestPermission = useCallback(async () => {
     try {
-      const locationService = await getEnhancedLocationService();
-      const permission = await locationService.getPermissionStatus();
-      setPermissionStatus(permission);
-
-      if (permission === "granted") {
-        await getCurrentLocation();
-        return true;
-      } else if (permission === "prompt" || permission === "unknown") {
-        // Try to get location which will prompt for permission
-        await getCurrentLocation();
-        return true;
-      } else {
-        throw new Error("Location permission denied");
+      // First check if geolocation is supported
+      if (!navigator.geolocation) {
+        throw new Error("Geolocation is not supported by this browser");
       }
+
+      // Check current permission status
+      if ("permissions" in navigator) {
+        const permission = await navigator.permissions.query({
+          name: "geolocation",
+        });
+        setPermissionStatus(permission.state);
+
+        if (permission.state === "denied") {
+          throw new Error(
+            "Location permission was denied. Please enable it in your browser settings.",
+          );
+        }
+      }
+
+      // Try to get current location which will trigger permission prompt if needed
+      const locationService = await getEnhancedLocationService();
+      await locationService.getCurrentLocation();
+      setPermissionStatus("granted");
+      return true;
     } catch (err: any) {
-      setError(err.message || "Permission request failed");
+      console.error("Permission request failed:", err);
+      setError(err.message || "Failed to request location permission");
+      setPermissionStatus("denied");
       return false;
     }
-  }, [getCurrentLocation]);
+  }, []);
 
   return {
     location,

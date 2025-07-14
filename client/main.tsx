@@ -28,6 +28,8 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import { FullPageLoading } from "@/components/LoadingAnimation";
+import { SplashScreen } from "@/components/SplashScreen";
+import { useCapacitor } from "@/hooks/use-capacitor";
 
 const queryClient = new QueryClient();
 
@@ -185,23 +187,53 @@ function AnimatedRoutes() {
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AuthProvider>
-        <SOSSettingsProvider>
-          <TooltipProvider>
-            <UnifiedNotificationSystem />
-            <BrowserRouter>
-              <div className="relative w-full min-h-screen bg-background">
-                <AnimatedRoutes />
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </SOSSettingsProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showSplash, setShowSplash] = useState(true);
+  const { isReady } = useCapacitor();
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
+
+  // Don't render main app until Capacitor is ready and splash is complete
+  if (!isReady || showSplash) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          forcedTheme="light"
+        >
+          <SplashScreen onComplete={handleSplashComplete} duration={3000} />
+        </ThemeProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem={false}
+        forcedTheme="light"
+      >
+        <AuthProvider>
+          <SOSSettingsProvider>
+            <TooltipProvider>
+              <UnifiedNotificationSystem />
+              <BrowserRouter>
+                <div className="relative w-full min-h-screen bg-background">
+                  <AnimatedRoutes />
+                </div>
+              </BrowserRouter>
+            </TooltipProvider>
+          </SOSSettingsProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);

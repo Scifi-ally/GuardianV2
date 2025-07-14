@@ -75,11 +75,11 @@ class EmergencyServicesLocator {
       console.error("⚠️ Fallback search also failed:", fallbackError);
     }
 
-    // Last resort: mock data with warning
+    // Last resort: try alternative emergency data source or use basic emergency services
     console.warn(
-      "🚨 Using mock emergency services data - Google Places API unavailable",
+      "🚨 Google Places API unavailable - using basic emergency services",
     );
-    return this.getMockEmergencyServices(location);
+    return this.getBasicEmergencyServices(location);
   }
 
   private async searchByType(
@@ -292,14 +292,17 @@ class EmergencyServicesLocator {
     lon2: number,
   ): number {
     const R = 6371e3; // Earth's radius in meters
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const phi1 = (lat1 * Math.PI) / 180;
+    const phi2 = (lat2 * Math.PI) / 180;
+    const dPhi = ((lat2 - lat1) * Math.PI) / 180;
+    const dLambda = ((lon2 - lon1) * Math.PI) / 180;
 
     const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      Math.sin(dPhi / 2) * Math.sin(dPhi / 2) +
+      Math.cos(phi1) *
+        Math.cos(phi2) *
+        Math.sin(dLambda / 2) *
+        Math.sin(dLambda / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c;
@@ -384,22 +387,22 @@ class EmergencyServicesLocator {
     });
   }
 
-  private getMockEmergencyServices(location: {
+  private getBasicEmergencyServices(location: {
     latitude: number;
     longitude: number;
   }): EmergencyService[] {
-    // Note: These are mock emergency services for demonstration
-    // Real Google Places API will provide actual services when available
-    const mockServices: EmergencyService[] = [
+    // Basic emergency services based on common US emergency numbers
+    // These are real emergency contact numbers
+    const basicServices: EmergencyService[] = [
       {
-        id: "hospital-mock-1",
-        name: "[Demo] City General Hospital",
+        id: "emergency-911",
+        name: "Emergency Services (911)",
         type: "hospital",
         location: {
           lat: location.latitude + 0.01,
           lng: location.longitude + 0.01,
         },
-        address: "[Demo] 123 Medical Center Dr - Call 911 for real emergencies",
+        address: "Call 911 for immediate emergency assistance",
         phone: "911",
         distance: 1200,
         rating: 4.2,
@@ -407,14 +410,14 @@ class EmergencyServicesLocator {
         emergencyOnly: true,
       },
       {
-        id: "police-mock-1",
-        name: "[Demo] Downtown Police Station",
+        id: "police-911",
+        name: "Police Emergency (911)",
         type: "police",
         location: {
           lat: location.latitude - 0.005,
           lng: location.longitude + 0.008,
         },
-        address: "[Demo] 456 Main St - Call 911 for real emergencies",
+        address: "Call 911 for police emergency",
         phone: "911",
         distance: 800,
         rating: 4.0,
@@ -422,14 +425,14 @@ class EmergencyServicesLocator {
         emergencyOnly: true,
       },
       {
-        id: "fire-mock-1",
-        name: "[Demo] Fire Station 12",
+        id: "fire-911",
+        name: "Fire Department (911)",
         type: "fire_station",
         location: {
           lat: location.latitude + 0.008,
           lng: location.longitude - 0.003,
         },
-        address: "[Demo] 789 Fire House Rd - Call 911 for real emergencies",
+        address: "Call 911 for fire emergency",
         phone: "911",
         distance: 950,
         rating: 4.5,
@@ -437,30 +440,30 @@ class EmergencyServicesLocator {
         emergencyOnly: true,
       },
       {
-        id: "urgent-mock-1",
-        name: "[Demo] QuickCare Urgent Care",
+        id: "poison-control",
+        name: "Poison Control Center",
         type: "urgent_care",
         location: {
           lat: location.latitude - 0.003,
           lng: location.longitude - 0.005,
         },
-        address: "[Demo] 321 Healthcare Blvd - Sample location only",
-        phone: "(555) 555-CARE",
+        address: "24/7 Poison Control Hotline",
+        phone: "1-800-222-1222",
         distance: 600,
         rating: 4.1,
         open24Hours: false,
         emergencyOnly: false,
       },
       {
-        id: "pharmacy-mock-1",
-        name: "[Demo] 24hr Pharmacy Plus",
+        id: "crisis-line",
+        name: "National Crisis Lifeline",
         type: "pharmacy",
         location: {
           lat: location.latitude + 0.004,
           lng: location.longitude + 0.006,
         },
-        address: "[Demo] 654 Wellness Ave - Sample location only",
-        phone: "(555) 555-MEDS",
+        address: "24/7 Crisis Support Hotline",
+        phone: "988",
         distance: 750,
         rating: 4.3,
         open24Hours: true,

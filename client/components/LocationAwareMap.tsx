@@ -217,8 +217,8 @@ export function LocationAwareMap({
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-4">
-                This app needs access to your location to show you the map and
-                provide location-based safety features.
+                Guardian Safety needs your location to provide emergency
+                services, safety alerts, and location-based features.
               </p>
               <Button
                 onClick={handleRequestLocation}

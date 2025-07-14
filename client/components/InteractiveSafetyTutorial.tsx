@@ -29,6 +29,7 @@ import {
   Lock,
   Smartphone,
   Clock,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -64,64 +65,51 @@ export function InteractiveSafetyTutorial({
   const tutorialSteps: TutorialStep[] = [
     {
       id: "welcome",
-      title: "Welcome to Guardian Safety",
-      description:
-        "Your complete guide to staying safe with Guardian's emergency features",
+      title: "Welcome to Guardian",
+      description: "Your emergency safety guide",
       icon: Shield,
       type: "info",
     },
     {
       id: "sos-demo",
-      title: "Emergency SOS System",
-      description:
-        "Learn how to trigger emergency alerts that could save your life",
+      title: "Emergency SOS",
+      description: "Learn emergency alert system",
       icon: AlertTriangle,
       type: "interactive",
       component: SOSDemo,
-      completionCriteria: "Practice the SOS button sequence",
+      completionCriteria: "Try SOS button",
     },
     {
       id: "guardian-key",
-      title: "Your Guardian Key",
-      description:
-        "Share your unique key with trusted people for emergency network",
+      title: "Guardian Key",
+      description: "Share your emergency key",
       icon: Key,
       type: "practice",
       component: GuardianKeyPractice,
-      completionCriteria: "Copy your Guardian Key",
+      completionCriteria: "Copy your key",
     },
     {
       id: "emergency-contacts",
-      title: "Emergency Contact Network",
-      description: "Build your safety network with trusted contacts",
+      title: "Emergency Contacts",
+      description: "Understand priority system",
       icon: Users,
       type: "interactive",
       component: EmergencyContactsDemo,
-      completionCriteria: "Understand contact priority system",
+      completionCriteria: "Learn priorities",
     },
     {
       id: "location-services",
-      title: "Location & Navigation",
-      description: "Enable location services for accurate emergency response",
+      title: "Location Services",
+      description: "Test location permissions",
       icon: MapPin,
       type: "practice",
       component: LocationServicesDemo,
-      completionCriteria: "Test location permissions",
-    },
-    {
-      id: "safety-scenarios",
-      title: "Real-World Safety Scenarios",
-      description: "Practice what to do in different emergency situations",
-      icon: Target,
-      type: "interactive",
-      component: SafetyScenarios,
-      completionCriteria: "Complete 3 safety scenarios",
+      completionCriteria: "Enable location",
     },
     {
       id: "completion",
-      title: "You're Ready to Stay Safe!",
-      description:
-        "Congratulations! You've mastered Guardian's safety features",
+      title: "Ready to Stay Safe!",
+      description: "You've mastered Guardian safety",
       icon: Award,
       type: "completion",
     },
@@ -136,7 +124,7 @@ export function InteractiveSafetyTutorial({
 
     setTimeout(() => {
       nextStep();
-    }, 1000);
+    }, 800);
   };
 
   const handleStepSkip = () => {
@@ -148,8 +136,6 @@ export function InteractiveSafetyTutorial({
       setCurrentStep(currentStep + 1);
       setIsStepCompleted(false);
     } else {
-      // Tutorial completed
-      // Silently complete tutorial
       localStorage.setItem("guardian-tutorial-completed", "true");
       onClose();
     }
@@ -169,95 +155,91 @@ export function InteractiveSafetyTutorial({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] overflow-hidden p-0 bg-white">
+      <DialogContent className="w-[96vw] max-w-md h-[92vh] overflow-hidden p-0 bg-white">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="flex flex-col h-[90vh] max-h-[90vh]"
+          className="flex flex-col h-full"
         >
-          {/* Header */}
-          <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-green-50 flex-shrink-0">
+          {/* Compact Header */}
+          <DialogHeader className="px-4 py-3 border-b bg-gradient-to-r from-blue-50 to-green-50 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Shield className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-blue-100 rounded-md">
+                  <Shield className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <DialogTitle className="text-lg font-bold text-black">
-                    Guardian Safety Tutorial
+                  <DialogTitle className="text-sm font-bold text-black">
+                    Guardian Safety
                   </DialogTitle>
-                  <p className="text-sm text-gray-600">
-                    Step {currentStep + 1} of {tutorialSteps.length}
+                  <p className="text-xs text-gray-600">
+                    {currentStep + 1}/{tutorialSteps.length}
                   </p>
                 </div>
               </div>
               <Button
                 variant="ghost"
-                onClick={skipTutorial}
-                className="text-gray-500 hover:text-gray-700 text-sm"
+                onClick={onClose}
+                className="p-1 h-auto"
                 size="sm"
               >
-                Skip Tutorial
+                <X className="h-4 w-4 text-gray-500" />
               </Button>
             </div>
 
-            {/* Progress Bar */}
-            <div className="mt-3">
-              <div className="flex justify-between text-xs text-gray-600 mb-2">
-                <span>Progress</span>
-                <span>{Math.round(progress)}% Complete</span>
-              </div>
-              <Progress value={progress} className="h-2" />
+            {/* Compact Progress */}
+            <div className="mt-2">
+              <Progress value={progress} className="h-1.5" />
             </div>
           </DialogHeader>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
+          {/* Compact Content */}
+          <div className="flex-1 overflow-y-auto px-3 py-2 min-h-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-6 pb-6"
+                transition={{ duration: 0.2 }}
+                className="space-y-3 pb-3"
               >
-                {/* Step Header */}
-                <div className="text-center space-y-4">
+                {/* Compact Step Header */}
+                <div className="text-center space-y-2">
                   <div className="flex justify-center">
                     <div
-                      className={`p-4 rounded-full ${
+                      className={`p-2 rounded-full ${
                         isStepCompleted ? "bg-green-100" : "bg-gray-100"
                       } transition-colors duration-300`}
                     >
                       {isStepCompleted ? (
-                        <CheckCircle className="h-8 w-8 text-green-600" />
+                        <CheckCircle className="h-5 w-5 text-green-600" />
                       ) : (
-                        <currentStepData.icon className="h-8 w-8 text-gray-600" />
+                        <currentStepData.icon className="h-5 w-5 text-gray-600" />
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <h2 className="text-2xl font-bold text-black mb-2">
+                    <h2 className="text-lg font-bold text-black mb-1">
                       {currentStepData.title}
                     </h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto">
+                    <p className="text-sm text-gray-600">
                       {currentStepData.description}
                     </p>
                   </div>
 
                   {currentStepData.completionCriteria && (
-                    <Badge variant="outline" className="text-sm">
-                      <Target className="h-4 w-4 mr-2" />
-                      Goal: {currentStepData.completionCriteria}
+                    <Badge variant="outline" className="text-xs">
+                      <Target className="h-3 w-3 mr-1" />
+                      {currentStepData.completionCriteria}
                     </Badge>
                   )}
                 </div>
 
                 {/* Step Content */}
-                <div className="max-w-2xl mx-auto">
+                <div>
                   {currentStepData.component ? (
                     <currentStepData.component
                       onComplete={handleStepComplete}
@@ -274,22 +256,23 @@ export function InteractiveSafetyTutorial({
             </AnimatePresence>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 border-t bg-gray-50 flex justify-between items-center flex-shrink-0">
+          {/* Compact Footer */}
+          <div className="px-3 py-2 border-t bg-gray-50 flex justify-between items-center flex-shrink-0">
             <Button
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 0}
               size="sm"
+              className="text-xs px-2 py-1 h-7"
             >
-              Previous
+              Back
             </Button>
 
-            <div className="flex space-x-2">
+            <div className="flex space-x-1">
               {tutorialSteps.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-2 h-2 rounded-full transition-colors ${
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
                     index === currentStep
                       ? "bg-blue-600"
                       : completedSteps.has(index)
@@ -303,21 +286,21 @@ export function InteractiveSafetyTutorial({
             {!isStepCompleted && !currentStepData.component && (
               <Button
                 onClick={nextStep}
-                className="bg-blue-600 text-white hover:bg-blue-700"
+                className="bg-blue-600 text-white hover:bg-blue-700 text-xs px-2 py-1 h-7"
                 size="sm"
               >
-                {currentStep === tutorialSteps.length - 1 ? "Finish" : "Next"}
-                <ArrowRight className="h-4 w-4 ml-2" />
+                {currentStep === tutorialSteps.length - 1 ? "Done" : "Next"}
+                <ArrowRight className="h-3 w-3 ml-1" />
               </Button>
             )}
 
             {isStepCompleted && (
               <Button
                 onClick={nextStep}
-                className="bg-green-600 text-white hover:bg-green-700"
+                className="bg-green-600 text-white hover:bg-green-700 text-xs px-2 py-1 h-7"
                 size="sm"
               >
-                <CheckCircle className="h-4 w-4 mr-2" />
+                <CheckCircle className="h-3 w-3 mr-1" />
                 Continue
               </Button>
             )}
@@ -328,7 +311,7 @@ export function InteractiveSafetyTutorial({
   );
 }
 
-// Default step content for info steps
+// Compact default step content
 function DefaultStepContent({
   step,
   onComplete,
@@ -339,19 +322,19 @@ function DefaultStepContent({
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
-    }, 2000);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
 
   return (
     <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
-      <CardContent className="p-8 text-center">
-        <div className="space-y-4">
-          <step.icon className="h-16 w-16 text-blue-600 mx-auto" />
-          <div className="space-y-3">
-            <h3 className="text-xl font-semibold text-black">{step.title}</h3>
-            <p className="text-gray-600">{step.description}</p>
+      <CardContent className="p-4 text-center">
+        <div className="space-y-3">
+          <step.icon className="h-8 w-8 text-blue-600 mx-auto" />
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold text-black">{step.title}</h3>
+            <p className="text-sm text-gray-600">{step.description}</p>
           </div>
         </div>
       </CardContent>
@@ -359,7 +342,7 @@ function DefaultStepContent({
   );
 }
 
-// SOS Demo Component
+// Compact SOS Demo Component
 function SOSDemo({
   onComplete,
   onSkip,
@@ -382,8 +365,7 @@ function SOSDemo({
           clearInterval(timerRef.current);
           setIsPressed(false);
           setDemoCompleted(true);
-          // Silently complete SOS demo
-          setTimeout(onComplete, 1500);
+          setTimeout(onComplete, 1000);
           return 0;
         }
         return prev - 1;
@@ -408,29 +390,26 @@ function SOSDemo({
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <Card className="bg-red-50 border-red-200">
-        <CardContent className="p-6">
-          <div className="text-center space-y-4">
-            <AlertTriangle className="h-12 w-12 text-red-600 mx-auto" />
+        <CardContent className="p-3">
+          <div className="text-center space-y-2">
+            <AlertTriangle className="h-6 w-6 text-red-600 mx-auto" />
             <div>
-              <h3 className="text-lg font-semibold text-black mb-2">
-                Emergency SOS Button
+              <h3 className="text-sm font-semibold text-black mb-1">
+                Emergency SOS
               </h3>
-              <p className="text-gray-600">
-                In a real emergency, press and hold the SOS button for 3
-                seconds. This will alert all your emergency contacts with your
-                location.
+              <p className="text-xs text-gray-600">
+                Press and hold for 3 seconds to alert emergency contacts with
+                your location.
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="text-center space-y-6">
-        <p className="text-black font-medium text-lg">
-          Try the SOS button demo:
-        </p>
+      <div className="text-center space-y-3">
+        <p className="text-black font-medium text-sm">Try the SOS demo:</p>
 
         <div className="relative">
           <Button
@@ -440,7 +419,7 @@ function SOSDemo({
             onTouchStart={startSOSDemo}
             onTouchEnd={cancelDemo}
             disabled={demoCompleted}
-            className={`h-24 w-24 rounded-full text-white font-bold text-xl transition-all ${
+            className={`h-16 w-16 rounded-full text-white font-bold text-lg transition-all ${
               isPressed
                 ? "bg-red-700 scale-110 animate-pulse"
                 : demoCompleted
@@ -449,7 +428,7 @@ function SOSDemo({
             }`}
           >
             {demoCompleted ? (
-              <CheckCircle className="h-10 w-10" />
+              <CheckCircle className="h-6 w-6" />
             ) : isPressed ? (
               countdown
             ) : (
@@ -458,25 +437,30 @@ function SOSDemo({
           </Button>
 
           {isPressed && (
-            <div className="absolute inset-0 rounded-full border-4 border-red-300 animate-ping" />
+            <div className="absolute inset-0 rounded-full border-2 border-red-300 animate-ping" />
           )}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {!demoCompleted ? (
             <>
-              <p className="text-gray-600">
+              <p className="text-xs text-gray-600">
                 {isPressed
                   ? `Hold for ${countdown} more seconds...`
-                  : "Press and hold the SOS button for 3 seconds"}
+                  : "Press and hold the SOS button"}
               </p>
-              <Button variant="outline" onClick={onSkip}>
+              <Button
+                variant="outline"
+                onClick={onSkip}
+                size="sm"
+                className="text-xs"
+              >
                 Skip Demo
               </Button>
             </>
           ) : (
-            <p className="text-green-600 font-medium text-lg">
-              ✓ Demo completed! You know how to use the SOS button.
+            <p className="text-green-600 font-medium text-sm">
+              ✓ Demo completed!
             </p>
           )}
         </div>
@@ -485,7 +469,7 @@ function SOSDemo({
   );
 }
 
-// Guardian Key Practice Component
+// Compact Guardian Key Practice Component
 function GuardianKeyPractice({
   onComplete,
   onSkip,
@@ -501,76 +485,75 @@ function GuardianKeyPractice({
       const success = await copyToClipboard(userProfile.guardianKey);
       if (success) {
         setCopied(true);
-        // Silently copy Guardian Key
-        setTimeout(onComplete, 1500);
+        toast.success("Guardian Key copied!");
+        setTimeout(onComplete, 1000);
       } else {
-        toast.error("Failed to copy key. Please try again.");
+        toast.error("Failed to copy key");
       }
     } else {
-      toast.error(
-        "No Guardian Key found. Please generate one in your profile.",
-      );
+      toast.error("No Guardian Key found");
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="p-6">
-          <div className="text-center space-y-4">
-            <Key className="h-12 w-12 text-blue-600 mx-auto" />
+        <CardContent className="p-3">
+          <div className="text-center space-y-2">
+            <Key className="h-6 w-6 text-blue-600 mx-auto" />
             <div>
-              <h3 className="text-lg font-semibold text-black mb-2">
+              <h3 className="text-sm font-semibold text-black mb-1">
                 Your Guardian Key
               </h3>
-              <p className="text-gray-600">
-                This unique key allows trusted contacts to add you to their
-                emergency network. When you share this key, they'll receive your
-                emergency alerts.
+              <p className="text-xs text-gray-600">
+                Share this key with trusted contacts to join their emergency
+                network.
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="text-center space-y-6">
-        <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300">
-          <div className="font-mono text-2xl font-bold text-black tracking-widest mb-2">
+      <div className="text-center space-y-3">
+        <div className="bg-gray-50 p-3 rounded-lg border border-dashed border-gray-300">
+          <div className="font-mono text-sm font-bold text-black tracking-wide break-all">
             {userProfile?.guardianKey || "NO-KEY-AVAILABLE"}
           </div>
-          <p className="text-sm text-gray-600">Your unique Guardian Key</p>
+          <p className="text-xs text-gray-600 mt-1">Your Guardian Key</p>
         </div>
 
         <Button
           onClick={handleCopyKey}
           disabled={copied || !userProfile?.guardianKey}
-          className={`${copied ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"} text-white px-8 py-3 text-lg`}
+          className={`${copied ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"} text-white px-4 py-2 text-sm w-full`}
         >
           {copied ? (
             <>
-              <CheckCircle className="h-5 w-5 mr-2" />
-              Copied Successfully!
+              <CheckCircle className="h-4 w-4 mr-1" />
+              Copied!
             </>
           ) : (
             <>
-              <Copy className="h-5 w-5 mr-2" />
-              Copy Guardian Key
+              <Copy className="h-4 w-4 mr-1" />
+              Copy Key
             </>
           )}
         </Button>
 
-        <div className="text-gray-600 space-y-2">
-          <p>Share this key with family and close friends</p>
-          <Button variant="outline" onClick={onSkip}>
-            Skip Practice
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={onSkip}
+          size="sm"
+          className="text-xs"
+        >
+          Skip
+        </Button>
       </div>
     </div>
   );
 }
 
-// Emergency Contacts Demo Component
+// Compact Emergency Contacts Demo Component
 function EmergencyContactsDemo({
   onComplete,
   onSkip,
@@ -585,23 +568,20 @@ function EmergencyContactsDemo({
     {
       level: 1,
       name: "First Contact",
-      description: "Called immediately during emergency",
+      description: "Called immediately",
       color: "bg-red-500",
-      textColor: "text-red-700",
     },
     {
       level: 2,
-      name: "Secondary Contact",
-      description: "Called if first contact doesn't respond",
+      name: "Secondary",
+      description: "Called if first doesn't respond",
       color: "bg-yellow-500",
-      textColor: "text-yellow-700",
     },
     {
       level: 3,
-      name: "Backup Contact",
-      description: "Additional support and notification",
+      name: "Backup",
+      description: "Additional notification",
       color: "bg-green-500",
-      textColor: "text-green-700",
     },
   ];
 
@@ -609,36 +589,34 @@ function EmergencyContactsDemo({
     setSelectedPriority(level);
     setTimeout(() => {
       setUnderstood(true);
-      // Silently confirm understanding
-      setTimeout(onComplete, 1000);
-    }, 1000);
+      setTimeout(onComplete, 800);
+    }, 800);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <Card className="bg-green-50 border-green-200">
-        <CardContent className="p-6">
-          <div className="text-center space-y-4">
-            <Users className="h-12 w-12 text-green-600 mx-auto" />
+        <CardContent className="p-3">
+          <div className="text-center space-y-2">
+            <Users className="h-6 w-6 text-green-600 mx-auto" />
             <div>
-              <h3 className="text-lg font-semibold text-black mb-2">
-                Emergency Contact Priority
+              <h3 className="text-sm font-semibold text-black mb-1">
+                Contact Priority
               </h3>
-              <p className="text-gray-600">
-                Learn how the priority system works to ensure the right people
-                are contacted first during emergencies.
+              <p className="text-xs text-gray-600">
+                Learn how contacts are called during emergencies.
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        <p className="text-black font-medium text-center text-lg">
-          Click on a priority level to learn more:
+      <div className="space-y-2">
+        <p className="text-black font-medium text-center text-sm">
+          Tap a priority level:
         </p>
 
-        <div className="grid gap-4">
+        <div className="space-y-2">
           {priorities.map((priority) => (
             <motion.div
               key={priority.level}
@@ -648,24 +626,24 @@ function EmergencyContactsDemo({
               <Card
                 className={`cursor-pointer transition-all ${
                   selectedPriority === priority.level
-                    ? "border-blue-500 bg-blue-50 shadow-lg"
-                    : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+                    ? "border-blue-500 bg-blue-50 shadow-md"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
                 onClick={() => handlePrioritySelect(priority.level)}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-6 h-6 rounded-full ${priority.color}`} />
+                <CardContent className="p-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-4 h-4 rounded-full ${priority.color}`} />
                     <div className="flex-1">
-                      <div className="font-medium text-black text-lg">
-                        Priority {priority.level} - {priority.name}
+                      <div className="font-medium text-black text-sm">
+                        {priority.level}. {priority.name}
                       </div>
-                      <div className="text-gray-600">
+                      <div className="text-xs text-gray-600">
                         {priority.description}
                       </div>
                     </div>
                     {selectedPriority === priority.level && (
-                      <CheckCircle className="h-6 w-6 text-green-600" />
+                      <CheckCircle className="h-4 w-4 text-green-600" />
                     )}
                   </div>
                 </CardContent>
@@ -676,16 +654,21 @@ function EmergencyContactsDemo({
 
         {understood && (
           <div className="text-center">
-            <Badge className="bg-green-100 text-green-800 px-4 py-2">
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Priority system understood!
+            <Badge className="bg-green-100 text-green-800 px-2 py-1 text-xs">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Understood!
             </Badge>
           </div>
         )}
 
         <div className="text-center">
-          <Button variant="outline" onClick={onSkip}>
-            Skip Demo
+          <Button
+            variant="outline"
+            onClick={onSkip}
+            size="sm"
+            className="text-xs"
+          >
+            Skip
           </Button>
         </div>
       </div>
@@ -693,7 +676,7 @@ function EmergencyContactsDemo({
   );
 }
 
-// Location Services Demo Component
+// Compact Location Services Demo Component
 function LocationServicesDemo({
   onComplete,
   onSkip,
@@ -712,14 +695,24 @@ function LocationServicesDemo({
 
     try {
       if (!navigator.geolocation) {
-        throw new Error("Geolocation is not supported by this browser");
+        throw new Error("Geolocation not supported");
+      }
+
+      // Request permission properly
+      const permissionResult = await navigator.permissions.query({
+        name: "geolocation",
+      });
+
+      if (permissionResult.state === "denied") {
+        throw new Error("Location permission denied");
       }
 
       const position = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
-            maximumAge: 0,
+            timeout: 10000,
+            maximumAge: 60000,
           });
         },
       );
@@ -729,12 +722,12 @@ function LocationServicesDemo({
         lng: position.coords.longitude,
       });
       setLocationTested(true);
-      // Silently confirm location services
-      setTimeout(onComplete, 2000);
+      toast.success("Location access granted!");
+      setTimeout(onComplete, 1500);
     } catch (error) {
       console.error("Location error:", error);
       toast.error(
-        "Location access denied. Please enable location permissions for emergency features.",
+        "Location access denied. Please enable location permissions in your browser settings.",
       );
     } finally {
       setTesting(false);
@@ -742,30 +735,28 @@ function LocationServicesDemo({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <Card className="bg-purple-50 border-purple-200">
-        <CardContent className="p-6">
-          <div className="text-center space-y-4">
-            <MapPin className="h-12 w-12 text-purple-600 mx-auto" />
+        <CardContent className="p-3">
+          <div className="text-center space-y-2">
+            <MapPin className="h-6 w-6 text-purple-600 mx-auto" />
             <div>
-              <h3 className="text-lg font-semibold text-black mb-2">
+              <h3 className="text-sm font-semibold text-black mb-1">
                 Location Services
               </h3>
-              <p className="text-gray-600">
-                Your location is crucial for emergency responders to find you
-                quickly. Test your location services to ensure they work when
-                needed.
+              <p className="text-xs text-gray-600">
+                Essential for emergency responders to find you quickly.
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="text-center space-y-6">
+      <div className="text-center space-y-3">
         <Button
           onClick={testLocation}
           disabled={locationTested || testing}
-          className={`px-8 py-3 text-lg ${
+          className={`px-4 py-2 text-sm w-full ${
             locationTested
               ? "bg-green-600 hover:bg-green-700"
               : "bg-purple-600 hover:bg-purple-700"
@@ -773,222 +764,49 @@ function LocationServicesDemo({
         >
           {testing ? (
             <>
-              <Clock className="h-5 w-5 mr-2 animate-spin" />
-              Testing Location...
+              <Clock className="h-4 w-4 mr-1 animate-spin" />
+              Testing...
             </>
           ) : locationTested ? (
             <>
-              <CheckCircle className="h-5 w-5 mr-2" />
+              <CheckCircle className="h-4 w-4 mr-1" />
               Location Verified!
             </>
           ) : (
             <>
-              <MapPin className="h-5 w-5 mr-2" />
-              Test Location Services
+              <MapPin className="h-4 w-4 mr-1" />
+              Test Location
             </>
           )}
         </Button>
 
         {location && (
           <Card className="bg-green-50 border-green-200">
-            <CardContent className="p-4">
+            <CardContent className="p-2">
               <div className="text-center">
-                <p className="font-medium text-green-800 mb-2">
-                  📍 Location Found Successfully!
+                <p className="font-medium text-green-800 mb-1 text-xs">
+                  📍 Location Found!
                 </p>
-                <p className="text-green-600 font-mono text-sm">
-                  Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}
+                <p className="text-green-600 font-mono text-xs break-all">
+                  {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </p>
-                <p className="text-green-600 text-sm mt-2">
-                  ✓ Your location will be automatically shared during
-                  emergencies
+                <p className="text-green-600 text-xs mt-1">
+                  ✓ Will be shared during emergencies
                 </p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        <div className="text-gray-600">
-          <Button variant="outline" onClick={onSkip}>
-            Skip Test
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={onSkip}
+          size="sm"
+          className="text-xs"
+        >
+          Skip Test
+        </Button>
       </div>
-    </div>
-  );
-}
-
-// Safety Scenarios Component
-function SafetyScenarios({
-  onComplete,
-  onSkip,
-}: {
-  onComplete: () => void;
-  onSkip: () => void;
-}) {
-  const [completedScenarios, setCompletedScenarios] = useState<Set<number>>(
-    new Set(),
-  );
-  const [currentScenario, setCurrentScenario] = useState<number | null>(null);
-
-  const scenarios = [
-    {
-      id: 1,
-      title: "🌙 Walking Alone at Night",
-      description: "You're walking home alone and feel unsafe",
-      correctAction: "Use SOS button and share location with trusted contacts",
-      options: [
-        "Ignore the feeling and keep walking",
-        "Call 911 immediately",
-        "Use Guardian SOS to alert trusted contacts",
-        "Run to the nearest building",
-      ],
-      correctIndex: 2,
-      explanation:
-        "Guardian SOS alerts your trusted network immediately while keeping you connected to help.",
-    },
-    {
-      id: 2,
-      title: "🚗 Car Breakdown",
-      description: "Your car breaks down on a highway",
-      correctAction: "Send location to emergency contacts and call for help",
-      options: [
-        "Wait for someone to stop and help",
-        "Start walking to find help",
-        "Use Guardian to share location and call roadside assistance",
-        "Try to fix the car yourself",
-      ],
-      correctIndex: 2,
-      explanation:
-        "Sharing your location ensures help can find you quickly and safely.",
-    },
-    {
-      id: 3,
-      title: "🚑 Medical Emergency",
-      description: "Someone near you is having a medical emergency",
-      correctAction: "Call 911 and use Guardian to notify your network",
-      options: [
-        "Try to help them yourself",
-        "Call 911 and alert your Guardian network",
-        "Ask other people for help",
-        "Take them to the hospital yourself",
-      ],
-      correctIndex: 1,
-      explanation:
-        "Professional medical help is essential, and notifying your network keeps you safe too.",
-    },
-  ];
-
-  const handleAnswerSelect = (scenarioId: number, selectedIndex: number) => {
-    const scenario = scenarios.find((s) => s.id === scenarioId);
-    if (scenario && selectedIndex === scenario.correctIndex) {
-      setCompletedScenarios((prev) => new Set([...prev, scenarioId]));
-      // Silently confirm correct answer
-
-      if (completedScenarios.size + 1 >= 3) {
-        setTimeout(onComplete, 1500);
-      }
-    } else {
-      toast.error(
-        "Not the best choice. Think about the safest option and try again!",
-      );
-    }
-    setCurrentScenario(null);
-  };
-
-  return (
-    <div className="space-y-6">
-      <Card className="bg-orange-50 border-orange-200">
-        <CardContent className="p-6">
-          <div className="text-center space-y-4">
-            <Target className="h-12 w-12 text-orange-600 mx-auto" />
-            <div>
-              <h3 className="text-lg font-semibold text-black mb-2">
-                Safety Scenarios
-              </h3>
-              <p className="text-gray-600">
-                Practice making the right decisions in emergency situations.
-                Complete all scenarios to master safety protocols.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="text-center mb-4">
-        <Badge variant="outline" className="px-4 py-2">
-          {completedScenarios.size} / 3 scenarios completed
-        </Badge>
-      </div>
-
-      <div className="grid gap-4">
-        {scenarios.map((scenario) => (
-          <Card
-            key={scenario.id}
-            className={`transition-all ${
-              completedScenarios.has(scenario.id)
-                ? "border-green-500 bg-green-50 shadow-lg"
-                : currentScenario === scenario.id
-                  ? "border-blue-500 bg-blue-50 shadow-lg"
-                  : "border-gray-200 hover:shadow-md"
-            }`}
-          >
-            <CardContent className="p-4">
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-black text-lg">
-                      {scenario.title}
-                    </h4>
-                    <p className="text-gray-600 mt-1">{scenario.description}</p>
-                  </div>
-                  {completedScenarios.has(scenario.id) && (
-                    <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0 ml-2" />
-                  )}
-                </div>
-
-                {currentScenario === scenario.id ? (
-                  <div className="space-y-3">
-                    <p className="font-medium text-black">
-                      What should you do?
-                    </p>
-                    {scenario.options.map((option, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        onClick={() => handleAnswerSelect(scenario.id, index)}
-                        className="w-full text-left justify-start p-3 h-auto text-sm"
-                      >
-                        {option}
-                      </Button>
-                    ))}
-                  </div>
-                ) : !completedScenarios.has(scenario.id) ? (
-                  <Button
-                    onClick={() => setCurrentScenario(scenario.id)}
-                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Practice This Scenario
-                  </Button>
-                ) : (
-                  <div className="text-green-600 font-medium bg-green-100 p-3 rounded-lg">
-                    ✓ Completed: {scenario.correctAction}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {completedScenarios.size < 3 && (
-        <div className="text-center">
-          <Button variant="outline" onClick={onSkip}>
-            Skip Scenarios
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

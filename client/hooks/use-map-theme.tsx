@@ -1,23 +1,15 @@
 import { useState, useEffect } from "react";
 
-export type MapTheme = "light" | "dark" | "safety" | "night";
+export type MapTheme = "light" | "safety";
 export type MapType = "normal" | "satellite" | "terrain";
 
 export function useMapTheme() {
   const [mapTheme, setMapTheme] = useState<MapTheme>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("guardian-map-theme");
-      if (
-        saved === "light" ||
-        saved === "dark" ||
-        saved === "safety" ||
-        saved === "night"
-      ) {
+      if (saved === "light" || saved === "safety") {
         return saved as MapTheme;
       }
-
-      // Default to light theme instead of auto-detecting
-      return "light";
     }
     return "light";
   });
@@ -52,12 +44,8 @@ export function useMapTheme() {
     setMapTheme((current) => {
       switch (current) {
         case "light":
-          return "dark";
-        case "dark":
           return "safety";
         case "safety":
-          return "night";
-        case "night":
           return "light";
         default:
           return "light";
@@ -88,23 +76,11 @@ export function useMapTheme() {
           icon: "🌅",
           description: "Standard daylight view",
         };
-      case "dark":
-        return {
-          name: "Dark Mode",
-          icon: "🌙",
-          description: "Low-light display",
-        };
       case "safety":
         return {
           name: "Safety Mode",
           icon: "🛡️",
           description: "High-contrast safety view",
-        };
-      case "night":
-        return {
-          name: "Night Mode",
-          icon: "🌌",
-          description: "Optimized for night use",
         };
       default:
         return {

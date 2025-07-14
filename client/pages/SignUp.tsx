@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
+import { PrimaryActionButton } from "@/components/ui/animated-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,7 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isPressed, setIsPressed] = useState(false);
+
   const { signup } = useAuth();
   const navigate = useNavigate();
 
@@ -201,32 +201,18 @@ export default function SignUp() {
                 </div>
               </div>
 
-              <Button
+              <PrimaryActionButton
                 type="submit"
-                className={cn(
-                  "w-full h-12 text-base font-medium transition-all duration-100 rounded-lg",
-                  "bg-primary hover:bg-primary/90 text-primary-foreground",
-                  isPressed && "scale-[0.96]",
-                )}
-                disabled={loading}
-                onMouseDown={() => setIsPressed(true)}
-                onMouseUp={() => setIsPressed(false)}
-                onMouseLeave={() => setIsPressed(false)}
-                onTouchStart={() => setIsPressed(true)}
-                onTouchEnd={() => setIsPressed(false)}
+                className="w-full h-12 text-base font-medium rounded-lg"
+                loading={loading}
+                loadingText="Creating account..."
+                icon={<ArrowRight className="h-5 w-5" />}
+                iconPosition="right"
+                hoverScale={true}
+                pressAnimation={true}
               >
-                {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <LoadingAnimation size="sm" variant="dots" />
-                    <span>Creating account...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <span>Create Account</span>
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                )}
-              </Button>
+                Create Account
+              </PrimaryActionButton>
             </form>
           </CardContent>
         </Card>

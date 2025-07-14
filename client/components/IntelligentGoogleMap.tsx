@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Wrapper } from "@googlemaps/react-wrapper";
-import { useTheme } from "next-themes";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,7 +85,6 @@ function IntelligentGoogleMap({
   const [currentHeading, setCurrentHeading] = useState(0);
   const [isNavigationMode, setIsNavigationMode] = useState(false);
   const [autoZoom, setAutoZoom] = useState(true);
-  const { theme: globalTheme } = useTheme();
   const [currentMapTheme, setCurrentMapTheme] = useState<"light" | "dark">(
     "light",
   );
@@ -235,16 +234,9 @@ function IntelligentGoogleMap({
 
   // Sync with global theme
   useEffect(() => {
-    if (globalTheme === "dark") {
-      applyMapTheme("dark");
-    } else if (globalTheme === "light") {
-      applyMapTheme("light");
-    } else {
-      // System theme
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-      applyMapTheme(mediaQuery.matches ? "dark" : "light");
-    }
-  }, [globalTheme, map, applyMapTheme]);
+    // Always use light theme
+    applyMapTheme("light");
+  }, [map, applyMapTheme]);
 
   // Update map type when currentMapType changes
   useEffect(() => {

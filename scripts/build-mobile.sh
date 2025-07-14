@@ -1,62 +1,84 @@
 #!/bin/bash
 
-echo "🔧 Building Emergency Safety App for mobile..."
+# Guardian Safety - Mobile Build Script
+# Builds the app for iOS and Android deployment
+
+echo "🛡️ Guardian Safety - Mobile Build Script"
+echo "========================================="
+
+# Check if we're in the right directory
+if [ ! -f "capacitor.config.ts" ]; then
+  echo "❌ Error: capacitor.config.ts not found. Please run this script from the project root."
+  exit 1
+fi
+
+# Install dependencies if needed
+if [ ! -d "node_modules" ]; then
+  echo "📦 Installing dependencies..."
+  npm install
+fi
 
 # Build the web app
-echo "📦 Building web app..."
+echo "🏗️ Building web application..."
 npm run build
 
 if [ $? -ne 0 ]; then
-    echo "❌ Web build failed"
-    exit 1
+  echo "❌ Web build failed!"
+  exit 1
 fi
 
-echo "✅ Web build successful"
-
 # Sync with Capacitor
-echo "📱 Syncing with Capacitor..."
+echo "🔄 Syncing with Capacitor..."
 npx cap sync
 
 if [ $? -ne 0 ]; then
-    echo "❌ Capacitor sync failed"
-    exit 1
+  echo "❌ Capacitor sync failed!"
+  exit 1
 fi
 
-echo "✅ Capacitor sync successful"
+# Copy icons and splash screens
+echo "🎨 Copying mobile assets..."
+mkdir -p android/app/src/main/res/drawable
+mkdir -p ios/App/App/Assets.xcassets/AppIcon.appiconset
+mkdir -p ios/App/App/Assets.xcassets/Splash.imageset
 
-# Copy additional assets
-echo "📂 Copying mobile assets..."
-mkdir -p android/app/src/main/res/values
-mkdir -p ios/App/App
+# Check what platforms to build
+echo "📱 Available build options:"
+echo "1. Android"
+echo "2. iOS"
+echo "3. Both"
+read -p "Select build option (1-3): " choice
 
-# Create Android permissions
-cat > android/app/src/main/res/values/strings.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Emergency Safety App</string>
-    <string name="title_activity_main">Emergency Safety App</string>
-    <string name="package_name">com.emergency.safety</string>
-    <string name="custom_url_scheme">com.emergency.safety</string>
-</resources>
-EOF
+case $choice in
+  1)
+    echo "🤖 Building for Android..."
+    npx cap build android
+    ;;
+  2)
+    echo "🍎 Building for iOS..."
+    npx cap build ios
+    ;;
+  3)
+    echo "📱 Building for both platforms..."
+    npx cap build android
+    npx cap build ios
+    ;;
+  *)
+    echo "❌ Invalid option. Building for both platforms..."
+    npx cap build android
+    npx cap build ios
+    ;;
+esac
 
-# Add camera permissions to Android manifest
-if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
-    echo "✅ Android manifest exists, permissions will be auto-added by Capacitor"
-fi
-
-echo "🎉 Mobile build complete!"
+echo "✅ Mobile build complete!"
 echo ""
-echo "📱 Next steps:"
-echo "  • For Android: npx cap open android"
-echo "  • For iOS: npx cap open ios"
-echo "  • To test: npx cap run android --target=<device>"
+echo "📂 Build artifacts:"
+echo "   - Web: ./dist/spa/"
+echo "   - Android: ./android/"
+echo "   - iOS: ./ios/"
 echo ""
-echo "📋 Requirements for building:"
-echo "  • Android: Android Studio with SDK 21+"
-echo "  • iOS: Xcode 12+ (macOS only)"
+echo "🚀 Next steps:"
+echo "   - Android: Open ./android/ in Android Studio"
+echo "   - iOS: Open ./ios/App.xcworkspace in Xcode"
 echo ""
-echo "🔍 Camera permissions:"
-echo "  • Camera access for QR scanning"
-echo "  • Photo library access for image capture"
-echo "  • Location access for emergency features"
+echo "🛡️ Guardian Safety is ready for mobile deployment!"

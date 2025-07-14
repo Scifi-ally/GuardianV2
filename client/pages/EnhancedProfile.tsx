@@ -198,10 +198,10 @@ export default function EnhancedProfile() {
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  <span className="text-sm">Location Sharing</span>
+                  <span className="text-sm">Location Services</span>
                 </div>
                 <Badge variant="outline" className="bg-safe/10 text-safe">
-                  Enabled
+                  Active
                 </Badge>
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg">

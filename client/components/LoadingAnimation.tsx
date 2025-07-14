@@ -27,26 +27,34 @@ export function LoadingAnimation({
         <div className="relative">
           <div
             className={cn(
-              "rounded-full bg-primary/10 flex items-center justify-center relative",
+              "rounded-full bg-white shadow-lg flex items-center justify-center relative border-2 border-black/10",
               sizeClasses[size],
             )}
           >
-            <Shield
+            {/* Guardian logo as SVG */}
+            <svg
               className={cn(
-                "text-primary animate-pulse",
+                "text-black animate-pulse",
                 size === "sm" && "h-3 w-3",
                 size === "md" && "h-5 w-5",
                 size === "lg" && "h-8 w-8",
-                size === "xl" && "h-10 w-10",
+                size === "xl" && "h-12 w-12",
               )}
-            />
-            <div className="absolute inset-0 border-2 border-primary/30 rounded-full animate-spin border-t-primary" />
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M6 9c0-1 .6-2 1.5-2h9c.9 0 1.5 1 1.5 2v4c0 2-.8 3.2-2 4l-3 1.4-3-1.4c-1.2-.8-2-2-2-4V9z" />
+              <circle cx="12" cy="12" r="1" fill="#ff0000" />
+            </svg>
+            <div className="absolute inset-0 border-2 border-black/20 rounded-full animate-spin border-t-black" />
+            {/* Pulse ring */}
+            <div className="absolute inset-0 border border-black/10 rounded-full animate-ping" />
           </div>
         </div>
         {text && (
           <p
             className={cn(
-              "text-muted-foreground animate-pulse",
+              "text-black font-medium animate-pulse",
               size === "sm" && "text-xs",
               size === "md" && "text-sm",
               size === "lg" && "text-base",

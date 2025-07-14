@@ -1,9 +1,9 @@
 {
-  "name": "Emergency Safety Navigation",
-  "short_name": "SafeNav",
-  "description": "AI-powered emergency safety navigation with real-time location sharing and comprehensive emergency response features",
+  "name": "Guardian Safety",
+  "short_name": "Guardian",
+  "description": "Your personal safety companion. Real-time emergency assistance, location sharing, and safety alerts.",
   "version": "1.0.0",
-  "theme_color": "#2563eb",
+  "theme_color": "#000000",
   "background_color": "#ffffff",
   "display": "standalone",
   "start_url": "/",

@@ -2,12 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 
 interface GestureOptions {
-  enableSOSGesture?: boolean;
-  enablePanicGesture?: boolean;
   enableQuickShare?: boolean;
   enableNavigationGestures?: boolean;
-  onSOSActivated?: () => void;
-  onPanicActivated?: () => void;
   onQuickShare?: () => void;
   onSwipeUp?: () => void;
   onSwipeDown?: () => void;
@@ -24,12 +20,8 @@ interface TouchData {
 
 export function useGestures(options: GestureOptions = {}) {
   const {
-    enableSOSGesture = true,
-    enablePanicGesture = true,
     enableQuickShare = true,
     enableNavigationGestures = true,
-    onSOSActivated,
-    onPanicActivated,
     onQuickShare,
     onSwipeUp,
     onSwipeDown,
@@ -39,50 +31,11 @@ export function useGestures(options: GestureOptions = {}) {
 
   const touchData = useRef<TouchData | null>(null);
   const [gesturesEnabled, setGesturesEnabled] = useState(true);
-  const panicTapCount = useRef(0);
-  const panicTapTimer = useRef<NodeJS.Timeout | null>(null);
-  const sosShakeCount = useRef(0);
-  const shakeThreshold = 15; // Sensitivity for shake detection
+  // Removed gesture-based SOS functionality for safety
 
-  // SOS Gesture: 5 rapid taps anywhere on screen
-  const handleSOSTaps = (event: TouchEvent) => {
-    if (!enableSOSGesture || !gesturesEnabled) return;
+  // Removed SOS tap gesture for safety
 
-    panicTapCount.current++;
-
-    if (panicTapTimer.current) {
-      clearTimeout(panicTapTimer.current);
-    }
-
-    panicTapTimer.current = setTimeout(() => {
-      panicTapCount.current = 0;
-    }, 2000); // Reset after 2 seconds
-
-    if (panicTapCount.current >= 5) {
-      panicTapCount.current = 0;
-      triggerSOSGesture();
-    }
-  };
-
-  // Panic Gesture: Three-finger press and hold for 3 seconds
-  const handlePanicGesture = (event: TouchEvent) => {
-    if (!enablePanicGesture || !gesturesEnabled) return;
-
-    if (event.touches.length === 3) {
-      const timer = setTimeout(() => {
-        triggerPanicGesture();
-      }, 3000);
-
-      const cleanup = () => {
-        clearTimeout(timer);
-        document.removeEventListener("touchend", cleanup);
-        document.removeEventListener("touchmove", cleanup);
-      };
-
-      document.addEventListener("touchend", cleanup);
-      document.addEventListener("touchmove", cleanup);
-    }
-  };
+  // Removed panic gesture for safety
 
   // Swipe Gestures: Directional swipes for navigation
   const handleTouchStart = (event: TouchEvent) => {
@@ -138,57 +91,9 @@ export function useGestures(options: GestureOptions = {}) {
     touchData.current = null;
   };
 
-  // Shake Detection for Emergency
-  const handleDeviceMotion = (event: DeviceMotionEvent) => {
-    if (!enableSOSGesture || !gesturesEnabled) return;
+  // Removed shake detection for safety
 
-    const { accelerationIncludingGravity } = event;
-    if (!accelerationIncludingGravity) return;
-
-    const { x, y, z } = accelerationIncludingGravity;
-    const acceleration = Math.sqrt(x! * x! + y! * y! + z! * z!);
-
-    if (acceleration > shakeThreshold) {
-      sosShakeCount.current++;
-
-      setTimeout(() => {
-        sosShakeCount.current--;
-      }, 1000);
-
-      // If 5 shakes within 3 seconds, trigger SOS
-      if (sosShakeCount.current >= 5) {
-        sosShakeCount.current = 0;
-        triggerSOSGesture();
-      }
-    }
-  };
-
-  // Gesture action handlers
-  const triggerSOSGesture = () => {
-    unifiedNotifications.critical("SOS activated by gesture!", {
-      title: "🚨 Emergency Gesture Detected",
-      message: "SOS activated by rapid taps or shake gesture",
-    });
-
-    if (navigator.vibrate) {
-      navigator.vibrate([500, 200, 500, 200, 500]);
-    }
-
-    onSOSActivated?.();
-  };
-
-  const triggerPanicGesture = () => {
-    unifiedNotifications.critical("Panic mode activated!", {
-      title: "🔴 Panic Gesture Detected",
-      message: "Three-finger panic gesture triggered",
-    });
-
-    if (navigator.vibrate) {
-      navigator.vibrate([1000, 500, 1000]);
-    }
-
-    onPanicActivated?.();
-  };
+  // Removed gesture trigger functions for safety
 
   const handleSwipeUp = () => {
     onSwipeUp?.();
@@ -232,8 +137,6 @@ export function useGestures(options: GestureOptions = {}) {
     if (!gesturesEnabled) return;
 
     const handleTouch = (event: TouchEvent) => {
-      handleSOSTaps(event);
-      handlePanicGesture(event);
       handleQuickShare(event);
     };
 
@@ -244,37 +147,20 @@ export function useGestures(options: GestureOptions = {}) {
     document.addEventListener("touchend", handleTouchEnd, { passive: false });
     document.addEventListener("touchstart", handleTouch, { passive: false });
 
-    // Add device motion for shake detection
-    if (window.DeviceMotionEvent) {
-      window.addEventListener("devicemotion", handleDeviceMotion);
-    }
+    // Removed device motion listeners for safety
 
     return () => {
       document.removeEventListener("touchstart", handleTouchStart);
       document.removeEventListener("touchend", handleTouchEnd);
       document.removeEventListener("touchstart", handleTouch);
 
-      if (window.DeviceMotionEvent) {
-        window.removeEventListener("devicemotion", handleDeviceMotion);
-      }
-
-      if (panicTapTimer.current) {
-        clearTimeout(panicTapTimer.current);
-      }
+      // Removed device motion cleanup
     };
-  }, [
-    gesturesEnabled,
-    enableSOSGesture,
-    enablePanicGesture,
-    enableQuickShare,
-    enableNavigationGestures,
-  ]);
+  }, [gesturesEnabled, enableQuickShare, enableNavigationGestures]);
 
   return {
     gesturesEnabled,
     setGesturesEnabled,
-    triggerSOSGesture,
-    triggerPanicGesture,
   };
 }
 
@@ -284,14 +170,6 @@ export function GestureGuide() {
     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
       <h3 className="font-semibold text-blue-800 mb-3">Available Gestures</h3>
       <div className="space-y-2 text-sm text-blue-700">
-        <div className="flex items-center gap-2">
-          <span className="font-medium">🚨 Emergency SOS:</span>
-          <span>Tap rapidly 5 times or shake device vigorously</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="font-medium">🔴 Panic Mode:</span>
-          <span>Press and hold with 3 fingers for 3 seconds</span>
-        </div>
         <div className="flex items-center gap-2">
           <span className="font-medium">📤 Quick Share:</span>
           <span>Tap with 2 fingers to copy location</span>

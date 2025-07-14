@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.emergency.safety",
-  appName: "Emergency Safety App",
+  appId: "com.guardian.safety",
+  appName: "Guardian Safety",
   webDir: "dist/spa",
   server: {
     androidScheme: "https",
@@ -11,26 +11,44 @@ const config: CapacitorConfig = {
     Camera: {
       permissions: ["camera", "photos"],
     },
+    Geolocation: {
+      permissions: ["location"],
+    },
     StatusBar: {
-      style: "dark",
-      backgroundColor: "#000000",
+      style: "light",
+      backgroundColor: "#ffffff",
     },
     SplashScreen: {
-      launchShowDuration: 2000,
-      backgroundColor: "#1f2937",
+      launchShowDuration: 3000,
+      backgroundColor: "#ffffff",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
-      showSpinner: false,
+      showSpinner: true,
+      spinnerStyle: "small",
+      spinnerColor: "#000000",
     },
   },
   android: {
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true,
+    permissions: [
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.ACCESS_BACKGROUND_LOCATION",
+      "android.permission.CALL_PHONE",
+      "android.permission.VIBRATE",
+      "android.permission.CAMERA",
+    ],
   },
   ios: {
     contentInset: "automatic",
     scrollEnabled: true,
+    permissions: [
+      "NSLocationWhenInUseUsageDescription",
+      "NSLocationAlwaysAndWhenInUseUsageDescription",
+      "NSCameraUsageDescription",
+    ],
   },
 };
 

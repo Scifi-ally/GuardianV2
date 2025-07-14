@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Wrapper } from "@googlemaps/react-wrapper";
-import { useTheme } from "next-themes";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -48,7 +48,7 @@ export function GoogleMapsNavigationView({
   onLocationChange,
   onMapLoad,
 }: GoogleMapsNavigationViewProps) {
-  const { theme } = useTheme();
+  const theme = "light";
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null);

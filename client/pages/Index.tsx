@@ -29,7 +29,6 @@ import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
 // Removed redundant useGeolocation - handled by LocationAwareMap
 import { useMapTheme } from "@/hooks/use-map-theme";
-import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminDebug } from "@/services/adminDebugService";
 import { useGestures, GestureGuide } from "@/hooks/useGestures";
@@ -51,7 +50,7 @@ import { CustomCheckbox } from "@/components/ui/custom-checkbox";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 
 // Removed redundant notification imports
-import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
+
 import AINavigationPanel from "@/components/AINavigationPanel";
 import { useRealTime } from "@/hooks/useRealTime";
 import { RealTimeStatusIndicator } from "@/components/RealTimeStatusIndicator";
@@ -194,13 +193,6 @@ export default function Index() {
 
   // Initialize gesture system for enhanced usability
   const { gesturesEnabled, setGesturesEnabled } = useGestures({
-    onSOSActivated: () => {
-      unifiedNotifications.sos({
-        title: "�� Gesture SOS Activated",
-        message:
-          "Emergency SOS triggered by rapid taps or shake - immediate assistance needed!",
-      });
-    },
     onQuickShare: async () => {
       const shareText = `Emergency location shared via gesture`;
       navigator.clipboard?.writeText(shareText);
@@ -241,9 +233,6 @@ export default function Index() {
     setMapType,
   } = useMapTheme();
 
-  // Global theme management
-  const { theme, setTheme, systemTheme } = useTheme();
-
   // Battery optimization state
   const [batterySaverMode, setBatterySaverMode] = useState(false);
 
@@ -276,23 +265,6 @@ export default function Index() {
     };
   }, []);
 
-  // Debug theme changes and force application
-  useEffect(() => {
-    console.log("Current theme:", theme, "System theme:", systemTheme);
-
-    // Force theme application to document
-    const html = document.documentElement;
-    html.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemThemeValue = systemTheme || "light";
-      html.classList.add(systemThemeValue);
-      console.log("Applied system theme:", systemThemeValue);
-    } else if (theme) {
-      html.classList.add(theme);
-      console.log("Applied theme:", theme);
-    }
-  }, [theme, systemTheme]);
   const { userProfile } = useAuth();
   const {
     shouldShowLocationDebug,
@@ -689,7 +661,7 @@ export default function Index() {
             key="main-map"
             onLocationChange={setLocation}
             onMapLoad={(map) => {
-              console.log("🗺️ Map loaded successfully");
+              console.log("��️ Map loaded successfully");
             }}
             showDebug={shouldShowLocationDebug}
             zoomLevel={routeSettings.zoomLevel}
@@ -792,8 +764,7 @@ export default function Index() {
                         <div className="p-2 bg-blue-500 rounded-xl shadow-md">
                           <Target className="h-5 w-5 text-white" />
                         </div>
-                        LOCATION SHARING
-                        <LocationSharingInfoButton />
+                        EMERGENCY CONTACTS
                       </h3>
                       <p className="text-sm text-slate-600 font-mono mb-4">
                         Share your location with trusted contacts for enhanced
@@ -861,7 +832,8 @@ export default function Index() {
                               </span>
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {routeSummary.distance} • {routeSummary.duration}
+                              {routeSummary.distance} ���{" "}
+                              {routeSummary.duration}
                             </div>
                           </div>
                         </CardContent>
@@ -947,13 +919,7 @@ export default function Index() {
                         onClick={async () => {
                           if (location && userProfile) {
                             try {
-                              // Start sharing location on the map
-                              const sessionId =
-                                sharedLocationService.startLocationSharing(
-                                  userProfile.uid,
-                                  userProfile.displayName || "You",
-                                  userProfile.photoURL,
-                                );
+                              // Location shared for emergency purposes
 
                               // Update initial location
                               sharedLocationService.updateUserLocation(
@@ -1124,39 +1090,19 @@ export default function Index() {
                               timestamp: Date.now(),
                             });
 
-                            // Also start live tracking on the map
-                            if (userProfile) {
-                              const sessionId =
-                                sharedLocationService.startLiveTracking(
-                                  userProfile.uid,
-                                  userProfile.displayName || "You",
-                                  userProfile.photoURL,
-                                );
-
-                              // Update initial location for live tracking
-                              sharedLocationService.updateUserLocation(
-                                userProfile.uid,
-                                userProfile.displayName || "You",
-                                location.latitude,
-                                location.longitude,
-                                10, // Default accuracy
-                                userProfile.photoURL,
-                                true, // isLiveTracking
-                              );
-                            }
-
-                            // Notify emergency contacts about live tracking
+                            // Send location to emergency contacts
                             const locationUrl = `https://maps.google.com/?q=${location.latitude},${location.longitude}`;
                             await emergencyContactActionsService.sendEmergencyMessage(
-                              `����� LIVE TRACKING STARTED: I'm sharing my real-time location with you. Current location: ${locationUrl}. You'll receive updates every 2 minutes.`,
+                              `📍 LOCATION SHARED: My current location is: ${locationUrl}. This is for emergency contact purposes.`,
+                              emergencyContacts,
                             );
 
                             // Add to real-time alerts
                             realTimeService.addAlert({
                               id: `live-tracking-${Date.now()}`,
                               type: "info",
-                              title: "Live Tracking Active",
-                              message: `Sharing location with ${userProfile.emergencyContacts.length} emergency contacts`,
+                              title: "Location Shared",
+                              message: `Current location sent to ${userProfile.emergencyContacts.length} emergency contacts`,
                               timestamp: new Date(),
                               location: {
                                 latitude: location.latitude,
@@ -1174,7 +1120,7 @@ export default function Index() {
                         }}
                       >
                         <Navigation className="h-4 w-4" />
-                        Live Tracking
+                        Share Location
                       </Button>
                     </div>
                   </div>
@@ -1229,38 +1175,6 @@ export default function Index() {
                       </p>
                     </div>
                   )}
-
-                  {/* App Theme Settings */}
-                  <div>
-                    <h4 className="text-sm font-medium mb-3">App Theme</h4>
-                    <div className="space-y-2">
-                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
-                        <ToggleSwitch
-                          checked={theme === "dark"}
-                          onChange={(checked) => {
-                            const newTheme = checked ? "dark" : "light";
-                            setTheme(newTheme);
-                            console.log("Theme changed to:", newTheme);
-                            unifiedNotifications.success(
-                              `Switched to ${newTheme} mode`,
-                              {
-                                message: `App theme is now ${newTheme} mode`,
-                              },
-                            );
-                          }}
-                          label="Dark Mode"
-                          description={
-                            theme === "light"
-                              ? "Light mode active"
-                              : theme === "dark"
-                                ? "Dark mode active"
-                                : "System theme"
-                          }
-                          size="md"
-                        />
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Map Style Settings */}
                   <div>
@@ -1354,13 +1268,13 @@ export default function Index() {
                                 : "Gesture controls disabled",
                               {
                                 message: checked
-                                  ? "5 rapid taps or shake for SOS, 3-finger hold for panic mode"
-                                  : "Emergency gesture detection turned off",
+                                  ? "Navigation gestures and quick actions enabled"
+                                  : "Navigation gesture detection turned off",
                               },
                             );
                           }}
-                          label="Gesture Controls"
-                          description="Emergency gestures & navigation"
+                          label="Navigation Gestures"
+                          description="Swipe gestures & quick actions"
                           size="md"
                         />
                       </div>

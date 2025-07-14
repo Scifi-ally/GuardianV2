@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
+import { PrimaryActionButton } from "@/components/ui/animated-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,7 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isPressed, setIsPressed] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -136,32 +136,18 @@ export default function SignIn() {
                 </div>
               </div>
 
-              <Button
+              <PrimaryActionButton
                 type="submit"
-                className={cn(
-                  "w-full h-12 sm:h-14 text-base sm:text-lg font-medium transition-all duration-100 rounded-lg mt-6",
-                  "bg-primary hover:bg-primary/90 text-primary-foreground",
-                  isPressed && "scale-[0.96]",
-                )}
-                disabled={loading}
-                onMouseDown={() => setIsPressed(true)}
-                onMouseUp={() => setIsPressed(false)}
-                onMouseLeave={() => setIsPressed(false)}
-                onTouchStart={() => setIsPressed(true)}
-                onTouchEnd={() => setIsPressed(false)}
+                className="w-full h-12 sm:h-14 text-base sm:text-lg font-medium rounded-lg mt-6"
+                loading={loading}
+                loadingText="Signing in..."
+                icon={<ArrowRight className="h-5 w-5" />}
+                iconPosition="right"
+                hoverScale={true}
+                pressAnimation={true}
               >
-                {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <LoadingAnimation size="sm" variant="dots" />
-                    <span>Signing in...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <span>Sign In</span>
-                    <ArrowRight className="h-5 w-5" />
-                  </div>
-                )}
-              </Button>
+                Sign In
+              </PrimaryActionButton>
             </form>
           </CardContent>
         </Card>
