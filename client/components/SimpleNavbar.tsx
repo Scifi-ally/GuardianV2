@@ -1,17 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Home,
-  MapPin,
-  User,
-  Settings,
-  AlertTriangle,
-  Users,
-  Navigation as NavigationIcon,
-} from "lucide-react";
+import { MapPin, User, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useSOSSettings } from "@/contexts/SOSSettingsContext";
@@ -24,7 +15,7 @@ import { notifications } from "@/services/enhancedNotificationService";
 interface NavItem {
   id: string;
   label: string;
-  icon: typeof Home;
+  icon: typeof MapPin;
   path: string;
   isSpecial?: boolean;
 }
@@ -35,27 +26,22 @@ const navItems: NavItem[] = [
   { id: "profile", label: "Profile", icon: User, path: "/profile" },
 ];
 
-interface MagicNavbarProps {
+interface SimpleNavbarProps {
   onSOSPress?: () => void;
 }
 
-export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
+export function SimpleNavbar({ onSOSPress }: SimpleNavbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, userProfile } = useAuth();
   const { location: userLocation, getCurrentLocation } = useGeolocation();
   const { sosSettings, verifyPassword } = useSOSSettings();
-  const isMobile = useIsMobile();
   const [activeIndex, setActiveIndex] = useState(0);
   const [sosPressed, setSOSPressed] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [sending, setSending] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [activeAlertId, setActiveAlertId] = useState<string | null>(null);
-  const [mapLongPressTimer, setMapLongPressTimer] = useState<number | null>(
-    null,
-  );
-  const [showEnhancedMapHint, setShowEnhancedMapHint] = useState(false);
 
   useEffect(() => {
     const currentIndex = navItems.findIndex(
@@ -75,34 +61,23 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
     }
   };
 
-  const handleMapLongPress = () => {
-    // Focus on the floating search bar instead of navigating
-    const searchInput = document.querySelector(
-      'input[placeholder*="Where do you want to go"]',
-    ) as HTMLInputElement;
-    if (searchInput) {
-      searchInput.focus();
-      searchInput.click();
-    }
-    setShowEnhancedMapHint(false);
-  };
+  const handleSOSPress = () => {
+    if (sosPressed || sending) return;
 
-  const handleMapMouseDown = (item: NavItem, index: number) => {
-    if (item.id === "map") {
-      const timer = setTimeout(() => {
-        setShowEnhancedMapHint(true);
-        handleMapLongPress();
-      }, 800); // 800ms long press
-      setMapLongPressTimer(timer as unknown as number);
-    }
-  };
+    setSOSPressed(true);
+    setCountdown(3);
 
-  const handleMapMouseUp = () => {
-    if (mapLongPressTimer) {
-      clearTimeout(mapLongPressTimer);
-      setMapLongPressTimer(null);
-    }
-    setShowEnhancedMapHint(false);
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          setSOSPressed(false);
+          sendSOSAlert();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   const getLocationName = async (lat: number, lng: number): Promise<string> => {
@@ -330,25 +305,6 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
     }
   };
 
-  const handleSOSPress = () => {
-    if (sosPressed || sending) return;
-
-    setSOSPressed(true);
-    setCountdown(3);
-
-    const countdownInterval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          setSOSPressed(false);
-          sendSOSAlert();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
   const handleCancelSOS = () => {
     if (sosSettings.requirePasswordToCancel && sosSettings.passwordProtected) {
       setShowPasswordModal(true);
@@ -445,28 +401,15 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         />
       )}
 
-      <div
-        className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 safe-area-inset-bottom",
-          isMobile ? "pb-2" : "pb-4",
-        )}
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
+      <div className="fixed bottom-0 left-0 right-0 z-50 safe-area-inset-bottom">
         {/* Ultra-light professional background */}
-        <div className="absolute inset-0 navbar-light" />
+        <div className="absolute inset-0 navbar-light bg-gradient-to-t from-white via-white/95 to-white/90 backdrop-blur-md border-t border-slate-200/50" />
 
-        {/* Navigation items */}
-        <div
-          className={cn(
-            "relative rounded-t-2xl",
-            isMobile ? "px-3 py-2" : "px-6 py-3",
-          )}
-        >
-          <div className="flex items-center justify-between w-full max-w-lg mx-auto px-1">
+        {/* Navigation container */}
+        <div className="relative rounded-t-3xl">
+          <div className="flex items-center justify-between w-full max-w-lg mx-auto px-6 py-3">
             <div className="flex-1"></div>
-            <div
-              className={cn("flex items-center", isMobile ? "gap-4" : "gap-6")}
-            >
+            <div className="flex items-center gap-6">
               {navItems.map((item, index) => {
                 const Icon = item.icon;
                 const isActive = activeIndex === index;
@@ -474,7 +417,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
 
                 if (isSpecial && (sosPressed || sending || activeAlertId)) {
                   return (
-                    <button
+                    <motion.button
                       key={item.id}
                       onClick={
                         sosPressed
@@ -504,55 +447,139 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                         }
                       }}
                       className={cn(
-                        "relative flex flex-col items-center transition-all duration-300 flex-1 touch-emergency emergency-focus sos-button",
-                        isMobile
-                          ? "px-2 py-1.5 max-w-[70px] min-h-[50px]"
-                          : "px-4 py-2 max-w-[70px] min-h-[55px]",
-                        sosPressed
-                          ? "bg-warning/20 rounded-3xl animate-pulse"
-                          : activeAlertId
-                            ? "bg-red-500 text-white rounded-3xl animate-pulse"
-                            : "bg-emergency/20 rounded-3xl",
+                        "relative flex flex-col items-center transition-all duration-300 touch-emergency emergency-focus sos-button",
+                        "px-4 py-3 min-w-[80px] min-h-[70px] mx-2",
                         sending && "opacity-50 cursor-not-allowed",
                       )}
+                      whileHover={{
+                        scale: 1.15,
+                        y: -4,
+                        transition: {
+                          type: "spring",
+                          damping: 20,
+                          stiffness: 300,
+                          duration: 0.2,
+                        },
+                      }}
+                      whileTap={{
+                        scale: 0.95,
+                        transition: { duration: 0.1 },
+                      }}
+                      initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                        transition: {
+                          delay: index * 0.2,
+                          type: "spring",
+                          damping: 20,
+                          stiffness: 300,
+                          duration: 0.8,
+                        },
+                      }}
                     >
-                      {sosPressed && (
-                        <div className="absolute inset-0 rounded-3xl border-2 border-warning animate-ping" />
-                      )}
-                      {(sending || activeAlertId) && (
-                        <div className="absolute inset-0 rounded-3xl border-2 border-red-500 animate-pulse" />
-                      )}
-                      <div className="relative z-10 flex flex-col items-center">
-                        {sosPressed ? (
-                          <>
-                            <div className="text-2xl font-bold text-warning mb-1">
-                              {countdown}
-                            </div>
-                            <span className="text-xs text-warning font-medium">
-                              Cancel
-                            </span>
-                          </>
-                        ) : activeAlertId ? (
-                          <>
-                            <div className="text-lg font-bold text-white mb-1">
-                              STOP
-                            </div>
-                            <span className="text-xs text-white font-medium">
-                              Active SOS
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-lg font-bold text-emergency mb-1">
-                              ...
-                            </div>
-                            <span className="text-xs text-emergency font-medium">
-                              Sending
-                            </span>
-                          </>
+                      {/* Ultra-Enhanced Background with dynamic effects */}
+                      <motion.div
+                        className={cn(
+                          "absolute inset-0 rounded-3xl transition-all duration-500",
+                          "bg-gradient-to-br from-red-50 via-red-100 to-red-200 ring-2 ring-red-300/50 shadow-2xl",
                         )}
-                      </div>
-                    </button>
+                        animate={{
+                          scale: [1, 1.05, 1],
+                          opacity: [0.8, 1, 0.8],
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+
+                      {/* Ultra-Premium Icon container with advanced effects */}
+                      <motion.div
+                        className={cn(
+                          "relative z-10 rounded-professional smooth-transition backdrop-blur-sm interactive-card",
+                          "p-3",
+                          sosPressed
+                            ? "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-white shadow-lg ring-1 ring-yellow-200/50 rounded-2xl"
+                            : activeAlertId
+                              ? "bg-gradient-to-br from-red-400 via-red-500 to-red-600 text-white shadow-lg ring-1 ring-red-200/50 rounded-2xl"
+                              : "bg-gradient-to-br from-red-400 via-red-500 to-red-600 text-white shadow-lg ring-1 ring-red-200/50 rounded-2xl",
+                        )}
+                        whileHover={{
+                          boxShadow: sosPressed
+                            ? "0 25px 50px rgba(251, 191, 36, 0.5), 0 0 40px rgba(251, 191, 36, 0.4)"
+                            : "0 25px 50px rgba(239, 68, 68, 0.5), 0 0 40px rgba(239, 68, 68, 0.4)",
+                          scale: 1.1,
+                          transition: { duration: 0.3 },
+                        }}
+                        animate={{
+                          scale: [1, 1.08, 1],
+                        }}
+                        transition={{
+                          duration: 1.2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        {sosPressed ? (
+                          <div className="text-2xl font-bold text-white">
+                            {countdown}
+                          </div>
+                        ) : activeAlertId ? (
+                          <div className="text-lg font-bold text-white">
+                            STOP
+                          </div>
+                        ) : (
+                          <div className="text-lg font-bold text-white">
+                            ...
+                          </div>
+                        )}
+                      </motion.div>
+
+                      {/* Ultra-Enhanced Label */}
+                      <motion.span
+                        className={cn(
+                          "font-medium transition-all duration-300 tracking-wide",
+                          "text-sm mt-2",
+                          sosPressed
+                            ? "text-yellow-600 font-semibold drop-shadow-sm"
+                            : activeAlertId
+                              ? "text-red-600 font-semibold drop-shadow-sm"
+                              : "text-red-600 font-semibold drop-shadow-sm",
+                        )}
+                        animate={{
+                          y: [0, -3, 0],
+                          scale: [1, 1.08, 1],
+                        }}
+                        transition={{
+                          duration: 2.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        {sosPressed
+                          ? "Cancel"
+                          : activeAlertId
+                            ? "Active SOS"
+                            : "Sending"}
+                      </motion.span>
+
+                      {/* Advanced special item effects */}
+                      <motion.div
+                        className="absolute inset-0 rounded-3xl bg-emergency/20 opacity-50"
+                        animate={{
+                          opacity: [0.2, 0.5, 0.2],
+                          scale: [1, 1.05, 1],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </motion.button>
                   );
                 }
 
@@ -560,21 +587,11 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   <motion.button
                     key={item.id}
                     onClick={() => handleNavClick(item, index)}
-                    onMouseDown={() => handleMapMouseDown(item, index)}
-                    onMouseUp={handleMapMouseUp}
-                    onMouseLeave={handleMapMouseUp}
-                    onTouchStart={() => handleMapMouseDown(item, index)}
-                    onTouchEnd={handleMapMouseUp}
                     disabled={sending}
                     className={cn(
                       "relative flex flex-col items-center transition-all duration-300 touch-optimization group",
-                      isMobile
-                        ? "px-3 py-2 min-w-[70px] min-h-[60px] mx-1"
-                        : "px-4 py-3 min-w-[80px] min-h-[70px] mx-2",
+                      "px-4 py-3 min-w-[80px] min-h-[70px] mx-2",
                       sending && isSpecial && "opacity-50 cursor-not-allowed",
-                      item.id === "map" &&
-                        showEnhancedMapHint &&
-                        "bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl shadow-lg",
                     )}
                     whileHover={{
                       scale: isSpecial ? 1.15 : 1.1,
@@ -608,13 +625,28 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                     <motion.div
                       className={cn(
                         "absolute inset-0 rounded-3xl transition-all duration-500",
-                        isActive &&
-                          !isSpecial &&
-                          "bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 ring-2 ring-blue-300/50 shadow-xl",
+                        // Map button - Beautiful blue ocean theme
+                        item.id === "map" &&
+                          isActive &&
+                          "bg-gradient-to-br from-cyan-50 via-blue-100 to-indigo-200 ring-2 ring-cyan-300/60 shadow-2xl",
+                        item.id === "map" &&
+                          !isActive &&
+                          "bg-gradient-to-br from-cyan-25 via-sky-50 to-blue-100 ring-1 ring-cyan-200/40 shadow-lg",
+                        // Profile button - Beautiful purple gradient theme
+                        item.id === "profile" &&
+                          isActive &&
+                          "bg-gradient-to-br from-purple-50 via-violet-100 to-indigo-200 ring-2 ring-purple-300/60 shadow-2xl",
+                        item.id === "profile" &&
+                          !isActive &&
+                          "bg-gradient-to-br from-purple-25 via-lavender-50 to-violet-100 ring-1 ring-purple-200/40 shadow-lg",
+                        // SOS button fallback
                         isSpecial &&
                           "bg-gradient-to-br from-red-50 via-red-100 to-red-200 ring-2 ring-red-300/50 shadow-2xl",
+                        // Generic fallback
                         !isActive &&
                           !isSpecial &&
+                          item.id !== "map" &&
+                          item.id !== "profile" &&
                           "bg-gradient-to-br from-gray-50 to-gray-100 shadow-md ring-1 ring-gray-200/30",
                       )}
                       animate={{
@@ -637,22 +669,39 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                     <motion.div
                       className={cn(
                         "relative z-10 rounded-professional smooth-transition backdrop-blur-sm interactive-card",
-                        isMobile ? "p-2.5" : "p-3",
+                        "p-3",
+                        // Map button - Ocean blue crystal theme
+                        item.id === "map" &&
+                          isActive &&
+                          "bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 text-white shadow-lg ring-1 ring-cyan-200/50 rounded-2xl",
+                        item.id === "map" &&
+                          !isActive &&
+                          "text-cyan-500 bg-gradient-to-br from-cyan-50 to-blue-100 shadow-sm ring-1 ring-cyan-200/60 rounded-2xl",
+                        // Profile button - Royal purple theme
+                        item.id === "profile" &&
+                          isActive &&
+                          "bg-gradient-to-br from-purple-400 via-violet-500 to-indigo-600 text-white shadow-lg ring-1 ring-purple-200/50 rounded-2xl",
+                        item.id === "profile" &&
+                          !isActive &&
+                          "text-purple-500 bg-gradient-to-br from-purple-50 to-violet-100 shadow-sm ring-1 ring-purple-200/60 rounded-2xl",
+                        // SOS button fallback
                         isSpecial &&
                           "bg-gradient-to-br from-red-400 via-red-500 to-red-600 text-white shadow-lg ring-1 ring-red-200/50 rounded-2xl",
-                        isActive &&
-                          !isSpecial &&
-                          "bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 text-white shadow-lg ring-1 ring-slate-200/50 rounded-2xl",
+                        // Generic fallback
                         !isActive &&
                           !isSpecial &&
+                          item.id !== "map" &&
+                          item.id !== "profile" &&
                           "text-slate-400 bg-white/95 shadow-sm ring-1 ring-slate-100/80 rounded-2xl",
                       )}
                       whileHover={{
                         boxShadow: isSpecial
                           ? "0 25px 50px rgba(239, 68, 68, 0.5), 0 0 40px rgba(239, 68, 68, 0.4)"
-                          : isActive
-                            ? "0 20px 40px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.4)"
-                            : "0 15px 30px rgba(0, 0, 0, 0.15)",
+                          : item.id === "map"
+                            ? "0 25px 50px rgba(34, 211, 238, 0.6), 0 0 40px rgba(59, 130, 246, 0.5)"
+                            : item.id === "profile"
+                              ? "0 25px 50px rgba(147, 51, 234, 0.6), 0 0 40px rgba(139, 92, 246, 0.5)"
+                              : "0 15px 30px rgba(0, 0, 0, 0.15)",
                         scale: 1.1,
                         transition: { duration: 0.3 },
                       }}
@@ -669,13 +718,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                       <Icon
                         className={cn(
                           "transition-all duration-300 drop-shadow-sm",
-                          isSpecial
-                            ? isMobile
-                              ? "h-5 w-5"
-                              : "h-6 w-6"
-                            : isMobile
-                              ? "h-4 w-4"
-                              : "h-5 w-5",
+                          isSpecial ? "h-6 w-6" : "h-5 w-5",
                           (isActive || isSpecial) &&
                             "text-white drop-shadow-lg",
                           !isActive && !isSpecial && "text-slate-400",
@@ -687,12 +730,29 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                     <motion.span
                       className={cn(
                         "font-medium transition-all duration-300 tracking-wide",
-                        isMobile ? "text-xs mt-1.5" : "text-sm mt-2",
-                        isActive && !isSpecial
-                          ? "text-slate-700 font-semibold drop-shadow-sm"
-                          : "text-slate-400",
+                        "text-sm mt-2",
+                        // Map button labels
+                        item.id === "map" && isActive
+                          ? "text-cyan-700 font-semibold drop-shadow-sm"
+                          : item.id === "map" && !isActive
+                            ? "text-cyan-500 font-medium"
+                            : "",
+                        // Profile button labels
+                        item.id === "profile" && isActive
+                          ? "text-purple-700 font-semibold drop-shadow-sm"
+                          : item.id === "profile" && !isActive
+                            ? "text-purple-500 font-medium"
+                            : "",
+                        // SOS button labels
                         isSpecial &&
                           "text-red-400 font-semibold drop-shadow-sm",
+                        // Generic fallback
+                        !isSpecial &&
+                          item.id !== "map" &&
+                          item.id !== "profile" &&
+                          (isActive
+                            ? "text-slate-700 font-semibold drop-shadow-sm"
+                            : "text-slate-400"),
                       )}
                       animate={{
                         y: isActive || isSpecial ? [0, -3, 0] : 0,
@@ -729,21 +789,6 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
             <div className="flex-1"></div>
           </div>
         </div>
-
-        {/* Enhanced Navigation Hint */}
-        <AnimatePresence>
-          {showEnhancedMapHint && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-blue-600 text-white text-xs rounded-2xl whitespace-nowrap"
-            >
-              🚀 Enhanced Navigation
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-600" />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </>
   );

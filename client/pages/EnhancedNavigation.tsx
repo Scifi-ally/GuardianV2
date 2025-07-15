@@ -13,7 +13,7 @@ import {
   RotateCcw,
   Settings,
 } from "lucide-react";
-import { MagicNavbar } from "@/components/MagicNavbar";
+import { SimpleNavbar } from "@/components/SimpleNavbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -605,7 +605,7 @@ export default function EnhancedNavigationPage() {
         </div>
       </div>
 
-      <MagicNavbar onSOSPress={handleSOSPress} />
+      <SimpleNavbar onSOSPress={handleSOSPress} />
     </div>
   );
 }

@@ -18,7 +18,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { GuardianKeyCard } from "@/components/GuardianKeyCard";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
-import { MagicNavbar } from "@/components/MagicNavbar";
+import { SimpleNavbar } from "@/components/SimpleNavbar";
 import { SimpleBottomNav } from "@/components/SimpleBottomNav";
 import { CompactProfileHeader } from "@/components/CompactProfileHeader";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,7 @@ export default function EnhancedProfile() {
 
   return (
     <div className="min-h-screen bg-background safe-bottom-spacing">
-      <MagicNavbar />
+      <SimpleNavbar />
 
       <main className="container px-4 py-6 space-y-6 pb-32">
         {/* Compact Profile Header */}

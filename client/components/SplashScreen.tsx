@@ -56,14 +56,14 @@ export function SplashScreen({
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.1 }}
           transition={{ duration: 0.5 }}
-          className="fixed inset-0 z-50 bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center overflow-hidden"
+          className="fixed inset-0 z-50 bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30 flex items-center justify-center overflow-hidden"
         >
           {/* Floating Background Elements */}
           <div className="absolute inset-0 overflow-hidden">
             {[...Array(8)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-4 h-4 bg-blue-200/30 rounded-full"
+                className="absolute w-3 h-3 bg-slate-100/60 rounded-full"
                 animate={{
                   x: [
                     Math.random() * window.innerWidth,
@@ -87,7 +87,7 @@ export function SplashScreen({
             {[...Array(6)].map((_, i) => (
               <motion.div
                 key={`purple-${i}`}
-                className="absolute w-6 h-6 bg-purple-200/20 rounded-full"
+                className="absolute w-4 h-4 bg-blue-100/40 rounded-full"
                 animate={{
                   x: [
                     Math.random() * window.innerWidth,
@@ -122,12 +122,12 @@ export function SplashScreen({
             >
               <div className="relative">
                 <motion.div
-                  className="w-24 h-24 rounded-full bg-white shadow-xl flex items-center justify-center border-4 border-blue-100 relative overflow-hidden"
+                  className="w-28 h-28 rounded-3xl bg-white shadow-2xl flex items-center justify-center border-2 border-slate-100/80 relative overflow-hidden"
                   animate={{
                     boxShadow: [
-                      "0 10px 40px rgba(59, 130, 246, 0.2)",
-                      "0 10px 60px rgba(147, 51, 234, 0.3)",
-                      "0 10px 40px rgba(59, 130, 246, 0.2)",
+                      "0 8px 32px rgba(71, 85, 105, 0.08)",
+                      "0 16px 48px rgba(59, 130, 246, 0.12)",
+                      "0 8px 32px rgba(71, 85, 105, 0.08)",
                     ],
                   }}
                   transition={{
@@ -137,7 +137,7 @@ export function SplashScreen({
                   }}
                 >
                   <svg
-                    className="w-12 h-12 text-black"
+                    className="w-14 h-14 text-slate-600"
                     viewBox="0 0 24 24"
                     fill="currentColor"
                   >
@@ -148,12 +148,12 @@ export function SplashScreen({
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 border-2 border-blue-200 rounded-full border-t-blue-500"
+                  className="absolute inset-0 border-2 border-slate-100 rounded-3xl border-t-slate-400"
                 />
                 <motion.div
                   animate={{ rotate: -360 }}
                   transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-2 border-2 border-purple-200 rounded-full border-b-purple-500"
+                  className="absolute inset-2 border-2 border-blue-100 rounded-2xl border-b-blue-400"
                 />
               </div>
             </motion.div>
@@ -165,8 +165,10 @@ export function SplashScreen({
               transition={{ delay: 0.5, duration: 0.6 }}
               className="space-y-2"
             >
-              <h1 className="text-3xl font-bold text-black">Guardian Safety</h1>
-              <p className="text-gray-600 text-sm">
+              <h1 className="text-4xl font-bold text-slate-700 tracking-tight">
+                Guardian Safety
+              </h1>
+              <p className="text-slate-500 text-base font-medium">
                 Your Personal Safety Companion
               </p>
             </motion.div>
@@ -195,23 +197,23 @@ export function SplashScreen({
                     className="flex items-center gap-3 justify-center"
                   >
                     <div
-                      className={`p-2 rounded-lg transition-all duration-300 ${
+                      className={`p-3 rounded-2xl transition-all duration-500 shadow-sm ${
                         isActive
-                          ? "bg-black text-white"
+                          ? "bg-slate-600 text-white shadow-lg scale-105"
                           : isCompleted
-                            ? "bg-green-100 text-green-600"
-                            : "bg-gray-100 text-gray-400"
+                            ? "bg-emerald-50 text-emerald-500 shadow-md"
+                            : "bg-slate-50 text-slate-300"
                       }`}
                     >
                       <Icon className="w-4 h-4" />
                     </div>
                     <span
-                      className={`text-sm font-medium transition-colors duration-300 ${
+                      className={`text-sm font-semibold transition-all duration-500 ${
                         isActive
-                          ? "text-black"
+                          ? "text-slate-700 scale-105"
                           : isCompleted
-                            ? "text-green-600"
-                            : "text-gray-400"
+                            ? "text-emerald-500 scale-100"
+                            : "text-slate-300"
                       }`}
                     >
                       {step.label}
@@ -228,9 +230,9 @@ export function SplashScreen({
               transition={{ delay: 1.5, duration: 0.5 }}
               className="w-64 mx-auto"
             >
-              <div className="h-3 bg-gray-200 rounded-full overflow-hidden relative">
+              <div className="h-4 bg-slate-100 rounded-full overflow-hidden relative shadow-inner">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full relative"
+                  className="h-full bg-gradient-to-r from-slate-500 via-blue-400 to-slate-600 rounded-full relative"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.1 }}
@@ -246,7 +248,9 @@ export function SplashScreen({
                   />
                 </motion.div>
               </div>
-              <p className="text-xs text-gray-500 mt-2">{progress}% Complete</p>
+              <p className="caption text-slate-400 mt-4">
+                {progress}% Complete
+              </p>
             </motion.div>
 
             {/* Loading Animation */}

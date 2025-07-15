@@ -28,6 +28,12 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  EnhancedButton,
+  PrimaryButton,
+  SecondaryButton,
+  GlassButton,
+} from "@/components/ui/enhanced-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -207,6 +213,58 @@ export function ExpandableSearchBar({
     initializeServices();
     loadStoredData();
   }, []);
+
+  // Enhanced collapse with smooth animations
+  const handleCollapse = useCallback(() => {
+    // Animated collapse sequence
+    setShowSuggestions(false);
+    setShowRoutePreview(false);
+    setShowRouteModeSelection(false);
+
+    // Smooth transition with stagger
+    setTimeout(() => {
+      setSearchQuery("");
+      setSuggestions([]);
+      setSelectedDestination(null);
+      setRouteInfo(null);
+      searchInputRef.current?.blur();
+    }, 100);
+
+    setTimeout(() => {
+      handleExpandChange(false);
+    }, 200);
+  }, [handleExpandChange]);
+
+  // Enhanced keyboard and click outside handling
+  useEffect(() => {
+    if (!isExpanded) return;
+
+    // Keyboard event handling
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleCollapse();
+      }
+    };
+
+    // Click outside handling
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        handleCollapse();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isExpanded, handleCollapse]);
 
   // Load recent searches and favorites from localStorage
   const loadStoredData = () => {
@@ -467,30 +525,21 @@ export function ExpandableSearchBar({
     }, 300);
   };
 
-  // Handle search bar click (expansion)
-  const handleSearchBarClick = () => {
+  // Enhanced search bar expansion with smooth animations
+  const handleSearchBarClick = useCallback(() => {
     if (!isExpanded) {
       handleExpandChange(true);
-      setShowSuggestions(true);
+
+      // Staggered animation sequence
+      setTimeout(() => {
+        setShowSuggestions(true);
+      }, 100);
+
       setTimeout(() => {
         searchInputRef.current?.focus();
-      }, 200);
+      }, 300);
     }
-  };
-
-  // Handle collapse with smooth animation
-  const handleCollapse = () => {
-    // Start with hiding suggestions first
-    setShowSuggestions(false);
-
-    // Then after a short delay, collapse the search bar
-    setTimeout(() => {
-      handleExpandChange(false);
-      setSearchQuery("");
-      setSuggestions([]);
-      searchInputRef.current?.blur();
-    }, 150);
-  };
+  }, [isExpanded, handleExpandChange]);
 
   // Handle place selection with route preview
   const handlePlaceSelect = async (suggestion: SearchSuggestion) => {
@@ -685,16 +734,50 @@ export function ExpandableSearchBar({
         throw new Error("Invalid destination coordinates");
       }
 
-      // Check for extreme conditions
+      // Enhanced AI safety analysis and warnings
       const safetyScore = routeModes?.[routeMode || "quickest"]?.safetyScore;
-      if (safetyScore && safetyScore.overall < 30) {
-        console.warn("⚠️ Safety critical navigation attempt");
-        const userConfirm = confirm(
-          "Safety Alert: This route may be dangerous. Continue anyway?",
-        );
-        if (!userConfirm) {
-          setIsNavigating(false);
-          return;
+      if (safetyScore) {
+        // Log detailed safety analysis
+        console.log("🛡️ AI Safety Analysis:", {
+          overall: safetyScore.overall,
+          traffic: safetyScore.traffic,
+          weather: safetyScore.weather,
+          time: safetyScore.time,
+          area: safetyScore.area,
+        });
+
+        // Enhanced safety warnings with specific recommendations
+        if (safetyScore.overall < 40) {
+          console.warn("⚠️ High-risk route detected by AI analysis");
+          const riskFactors = [];
+          if (safetyScore.traffic < 50)
+            riskFactors.push("Heavy traffic conditions");
+          if (safetyScore.weather < 50)
+            riskFactors.push("Poor weather conditions");
+          if (safetyScore.time < 50) riskFactors.push("Dangerous time of day");
+          if (safetyScore.area < 50)
+            riskFactors.push("High-risk area detected");
+
+          const warningMessage = `🚨 AI Safety Alert\n\nRisk factors detected:\n${riskFactors.map((f) => `• ${f}`).join("\n")}\n\nRecommendation: Consider taking the safest route or delay travel.\n\nContinue anyway?`;
+
+          unifiedNotifications.warning("High Risk Route", {
+            message: "AI detected safety concerns. Check route details.",
+            persistent: true,
+          });
+
+          const userConfirm = confirm(warningMessage);
+          if (!userConfirm) {
+            setIsNavigating(false);
+            return;
+          }
+        } else if (safetyScore.overall < 70) {
+          unifiedNotifications.info("Moderate Risk Route", {
+            message: "AI suggests caution. Stay alert during navigation.",
+          });
+        } else {
+          unifiedNotifications.success("Safe Route", {
+            message: "AI confirms this is a safe route for travel.",
+          });
         }
       }
 
@@ -864,14 +947,16 @@ export function ExpandableSearchBar({
           // Collapsed State - Modern floating search bar
           <motion.div
             onClick={handleSearchBarClick}
-            className="flex items-center gap-3 px-4 py-3 bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-200/50 min-w-[300px] max-w-sm ring-1 ring-gray-200/30"
+            className="flex items-center gap-4 px-6 py-4 glass-light rounded-ultra shadow-xl transition-all duration-500 cursor-pointer border border-white/60 min-w-[340px] max-w-md ring-1 ring-slate-200/20 interactive-card group"
             whileHover={{
-              scale: 1.02,
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.15)",
-              backdropFilter: "blur(20px)",
+              scale: 1.03,
+              y: -4,
+              boxShadow:
+                "0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08)",
+              backdropFilter: "blur(24px)",
             }}
             whileTap={{
-              scale: 0.98,
+              scale: 0.97,
               transition: { duration: 0.1 },
             }}
             style={{
@@ -880,10 +965,30 @@ export function ExpandableSearchBar({
               perspective: 1000,
             }}
           >
-            <Search className="h-5 w-5 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-500 text-base truncate flex-1 whitespace-nowrap">
-              {searchQuery || placeholder}
-            </span>
+            <motion.div
+              className="p-2.5 rounded-xl bg-slate-100 group-hover:bg-slate-200 transition-all duration-300 flex-shrink-0"
+              whileHover={{ rotate: 15, scale: 1.1 }}
+            >
+              <Search className="w-5 h-5 text-slate-600" />
+            </motion.div>
+            <div className="flex-1 min-w-0">
+              <motion.span
+                className="text-slate-700 font-semibold text-base tracking-tight block"
+                initial={{ x: -10, opacity: 0.7 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                {searchQuery || "Where do you want to go?"}
+              </motion.span>
+              <motion.div
+                className="text-sm text-slate-500 mt-0.5 font-medium truncate"
+                initial={{ x: -10, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                🔍 Search • 🧭 Navigate • 🛡️ AI Safety
+              </motion.div>
+            </div>
           </motion.div>
         ) : (
           // Expanded State - Full search interface
@@ -917,14 +1022,14 @@ export function ExpandableSearchBar({
                   whileTap={{ scale: 0.9 }}
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 >
-                  <Button
+                  <GlassButton
                     onClick={handleCollapse}
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 transition-all duration-200"
+                    size="icon-sm"
+                    animation="subtle"
+                    className="rounded-full"
                   >
-                    <ArrowRight className="h-4 w-4 text-gray-500 rotate-180 transition-transform duration-200" />
-                  </Button>
+                    <ArrowRight className="h-4 w-4 rotate-180" />
+                  </GlassButton>
                 </motion.div>
               </div>
 
@@ -933,26 +1038,26 @@ export function ExpandableSearchBar({
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder={placeholder}
-                className="pl-14 pr-20 h-16 text-base border-0 rounded-xl focus:ring-0 bg-transparent"
+                className="pl-16 pr-20 h-16 text-base border-0 rounded-xl focus:ring-0 bg-transparent font-medium text-slate-700 placeholder:text-slate-400 focus:placeholder:text-slate-300 transition-all duration-300"
                 autoComplete="off"
                 autoFocus
               />
 
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                 {searchQuery && (
-                  <Button
+                  <GlassButton
                     onClick={() => {
                       setSearchQuery("");
                       setSuggestions([]);
                       setShowSuggestions(true);
                       searchInputRef.current?.focus();
                     }}
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 rounded-full hover:bg-gray-100"
+                    size="icon-sm"
+                    animation="subtle"
+                    className="rounded-full"
                   >
-                    <X className="h-4 w-4 text-gray-400" />
-                  </Button>
+                    <X className="h-4 w-4" />
+                  </GlassButton>
                 )}
               </div>
             </div>
@@ -1172,31 +1277,35 @@ export function ExpandableSearchBar({
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                    <div className="flex gap-3">
+                      <PrimaryButton
                         onClick={() =>
                           startNavigationToDestination(selectedDestination)
                         }
                         disabled={isNavigating}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+                        loading={isNavigating}
+                        size="md"
+                        animation="float"
+                        className="flex-1"
+                        leftIcon={<Navigation className="w-4 h-4" />}
                       >
-                        {isNavigating ? "Starting..." : "Start Navigation"}
-                      </motion.button>
+                        {isNavigating
+                          ? "Starting Navigation..."
+                          : "Start Navigation"}
+                      </PrimaryButton>
 
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                      <SecondaryButton
                         onClick={() => {
                           setShowRoutePreview(false);
                           setSelectedDestination(null);
                           setRouteInfo(null);
                         }}
-                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors"
+                        size="md"
+                        animation="subtle"
+                        leftIcon={<X className="w-4 h-4" />}
                       >
                         Cancel
-                      </motion.button>
+                      </SecondaryButton>
                     </div>
                   </div>
                 </motion.div>
