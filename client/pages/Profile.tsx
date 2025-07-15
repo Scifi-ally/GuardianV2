@@ -85,6 +85,7 @@ const floatingVariants = {
 };
 
 const buttonVariants = {
+  hover: { scale: 1.02, y: -2 },
   tap: { scale: 0.98 },
 };
 
@@ -205,16 +206,16 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 safe-bottom-spacing pb-20">
+    <div className="min-h-screen bg-white safe-bottom-spacing">
       {/* SOS notifications now handled by unified notification system */}
 
-      <main className="container px-4 py-8 space-y-8 max-w-4xl mx-auto flex flex-col items-center">
+      <main className="container px-4 py-6 space-y-6 max-w-4xl mx-auto">
         {/* Profile Header */}
-        <Card className="border-2 border-gray-100 shadow-2xl bg-white w-full max-w-2xl rounded-3xl hover:shadow-3xl transition-all duration-300">
-          <CardContent className="p-8">
-            <div className="flex flex-col items-center text-center space-y-6">
+        <Card className="border shadow-lg bg-white">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center text-center space-y-4">
               <div className="relative">
-                <Avatar className="h-28 w-28 border-4 border-white shadow-xl">
+                <Avatar className="h-24 w-24 border-2 border-gray-200">
                   <AvatarImage
                     src={userProfile?.photoURL || currentUser?.photoURL}
                     alt={
@@ -250,10 +251,10 @@ export default function Profile() {
                 )}
               </div>
 
-              <div className="flex gap-4 w-full max-w-md">
+              <div className="flex gap-3 w-full max-w-sm">
                 <Button
                   onClick={handleEditProfile}
-                  className="flex-1 h-12 text-sm bg-white border-2 border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 shadow-md hover:shadow-lg rounded-xl"
+                  className="flex-1 h-10 text-sm"
                   variant="outline"
                 >
                   <Edit className="h-4 w-4 mr-2" />
@@ -261,7 +262,7 @@ export default function Profile() {
                 </Button>
                 <Button
                   onClick={handleAdvancedSettings}
-                  className="flex-1 h-12 text-sm bg-gradient-to-r from-gray-700 to-gray-800 text-white hover:from-gray-800 hover:to-gray-900 transition-all duration-200 shadow-md hover:shadow-lg rounded-xl"
+                  className="flex-1 h-10 text-sm bg-black text-white hover:bg-gray-800"
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
@@ -272,20 +273,18 @@ export default function Profile() {
         </Card>
 
         {/* Guardian Key Section with QR Code */}
-        <div className="w-full max-w-2xl">
-          <GuardianKeyCard />
-        </div>
+        <GuardianKeyCard />
 
         {/* QR Scanner - Moved to bottom */}
         <div className="flex justify-center">
           <Card
-            className="text-center p-4 bg-white border transition-shadow cursor-pointer group max-w-sm"
+            className="text-center p-4 bg-white border hover:shadow-lg transition-shadow cursor-pointer group max-w-sm"
             onClick={() => setShowQRScanner(true)}
           >
-            <div className="text-2xl font-bold text-blue-500 transition-colors">
+            <div className="text-2xl font-bold text-blue-500 group-hover:text-blue-600 transition-colors">
               <QrCode className="h-8 w-8 mx-auto" />
             </div>
-            <div className="text-sm text-gray-600 transition-colors">
+            <div className="text-sm text-gray-600 group-hover:text-blue-500 transition-colors">
               QR Scanner
             </div>
             <div className="mt-1">
@@ -295,24 +294,20 @@ export default function Profile() {
         </div>
 
         {/* User Stats & Activity */}
-        <div className="w-full max-w-2xl">
-          <ErrorBoundary>
-            <UserStatsManager />
-          </ErrorBoundary>
-        </div>
+        <ErrorBoundary>
+          <UserStatsManager />
+        </ErrorBoundary>
 
         {/* Emergency Contacts Section */}
-        <div className="w-full max-w-2xl">
-          <EmergencyContactManager />
-        </div>
+        <EmergencyContactManager />
 
         {/* Sign Out */}
-        <Card className="border-2 border-gray-100 shadow-xl bg-white w-full max-w-2xl rounded-2xl hover:shadow-2xl transition-all duration-300">
+        <Card className="border shadow-lg bg-white">
           <CardContent className="p-6">
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="w-full justify-center h-12 text-red-600 border-2 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
+              className="w-full justify-center h-12 text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out

@@ -27,9 +27,8 @@ import Settings from "./pages/Settings";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
-import EnhancedNavigation from "./pages/EnhancedNavigation";
 import { FullPageLoading } from "@/components/LoadingAnimation";
-import { FunctionalSplashScreen } from "@/components/FunctionalSplashScreen";
+import { SplashScreen } from "@/components/SplashScreen";
 import { useCapacitor } from "@/hooks/use-capacitor";
 import { MagicNavbar } from "@/components/MagicNavbar";
 
@@ -173,23 +172,6 @@ function AnimatedRoutes() {
           }
         />
         <Route
-          path="/enhanced-navigation"
-          element={
-            <ProtectedRoute>
-              <SafeMotion
-                variants={pageVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={emergencyTransition}
-                className="w-full min-h-screen"
-              >
-                <EnhancedNavigation />
-              </SafeMotion>
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/signin"
           element={
             <PublicRoute>
@@ -248,7 +230,7 @@ const App = () => {
           enableSystem={false}
           forcedTheme="light"
         >
-          <FunctionalSplashScreen onComplete={handleSplashComplete} />
+          <SplashScreen onComplete={handleSplashComplete} duration={3000} />
         </ThemeProvider>
       </QueryClientProvider>
     );

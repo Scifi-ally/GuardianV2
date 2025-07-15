@@ -1,415 +1,290 @@
-/**
- * Compact Search Bar - Clean, functional, and fast
- * Focuses on simplicity and performance
- */
-
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, X, Navigation, Clock, Star } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import {
+  Search,
+  MapPin,
+  Navigation,
+  Target,
+  X,
+  Loader2,
+  ArrowRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface SearchSuggestion {
-  id: string;
-  name: string;
-  address: string;
-  location: { lat: number; lng: number };
-  type: string;
-  rating?: number;
-}
-
 interface CompactSearchBarProps {
-  onPlaceSelect: (place: SearchSuggestion) => void;
-  onNavigationStart?: (destination: {
-    lat: number;
-    lng: number;
-    name: string;
-  }) => void;
-  placeholder?: string;
-  className?: string;
+  fromLocation: string;
+  setFromLocation: (location: string) => void;
+  toLocation: string;
+  setToLocation: (location: string) => void;
+  onSearch: () => void;
+  onUseCurrentLocation: () => void;
+  location?: {
+    latitude: number;
+    longitude: number;
+    accuracy: number;
+    timestamp: number;
+  } | null;
+  isSearching?: boolean;
 }
 
 export function CompactSearchBar({
-  onPlaceSelect,
-  onNavigationStart,
-  placeholder = "Search destinations...",
-  className,
+  fromLocation,
+  setFromLocation,
+  toLocation,
+  setToLocation,
+  onSearch,
+  onUseCurrentLocation,
+  location,
+  isSearching = false,
 }: CompactSearchBarProps) {
-  const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [recentSearches, setRecentSearches] = useState<SearchSuggestion[]>([]);
-
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [focusedField, setFocusedField] = useState<"from" | "to" | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<NodeJS.Timeout>();
 
-  // Google Places Autocomplete Service
-  const autocompleteService = useRef<google.maps.places.AutocompleteService>();
-  const placesService = useRef<google.maps.places.PlacesService>();
+  const suggestions = [
+    { label: "Home", icon: MapPin, type: "recent" },
+    { label: "Work", icon: MapPin, type: "recent" },
+    { label: "Hospital", icon: MapPin, type: "emergency" },
+    { label: "Police Station", icon: MapPin, type: "emergency" },
+  ];
+
+  const handleExpand = () => {
+    setIsExpanded(true);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  const handleCollapse = () => {
+    setIsExpanded(false);
+    setFocusedField(null);
+    setShowSuggestions(false);
+  };
+
+  const handleSearch = () => {
+    if (!fromLocation) {
+      onUseCurrentLocation();
+    }
+    if (fromLocation && toLocation) {
+      onSearch();
+      handleCollapse();
+    }
+  };
 
   useEffect(() => {
-    if (window.google?.maps?.places) {
-      autocompleteService.current =
-        new google.maps.places.AutocompleteService();
-
-      // Create a dummy div for PlacesService
-      const dummyDiv = document.createElement("div");
-      placesService.current = new google.maps.places.PlacesService(dummyDiv);
+    if (fromLocation && toLocation) {
+      setIsExpanded(true);
     }
-
-    // Load recent searches from localStorage
-    try {
-      const stored = localStorage.getItem("guardian-recent-searches");
-      if (stored) {
-        const recent = JSON.parse(stored);
-        setRecentSearches(recent.slice(0, 3)); // Only keep top 3
-      }
-    } catch (error) {
-      console.warn("Failed to load recent searches:", error);
-    }
-  }, []);
-
-  const saveRecentSearch = (suggestion: SearchSuggestion) => {
-    try {
-      const existing = recentSearches.filter(
-        (item) => item.id !== suggestion.id,
-      );
-      const updated = [suggestion, ...existing].slice(0, 3);
-
-      setRecentSearches(updated);
-      localStorage.setItem("guardian-recent-searches", JSON.stringify(updated));
-    } catch (error) {
-      console.warn("Failed to save recent search:", error);
-    }
-  };
-
-  const searchPlaces = async (searchQuery: string) => {
-    if (!searchQuery.trim() || !autocompleteService.current) {
-      setSuggestions([]);
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const predictions = await new Promise<
-        google.maps.places.AutocompletePrediction[]
-      >((resolve, reject) => {
-        autocompleteService.current!.getPlacePredictions(
-          {
-            input: searchQuery,
-            types: ["establishment", "geocode"],
-            componentRestrictions: { country: "us" }, // Adjust as needed
-          },
-          (predictions, status) => {
-            if (
-              status === google.maps.places.PlacesServiceStatus.OK &&
-              predictions
-            ) {
-              resolve(predictions);
-            } else {
-              resolve([]);
-            }
-          },
-        );
-      });
-
-      const mappedSuggestions: SearchSuggestion[] = predictions
-        .slice(0, 5)
-        .map((prediction, index) => ({
-          id: prediction.place_id || `suggestion-${index}`,
-          name: prediction.structured_formatting.main_text,
-          address: prediction.structured_formatting.secondary_text || "",
-          location: { lat: 0, lng: 0 }, // Will be filled when selected
-          type: prediction.types?.[0] || "place",
-          rating:
-            Math.random() > 0.5
-              ? Math.round((Math.random() * 2 + 3) * 10) / 10
-              : undefined,
-        }));
-
-      setSuggestions(mappedSuggestions);
-    } catch (error) {
-      console.error("Search error:", error);
-      setSuggestions([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setQuery(value);
-    setSelectedIndex(-1);
-
-    // Clear previous debounce
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    // Debounce search
-    debounceRef.current = setTimeout(() => {
-      searchPlaces(value);
-    }, 300);
-  };
-
-  const getPlaceDetails = async (
-    placeId: string,
-  ): Promise<google.maps.places.PlaceResult | null> => {
-    if (!placesService.current) return null;
-
-    return new Promise((resolve) => {
-      placesService.current!.getDetails(
-        {
-          placeId,
-          fields: ["geometry", "name", "formatted_address", "rating"],
-        },
-        (place, status) => {
-          if (
-            status === google.maps.places.PlacesServiceStatus.OK &&
-            place?.geometry?.location
-          ) {
-            resolve(place);
-          } else {
-            resolve(null);
-          }
-        },
-      );
-    });
-  };
-
-  const handleSuggestionSelect = async (suggestion: SearchSuggestion) => {
-    setQuery(suggestion.name);
-    setIsOpen(false);
-    setSuggestions([]);
-
-    let finalSuggestion = suggestion;
-
-    // Get place details if we have a place_id
-    if (suggestion.id.startsWith("ChIJ") || suggestion.id.includes("place")) {
-      const placeDetails = await getPlaceDetails(suggestion.id);
-      if (placeDetails?.geometry?.location) {
-        finalSuggestion = {
-          ...suggestion,
-          location: {
-            lat: placeDetails.geometry.location.lat(),
-            lng: placeDetails.geometry.location.lng(),
-          },
-        };
-      }
-    }
-
-    // Save to recent searches
-    saveRecentSearch(finalSuggestion);
-
-    // Call onPlaceSelect first
-    onPlaceSelect(finalSuggestion);
-
-    // If we have onNavigationStart, also trigger navigation
-    if (
-      onNavigationStart &&
-      finalSuggestion.location.lat &&
-      finalSuggestion.location.lng
-    ) {
-      onNavigationStart({
-        lat: finalSuggestion.location.lat,
-        lng: finalSuggestion.location.lng,
-        name: finalSuggestion.name,
-      });
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen || suggestions.length === 0) return;
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev < suggestions.length - 1 ? prev + 1 : 0,
-        );
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : suggestions.length - 1,
-        );
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
-          handleSuggestionSelect(suggestions[selectedIndex]);
-        }
-        break;
-      case "Escape":
-        setIsOpen(false);
-        setSelectedIndex(-1);
-        inputRef.current?.blur();
-        break;
-    }
-  };
-
-  const clearSearch = () => {
-    setQuery("");
-    setSuggestions([]);
-    setIsOpen(false);
-    setSelectedIndex(-1);
-    inputRef.current?.focus();
-  };
-
-  const handleFocus = () => {
-    setIsOpen(true);
-    if (query && suggestions.length === 0) {
-      searchPlaces(query);
-    } else if (!query && recentSearches.length > 0) {
-      // Show recent searches when input is empty
-      setSuggestions(recentSearches);
-    }
-  };
-
-  const handleBlur = () => {
-    // Delay closing to allow click on suggestions
-    setTimeout(() => {
-      setIsOpen(false);
-      setSelectedIndex(-1);
-    }, 150);
-  };
+  }, [fromLocation, toLocation]);
 
   return (
     <div
-      className={cn("relative w-full max-w-md", className)}
-      style={{ maxWidth: "100%" }}
+      className="absolute left-4 right-4 z-[1000]"
+      style={{
+        top: `max(env(safe-area-inset-top, 0px) + 16px, 64px)`,
+        paddingBottom: "8px",
+      }}
     >
-      {/* Search Input */}
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-          <Search
-            className={cn(
-              "h-4 w-4 transition-colors duration-200",
-              isOpen ? "text-blue-500" : "text-gray-400",
-            )}
-          />
-        </div>
-
-        <Input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          className="pl-10 pr-10 h-10 sm:h-12 bg-white border-2 border-gray-200 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm hover:shadow-md transition-all duration-200 placeholder:text-gray-400 w-full max-w-full text-sm sm:text-base"
-          style={{ fontSize: "16px" }}
-        />
-
-        {query && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearSearch}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100 rounded-lg"
-          >
-            <X className="h-4 w-4 text-gray-400" />
-          </Button>
+      <motion.div
+        layout
+        className={cn(
+          "bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 overflow-hidden",
+          "transition-all duration-300",
         )}
-
-        {isLoading && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-      </div>
-
-      {/* Suggestions Dropdown */}
-      <AnimatePresence>
-        {isOpen && (query.length > 0 || recentSearches.length > 0) && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden backdrop-blur-sm max-w-full"
-            style={{ maxWidth: "100vw", width: "100%" }}
-          >
-            {/* Recent Searches Header */}
-            {!query && suggestions.length > 0 && (
-              <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3 w-3 text-gray-400" />
-                  <span className="text-xs font-medium text-gray-600">
-                    Recent Searches
-                  </span>
+        animate={{
+          scale: isExpanded ? 1 : 0.98,
+        }}
+      >
+        <AnimatePresence mode="wait">
+          {!isExpanded ? (
+            /* Compact Mode */
+            <motion.div
+              key="compact"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="p-3"
+            >
+              <button
+                onClick={handleExpand}
+                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors min-h-[44px]"
+              >
+                <div className="p-2 bg-blue-100 rounded-xl">
+                  <Search className="h-4 w-4 text-blue-600" />
                 </div>
-              </div>
-            )}
-
-            {suggestions.length > 0 ? (
-              suggestions.map((suggestion, index) => (
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium text-gray-900">
+                    {fromLocation && toLocation
+                      ? `${fromLocation} → ${toLocation}`
+                      : "Where to go?"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Tap to set destination
+                  </p>
+                </div>
+              </button>
+            </motion.div>
+          ) : (
+            /* Expanded Mode */
+            <motion.div
+              key="expanded"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="p-4"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Plan Route
+                </h3>
                 <motion.button
-                  key={suggestion.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => handleSuggestionSelect(suggestion)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100 last:border-b-0",
-                    selectedIndex === index && "bg-blue-50 hover:bg-blue-50",
-                  )}
+                  onClick={handleCollapse}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <MapPin className="h-4 w-4 text-blue-600" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate text-sm sm:text-base">
-                      {suggestion.name}
-                    </div>
-                    {suggestion.address && (
-                      <div className="text-xs sm:text-sm text-gray-500 truncate">
-                        {suggestion.address}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-shrink-0 flex items-center gap-2">
-                    {suggestion.rating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                        <span className="text-xs text-gray-600">
-                          {suggestion.rating}
-                        </span>
-                      </div>
-                    )}
-                    <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center">
-                      <Navigation className="h-3 w-3 text-blue-600" />
-                    </div>
-                  </div>
+                  <X className="h-4 w-4 text-gray-500" />
                 </motion.button>
-              ))
-            ) : isLoading ? (
-              <div className="px-4 py-6 text-center">
-                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Searching...</p>
               </div>
-            ) : query.length > 2 ? (
-              <div className="px-4 py-6 text-center">
-                <MapPin className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No results found</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Try a different search term
-                </p>
+
+              <div className="space-y-3">
+                {/* From Field */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600 flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    From
+                  </label>
+                  <div className="relative">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={fromLocation}
+                      onChange={(e) => setFromLocation(e.target.value)}
+                      onFocus={() => {
+                        setFocusedField("from");
+                        setShowSuggestions(true);
+                      }}
+                      onBlur={() =>
+                        setTimeout(() => setShowSuggestions(false), 150)
+                      }
+                      placeholder="Enter starting location"
+                      className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    {location && !fromLocation && (
+                      <button
+                        onClick={onUseCurrentLocation}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors touch-manipulation min-h-[32px]"
+                      >
+                        Use current
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* To Field */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-600 flex items-center gap-1">
+                    <div className="w-2 h-2 bg-red-500 rounded-full" />
+                    To
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={toLocation}
+                      onChange={(e) => setToLocation(e.target.value)}
+                      onFocus={() => {
+                        setFocusedField("to");
+                        setShowSuggestions(true);
+                      }}
+                      onBlur={() =>
+                        setTimeout(() => setShowSuggestions(false), 150)
+                      }
+                      placeholder="Choose destination"
+                      className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                    <Navigation className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+
+                {/* Search Button */}
+                <motion.button
+                  onClick={handleSearch}
+                  disabled={!fromLocation || !toLocation || isSearching}
+                  className={cn(
+                    "w-full flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all",
+                    fromLocation && toLocation
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed",
+                  )}
+                  whileHover={fromLocation && toLocation ? { scale: 1.02 } : {}}
+                  whileTap={fromLocation && toLocation ? { scale: 0.98 } : {}}
+                >
+                  {isSearching ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="h-4 w-4" />
+                      Get Directions
+                    </>
+                  )}
+                </motion.button>
               </div>
-            ) : null}
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+              {/* Quick Suggestions */}
+              <AnimatePresence>
+                {showSuggestions && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mt-3 p-3 bg-gray-50 rounded-xl"
+                  >
+                    <p className="text-xs font-medium text-gray-600 mb-2">
+                      Quick options
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {suggestions.map((suggestion, index) => (
+                        <motion.button
+                          key={suggestion.label}
+                          onClick={() => {
+                            if (focusedField === "from") {
+                              setFromLocation(suggestion.label);
+                            } else {
+                              setToLocation(suggestion.label);
+                            }
+                            setShowSuggestions(false);
+                          }}
+                          className="flex items-center gap-2 p-3 text-left hover:bg-white rounded-lg transition-colors min-h-[44px] touch-manipulation"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          <suggestion.icon
+                            className={cn(
+                              "h-3 w-3",
+                              suggestion.type === "emergency"
+                                ? "text-red-500"
+                                : "text-gray-500",
+                            )}
+                          />
+                          <span className="text-xs text-gray-700">
+                            {suggestion.label}
+                          </span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }
-
-export default CompactSearchBar;

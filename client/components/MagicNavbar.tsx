@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -446,53 +446,17 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         )}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {/* Professional background with enhanced blur effect */}
-        <motion.div
-          className="absolute inset-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-2xl"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        />
-
-        {/* Subtle gradient overlay for depth */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-t from-gray-50/20 to-transparent rounded-t-2xl"
-          animate={{
-            background: [
-              "linear-gradient(to top, rgba(249, 250, 251, 0.2), transparent)",
-              "linear-gradient(to top, rgba(239, 246, 255, 0.3), transparent)",
-              "linear-gradient(to top, rgba(249, 250, 251, 0.2), transparent)",
-            ],
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
+        {/* Background with blur effect */}
+        <div className="absolute inset-0 bg-background/95 backdrop-blur-lg border-t border-border/50 rounded-t-3xl shadow-2xl" />
 
         {/* Navigation items */}
-        <motion.div
+        <div
           className={cn(
-            "relative rounded-t-2xl",
-            isMobile ? "px-6 py-4" : "px-8 py-5",
+            "relative rounded-t-3xl",
+            isMobile ? "px-4 py-3" : "px-8 py-4",
           )}
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 30,
-            delay: 0.2,
-          }}
         >
-          <motion.div
-            className="flex items-center justify-between w-full max-w-sm mx-auto"
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 400,
-              damping: 25,
-              delay: 0.3,
-            }}
-          >
+          <div className="flex items-center justify-between w-full max-w-md mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = activeIndex === index;
@@ -530,15 +494,15 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                       }
                     }}
                     className={cn(
-                      "relative flex flex-col items-center transition-all duration-300 flex-1 touch-emergency emergency-focus sos-button rounded-xl",
+                      "relative flex flex-col items-center transition-all duration-300 flex-1 touch-emergency emergency-focus sos-button",
                       isMobile
-                        ? "px-4 py-3 max-w-[90px] min-h-[60px]"
-                        : "px-6 py-4 max-w-[80px]",
+                        ? "px-3 py-2 max-w-[90px] min-h-[60px]"
+                        : "px-6 py-3 max-w-[80px]",
                       sosPressed
-                        ? "bg-gradient-to-br from-orange-400 to-orange-500 text-white shadow-lg animate-pulse"
+                        ? "bg-warning/20 rounded-3xl animate-pulse"
                         : activeAlertId
-                          ? "bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg animate-pulse"
-                          : "bg-gradient-to-br from-red-50 to-red-100 border border-red-200",
+                          ? "bg-red-500 text-white rounded-3xl animate-pulse"
+                          : "bg-emergency/20 rounded-3xl",
                       sending && "opacity-50 cursor-not-allowed",
                     )}
                   >
@@ -593,132 +557,92 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   onTouchEnd={handleMapMouseUp}
                   disabled={sending}
                   className={cn(
-                    "relative flex flex-col items-center transition-all duration-300 flex-1 touch-optimization rounded-xl",
+                    "relative flex flex-col items-center transition-all duration-300 flex-1 touch-optimization",
                     isMobile
-                      ? "px-4 py-3 max-w-[90px] min-h-[60px]"
-                      : "px-6 py-4 max-w-[80px]",
+                      ? "px-3 py-2 max-w-[90px] min-h-[50px]"
+                      : "px-6 py-3 max-w-[80px]",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
                     item.id === "map" &&
                       showEnhancedMapHint &&
-                      "bg-blue-50 border border-blue-200",
-                    isActive && !isSpecial && "bg-blue-50",
+                      "bg-blue-100 rounded-lg",
                   )}
-                  whileTap={{ scale: 0.92 }}
                   whileHover={{
-                    scale: 1.05,
+                    scale: isSpecial ? 1.15 : 1.1,
                     y: -2,
-                    transition: { duration: 0.2 },
                   }}
-                  initial={{ opacity: 0, y: 30, scale: 0.8, rotate: -10 }}
-                  animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{
                     delay: index * 0.1,
                     type: "spring",
                     damping: 20,
                     stiffness: 300,
-                    duration: 0.6,
                   }}
                 >
-                  {/* Icon container */}
-                  <motion.div
+                  {/* Background circle for active/special items */}
+                  <div
                     className={cn(
-                      "relative z-10 p-3 rounded-xl transition-all duration-300 mb-1",
-                      isSpecial &&
-                        "bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg",
-                      isActive &&
-                        !isSpecial &&
-                        "bg-blue-500 text-white shadow-md",
-                      !isActive && !isSpecial && "bg-gray-100 text-gray-600",
+                      "absolute inset-2 rounded-3xl transition-all duration-300",
+                      isActive && !isSpecial && "bg-primary/10 scale-110",
+                      isSpecial && "bg-emergency/10 scale-125 animate-pulse",
                     )}
-                    animate={{
-                      scale: isActive ? [1, 1.1, 1] : 1,
-                      boxShadow: isActive
-                        ? [
-                            "0 4px 20px rgba(59, 130, 246, 0.3)",
-                            "0 8px 30px rgba(59, 130, 246, 0.4)",
-                            "0 4px 20px rgba(59, 130, 246, 0.3)",
-                          ]
-                        : "0 2px 10px rgba(0, 0, 0, 0.1)",
-                    }}
-                    transition={{
-                      duration: 0.8,
-                      ease: [0.25, 0.46, 0.45, 0.94],
-                      repeat: isActive ? Infinity : 0,
-                      repeatDelay: 1.2,
-                    }}
+                  />
+
+                  {/* Icon container */}
+                  <div
+                    className={cn(
+                      "relative z-10 p-1.5 rounded-2xl transition-all duration-300",
+                      isSpecial &&
+                        "bg-emergency text-emergency-foreground shadow-lg",
+                      isActive && !isSpecial && "bg-primary/20",
+                    )}
                   >
-                    <motion.div
-                      animate={isActive ? { rotate: [0, 3, -3, 0] } : {}}
-                      transition={{ duration: 0.8, ease: "easeInOut" }}
-                    >
-                      <Icon
-                        className={cn(
-                          "transition-all duration-300",
-                          isSpecial ? "h-5 w-5" : "h-4 w-4",
-                        )}
-                      />
-                    </motion.div>
-                  </motion.div>
+                    <Icon
+                      className={cn(
+                        "transition-all duration-300",
+                        isSpecial ? "h-6 w-6" : "h-4 w-4",
+                        isActive && !isSpecial
+                          ? "text-primary"
+                          : "text-foreground",
+                        isSpecial && "text-emergency-foreground",
+                      )}
+                    />
+                  </div>
 
                   {/* Label */}
-                  <motion.span
+                  <span
                     className={cn(
-                      "text-xs font-semibold transition-all duration-300",
+                      "text-xs font-medium transition-all duration-300 mt-1",
                       isActive && !isSpecial
-                        ? "text-blue-600"
-                        : "text-gray-600",
-                      isSpecial && "text-red-600 font-bold",
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                      isSpecial && "text-emergency font-bold",
                     )}
-                    animate={{
-                      y: isActive ? [0, -1, 0] : 0,
-                    }}
-                    transition={{
-                      duration: 1.2,
-                      ease: "easeInOut",
-                      repeat: isActive ? Infinity : 0,
-                      repeatDelay: 0.5,
-                    }}
                   >
                     {item.label}
-                  </motion.span>
+                  </span>
 
                   {/* Special item glow effect */}
                   {isSpecial && (
                     <motion.div
-                      className="absolute inset-0 rounded-xl bg-red-500/10"
+                      className="absolute inset-0 rounded-3xl bg-emergency/20 opacity-50"
                       animate={{
-                        opacity: [0.1, 0.3, 0.1],
-                        scale: [1, 1.02, 1],
+                        opacity: [0.2, 0.5, 0.2],
+                        scale: [1, 1.05, 1],
                       }}
                       transition={{
-                        duration: 2.5,
+                        duration: 2,
                         repeat: Infinity,
                         ease: "easeInOut",
                       }}
                     />
                   )}
-
-                  {/* Active item indicator */}
-                  <AnimatePresence>
-                    {isActive && !isSpecial && (
-                      <motion.div
-                        className="absolute bottom-1 left-1/2 w-1 h-1 bg-blue-500 rounded-full"
-                        initial={{ scale: 0, x: "-50%" }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        transition={{
-                          type: "spring",
-                          damping: 15,
-                          stiffness: 300,
-                        }}
-                      />
-                    )}
-                  </AnimatePresence>
                 </motion.button>
               );
             })}
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* Enhanced Navigation Hint */}
         <AnimatePresence>
