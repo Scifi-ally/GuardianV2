@@ -66,14 +66,14 @@ interface EnhancedSearchBarProps {
 const RECENT_SEARCHES_KEY = "enhanced_recent_searches";
 const FAVORITE_PLACES_KEY = "enhanced_favorite_places";
 
-// Popular categories for quick access
+// Safety-focused categories for quick access
 const QUICK_CATEGORIES = [
-  { name: "Restaurants", icon: "restaurant", query: "restaurant" },
-  { name: "Gas Stations", icon: "gas", query: "gas station" },
-  { name: "Hospitals", icon: "hospital", query: "hospital" },
-  { name: "ATMs", icon: "building", query: "atm" },
-  { name: "Shopping", icon: "building", query: "shopping mall" },
-  { name: "Hotels", icon: "building", query: "hotel" },
+  { name: "Hospitals", icon: "hospital", query: "hospital near me" },
+  { name: "Police", icon: "building", query: "police station near me" },
+  { name: "Fire Station", icon: "building", query: "fire station near me" },
+  { name: "Pharmacy", icon: "hospital", query: "pharmacy near me" },
+  { name: "Safe Places", icon: "building", query: "safe places near me" },
+  { name: "Gas Stations", icon: "gas", query: "gas station near me" },
 ];
 
 export function EnhancedSearchBar({
@@ -430,7 +430,7 @@ export function EnhancedSearchBar({
     <div className={cn("relative w-full max-w-2xl mx-auto", className)}>
       {/* Search Input */}
       <div className="relative">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
           <Search
             className={cn(
               "h-5 w-5 transition-colors",
@@ -448,57 +448,43 @@ export function EnhancedSearchBar({
             if (suggestions.length > 0) setShowSuggestions(true);
           }}
           placeholder={placeholder}
-          className="pl-11 pr-24 h-12 text-base border-2 border-gray-200 focus:border-blue-500 rounded-xl shadow-sm"
+          className="pl-12 pr-20 h-14 text-base border border-gray-300 focus:border-blue-500 rounded-full shadow-md focus:shadow-lg transition-all duration-200 bg-white"
           autoComplete="off"
         />
 
-        {/* Current Location Button */}
-        <Button
-          onClick={handleCurrentLocation}
-          variant="ghost"
-          size="sm"
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-gray-500 hover:text-blue-500"
-          disabled={isSearching}
-        >
-          <Locate className="h-4 w-4" />
-        </Button>
+        {/* Action Buttons Container - Google Maps Style */}
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+          {/* Clear Button - Google Maps Style */}
+          {searchQuery && (
+            <Button
+              onClick={() => {
+                setSearchQuery("");
+                setSuggestions([]);
+                setShowSuggestions(false);
+                searchInputRef.current?.focus();
+              }}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+              title="Clear search"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
 
-        {/* Clear Button */}
-        {searchQuery && (
+          {/* Current Location Button */}
           <Button
-            onClick={() => {
-              setSearchQuery("");
-              setSuggestions([]);
-              setShowSuggestions(false);
-              searchInputRef.current?.focus();
-            }}
+            onClick={handleCurrentLocation}
             variant="ghost"
             size="sm"
-            className="absolute right-10 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+            className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 text-gray-500 hover:text-blue-500"
+            disabled={isSearching}
+            title="Use current location"
           >
-            <X className="h-3 w-3" />
+            <Locate className="h-4 w-4" />
           </Button>
-        )}
-      </div>
-
-      {/* Travel Mode Selector */}
-      {showTravelModes && (
-        <div className="flex items-center gap-2 mt-3 px-1">
-          <span className="text-sm text-gray-600 font-medium">Travel by:</span>
-          {(["driving", "walking", "bicycling"] as TravelMode[]).map((mode) => (
-            <Button
-              key={mode}
-              onClick={() => setCurrentTravelMode(mode)}
-              variant={currentTravelMode === mode ? "default" : "outline"}
-              size="sm"
-              className="h-8 px-3 text-xs"
-            >
-              {getTravelModeIcon(mode)}
-              <span className="ml-1 capitalize">{mode}</span>
-            </Button>
-          ))}
         </div>
-      )}
+      </div>
 
       {/* Suggestions Dropdown */}
       <AnimatePresence>
@@ -509,27 +495,27 @@ export function EnhancedSearchBar({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full left-0 right-0 mt-2 z-50"
+            className="absolute top-full left-0 right-0 mt-3 z-50"
           >
-            <Card className="shadow-xl border-2 border-gray-100 max-h-96 overflow-hidden">
+            <Card className="shadow-2xl border border-gray-200 max-h-96 overflow-hidden rounded-lg bg-white">
               <CardContent className="p-0">
                 {/* Quick Categories (when no search query) */}
                 {searchQuery === "" && (
-                  <div className="p-4 border-b border-gray-100">
-                    <div className="text-sm font-medium text-gray-700 mb-3">
+                  <div className="p-3 sm:p-4 border-b border-gray-100">
+                    <div className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                       Quick search
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2">
                       {QUICK_CATEGORIES.map((category) => (
                         <Button
                           key={category.name}
                           onClick={() => handleSearchChange(category.query)}
                           variant="outline"
                           size="sm"
-                          className="h-8 text-xs justify-start"
+                          className="h-7 sm:h-8 text-xs justify-start"
                         >
                           <Building className="h-3 w-3 mr-1" />
-                          {category.name}
+                          <span className="truncate">{category.name}</span>
                         </Button>
                       ))}
                     </div>
@@ -537,7 +523,7 @@ export function EnhancedSearchBar({
                 )}
 
                 {/* Suggestions List */}
-                <div className="max-h-80 overflow-y-auto">
+                <div className="max-h-64 sm:max-h-80 overflow-y-auto">
                   {suggestions.map((suggestion, index) => (
                     <motion.div
                       key={suggestion.id}
@@ -546,17 +532,17 @@ export function EnhancedSearchBar({
                       transition={{ delay: index * 0.05 }}
                       onClick={() => handlePlaceSelect(suggestion)}
                       className={cn(
-                        "flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-50 last:border-b-0",
+                        "flex items-center gap-2 sm:gap-3 p-2 sm:p-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-50 last:border-b-0",
                         selectedIndex === index && "bg-blue-50",
                       )}
                     >
                       {getSuggestionIcon(suggestion.icon, suggestion.type)}
 
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 truncate">
+                        <div className="font-medium text-sm sm:text-base text-gray-900 truncate">
                           {suggestion.name}
                         </div>
-                        <div className="text-sm text-gray-500 truncate">
+                        <div className="text-xs sm:text-sm text-gray-500 truncate">
                           {suggestion.address}
                         </div>
                       </div>

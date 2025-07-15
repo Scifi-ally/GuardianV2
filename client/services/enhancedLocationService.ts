@@ -68,10 +68,10 @@ class EnhancedLocationService {
   private isTracking = false;
   private config: LocationServiceConfig = {
     highAccuracy: false,
-    maxAge: 60000, // 60 seconds - longer cache
-    timeout: 30000, // 30 seconds - longer timeout
+    maxAge: 300000, // 5 minutes - longer cache to reduce requests
+    timeout: 45000, // 45 seconds - more generous timeout
     enableBackgroundTracking: true,
-    updateInterval: 15000, // 15 seconds - less frequent updates
+    updateInterval: 30000, // 30 seconds - less frequent updates for better battery
     maxHistorySize: 1000,
     enablePredictiveTracking: true,
     enableGeofencing: true,
@@ -99,8 +99,38 @@ class EnhancedLocationService {
 
   constructor() {
     this.loadSafetyZones();
+    this.loadHistoryFromStorage();
     this.setupBackgroundHandling();
     this.setupBatteryOptimization();
+
+    // Start location tracking automatically but gracefully
+    this.initializeGracefully();
+  }
+
+  private async initializeGracefully(): Promise<void> {
+    try {
+      // Wait a bit for the page to fully load
+      setTimeout(async () => {
+        try {
+          const permissionStatus = await this.getPermissionStatus();
+          if (permissionStatus === "granted") {
+            // Only auto-start if permission is already granted
+            await this.startTracking();
+          } else {
+            console.debug(
+              "Location permission not granted, waiting for user interaction",
+            );
+          }
+        } catch (error) {
+          console.debug(
+            "Deferred location initialization due to:",
+            error.message,
+          );
+        }
+      }, 1000);
+    } catch (error) {
+      console.debug("Graceful initialization deferred:", error.message);
+    }
   }
 
   // Configuration methods
@@ -148,13 +178,13 @@ class EnhancedLocationService {
         await this.acquireWakeLock();
       }
 
-      // Start tracking with battery optimization
+      // Start tracking with battery optimization and progressive timeouts
       const batteryOptimized =
         batteryOptimizationService.shouldReduceLocationAccuracy();
       const options: PositionOptions = {
-        enableHighAccuracy: batteryOptimized ? false : this.config.highAccuracy,
-        maximumAge: batteryOptimized ? 300000 : this.config.maxAge, // 5 minutes in battery saver
-        timeout: batteryOptimized ? 60000 : this.config.timeout, // Longer timeout in battery saver
+        enableHighAccuracy: false, // Always start with low accuracy for reliability
+        maximumAge: batteryOptimized ? 600000 : this.config.maxAge, // 10 minutes in battery saver
+        timeout: batteryOptimized ? 60000 : this.config.timeout, // Progressive timeout strategy
       };
 
       this.watchId = navigator.geolocation.watchPosition(
@@ -225,27 +255,56 @@ class EnhancedLocationService {
       return this.currentLocation;
     }
 
-    return new Promise((resolve, reject) => {
-      const options: PositionOptions = {
-        enableHighAccuracy: this.config.highAccuracy,
-        maximumAge: this.config.maxAge,
-        timeout: this.config.timeout,
-      };
+    // Progressive timeout strategy - try quick first, then fallback to longer timeout
+    return this.tryLocationWithFallback();
+  }
 
+  private async tryLocationWithFallback(): Promise<EnhancedLocationData> {
+    // First attempt: Quick, low accuracy
+    try {
+      return await this.attemptLocationRequest({
+        enableHighAccuracy: false,
+        maximumAge: this.config.maxAge,
+        timeout: 15000, // Quick first attempt
+      });
+    } catch (error) {
+      console.debug("Quick location attempt failed, trying longer timeout...");
+
+      // Second attempt: Longer timeout, still low accuracy
+      try {
+        return await this.attemptLocationRequest({
+          enableHighAccuracy: false,
+          maximumAge: this.config.maxAge * 2, // More generous cache
+          timeout: 45000, // Longer timeout
+        });
+      } catch (secondError) {
+        console.debug(
+          "Location request failed, checking for cached location...",
+        );
+
+        // Final fallback: Return any cached location, even if old
+        if (this.currentLocation) {
+          console.log("Using cached location as final fallback");
+          return this.currentLocation;
+        }
+
+        // If no cache available, throw the original error
+        throw new Error(this.getLocationErrorMessage(secondError));
+      }
+    }
+  }
+
+  private async attemptLocationRequest(
+    options: PositionOptions,
+  ): Promise<EnhancedLocationData> {
+    return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const enhancedLocation = await this.enhanceLocationData(position);
           resolve(enhancedLocation);
         },
         (error) => {
-          console.warn("Location request failed:", error);
-          // For timeout errors, try to return cached location
-          if (error.code === error.TIMEOUT && this.currentLocation) {
-            console.log("Using cached location due to timeout");
-            resolve(this.currentLocation);
-          } else {
-            reject(new Error(this.getLocationErrorMessage(error)));
-          }
+          reject(error);
         },
         options,
       );
@@ -716,28 +775,41 @@ class EnhancedLocationService {
     this.consecutiveErrors++;
 
     const message = this.getLocationErrorMessage(error);
-    console.warn("Location error:", message);
+    console.debug(
+      "Location error (attempt",
+      this.consecutiveErrors + "):",
+      message,
+    );
 
-    // Don't show notifications for timeout errors - they're common
+    // Don't show notifications for timeout errors - they're very common
     if (error.code === 3) {
       // TIMEOUT
       console.debug("Location timeout - will retry silently");
       return;
     }
 
+    // Only show error after multiple consecutive failures and only for critical errors
     if (this.consecutiveErrors >= this.maxErrors) {
       console.error("Multiple location errors - stopping tracking");
       this.stopTracking();
+
       // Only show critical error for permission denied
       if (error.code === 1) {
         // PERMISSION_DENIED
         notifications.error({
           title: "Location Permission Required",
-          description: "Please enable location access to use this feature.",
+          description:
+            "Please enable location access to use Guardian Safety features.",
         });
+      } else if (error.code === 2) {
+        // POSITION_UNAVAILABLE
+        console.debug("GPS unavailable - using fallback methods");
+        // Don't show notification for GPS unavailable - common indoors
       }
+
+      // Reset error count after showing notification
+      this.consecutiveErrors = 0;
     }
-    // Remove other warning notifications to reduce noise
   }
 
   private getLocationErrorMessage(error: any): string {

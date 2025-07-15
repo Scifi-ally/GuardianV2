@@ -168,16 +168,20 @@ class UnifiedRealTimeService extends EventEmitter<RealTimeEvents> {
         this.emit("location:update", location);
       },
       (error) => {
-        console.error("Location error:", error);
-        this.emit(
-          "error",
-          new Error(`Location tracking failed: ${error.message}`),
-        );
+        console.debug("Location error (will retry):", error.message);
+        // Don't emit errors for timeout - they're common and will retry
+        if (error.code !== 3) {
+          // Not a timeout error
+          this.emit(
+            "error",
+            new Error(`Location tracking failed: ${error.message}`),
+          );
+        }
       },
       {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 60000,
+        enableHighAccuracy: false, // Start with low accuracy for better reliability
+        timeout: 30000, // Increased timeout for better reliability
+        maximumAge: 300000, // 5 minutes cache to reduce requests
       },
     );
 

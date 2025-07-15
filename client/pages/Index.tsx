@@ -641,8 +641,8 @@ export default function Index() {
             console.log("🎯 Place selected:", place);
             setToLocation(place.name);
             setDestination({
-              latitude: place.location.lat,
-              longitude: place.location.lng,
+              latitude: place.lat,
+              longitude: place.lng,
             });
           }}
           onNavigationStart={(destination) => {
@@ -662,8 +662,13 @@ export default function Index() {
             // Add settings functionality
           }}
           onSOSClick={() => {
-            console.log("SOS clicked");
-            // Add SOS functionality
+            console.log("🚨 SOS button clicked");
+            import("@/services/advancedEmergencyController").then((module) => {
+              module.advancedEmergencyController.activateSOSWithCountdown(
+                "general",
+                3,
+              );
+            });
           }}
           location={location}
         />
