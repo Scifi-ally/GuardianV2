@@ -171,6 +171,7 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/signin"
           element={

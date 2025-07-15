@@ -6,6 +6,8 @@
 @import "./styles/layout-fixes.css";
 @import "./styles/emergency-optimizations.css";
 @import "./styles/mobile-optimizations.css";
+/* Professional UI enhancements */
+@import "./styles/professional-ui.css";
 
 @tailwind base;
 @tailwind components;

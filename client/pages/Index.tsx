@@ -27,6 +27,7 @@ import {
 import { LocationAwareMap } from "@/components/LocationAwareMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { NavigationControls } from "@/components/NavigationControls";
+import { ExpandableSearchBar } from "@/components/ExpandableSearchBar";
 import { enhancedNavigationService } from "@/services/enhancedNavigationService";
 import { dynamicLoadingService } from "@/services/dynamicLoadingService";
 
@@ -76,7 +77,6 @@ import { CompactSearchBar } from "@/components/CompactSearchBar";
 import { EnhancedSearchBar } from "@/components/EnhancedSearchBar";
 import { navigationFixService } from "@/services/navigationFixService";
 import { NavigationTroubleshooter } from "@/components/NavigationTroubleshooter";
-import { NavigationHeader } from "@/components/NavigationHeader";
 
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 import { EmergencyServicesPanel } from "@/components/EmergencyServicesPanel";
@@ -631,51 +631,56 @@ export default function Index() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-background">
+      <div className="h-screen overflow-hidden bg-background relative">
         <PerformanceOptimizer />
         {/* ClickableFixes removed - debug component */}
         {/* Compact Navigation Header - Reduced Height */}
-        {/* Navigation Header with Enhanced Search */}
-        <NavigationHeader
-          onPlaceSelect={(place) => {
-            console.log("🎯 Place selected:", place);
-            setToLocation(place.name);
-            setDestination({
-              latitude: place.lat,
-              longitude: place.lng,
-            });
+        {/* Floating Search Bar - Completely floating over map */}
+        <div
+          className="fixed top-0 left-0 right-0 z-50 pointer-events-none"
+          style={{
+            paddingTop: "max(env(safe-area-inset-top), 48px)",
+            paddingLeft: "max(env(safe-area-inset-left), 16px)",
+            paddingRight: "max(env(safe-area-inset-right), 16px)",
           }}
-          onNavigationStart={(destination) => {
-            console.log("🧭 Starting navigation to:", destination);
-            setIsNavigating(true);
-            setDestination({
-              latitude: destination.lat,
-              longitude: destination.lng,
-            });
-          }}
-          onMenuClick={() => {
-            console.log("Menu clicked");
-            // Add menu functionality
-          }}
-          onSettingsClick={() => {
-            console.log("Settings clicked");
-            // Add settings functionality
-          }}
-          onSOSClick={() => {
-            console.log("🚨 SOS button clicked");
-            import("@/services/advancedEmergencyController").then((module) => {
-              module.advancedEmergencyController.activateSOSWithCountdown(
-                "general",
-                3,
-              );
-            });
-          }}
-          location={location}
-        />
+        >
+          <div className="max-w-md mx-auto pointer-events-auto">
+            <div className="relative transform transition-all duration-300 ease-out">
+              <ExpandableSearchBar
+                onPlaceSelect={(place) => {
+                  console.log("🎯 Place selected from floating search:", place);
+                  setToLocation(place.name);
+                  setDestination({
+                    latitude: place.location.lat,
+                    longitude: place.location.lng,
+                  });
+                  notifications.success({
+                    title: "Destination Set",
+                    description: `Navigate to ${place.name}`,
+                  });
+                }}
+                onNavigationStart={(destination) => {
+                  console.log("🧭 Starting navigation to:", destination);
+                  setIsNavigating(true);
+                  setDestination({
+                    latitude: destination.lat,
+                    longitude: destination.lng,
+                  });
+                  notifications.success({
+                    title: "Navigation Started",
+                    description: `Navigating to ${destination.name}`,
+                  });
+                }}
+                placeholder="Where do you want to go?"
+                className="drop-shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
 
-        {/* Clear Route Button */}
+        {/* Clear Route Button - Floating */}
         {destination && (
-          <div className="container mx-auto px-3 py-1">
+          <div className="fixed top-24 right-4 z-40">
             <Button
               onClick={() => {
                 setDestination(undefined);
@@ -690,9 +695,10 @@ export default function Index() {
               }}
               size="sm"
               variant="outline"
-              className="w-full h-8 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700"
+              className="bg-white/95 backdrop-blur-xl hover:bg-gray-50/95 border border-gray-300/50 text-gray-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-3 py-2"
             >
-              Clear Route
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Clear
             </Button>
           </div>
         )}
@@ -712,7 +718,8 @@ export default function Index() {
         {/* Location Permission Prompt removed */}
 
         {/* Enhanced Google Map with Safety Score Coloring */}
-        <div className="absolute inset-0 top-0 z-10">
+        {/* Full Screen Map */}
+        <div className="absolute inset-0 z-10">
           <LocationAwareMap
             key="main-map"
             onLocationChange={setLocation}

@@ -44,6 +44,11 @@ import {
   type SafetyScore,
 } from "@/services/advancedSafetyScoring";
 import { navigationErrorHandler } from "@/services/navigationErrorHandler";
+import {
+  waitForGoogleMaps,
+  initializePlacesServices,
+  isGoogleMapsLoaded,
+} from "@/lib/googleMapsUtils";
 
 interface SearchSuggestion {
   id: string;
@@ -170,18 +175,32 @@ export function ExpandableSearchBar({
 
   // Initialize Google Places services
   useEffect(() => {
-    const initializeServices = () => {
-      if (window.google?.maps?.places) {
-        autocompleteService.current =
-          new google.maps.places.AutocompleteService();
+    const initializeServices = async () => {
+      try {
+        console.log("🔄 Initializing Google Places services...");
 
-        const mapDiv = document.createElement("div");
-        const map = new google.maps.Map(mapDiv);
-        placesService.current = new google.maps.places.PlacesService(map);
+        // Wait for Google Maps API to be available
+        await waitForGoogleMaps();
 
-        console.log("✅ Google Places services initialized");
-      } else {
-        setTimeout(initializeServices, 500);
+        // Initialize services
+        const {
+          autocompleteService: autoService,
+          placesService: placeService,
+        } = initializePlacesServices();
+
+        if (autoService && placeService) {
+          autocompleteService.current = autoService;
+          placesService.current = placeService;
+          console.log("✅ Google Places services initialized successfully");
+        } else {
+          console.warn("⚠️ Failed to initialize Google Places services");
+        }
+      } catch (error) {
+        console.error("❌ Google Places initialization failed:", error);
+        unifiedNotifications.warning("Maps Loading", {
+          message:
+            "Maps functionality may be limited. Please refresh if needed.",
+        });
       }
     };
 
@@ -322,7 +341,10 @@ export function ExpandableSearchBar({
   // Get Google Places suggestions
   const getGooglePlacesSuggestions = useCallback(
     async (query: string): Promise<SearchSuggestion[]> => {
-      if (!autocompleteService.current || query.length < 2) return [];
+      if (!autocompleteService.current || query.length < 2) {
+        console.log("🔍 Skipping search: service not ready or query too short");
+        return [];
+      }
 
       return new Promise((resolve) => {
         const request: google.maps.places.AutocompletionRequest = {
@@ -335,13 +357,19 @@ export function ExpandableSearchBar({
           radius: location ? 50000 : undefined,
         };
 
+        console.log(`🔍 Searching Google Places for: "${query}"`);
+
         autocompleteService.current!.getPlacePredictions(
           request,
           (predictions, status) => {
+            console.log(`📍 Google Places API status: ${status}`);
+
             if (
               status === google.maps.places.PlacesServiceStatus.OK &&
               predictions
             ) {
+              console.log(`✅ Found ${predictions.length} predictions`);
+
               const suggestions: SearchSuggestion[] = predictions
                 .slice(0, 8)
                 .map((prediction) => {
@@ -364,6 +392,7 @@ export function ExpandableSearchBar({
                 });
               resolve(suggestions);
             } else {
+              console.warn(`❌ Google Places search failed: ${status}`);
               resolve([]);
             }
           },
@@ -832,13 +861,14 @@ export function ExpandableSearchBar({
         }}
       >
         {!isExpanded ? (
-          // Collapsed State - Google Maps style compact search
+          // Collapsed State - Modern floating search bar
           <motion.div
             onClick={handleSearchBarClick}
-            className="flex items-center gap-3 px-4 py-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer border border-gray-200 min-w-[300px] max-w-sm"
+            className="flex items-center gap-3 px-4 py-3 bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-200/50 min-w-[300px] max-w-sm ring-1 ring-gray-200/30"
             whileHover={{
               scale: 1.02,
-              boxShadow: "0 10px 40px rgba(0, 0, 0, 0.15)",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.15)",
+              backdropFilter: "blur(20px)",
             }}
             whileTap={{
               scale: 0.98,
@@ -877,7 +907,7 @@ export function ExpandableSearchBar({
                 ease: [0.25, 0.1, 0.25, 1],
               },
             }}
-            className="bg-white rounded-xl shadow-2xl border border-gray-200"
+            className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 ring-1 ring-gray-200/30"
           >
             {/* Search Input */}
             <div className="relative">

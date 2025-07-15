@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LocationAwareMap } from "@/components/LocationAwareMap";
 import { EnhancedNavigationController } from "@/components/EnhancedNavigationController";
-import { LocationAutocompleteInput } from "@/components/LocationAutocompleteInput";
+import { ExpandableSearchBar } from "@/components/ExpandableSearchBar";
 import { AINavigationPanel } from "@/components/AINavigationPanel";
 import { NavigationInstructions } from "@/components/NavigationInstructions";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
@@ -40,6 +40,8 @@ export default function EnhancedNavigationPage() {
   const [directionsResult, setDirectionsResult] = useState<any>(null);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [activeTab, setActiveTab] = useState("navigate");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [navigationStats, setNavigationStats] = useState({
     totalDistance: "0 km",
     estimatedTime: "0 min",
@@ -200,7 +202,7 @@ export default function EnhancedNavigationPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 relative">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30 relative">
       {/* Enhanced Map Container */}
       <div className="h-screen w-full">
         <LocationAwareMap
@@ -225,37 +227,37 @@ export default function EnhancedNavigationPage() {
 
       {/* Enhanced Navigation Interface */}
       <div className="absolute bottom-0 left-0 right-0 z-50">
-        <div className="bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg">
+        <div className="bg-white/95 backdrop-blur-xl border-t border-gray-200/50 shadow-2xl">
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-4 bg-transparent border-b border-gray-200 rounded-none h-12">
+            <TabsList className="grid w-full grid-cols-4 bg-gray-50/80 border-b border-gray-200/50 rounded-none h-14 backdrop-blur-sm">
               <TabsTrigger
                 value="navigate"
-                className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-50 data-[state=active]:to-blue-100 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:shadow-sm transition-all duration-200"
               >
                 <NavIcon className="h-4 w-4 mr-1" />
                 Navigate
               </TabsTrigger>
               <TabsTrigger
                 value="smart"
-                className="data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700 data-[state=active]:border-b-2 data-[state=active]:border-purple-600"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-50 data-[state=active]:to-purple-100 data-[state=active]:text-purple-700 data-[state=active]:border-b-2 data-[state=active]:border-purple-600 data-[state=active]:shadow-sm transition-all duration-200"
               >
                 <Zap className="h-4 w-4 mr-1" />
                 Smart
               </TabsTrigger>
               <TabsTrigger
                 value="routes"
-                className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700 data-[state=active]:border-b-2 data-[state=active]:border-green-600"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-green-50 data-[state=active]:to-green-100 data-[state=active]:text-green-700 data-[state=active]:border-b-2 data-[state=active]:border-green-600 data-[state=active]:shadow-sm transition-all duration-200"
               >
                 <Route className="h-4 w-4 mr-1" />
                 Routes
               </TabsTrigger>
               <TabsTrigger
                 value="safety"
-                className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-b-2 data-[state=active]:border-orange-600"
+                className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-50 data-[state=active]:to-orange-100 data-[state=active]:text-orange-700 data-[state=active]:border-b-2 data-[state=active]:border-orange-600 data-[state=active]:shadow-sm transition-all duration-200"
               >
                 <Shield className="h-4 w-4 mr-1" />
                 Safety
@@ -273,7 +275,7 @@ export default function EnhancedNavigationPage() {
                       className="space-y-4"
                     >
                       {/* Active Navigation Status */}
-                      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+                      <Card className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-blue-200/50 shadow-lg ring-1 ring-blue-200/30">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
@@ -327,32 +329,54 @@ export default function EnhancedNavigationPage() {
                       exit={{ opacity: 0, y: -20 }}
                       className="space-y-4"
                     >
-                      {/* Search Interface */}
-                      <Card>
+                      {/* Enhanced Search Interface */}
+                      <Card className="overflow-visible bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg ring-1 ring-gray-200">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-lg">
-                            Quick Navigation
+                          <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                              <NavIcon className="h-4 w-4 text-white" />
+                            </div>
+                            Smart Navigation
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                          <LocationAutocompleteInput
-                            value=""
-                            onChange={() => {}}
+                          <ExpandableSearchBar
                             onPlaceSelect={(place) => {
-                              if (mapRef.current && currentLocation) {
+                              console.log(
+                                "🎯 Place selected from enhanced search:",
+                                place,
+                              );
+                              if (currentLocation && place.location) {
                                 const destination = new google.maps.LatLng(
-                                  place.geometry.location.lat,
-                                  place.geometry.location.lng,
+                                  place.location.lat,
+                                  place.location.lng,
                                 );
                                 handleNavigationStart(destination, {
-                                  overallSafety: 80,
+                                  overallSafety: place.safetyScore || 80,
                                   totalDistance: "Calculating...",
                                   estimatedTime: "Calculating...",
                                 });
+                                setSearchQuery(place.name);
+                                toast.success(`Navigating to ${place.name}`);
+                              } else {
+                                toast.error(
+                                  "Unable to start navigation. Please try again.",
+                                );
                               }
                             }}
-                            placeholder="Search for destination..."
+                            onNavigationStart={(destination) => {
+                              console.log(
+                                "🚀 Navigation started to:",
+                                destination,
+                              );
+                              toast.success(
+                                `Navigation started to ${destination.name}`,
+                              );
+                            }}
+                            placeholder="Where would you like to go?"
                             className="w-full"
+                            isExpanded={isSearchExpanded}
+                            onExpandChange={setIsSearchExpanded}
                           />
 
                           {/* Transportation Mode Selection */}
@@ -408,7 +432,7 @@ export default function EnhancedNavigationPage() {
 
               <TabsContent value="routes" className="mt-0 p-4 space-y-4">
                 {/* Navigation Stats */}
-                <Card>
+                <Card className="bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg ring-1 ring-gray-200">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Navigation Stats</CardTitle>
                   </CardHeader>
@@ -431,7 +455,7 @@ export default function EnhancedNavigationPage() {
                 </Card>
 
                 {/* Recent Routes */}
-                <Card>
+                <Card className="bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg ring-1 ring-gray-200">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Recent Routes</CardTitle>
                   </CardHeader>
@@ -479,7 +503,7 @@ export default function EnhancedNavigationPage() {
 
               <TabsContent value="safety" className="mt-0 p-4 space-y-4">
                 {/* Current Safety Status */}
-                <Card>
+                <Card className="bg-gradient-to-br from-green-50/50 to-white border-green-200/50 shadow-lg ring-1 ring-green-200/30">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Shield className="h-5 w-5 text-green-500" />
@@ -516,7 +540,7 @@ export default function EnhancedNavigationPage() {
                 </Card>
 
                 {/* Safety Features */}
-                <Card>
+                <Card className="bg-gradient-to-br from-white to-blue-50/30 border-blue-200/50 shadow-lg ring-1 ring-blue-200/30">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">
                       AI Safety Features
