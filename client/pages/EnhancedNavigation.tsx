@@ -439,7 +439,7 @@ export default function EnhancedNavigationPage() {
                     {recentRoutes.map((route) => (
                       <div
                         key={route.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer transition-colors"
                       >
                         <div className="flex-1">
                           <div className="font-medium text-sm">

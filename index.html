@@ -30,6 +30,23 @@
     <link rel="preconnect" href="https://firestore.googleapis.com" />
     <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
     <link rel="preconnect" href="https://www.googleapis.com" />
+    <link rel="preconnect" href="https://maps.googleapis.com" />
+
+    <!-- Load Google Maps API early -->
+    <script>
+      // Define callback function before loading the API
+      window.initGoogleMaps = function () {
+        console.log("✅ Google Maps API loaded successfully");
+        window.googleMapsLoaded = true;
+        // Dispatch event for components to listen to
+        window.dispatchEvent(new CustomEvent("google-maps-loaded"));
+      };
+    </script>
+    <script
+      async
+      defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA41wHVKnsb1RNhcftpHS5qNwvYz59nXIE&libraries=places,geometry&callback=initGoogleMaps"
+    ></script>
   </head>
 
   <body>

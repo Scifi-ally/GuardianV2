@@ -1,13 +1,18 @@
 /**
- * Compact Search Bar - Clean, functional, and fast
- * Focuses on simplicity and performance
+ * Google Maps-style Search Bar
+ * Exact replica of Google Maps search interface
  */
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, X, Navigation, Clock, Star } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import {
+  Search,
+  Navigation2,
+  Clock,
+  Star,
+  MapPin,
+  TrendingUp,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SearchSuggestion {
@@ -17,9 +22,10 @@ interface SearchSuggestion {
   location: { lat: number; lng: number };
   type: string;
   rating?: number;
+  isRecent?: boolean;
 }
 
-interface CompactSearchBarProps {
+interface GoogleMapsSearchBarProps {
   onPlaceSelect: (place: SearchSuggestion) => void;
   onNavigationStart?: (destination: {
     lat: number;
@@ -30,12 +36,12 @@ interface CompactSearchBarProps {
   className?: string;
 }
 
-export function CompactSearchBar({
+export function GoogleMapsSearchBar({
   onPlaceSelect,
   onNavigationStart,
-  placeholder = "Search destinations...",
+  placeholder = "Search Google Maps",
   className,
-}: CompactSearchBarProps) {
+}: GoogleMapsSearchBarProps) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -45,8 +51,6 @@ export function CompactSearchBar({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
-
-  // Google Places Autocomplete Service
   const autocompleteService = useRef<google.maps.places.AutocompleteService>();
   const placesService = useRef<google.maps.places.PlacesService>();
 
@@ -54,37 +58,21 @@ export function CompactSearchBar({
     if (window.google?.maps?.places) {
       autocompleteService.current =
         new google.maps.places.AutocompleteService();
-
-      // Create a dummy div for PlacesService
       const dummyDiv = document.createElement("div");
       placesService.current = new google.maps.places.PlacesService(dummyDiv);
     }
 
-    // Load recent searches from localStorage
+    // Load recent searches
     try {
       const stored = localStorage.getItem("guardian-recent-searches");
       if (stored) {
         const recent = JSON.parse(stored);
-        setRecentSearches(recent.slice(0, 3)); // Only keep top 3
+        setRecentSearches(recent.slice(0, 5));
       }
     } catch (error) {
       console.warn("Failed to load recent searches:", error);
     }
   }, []);
-
-  const saveRecentSearch = (suggestion: SearchSuggestion) => {
-    try {
-      const existing = recentSearches.filter(
-        (item) => item.id !== suggestion.id,
-      );
-      const updated = [suggestion, ...existing].slice(0, 3);
-
-      setRecentSearches(updated);
-      localStorage.setItem("guardian-recent-searches", JSON.stringify(updated));
-    } catch (error) {
-      console.warn("Failed to save recent search:", error);
-    }
-  };
 
   const searchPlaces = async (searchQuery: string) => {
     if (!searchQuery.trim() || !autocompleteService.current) {
@@ -97,12 +85,11 @@ export function CompactSearchBar({
     try {
       const predictions = await new Promise<
         google.maps.places.AutocompletePrediction[]
-      >((resolve, reject) => {
+      >((resolve) => {
         autocompleteService.current!.getPlacePredictions(
           {
             input: searchQuery,
             types: ["establishment", "geocode"],
-            componentRestrictions: { country: "us" }, // Adjust as needed
           },
           (predictions, status) => {
             if (
@@ -118,15 +105,15 @@ export function CompactSearchBar({
       });
 
       const mappedSuggestions: SearchSuggestion[] = predictions
-        .slice(0, 5)
+        .slice(0, 8)
         .map((prediction, index) => ({
           id: prediction.place_id || `suggestion-${index}`,
           name: prediction.structured_formatting.main_text,
           address: prediction.structured_formatting.secondary_text || "",
-          location: { lat: 0, lng: 0 }, // Will be filled when selected
+          location: { lat: 0, lng: 0 },
           type: prediction.types?.[0] || "place",
           rating:
-            Math.random() > 0.5
+            Math.random() > 0.6
               ? Math.round((Math.random() * 2 + 3) * 10) / 10
               : undefined,
         }));
@@ -145,23 +132,19 @@ export function CompactSearchBar({
     setQuery(value);
     setSelectedIndex(-1);
 
-    // Clear previous debounce
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
-    // Debounce search
     debounceRef.current = setTimeout(() => {
       searchPlaces(value);
-    }, 300);
+    }, 200);
   };
 
-  const getPlaceDetails = async (
-    placeId: string,
-  ): Promise<google.maps.places.PlaceResult | null> => {
+  const getPlaceDetails = async (placeId: string) => {
     if (!placesService.current) return null;
 
-    return new Promise((resolve) => {
+    return new Promise<google.maps.places.PlaceResult | null>((resolve) => {
       placesService.current!.getDetails(
         {
           placeId,
@@ -188,7 +171,6 @@ export function CompactSearchBar({
 
     let finalSuggestion = suggestion;
 
-    // Get place details if we have a place_id
     if (suggestion.id.startsWith("ChIJ") || suggestion.id.includes("place")) {
       const placeDetails = await getPlaceDetails(suggestion.id);
       if (placeDetails?.geometry?.location) {
@@ -203,12 +185,22 @@ export function CompactSearchBar({
     }
 
     // Save to recent searches
-    saveRecentSearch(finalSuggestion);
+    try {
+      const existing = recentSearches.filter(
+        (item) => item.id !== suggestion.id,
+      );
+      const updated = [
+        { ...finalSuggestion, isRecent: true },
+        ...existing,
+      ].slice(0, 5);
+      setRecentSearches(updated);
+      localStorage.setItem("guardian-recent-searches", JSON.stringify(updated));
+    } catch (error) {
+      console.warn("Failed to save recent search:", error);
+    }
 
-    // Call onPlaceSelect first
     onPlaceSelect(finalSuggestion);
 
-    // If we have onNavigationStart, also trigger navigation
     if (
       onNavigationStart &&
       finalSuggestion.location.lat &&
@@ -223,25 +215,26 @@ export function CompactSearchBar({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen || suggestions.length === 0) return;
+    const currentSuggestions = query ? suggestions : recentSearches;
+    if (!isOpen || currentSuggestions.length === 0) return;
 
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
         setSelectedIndex((prev) =>
-          prev < suggestions.length - 1 ? prev + 1 : 0,
+          prev < currentSuggestions.length - 1 ? prev + 1 : 0,
         );
         break;
       case "ArrowUp":
         e.preventDefault();
         setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : suggestions.length - 1,
+          prev > 0 ? prev - 1 : currentSuggestions.length - 1,
         );
         break;
       case "Enter":
         e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
-          handleSuggestionSelect(suggestions[selectedIndex]);
+        if (selectedIndex >= 0 && selectedIndex < currentSuggestions.length) {
+          handleSuggestionSelect(currentSuggestions[selectedIndex]);
         }
         break;
       case "Escape":
@@ -252,143 +245,157 @@ export function CompactSearchBar({
     }
   };
 
-  const clearSearch = () => {
-    setQuery("");
-    setSuggestions([]);
-    setIsOpen(false);
-    setSelectedIndex(-1);
-    inputRef.current?.focus();
-  };
-
   const handleFocus = () => {
     setIsOpen(true);
-    if (query && suggestions.length === 0) {
-      searchPlaces(query);
-    } else if (!query && recentSearches.length > 0) {
-      // Show recent searches when input is empty
-      setSuggestions(recentSearches);
+    if (!query && recentSearches.length > 0) {
+      setSuggestions([]);
     }
   };
 
   const handleBlur = () => {
-    // Delay closing to allow click on suggestions
     setTimeout(() => {
       setIsOpen(false);
       setSelectedIndex(-1);
     }, 150);
   };
 
-  return (
-    <div
-      className={cn("relative w-full max-w-md", className)}
-      style={{ maxWidth: "100%" }}
-    >
-      {/* Search Input */}
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-          <Search
-            className={cn(
-              "h-4 w-4 transition-colors duration-200",
-              isOpen ? "text-blue-500" : "text-gray-400",
-            )}
-          />
-        </div>
+  const getPlaceIcon = (type: string, isRecent?: boolean) => {
+    if (isRecent) return <Clock className="h-4 w-4 text-gray-500" />;
 
-        <Input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          className="pl-10 pr-10 h-10 sm:h-12 bg-white border-2 border-gray-200 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-100 shadow-sm hover:shadow-md transition-all duration-200 placeholder:text-gray-400 w-full max-w-full text-sm sm:text-base"
-          style={{ fontSize: "16px" }}
-        />
-
-        {query && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearSearch}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100 rounded-lg"
-          >
-            <X className="h-4 w-4 text-gray-400" />
-          </Button>
-        )}
-
-        {isLoading && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+    switch (type) {
+      case "restaurant":
+      case "food":
+        return (
+          <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-full" />
           </div>
-        )}
+        );
+      case "gas_station":
+        return (
+          <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-full" />
+          </div>
+        );
+      case "hospital":
+        return (
+          <div className="w-4 h-4 bg-red-600 rounded-sm flex items-center justify-center">
+            <div className="w-1 h-3 bg-white"></div>
+            <div className="w-3 h-1 bg-white absolute"></div>
+          </div>
+        );
+      default:
+        return <MapPin className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const currentSuggestions = query ? suggestions : recentSearches;
+
+  return (
+    <div className={cn("relative w-full", className)}>
+      {/* Google Maps Style Search Input */}
+      <div className="relative">
+        <div className="flex items-center bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+          <div className="p-3">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+            className="flex-1 py-3 px-1 text-base text-gray-900 placeholder-gray-500 bg-transparent border-none outline-none"
+            style={{ fontSize: "16px" }} // Prevent iOS zoom
+          />
+
+          {query && (
+            <button
+              onClick={() => {
+                setQuery("");
+                setSuggestions([]);
+                inputRef.current?.focus();
+              }}
+              className="p-3 hover:bg-gray-50 transition-colors"
+            >
+              <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center">
+                <div className="w-2 h-2 text-gray-600 text-xs">×</div>
+              </div>
+            </button>
+          )}
+
+          <div className="border-l border-gray-200 h-8 mx-1" />
+
+          <button className="p-3 hover:bg-gray-50 transition-colors">
+            <Navigation2 className="h-5 w-5 text-blue-600" />
+          </button>
+        </div>
       </div>
 
-      {/* Suggestions Dropdown */}
+      {/* Google Maps Style Suggestions Dropdown */}
       <AnimatePresence>
-        {isOpen && (query.length > 0 || recentSearches.length > 0) && (
+        {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden backdrop-blur-sm max-w-full"
-            style={{ maxWidth: "100vw", width: "100%" }}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden max-h-96 overflow-y-auto"
           >
-            {/* Recent Searches Header */}
-            {!query && suggestions.length > 0 && (
-              <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3 w-3 text-gray-400" />
-                  <span className="text-xs font-medium text-gray-600">
-                    Recent Searches
-                  </span>
+            {!query && recentSearches.length > 0 && (
+              <div className="px-4 py-3 border-b border-gray-100">
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <Clock className="h-4 w-4" />
+                  Recent
                 </div>
               </div>
             )}
 
-            {suggestions.length > 0 ? (
-              suggestions.map((suggestion, index) => (
+            {currentSuggestions.length > 0 ? (
+              currentSuggestions.map((suggestion, index) => (
                 <motion.button
                   key={suggestion.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.02 }}
                   onClick={() => handleSuggestionSelect(suggestion)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150 border-b border-gray-100 last:border-b-0",
-                    selectedIndex === index && "bg-blue-50 hover:bg-blue-50",
+                    "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0",
+                    selectedIndex === index && "bg-gray-50",
                   )}
                 >
-                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <MapPin className="h-4 w-4 text-blue-600" />
+                  <div className="flex-shrink-0">
+                    {getPlaceIcon(suggestion.type, suggestion.isRecent)}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate text-sm sm:text-base">
+                    <div className="font-medium text-gray-900 truncate">
                       {suggestion.name}
                     </div>
                     {suggestion.address && (
-                      <div className="text-xs sm:text-sm text-gray-500 truncate">
+                      <div className="text-sm text-gray-500 truncate">
                         {suggestion.address}
                       </div>
                     )}
                   </div>
 
-                  <div className="flex-shrink-0 flex items-center gap-2">
-                    {suggestion.rating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                        <span className="text-xs text-gray-600">
-                          {suggestion.rating}
-                        </span>
-                      </div>
-                    )}
-                    <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center">
-                      <Navigation className="h-3 w-3 text-blue-600" />
+                  {suggestion.rating && (
+                    <div className="flex-shrink-0 flex items-center gap-1">
+                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                      <span className="text-xs text-gray-600">
+                        {suggestion.rating}
+                      </span>
                     </div>
-                  </div>
+                  )}
+
+                  {!suggestion.isRecent && (
+                    <div className="flex-shrink-0">
+                      <TrendingUp className="h-4 w-4 text-gray-400" />
+                    </div>
+                  )}
                 </motion.button>
               ))
             ) : isLoading ? (
@@ -398,11 +405,8 @@ export function CompactSearchBar({
               </div>
             ) : query.length > 2 ? (
               <div className="px-4 py-6 text-center">
-                <MapPin className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                 <p className="text-sm text-gray-500">No results found</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Try a different search term
-                </p>
               </div>
             ) : null}
           </motion.div>
@@ -412,4 +416,4 @@ export function CompactSearchBar({
   );
 }
 
-export default CompactSearchBar;
+export default GoogleMapsSearchBar;

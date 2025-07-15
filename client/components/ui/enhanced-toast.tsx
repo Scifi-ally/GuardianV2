@@ -12,44 +12,55 @@ export const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       position="top-center"
-      expand
-      richColors
+      expand={false}
+      richColors={false}
       closeButton={false}
-      duration={5000}
-      visibleToasts={3}
+      duration={4000}
+      visibleToasts={2}
       dir="auto"
+      offset={24}
       toastOptions={{
         style: {
-          background: "hsl(var(--background))",
-          border: "1px solid hsl(var(--border))",
-          color: "hsl(var(--foreground))",
-          fontFamily: "var(--font-geist-mono)",
+          background: "rgba(255, 255, 255, 0.98)",
+          border: "1px solid rgba(0, 0, 0, 0.08)",
+          color: "#1f2937",
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
           fontSize: "14px",
-          borderRadius: "12px",
-          padding: "16px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          backdropFilter: "blur(8px)",
+          fontWeight: "500",
+          borderRadius: "16px",
+          padding: "16px 20px",
+          boxShadow:
+            "0 12px 48px rgba(0, 0, 0, 0.15), 0 6px 16px rgba(0, 0, 0, 0.1)",
+          backdropFilter: "blur(24px) saturate(1.8)",
           cursor: "pointer",
           userSelect: "none",
           touchAction: "pan-y",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          transform: "translateZ(0)",
+          transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+          transform: "translateZ(0) scale(1)",
           willChange: "transform, opacity",
+          maxWidth: "420px",
+          minHeight: "64px",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
         },
         classNames: {
           toast:
-            "group toast backdrop-blur-md border-border shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-out cursor-pointer select-none animate-in slide-in-from-top-2 fade-in",
-          title:
-            "text-sm font-medium text-foreground animate-in fade-in duration-200 delay-75",
-          description:
-            "text-sm text-muted-foreground mt-1 animate-in fade-in duration-200 delay-100",
+            "modern-toast group backdrop-blur-xl border-transparent shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-out cursor-pointer select-none",
+          title: "text-sm font-semibold text-gray-900 leading-tight mb-0",
+          description: "text-sm text-gray-600 leading-relaxed mt-1",
           closeButton:
-            "text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 active:scale-95",
+            "text-gray-400 hover:text-gray-600 transition-colors duration-200 hover:scale-110 active:scale-95 ml-auto",
           loading: "animate-spin duration-1000",
-          success: "animate-in zoom-in duration-200",
-          error: "animate-in zoom-in duration-200 animate-pulse",
-          warning: "animate-in slide-in-from-left-1 duration-300",
-          default: "animate-in slide-in-from-right-1 duration-300",
+          success:
+            "border-green-200/50 bg-gradient-to-r from-green-50/90 to-green-100/90",
+          error:
+            "border-red-200/50 bg-gradient-to-r from-red-50/90 to-red-100/90",
+          warning:
+            "border-orange-200/50 bg-gradient-to-r from-orange-50/90 to-orange-100/90",
+          default:
+            "border-blue-200/50 bg-gradient-to-r from-blue-50/90 to-blue-100/90",
         },
       }}
       {...props}

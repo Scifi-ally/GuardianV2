@@ -62,8 +62,7 @@ export function SlideUpPanel({
       setHeight(initialHeight);
       setIsCollapsed(false);
     } else {
-      setHeight(collapsedHeight);
-      setIsCollapsed(true);
+      smoothClose();
     }
   };
 
@@ -140,17 +139,21 @@ export function SlideUpPanel({
     };
   }, [isDragging, startY, startHeight, height, minHeight, maxHeight]);
 
-  // Handle touch outside to close panel with animation
+  // Smooth closing animation function
+  const smoothClose = () => {
+    setIsDragging(false);
+    setHeight(collapsedHeight);
+    setIsCollapsed(true);
+  };
+
+  // Handle touch outside to close panel with smooth animation
   useEffect(() => {
     const handleTouchOutsideClick = (e: MouseEvent | TouchEvent) => {
       if (!panelRef.current || isCollapsed || !onTouchOutside) return;
 
       const target = e.target as Node;
       if (!panelRef.current.contains(target)) {
-        // Animate slide down
-        setIsDragging(false);
-        setHeight(collapsedHeight);
-        setIsCollapsed(true);
+        smoothClose();
         onTouchOutside();
       }
     };
@@ -171,15 +174,18 @@ export function SlideUpPanel({
       ref={panelRef}
       className={cn(
         "fixed left-0 right-0 z-40 bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl overflow-hidden",
-        "border-t-2 border-border/60",
+        "border-t-2 border-border/60 safe-area-inset",
         "before:absolute before:inset-0 before:bg-gradient-to-t before:from-transparent before:via-transparent before:to-foreground/5 before:pointer-events-none",
         className,
       )}
       style={{
         bottom: bottomOffset,
         height: height,
+        maxWidth: "100vw",
+        willChange: "height, transform",
       }}
       animate={{
+        height: height,
         scale: isDragging ? 1.01 : 1,
         boxShadow: isDragging
           ? "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
@@ -187,9 +193,10 @@ export function SlideUpPanel({
       }}
       transition={{
         type: "spring",
-        damping: 25,
-        stiffness: 300,
-        duration: isDragging ? 0 : 0.2,
+        damping: 30,
+        stiffness: 400,
+        duration: isDragging ? 0 : 0.4,
+        ease: "easeInOut",
       }}
     >
       {/* Drag Handle */}
@@ -230,28 +237,32 @@ export function SlideUpPanel({
           }}
           transition={{ type: "spring", damping: 20, stiffness: 300 }}
         />
-        <AnimatePresence>
-          {isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-2 text-xs text-muted-foreground pulse-gentle"
-            >
-              Tap to expand
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
 
       {/* Panel Content */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {!isCollapsed && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{
+              opacity: 0,
+              y: 15,
+              scale: 0.96,
+              transition: {
+                duration: 0.3,
+                ease: "easeIn",
+                opacity: { duration: 0.2 },
+                y: { duration: 0.3, ease: "easeInOut" },
+                scale: { duration: 0.2, ease: "easeIn" },
+              },
+            }}
+            transition={{
+              type: "spring",
+              damping: 28,
+              stiffness: 300,
+              duration: 0.4,
+            }}
             className={cn(
               "h-full overflow-y-auto custom-scrollbar safe-area-inset-bottom",
               isMobile ? "px-4 pb-4" : "px-6 pb-6",
@@ -262,7 +273,11 @@ export function SlideUpPanel({
               style={{ paddingBottom: "2rem" }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                opacity: { delay: 0.1, duration: 0.3 },
+                exit: { duration: 0.15 },
+              }}
             >
               {children}
             </motion.div>

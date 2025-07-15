@@ -27,6 +27,7 @@ import {
 import { LocationAwareMap } from "@/components/LocationAwareMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { NavigationControls } from "@/components/NavigationControls";
+import { MagicNavbar } from "@/components/MagicNavbar";
 import { enhancedNavigationService } from "@/services/enhancedNavigationService";
 import { dynamicLoadingService } from "@/services/dynamicLoadingService";
 
@@ -44,7 +45,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ComprehensiveSafetySystem } from "@/components/ComprehensiveSafetySystem";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 // Debug helper removed - Firebase admin control only
@@ -71,9 +72,7 @@ import { LocationPermissionPrompt } from "@/components/LocationPermissionPrompt"
 import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
 import { RouteSelection } from "@/components/RouteSelection";
 import { routeCalculationService } from "@/services/routeCalculationService";
-import LocationAutocomplete from "@/components/LocationAutocomplete";
-import { CompactSearchBar } from "@/components/CompactSearchBar";
-import { EnhancedSearchBar } from "@/components/EnhancedSearchBar";
+
 import { navigationFixService } from "@/services/navigationFixService";
 import { NavigationTroubleshooter } from "@/components/NavigationTroubleshooter";
 import { NavigationHeader } from "@/components/NavigationHeader";
@@ -454,14 +453,26 @@ export default function Index() {
   );
 
   const handleSearch = useCallback(async () => {
-    if (!fromLocation || !toLocation) {
+    if (!toLocation) {
       notifications.warning({
-        title: "Missing Information",
-        description: "Please enter both starting point and destination.",
+        title: "Missing Destination",
+        description: "Please enter a destination to navigate to.",
         vibrate: true,
       });
       return;
     }
+
+    if (!location) {
+      notifications.warning({
+        title: "Location Required",
+        description: "Please enable location services to start navigation.",
+        vibrate: true,
+      });
+      return;
+    }
+
+    // Always use current location as starting point
+    setFromLocation("Current Location");
 
     setIsNavigating(true);
 
@@ -631,7 +642,15 @@ export default function Index() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-background">
+      <motion.div
+        className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 pb-20"
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{
+          duration: 0.6,
+          ease: [0.25, 0.46, 0.45, 0.94],
+        }}
+      >
         <PerformanceOptimizer />
         {/* ClickableFixes removed - debug component */}
         {/* Compact Navigation Header - Reduced Height */}
@@ -644,14 +663,52 @@ export default function Index() {
               latitude: place.lat,
               longitude: place.lng,
             });
+
+            // Always use current location as starting point
+            if (location) {
+              setFromLocation("Current Location");
+            }
           }}
-          onNavigationStart={(destination) => {
+          onNavigationStart={async (destination) => {
             console.log("🧭 Starting navigation to:", destination);
             setIsNavigating(true);
             setDestination({
               latitude: destination.lat,
               longitude: destination.lng,
             });
+            setToLocation(destination.name);
+
+            // Always use current location as starting point
+            if (location) {
+              setFromLocation("Current Location");
+
+              // Trigger route calculation automatically
+              try {
+                const routes = await routeCalculationService.calculateRoutes(
+                  {
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                  },
+                  { latitude: destination.lat, longitude: destination.lng },
+                );
+                setRouteOptions(routes);
+                setShowRouteSelection(true);
+              } catch (routeError) {
+                console.error("Route calculation error:", routeError);
+                notifications.error({
+                  title: "Route Planning Failed",
+                  description: "Unable to calculate routes. Please try again.",
+                  vibrate: true,
+                });
+              }
+            } else {
+              notifications.warning({
+                title: "Location Required",
+                description:
+                  "Please enable location services to start navigation.",
+                vibrate: true,
+              });
+            }
           }}
           onMenuClick={() => {
             console.log("Menu clicked");
@@ -660,15 +717,6 @@ export default function Index() {
           onSettingsClick={() => {
             console.log("Settings clicked");
             // Add settings functionality
-          }}
-          onSOSClick={() => {
-            console.log("🚨 SOS button clicked");
-            import("@/services/advancedEmergencyController").then((module) => {
-              module.advancedEmergencyController.activateSOSWithCountdown(
-                "general",
-                3,
-              );
-            });
           }}
           location={location}
         />
@@ -690,8 +738,9 @@ export default function Index() {
               }}
               size="sm"
               variant="outline"
-              className="w-full h-8 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700"
+              className="w-full h-10 text-sm bg-white/90 backdrop-blur border border-gray-200 text-gray-700 shadow-sm hover:shadow-md transition-all duration-200"
             >
+              <RotateCcw className="h-4 w-4 mr-2" />
               Clear Route
             </Button>
           </div>
@@ -792,28 +841,28 @@ export default function Index() {
               defaultValue={isNavigating ? "navigation" : "safety"}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-3 h-12 bg-slate-100/80 backdrop-blur-sm rounded-xl p-1 shadow-sm">
+              <TabsList className="grid w-full grid-cols-3 h-14 bg-white/90 backdrop-blur-xl rounded-2xl p-1.5 shadow-lg border border-gray-100">
                 <TabsTrigger
                   value="navigation"
-                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                  className="text-sm h-10 font-semibold rounded-xl data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
                 >
-                  <Navigation className="h-4 w-4 mr-1.5" />
-                  ROUTES
+                  <Navigation className="h-4 w-4 mr-2" />
+                  Routes
                 </TabsTrigger>
                 <TabsTrigger
                   value="safety"
-                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                  className="text-sm h-10 font-semibold rounded-xl data-[state=active]:bg-green-500 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
                 >
-                  <Navigation2 className="h-4 w-4 mr-1.5" />
-                  SAFETY
+                  <Navigation2 className="h-4 w-4 mr-2" />
+                  Safety
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="settings"
-                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                  className="text-sm h-10 font-semibold rounded-xl data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-300"
                 >
-                  <Settings className="h-4 w-4 mr-1.5" />
-                  SETTINGS
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
                 </TabsTrigger>
               </TabsList>
 
@@ -828,35 +877,34 @@ export default function Index() {
                   transition={{ delay: 0.1 }}
                 >
                   <div className="space-y-4">
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
-                      <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
-                        <div className="p-2 bg-blue-500 rounded-xl shadow-md">
+                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300">
+                      <h3 className="text-lg font-bold flex items-center gap-3 text-gray-900 mb-3">
+                        <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md">
                           <Target className="h-5 w-5 text-white" />
                         </div>
-                        EMERGENCY CONTACTS
+                        Emergency Contacts
                       </h3>
-                      <p className="text-sm text-slate-600 font-mono mb-4">
+                      <p className="text-sm text-gray-600 leading-relaxed">
                         Share your location with trusted contacts for enhanced
-                        safety
+                        safety monitoring and rapid response.
                       </p>
                     </div>
 
-                    <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100/50 shadow-sm">
-                      <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
-                        <div className="p-2 bg-red-500 rounded-xl shadow-md">
+                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300">
+                      <h3 className="text-lg font-bold flex items-center gap-3 text-gray-900 mb-3">
+                        <div className="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-md">
                           <AlertTriangle className="h-5 w-5 text-white" />
                         </div>
-                        EMERGENCY SOS
+                        Emergency SOS
                       </h3>
-                      <p className="text-sm text-slate-600 font-mono mb-4">
-                        Use the red SOS button in the bottom navigation to send
-                        emergency alerts
+                      <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                        Instant emergency alert system with one-touch activation
+                        and automatic location sharing.
                       </p>
-                      <div className="flex items-center gap-2 text-sm text-red-600">
+                      <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
                         <AlertTriangle className="h-4 w-4" />
                         <span>
-                          Press and hold for 3 seconds to activate emergency
-                          mode
+                          Tap the SOS button for immediate emergency assistance
                         </span>
                       </div>
                     </div>
@@ -914,7 +962,7 @@ export default function Index() {
                         <Card
                           key={index}
                           className={cn(
-                            "transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md",
+                            "transition-all duration-300 transform",
                             index === 0
                               ? "border-primary bg-primary/5 animate-in slide-in-from-left-2"
                               : "bg-muted/30 animate-in slide-in-from-left-1",
@@ -981,10 +1029,10 @@ export default function Index() {
                   // Route Planning
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Route Planning</h3>
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 gap-4">
                       <Button
                         variant="outline"
-                        className="h-12 sm:h-14 flex-col gap-1 text-xs sm:text-sm px-4 py-2 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                        className="h-14 flex items-center justify-center gap-3 text-sm px-6 py-4 bg-white border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md"
                         onClick={async () => {
                           if (location && userProfile) {
                             try {
@@ -1138,7 +1186,7 @@ export default function Index() {
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-12 sm:h-14 flex-col gap-1 text-xs sm:text-sm px-4 py-2 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                        className="h-14 flex items-center justify-center gap-3 text-sm px-6 py-4 bg-white border-2 border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 shadow-sm hover:shadow-md"
                         onClick={async () => {
                           try {
                             if (!userProfile?.emergencyContacts?.length) {
@@ -1249,7 +1297,7 @@ export default function Index() {
                   <div>
                     <h4 className="text-sm font-medium mb-3">Map Display</h4>
                     <div className="space-y-2">
-                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200">
                         <ToggleSwitch
                           checked={mapType === "satellite"}
                           onChange={(checked) => {
@@ -1273,7 +1321,7 @@ export default function Index() {
                         />
                       </div>
 
-                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200">
                         <ToggleSwitch
                           checked={routeSettings.showTraffic}
                           onChange={(checked) => {
@@ -1298,7 +1346,7 @@ export default function Index() {
                         />
                       </div>
 
-                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200">
                         <ToggleSwitch
                           checked={routeSettings.showEmergencyServices}
                           onChange={(checked) => {
@@ -1325,7 +1373,7 @@ export default function Index() {
 
                       {/* Admin debug mode indicator removed */}
 
-                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200">
                         <ToggleSwitch
                           checked={gesturesEnabled}
                           onChange={(checked) => {
@@ -1349,7 +1397,7 @@ export default function Index() {
                       </div>
 
                       {/* Battery Optimization */}
-                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200 hover:bg-muted/30">
+                      <div className="p-3 bg-muted/20 rounded border transition-all duration-200">
                         <ToggleSwitch
                           checked={batterySaverMode}
                           onChange={(checked) => {
@@ -1405,7 +1453,8 @@ export default function Index() {
         />
 
         {/* Magic Navbar */}
-      </div>
+        <MagicNavbar />
+      </motion.div>
     </ErrorBoundary>
   );
 }

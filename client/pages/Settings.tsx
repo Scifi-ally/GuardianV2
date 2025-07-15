@@ -264,23 +264,25 @@ export default function Settings() {
   ];
 
   return (
-    <div className="min-h-screen bg-white safe-bottom-spacing">
-      <main className="container px-4 py-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 safe-bottom-spacing pb-20">
+      <main className="container px-4 py-8 space-y-8 max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-xl bg-gray-100">
-            <SettingsIcon className="h-6 w-6 text-black" />
+        <div className="flex items-center gap-4 mb-8">
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-800 shadow-lg">
+            <SettingsIcon className="h-7 w-7 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-black">Settings</h1>
-            <p className="text-gray-600">Customize your Guardian experience</p>
+            <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+            <p className="text-gray-600 text-lg">
+              Customize your Guardian experience
+            </p>
           </div>
         </div>
 
         {/* Quick Status */}
-        <motion.div variants={cardAnimations} whileHover="hover" whileTap="tap">
-          <Card className="bg-white border shadow-lg">
-            <CardContent className="p-4">
+        <motion.div variants={cardAnimations} whileTap="tap">
+          <Card className="bg-white border-2 border-gray-100 shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <motion.div
@@ -318,7 +320,10 @@ export default function Settings() {
 
         {/* Settings Sections */}
         {settingSections.map((section, sectionIndex) => (
-          <Card key={section.title} className="bg-white border shadow-lg">
+          <Card
+            key={section.title}
+            className="bg-white border-2 border-gray-100 shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300"
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-black">
                 <section.icon className="h-5 w-5 text-black" />
@@ -405,14 +410,10 @@ export default function Settings() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <motion.div
-              variants={buttonAnimations}
-              whileHover="hover"
-              whileTap="tap"
-            >
+            <motion.div variants={buttonAnimations} whileTap="tap">
               <Button
                 variant="outline"
-                className="w-full justify-start hover:bg-gray-50"
+                className="w-full justify-start"
                 onClick={() => {
                   // Create comprehensive help modal with real functionality
                   const helpContent = `
@@ -456,14 +457,10 @@ Your safety is our priority. Stay vigilant, stay connected.
               </Button>
             </motion.div>
 
-            <motion.div
-              variants={buttonAnimations}
-              whileHover="hover"
-              whileTap="tap"
-            >
+            <motion.div variants={buttonAnimations} whileTap="tap">
               <Button
                 variant="outline"
-                className="w-full justify-start hover:bg-gray-50"
+                className="w-full justify-start"
                 onClick={() => {
                   // Show comprehensive about information
                   const aboutContent = `
@@ -514,14 +511,10 @@ Built with ❤️ for your safety and peace of mind.
               </Button>
             </motion.div>
 
-            <motion.div
-              variants={buttonAnimations}
-              whileHover="hover"
-              whileTap="tap"
-            >
+            <motion.div variants={buttonAnimations} whileTap="tap">
               <Button
                 variant="outline"
-                className="w-full justify-start hover:bg-gray-50"
+                className="w-full justify-start"
                 onClick={() => {
                   // Show comprehensive privacy policy
                   const privacyContent = `

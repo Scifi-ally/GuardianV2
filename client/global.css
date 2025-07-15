@@ -232,6 +232,10 @@ button[aria-label*="Emergency"]:focus,
   /* Force light theme only */
   html {
     color-scheme: light;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
   }
 
   html.dark {
@@ -241,6 +245,7 @@ button[aria-label*="Emergency"]:focus,
   * {
     @apply border-border;
     outline: none;
+    box-sizing: border-box;
   }
 
   body {
@@ -250,6 +255,11 @@ button[aria-label*="Emergency"]:focus,
     line-height: 1.6; /* Improved readability for monospace */
     font-weight: 450; /* Slightly heavier for better contrast */
     letter-spacing: -0.01em; /* Tighter spacing for better readability */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
   }
 
   /* Improved text scale for better hierarchy with monospace */
@@ -272,6 +282,66 @@ button[aria-label*="Emergency"]:focus,
   .text-xl {
     font-size: 1.25rem;
     line-height: 1.4;
+  }
+}
+
+/* VIEWPORT OVERFLOW FIXES */
+@layer base {
+  /* Prevent horizontal overflow globally */
+  .container,
+  .max-w-7xl,
+  .max-w-6xl,
+  .max-w-5xl,
+  .max-w-4xl,
+  .max-w-3xl,
+  .max-w-2xl,
+  .max-w-xl,
+  .max-w-lg,
+  .max-w-md,
+  .max-w-sm {
+    max-width: 100% !important;
+    overflow-x: hidden;
+  }
+
+  /* Ensure all elements respect viewport width */
+  div,
+  section,
+  article,
+  main,
+  header,
+  footer,
+  nav {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Fix flex containers */
+  .flex {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .flex-1 {
+    min-width: 0;
+  }
+
+  /* Grid responsiveness */
+  .grid {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Image responsiveness */
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Text overflow handling */
+  .truncate {
+    max-width: 100%;
   }
 }
 
@@ -738,12 +808,6 @@ button[aria-label*="Emergency"]:focus,
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-safety:hover {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
-  transform: translateY(-2px);
-}
-
 .btn-emergency {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
@@ -752,24 +816,12 @@ button[aria-label*="Emergency"]:focus,
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-emergency:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
-  transform: translateY(-2px);
-}
-
 .btn-navigation {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
   box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-navigation:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-  transform: translateY(-2px);
 }
 
 /* Enhanced card styles for safety app */
@@ -782,12 +834,6 @@ button[aria-label*="Emergency"]:focus,
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card-safety:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 48px rgba(34, 197, 94, 0.2);
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
 .card-emergency {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
@@ -797,12 +843,6 @@ button[aria-label*="Emergency"]:focus,
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card-emergency:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 48px rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
 /* Enhanced button hover effects - Optimized */
 .btn-enhanced {
   transform: translateZ(0);
@@ -810,20 +850,9 @@ button[aria-label*="Emergency"]:focus,
   transition: all 0.2s ease-out;
 }
 
-.btn-enhanced:hover {
-  transform: translateY(-2px) translateZ(0);
-}
-
 .btn-enhanced:active {
   transform: translateY(0) translateZ(0);
   transition: all 0.1s ease-out;
-}
-
-/* Prevent hover state hanging on touch devices */
-@media (hover: none) {
-  .btn-enhanced:hover {
-    transform: none;
-  }
 }
 
 /* Enhanced UI Animations */
@@ -926,12 +955,6 @@ button[aria-label*="Emergency"]:focus,
 .btn-gradient {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-gradient:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 /* Geist Mono font class */
@@ -1065,11 +1088,6 @@ button[aria-label*="Emergency"]:focus,
 [data-sonner-toast][data-styled="true"] {
   animation: toast-slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-[data-sonner-toast][data-styled="true"]:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 /* Success toast special animation */
@@ -1243,10 +1261,6 @@ button[aria-label*="Emergency"]:focus,
   will-change: transform;
 }
 
-.interactive-element:hover {
-  transform: translateY(-1px) scale(1.02);
-}
-
 .interactive-element:active {
   transform: translateY(0) scale(0.98);
   transition-duration: 0.1s;
@@ -1256,11 +1270,6 @@ button[aria-label*="Emergency"]:focus,
 .card-interactive {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateZ(0);
-}
-
-.card-interactive:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 /* Navigation animations */
@@ -1280,7 +1289,6 @@ button[aria-label*="Emergency"]:focus,
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.nav-item:hover::after,
 .nav-item.active::after {
   width: 100%;
 }
@@ -1296,5 +1304,243 @@ button[aria-label*="Emergency"]:focus,
     animation: fade-in linear;
     animation-timeline: view();
     animation-range: entry 0% cover 40%;
+  }
+}
+
+/* MOBILE-FIRST RESPONSIVE UTILITIES */
+@layer utilities {
+  /* Mobile viewport fixes */
+  .mobile-container {
+    width: 100%;
+    max-width: 100vw;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .mobile-safe {
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+  }
+
+  /* Responsive text sizes */
+  .text-responsive {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .text-responsive {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
+
+  /* Touch-friendly sizing */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  .touch-target-small {
+    min-height: 36px;
+    min-width: 36px;
+    touch-action: manipulation;
+  }
+
+  /* Fluid spacing */
+  .space-fluid {
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .space-fluid {
+      gap: 1rem;
+    }
+  }
+
+  /* Responsive padding */
+  .p-responsive {
+    padding: 0.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .p-responsive {
+      padding: 1rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .p-responsive {
+      padding: 1.5rem;
+    }
+  }
+
+  /* Prevent overflow */
+  .no-overflow {
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  .no-overflow-x {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* Fluid grids */
+  .grid-fluid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  @media (min-width: 640px) {
+    .grid-fluid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-fluid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  /* Mobile-optimized animations */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-smooth {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-smooth {
+      transition: all 0.2s ease-out;
+    }
+  }
+
+  /* Emergency button optimizations */
+  .emergency-button-mobile {
+    min-height: 56px;
+    min-width: 56px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Landscape mode adjustments */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .landscape-compact {
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+    }
+
+    .landscape-text {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+  }
+
+  /* High DPI optimizations */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .crisp-edges {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+  }
+
+  /* Dark mode mobile optimizations */
+  @media (prefers-color-scheme: dark) {
+    .dark-mobile {
+      background-color: #000000;
+      color: #ffffff;
+    }
+  }
+
+  /* Performance optimizations */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+
+  .will-change-auto {
+    will-change: auto;
+  }
+
+  /* Improved focus indicators for mobile */
+  .focus-mobile:focus {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  .focus-emergency:focus {
+    outline: 4px solid #ef4444;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.2);
+  }
+
+  /* Modern Toast Styles */
+  .modern-toast {
+    animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .modern-toast:hover {
+    transform: translateY(-1px) scale(1.01);
+    box-shadow:
+      0 12px 48px rgba(0, 0, 0, 0.18),
+      0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .modern-toast[data-swipe="move"] {
+    transform: translateX(var(--radix-toast-swipe-move-x));
+  }
+
+  .modern-toast[data-swipe="cancel"] {
+    transform: translateX(0);
+    transition: transform 200ms ease-out;
+  }
+
+  .modern-toast[data-swipe="end"] {
+    animation: toast-swipe-out 100ms ease-out;
+  }
+
+  @keyframes toast-slide-in {
+    from {
+      transform: translateY(-100%) scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes toast-swipe-out {
+    from {
+      transform: translateX(var(--radix-toast-swipe-end-x));
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Google Maps Search Bar Styles */
+  .google-search-bar {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .google-search-bar:focus-within {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
   }
 }

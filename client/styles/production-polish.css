@@ -20,12 +20,6 @@
   box-shadow: 0 2px 8px rgba(255, 0, 0, 0.3);
 }
 
-.sos-button:hover,
-[data-emergency="true"]:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 16px rgba(255, 0, 0, 0.4);
-}
-
 .sos-button:active,
 [data-emergency="true"]:active {
   transform: scale(0.98);
@@ -249,10 +243,6 @@ button:disabled,
 ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.5);
 }
 
 /* Print styles for emergency information */
