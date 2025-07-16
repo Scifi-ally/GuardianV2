@@ -1,0 +1,431 @@
+/* Professional UI Animations and Mobile Interactions */
+
+/* Professional UI Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes magnetic-hover {
+  0% {
+    transform: translateZ(0) scale(1);
+  }
+  100% {
+    transform: translateZ(0) scale(1.05) translateY(-2px);
+  }
+}
+
+@keyframes liquid-morph {
+  0%,
+  100% {
+    border-radius: 20px;
+  }
+  25% {
+    border-radius: 25px 15px 30px 10px;
+  }
+  50% {
+    border-radius: 15px 30px 10px 25px;
+  }
+  75% {
+    border-radius: 30px 10px 25px 15px;
+  }
+}
+
+@keyframes glass-reflect {
+  0% {
+    background-position: -100% 0;
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    background-position: 100% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes button-press-wave {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes micro-interaction {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes success-checkmark {
+  0% {
+    transform: scale(0) rotate(45deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(45deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+@keyframes notification-slide-in {
+  from {
+    transform: translateX(100%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes card-stack-hover {
+  0% {
+    transform: translateY(0) rotateX(0deg);
+  }
+  100% {
+    transform: translateY(-8px) rotateX(5deg);
+  }
+}
+
+@keyframes smooth-pop {
+  0% {
+    transform: scale(0.8) rotate(-5deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes gentle-wobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(1deg);
+  }
+  75% {
+    transform: rotate(-1deg);
+  }
+}
+
+@keyframes smooth-slide-up {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes elastic-bounce {
+  0% {
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Professional Animation Utility Classes */
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-magnetic {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-magnetic:hover {
+  animation: magnetic-hover 0.3s ease-out forwards;
+}
+
+.animate-liquid {
+  animation: liquid-morph 4s ease-in-out infinite;
+}
+
+.animate-glass-reflect {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-glass-reflect::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: glass-reflect 2s infinite;
+}
+
+.animate-success {
+  animation: success-checkmark 0.5s ease-out;
+}
+
+.animate-micro {
+  animation: micro-interaction 0.2s ease-out;
+}
+
+.animate-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.animate-card-hover:hover {
+  animation: card-stack-hover 0.3s ease-out forwards;
+}
+
+.animate-notification {
+  animation: notification-slide-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-smooth-pop {
+  animation: smooth-pop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.animate-gentle-wobble {
+  animation: gentle-wobble 0.8s ease-in-out;
+}
+
+.animate-smooth-slide {
+  animation: smooth-slide-up 0.5s ease-out;
+}
+
+.animate-elastic {
+  animation: elastic-bounce 0.6s ease-out;
+}
+
+/* Enhanced Button Interactions */
+.btn-professional {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.btn-professional::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+  pointer-events: none;
+}
+
+.btn-professional:hover {
+  transform: translateY(-3px) translateZ(0) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.btn-professional:hover::before {
+  transform: translateX(100%);
+}
+
+.btn-professional:active {
+  transform: translateY(-1px) translateZ(0) scale(0.98);
+  transition: all 0.1s ease-out;
+  animation: button-press-wave 0.4s ease-out;
+}
+
+/* Touch-friendly interactions */
+.touch-interactive {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  transition: all 0.2s ease-out;
+}
+
+.touch-interactive:active {
+  transform: scale(0.96);
+  transition: transform 0.1s ease-out;
+}
+
+/* Enhanced touch feedback */
+.touch-feedback {
+  position: relative;
+  overflow: hidden;
+}
+
+.touch-feedback::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition:
+    width 0.6s,
+    height 0.6s;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.touch-feedback:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Professional glass morphism */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.glass-morphism-dark {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile-optimized interactions */
+@media (max-width: 768px) {
+  .mobile-enhanced {
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+
+  .mobile-enhanced:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-out;
+  }
+
+  /* Reduce motion for battery optimization */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-shimmer,
+    .animate-magnetic,
+    .animate-liquid,
+    .animate-glass-reflect {
+      animation: none;
+    }
+
+    .btn-professional:hover {
+      transform: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+/* Professional card interactions */
+.card-interactive {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.card-interactive:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.card-interactive:active {
+  transform: translateY(-2px) scale(1.01);
+  transition: all 0.1s ease-out;
+}
+
+/* Staggered animations */
+.stagger-children > * {
+  animation-delay: calc(var(--stagger-delay, 0) * 100ms);
+}
+
+/* Professional loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.loading-pulse {
+  animation: pulse-gentle 2s ease-in-out infinite;
+}
+
+/* Enhanced focus states for accessibility */
+.focus-enhanced:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Professional shadows */
+.shadow-professional {
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-professional-hover {
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-professional-active {
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.06),
+    0 1px 4px rgba(0, 0, 0, 0.04);
+}

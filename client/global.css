@@ -1,5 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100;200;300;400;500;600;700;800;900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
+@import "./styles/enhanced-animations.css";
+@import "./styles/mobile-responsive.css";
 
 @tailwind base;
 @tailwind components;
@@ -485,7 +487,7 @@ button[aria-label*="Emergency"]:focus,
   }
 }
 
-/* Smooth transitions for touch interactions */
+/* Enhanced mobile interactions and responsive design */
 @layer utilities {
   .touch-pan-x {
     touch-action: pan-x;
@@ -497,6 +499,69 @@ button[aria-label*="Emergency"]:focus,
 
   .touch-none {
     touch-action: none;
+  }
+
+  /* Mobile-first responsive design */
+  .mobile-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .mobile-nav-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 4rem);
+  }
+
+  /* Touch-optimized interactions */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  .touch-target-large {
+    min-height: 56px;
+    min-width: 56px;
+    touch-action: manipulation;
+  }
+
+  /* Responsive text scaling */
+  .text-responsive {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+
+  .text-responsive-lg {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+  }
+
+  .text-responsive-xl {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
+
+  /* Mobile-optimized spacing */
+  .mobile-px {
+    padding-left: clamp(1rem, 4vw, 2rem);
+    padding-right: clamp(1rem, 4vw, 2rem);
+  }
+
+  .mobile-py {
+    padding-top: clamp(1rem, 3vh, 1.5rem);
+    padding-bottom: clamp(1rem, 3vh, 1.5rem);
+  }
+
+  /* Gesture-friendly areas */
+  .gesture-area {
+    touch-action: pan-x pan-y;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+  }
+
+  /* Mobile scroll optimization */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 }
 

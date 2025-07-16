@@ -68,7 +68,7 @@ export function RealTimeMapFeatures({
   const [safetyAreas, setSafetyAreas] = useState<SafetyArea[]>([]);
   const [trafficInfo, setTrafficInfo] = useState<TrafficInfo | null>(null);
   const [activeFeatures, setActiveFeatures] = useState({
-    emergency: true,
+    emergency: true, // Always enabled - no toggle
     safety: true,
     traffic: true,
   });
@@ -370,21 +370,17 @@ export function RealTimeMapFeatures({
     renderSafetyAreas();
   }, [renderSafetyAreas]);
 
-  // Toggle feature visibility
+  // Toggle feature visibility (emergency services always enabled)
   const toggleFeature = (feature: keyof typeof activeFeatures) => {
+    // Emergency services are always enabled
+    if (feature === "emergency") {
+      return;
+    }
+
     setActiveFeatures((prev) => ({
       ...prev,
       [feature]: !prev[feature],
     }));
-
-    if (feature === "emergency") {
-      if (!activeFeatures.emergency) {
-        renderEmergencyMarkers();
-      } else {
-        markers.forEach((marker) => marker.setMap(null));
-        setMarkers([]);
-      }
-    }
 
     if (feature === "safety") {
       if (!activeFeatures.safety) {
@@ -400,32 +396,40 @@ export function RealTimeMapFeatures({
 
   return (
     <div className="absolute top-20 left-4 z-[1000] max-w-sm">
-      <Card className="bg-white/95 backdrop-blur-sm p-3 shadow-lg">
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            <Activity className="h-4 w-4 text-blue-500" />
-            Real-Time Features
+      <Card className="bg-white/98 backdrop-blur-xl p-4 shadow-2xl border-0 rounded-2xl">
+        <div className="space-y-4">
+          <h3 className="text-base font-bold text-gray-800 flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
+              <Activity className="h-4 w-4 text-white" />
+            </div>
+            Live Map Features
           </h3>
 
-          {/* Feature toggles */}
-          <div className="space-y-2">
-            <Button
-              size="sm"
-              variant={activeFeatures.emergency ? "default" : "outline"}
-              onClick={() => toggleFeature("emergency")}
-              className="w-full justify-start h-8 text-xs"
-            >
-              <Phone className="h-3 w-3 mr-2" />
-              Emergency Services ({emergencyServices.length})
-            </Button>
+          {/* Feature toggles - Emergency services always enabled */}
+          <div className="space-y-3">
+            {/* Emergency Services - Always Active */}
+            <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="text-xs font-semibold text-red-700">
+                  Emergency Services Active
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-3 w-3 text-red-600" />
+                <span className="text-xs text-red-600">
+                  {emergencyServices.length} services nearby
+                </span>
+              </div>
+            </div>
 
             <Button
               size="sm"
               variant={activeFeatures.safety ? "default" : "outline"}
               onClick={() => toggleFeature("safety")}
-              className="w-full justify-start h-8 text-xs"
+              className="w-full justify-start h-10 text-xs rounded-xl transition-all duration-200 hover:scale-[1.02]"
             >
-              <Shield className="h-3 w-3 mr-2" />
+              <Shield className="h-4 w-4 mr-2" />
               Safety Areas ({safetyAreas.length})
             </Button>
 
@@ -433,9 +437,9 @@ export function RealTimeMapFeatures({
               size="sm"
               variant={activeFeatures.traffic ? "default" : "outline"}
               onClick={() => toggleFeature("traffic")}
-              className="w-full justify-start h-8 text-xs"
+              className="w-full justify-start h-10 text-xs rounded-xl transition-all duration-200 hover:scale-[1.02]"
             >
-              <Car className="h-3 w-3 mr-2" />
+              <Car className="h-4 w-4 mr-2" />
               Traffic Info
             </Button>
           </div>
@@ -468,14 +472,18 @@ export function RealTimeMapFeatures({
           )}
 
           {/* Quick stats */}
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t text-xs">
-            <div className="text-center">
-              <div className="text-gray-500">Emergency</div>
-              <div className="font-semibold">{emergencyServices.length}</div>
+          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+            <div className="text-center p-2 bg-gradient-to-br from-red-50 to-pink-50 rounded-xl border border-red-100">
+              <div className="text-xs text-red-600 font-medium">Emergency</div>
+              <div className="text-lg font-bold text-red-700">
+                {emergencyServices.length}
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-gray-500">Safe Zones</div>
-              <div className="font-semibold">
+            <div className="text-center p-2 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
+              <div className="text-xs text-green-600 font-medium">
+                Safe Zones
+              </div>
+              <div className="text-lg font-bold text-green-700">
                 {safetyAreas.filter((a) => a.type === "safe_zone").length}
               </div>
             </div>

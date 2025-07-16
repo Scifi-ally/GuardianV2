@@ -24,7 +24,9 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "lucide-react";
-import { LocationAwareMap } from "@/components/LocationAwareMap";
+import { RealTimeGoogleMapsClone } from "@/components/RealTimeGoogleMapsClone";
+import { advancedSafetyScoring } from "@/services/advancedSafetyScoring";
+
 import { SlideUpPanel } from "@/components/SlideUpPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
 // Removed redundant useGeolocation - handled by LocationAwareMap
@@ -67,9 +69,10 @@ import { productionSafeguardsService } from "@/services/productionSafeguardsServ
 import { LocationPermissionPrompt } from "@/components/LocationPermissionPrompt";
 import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
 import { RouteSelection } from "@/components/RouteSelection";
-import { routeCalculationService } from "@/services/routeCalculationService";
+import { enhancedRouteCalculationService } from "@/services/enhancedRouteCalculationService";
+import { backgroundSafetyNavigationController } from "@/services/backgroundSafetyNavigationController";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
-import { CompactSearchBar } from "@/components/CompactSearchBar";
+import { SimpleSearchBar } from "@/components/SimpleSearchBar";
 
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 import { EmergencyServicesPanel } from "@/components/EmergencyServicesPanel";
@@ -117,8 +120,56 @@ export default function Index() {
         latitude: realTimeLocation.latitude,
         longitude: realTimeLocation.longitude,
       });
+
+      // Update background safety monitoring
+      backgroundSafetyNavigationController.updateLocation({
+        latitude: realTimeLocation.latitude,
+        longitude: realTimeLocation.longitude,
+      });
     }
   }, [realTimeLocation]);
+
+  // Initialize background safety monitoring
+  useEffect(() => {
+    if (location) {
+      backgroundSafetyNavigationController.startSafetyMonitoring({
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+
+      // Listen for safety alerts (background processing only - no UI notifications)
+      const handleSafetyAlert = (alert: any) => {
+        console.log("🛡️ Background safety alert:", alert);
+        // Safety processing happens silently in background
+      };
+
+      const handleRouteAlert = (alert: any) => {
+        console.log("🗺️ Background route safety update:", alert);
+        // Route safety influences navigation decisions automatically
+      };
+
+      backgroundSafetyNavigationController.on(
+        "safety_alert",
+        handleSafetyAlert,
+      );
+      backgroundSafetyNavigationController.on(
+        "route_safety_alert",
+        handleRouteAlert,
+      );
+
+      return () => {
+        backgroundSafetyNavigationController.off(
+          "safety_alert",
+          handleSafetyAlert,
+        );
+        backgroundSafetyNavigationController.off(
+          "route_safety_alert",
+          handleRouteAlert,
+        );
+        backgroundSafetyNavigationController.stopSafetyMonitoring();
+      };
+    }
+  }, [location]);
 
   // Get router location state for QR navigation
   const routerLocation = useRouterLocation();
@@ -294,16 +345,56 @@ export default function Index() {
 
   // Route planning function (removed - now integrated into handleSearch)
 
-  const handleRouteSelect = useCallback((route: any) => {
-    setShowRouteSelection(false);
-    setDestination({
-      latitude: route.waypoints[route.waypoints.length - 1].latitude,
-      longitude: route.waypoints[route.waypoints.length - 1].longitude,
-    });
-    setIsNavigating(true);
+  const handleRouteSelect = useCallback(
+    async (route: any) => {
+      setShowRouteSelection(false);
+      const finalDestination = {
+        latitude: route.waypoints[route.waypoints.length - 1].latitude,
+        longitude: route.waypoints[route.waypoints.length - 1].longitude,
+      };
 
-    // Silently start navigation
-  }, []);
+      // Use advanced safety scoring to optimize route
+      if (location) {
+        try {
+          const safetyOptimizedRoute =
+            await advancedSafetyScoring.calculateSafetyOptimizedRoute(
+              { latitude: location.latitude, longitude: location.longitude },
+              finalDestination,
+              { prioritizeSafety: true },
+            );
+
+          // Log safety analysis results for navigation decisions
+          console.log("Safety-optimized route calculated:", {
+            score: safetyOptimizedRoute.score,
+            risks: safetyOptimizedRoute.risks,
+            advantages: safetyOptimizedRoute.advantages,
+            recommendation: safetyOptimizedRoute.alternativeRecommendation,
+          });
+
+          // Show warning if route has significant safety concerns
+          if (
+            safetyOptimizedRoute.score < 40 &&
+            safetyOptimizedRoute.alternativeRecommendation
+          ) {
+            notifications.warning({
+              title: "Route Safety Notice",
+              description: safetyOptimizedRoute.alternativeRecommendation,
+              vibrate: true,
+            });
+          }
+        } catch (error) {
+          console.error("Safety route optimization failed:", error);
+        }
+      }
+
+      setDestination(finalDestination);
+      setIsNavigating(true);
+
+      // Update background safety controller with new destination
+      backgroundSafetyNavigationController.setDestination(finalDestination);
+    },
+    [location],
+  );
 
   // Initialize real-time data monitoring
   useEffect(() => {
@@ -422,10 +513,19 @@ export default function Index() {
   );
 
   const handleSearch = useCallback(async () => {
-    if (!fromLocation || !toLocation) {
+    if (!toLocation) {
       notifications.warning({
-        title: "Missing Information",
-        description: "Please enter both starting point and destination.",
+        title: "Missing Destination",
+        description: "Please enter where you'd like to go.",
+        vibrate: true,
+      });
+      return;
+    }
+
+    if (!location) {
+      notifications.error({
+        title: "Location Required",
+        description: "Please enable location access to get directions.",
         vibrate: true,
       });
       return;
@@ -434,10 +534,9 @@ export default function Index() {
     setIsNavigating(true);
 
     try {
-      // If destination is already set from autocomplete, use it directly
+      // Geocode the destination to get coordinates
       let destinationCoords = destination;
 
-      // Otherwise, geocode the address
       if (!destinationCoords) {
         const geocoder = new google.maps.Geocoder();
         const geocodeResult = await new Promise<google.maps.GeocoderResult[]>(
@@ -463,31 +562,12 @@ export default function Index() {
       }
 
       if (!destinationCoords) {
-        throw new Error("Destination coordinates not available");
+        throw new Error("Could not find destination");
       }
 
-      // Calculate safety score for the route during navigation
-      if (location) {
-        try {
-          const { areaBasedSafety } = await import(
-            "@/services/areaBasedSafety"
-          );
-          const { area } = await areaBasedSafety.getSafetyScore({
-            latitude: destinationCoords.latitude,
-            longitude: destinationCoords.longitude,
-          });
-
-          // Route safety notification removed - no slide down notifications
-        } catch (safetyError) {
-          console.warn("Safety analysis failed:", safetyError);
-        }
-      }
-
-      // Show route selection modal after calculating routes
+      // Calculate routes using real Google Directions API with safety analysis
       try {
-        // Route planning notification removed - no slide down notifications
-
-        const routes = await routeCalculationService.calculateRoutes(
+        const routes = await enhancedRouteCalculationService.calculateRoutes(
           { latitude: location.latitude, longitude: location.longitude },
           {
             latitude: destinationCoords.latitude,
@@ -495,8 +575,39 @@ export default function Index() {
           },
         );
 
+        // Enhance route options with safety scoring
+        if (routes.safestRoute) {
+          const safetyAnalysis =
+            await advancedSafetyScoring.calculateSafetyOptimizedRoute(
+              { latitude: location.latitude, longitude: location.longitude },
+              {
+                latitude: destinationCoords.latitude,
+                longitude: destinationCoords.longitude,
+              },
+              { prioritizeSafety: true },
+            );
+
+          // Log safety analysis for internal use
+          console.log("Route safety analysis:", {
+            destinationSafetyScore: safetyAnalysis.score,
+            risks: safetyAnalysis.risks,
+            advantages: safetyAnalysis.advantages,
+          });
+
+          // Automatically recommend safest route if significant safety difference
+          if (safetyAnalysis.score > 70) {
+            routes.recommendedRoute = "safest";
+          }
+        }
+
         setRouteOptions(routes);
         setShowRouteSelection(true);
+
+        notifications.success({
+          title: "Routes Found",
+          description: "Choose your preferred route to start navigation.",
+          vibrate: true,
+        });
       } catch (routeError) {
         console.error("Route calculation error:", routeError);
         notifications.error({
@@ -506,7 +617,7 @@ export default function Index() {
         });
       }
 
-      setIsNavigating(false); // Reset navigation state
+      setIsNavigating(false);
     } catch (error) {
       console.error("Navigation error:", error);
       notifications.error({
@@ -519,80 +630,51 @@ export default function Index() {
       });
       setIsNavigating(false);
     }
-  }, [fromLocation, toLocation, destination, location]);
+  }, [toLocation, destination, location]);
 
-  const handleUseCurrentLocation = useCallback(async () => {
-    try {
-      const currentLoc = location; // Use location from LocationAwareMap
+  // Auto-set current location
+  useEffect(() => {
+    if (location && !fromLocation) {
+      // Auto-geocode current location for display
+      const geocodeCurrentLocation = async () => {
+        try {
+          if (window.google?.maps) {
+            const geocoder = new google.maps.Geocoder();
+            const latlng = { lat: location.latitude, lng: location.longitude };
 
-      // Try to get location name using geocoding
-      if (window.google?.maps) {
-        const geocoder = new google.maps.Geocoder();
-        const latlng = { lat: currentLoc.latitude, lng: currentLoc.longitude };
+            geocoder.geocode({ location: latlng }, (results, status) => {
+              if (status === "OK" && results && results[0]) {
+                const result = results[0];
+                const components = result.address_components;
 
-        geocoder.geocode({ location: latlng }, (results, status) => {
-          if (status === "OK" && results && results[0]) {
-            const result = results[0];
-            const components = result.address_components;
+                // Extract city or neighborhood
+                let locationName = "Current Location";
+                for (const component of components) {
+                  if (component.types.includes("locality")) {
+                    locationName = component.long_name;
+                    break;
+                  } else if (component.types.includes("sublocality")) {
+                    locationName = component.long_name;
+                    break;
+                  }
+                }
 
-            let shortName = "";
-            let neighborhood = "";
-            let city = "";
-
-            components.forEach((component) => {
-              const types = component.types;
-              if (
-                types.includes("establishment") ||
-                types.includes("point_of_interest")
-              ) {
-                shortName = component.long_name;
-              } else if (
-                types.includes("neighborhood") ||
-                types.includes("sublocality")
-              ) {
-                neighborhood = component.long_name;
-              } else if (types.includes("locality")) {
-                city = component.long_name;
+                setFromLocation(locationName);
+              } else {
+                setFromLocation("Current Location");
               }
             });
-
-            if (shortName) {
-              console.log("📍 Setting from location to:", shortName);
-              setFromLocation(shortName);
-            } else if (neighborhood && city) {
-              console.log(
-                "📍 Setting from location to:",
-                `${neighborhood}, ${city}`,
-              );
-              setFromLocation(`${neighborhood}, ${city}`);
-            } else if (city) {
-              console.log("📍 Setting from location to:", city);
-              setFromLocation(city);
-            } else {
-              setFromLocation("Current Location");
-            }
           } else {
             setFromLocation("Current Location");
           }
-        });
-      } else {
-        setFromLocation("Current Location");
-      }
+        } catch (error) {
+          setFromLocation("Current Location");
+        }
+      };
 
-      // Location set notification removed - no slide down notifications
-    } catch (error: any) {
-      console.error("Error getting current location:", error);
-
-      const errorMessage = error?.message || "Unable to get your location";
-      setFromLocation("📍 Location unavailable - tap to retry");
-
-      notifications.error({
-        title: "Location Error",
-        description: errorMessage,
-        vibrate: true,
-      });
+      geocodeCurrentLocation();
     }
-  }, [location]);
+  }, [location, fromLocation]);
 
   // Route refreshes automatically when destination changes
   // SOS functionality is handled by MagicNavbar component
@@ -603,48 +685,37 @@ export default function Index() {
         <PerformanceOptimizer />
         {/* ClickableFixes removed - debug component */}
         {/* Compact Navigation Header - Reduced Height */}
-        {/* Compact Search Bar */}
-        <CompactSearchBar
-          fromLocation={fromLocation}
-          setFromLocation={setFromLocation}
-          toLocation={toLocation}
-          setToLocation={setToLocation}
-          onSearch={handleSearch}
-          onUseCurrentLocation={handleUseCurrentLocation}
-          location={
-            location
-              ? {
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                  accuracy: 10, // Default accuracy
-                  timestamp: Date.now(), // Current timestamp
-                }
-              : null
-          }
-          isSearching={isNavigating}
-        />
 
         {/* Clear Route Button */}
         {destination && (
           <div className="container mx-auto px-3 py-1">
-            <Button
-              onClick={() => {
-                setDestination(undefined);
-                setIsNavigating(false);
-                setRouteInstructions([]);
-                setTurnByTurnInstructions([]);
-                setRouteSummary(null);
-
-                unifiedNotifications.success("Route cleared", {
-                  message: "Navigation route has been removed",
-                });
-              }}
-              size="sm"
-              variant="outline"
-              className="w-full h-8 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700"
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 300 }}
             >
-              Clear Route
-            </Button>
+              <Button
+                onClick={() => {
+                  setDestination(undefined);
+                  setIsNavigating(false);
+                  setRouteInstructions([]);
+                  setTurnByTurnInstructions([]);
+                  setRouteSummary(null);
+
+                  // Clear destination from background safety controller
+                  backgroundSafetyNavigationController.clearDestination();
+
+                  unifiedNotifications.success("Route cleared", {
+                    message: "Navigation route has been removed",
+                  });
+                }}
+                size="sm"
+                variant="outline"
+                className="w-full h-10 text-sm bg-gradient-to-r from-white to-red-50 hover:from-red-50 hover:to-red-100 border-2 border-red-200 hover:border-red-300 text-red-700 font-bold rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                Clear Route
+              </Button>
+            </motion.div>
           </div>
         )}
 
@@ -662,30 +733,36 @@ export default function Index() {
 
         {/* Location Permission Prompt removed */}
 
-        {/* Enhanced Google Map with Safety Score Coloring */}
+        {/* Real-Time Google Maps Clone with Integrated Safety Analysis */}
         <div className="absolute inset-0 top-0 z-10">
-          <LocationAwareMap
-            key="main-map"
-            onLocationChange={setLocation}
-            onMapLoad={(map) => {
-              console.log("🗺️ Map loaded successfully");
+          <RealTimeGoogleMapsClone
+            onLocationChange={(newLocation) => {
+              setLocation(newLocation);
+
+              // Update background safety monitoring
+              backgroundSafetyNavigationController.updateLocation(newLocation);
             }}
-            showDebug={shouldShowLocationDebug}
-            zoomLevel={routeSettings.zoomLevel}
-            destination={destination}
-            showTraffic={routeSettings.showTraffic}
-            showSafeZones={routeSettings.showSafeZones}
-            showEmergencyServices={routeSettings.showEmergencyServices}
-            mapType={mapType}
-            showSharedLocations={true}
-            currentUserId={userProfile?.uid}
-            emergencyContacts={emergencyContacts.map((contact) => ({
-              id: contact.id,
-              name: contact.name,
-              latitude: 37.7749 + Math.random() * 0.01,
-              longitude: -122.4194 + Math.random() * 0.01,
-            }))}
-            onLocationUpdate={(newLocation) => {}}
+            onDestinationSet={(dest) => {
+              setDestination(dest);
+              setIsNavigating(true);
+
+              // Update background safety controller with new destination
+              backgroundSafetyNavigationController.setDestination(dest);
+
+              // Auto-geocode destination for display
+              if (window.google?.maps) {
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode(
+                  { location: { lat: dest.latitude, lng: dest.longitude } },
+                  (results, status) => {
+                    if (status === "OK" && results && results[0]) {
+                      setToLocation(results[0].formatted_address);
+                    }
+                  },
+                );
+              }
+            }}
+            className="w-full h-full"
           />
         </div>
 
@@ -712,13 +789,15 @@ export default function Index() {
           </div>
         )}
 
-        {/* Slide Up Panel with Tabs for Navigation, Contacts, and Settings */}
+        {/* Enhanced Professional Slide Up Panel */}
         <SlideUpPanel
-          minHeight={200}
+          minHeight={100}
           maxHeight={Math.floor(window.innerHeight * 0.8)}
-          initialHeight={Math.floor(window.innerHeight * 0.45)}
-          bottomOffset={80}
-          collapsedHeight={60}
+          initialHeight={
+            destination ? Math.floor(window.innerHeight * 0.35) : 120
+          }
+          bottomOffset={75}
+          collapsedHeight={30}
           onTouchOutside={() => {}}
         >
           <motion.div
@@ -727,124 +806,82 @@ export default function Index() {
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             <Tabs
-              defaultValue={isNavigating ? "navigation" : "safety"}
+              defaultValue={isNavigating ? "navigation" : "navigation"}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-3 h-12 bg-slate-100/80 backdrop-blur-sm rounded-xl p-1 shadow-sm">
+              <TabsList className="grid w-full grid-cols-2 h-12 bg-white/95 backdrop-blur-xl rounded-xl p-1 shadow-xl border border-gray-100">
                 <TabsTrigger
                   value="navigation"
-                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                  className="text-sm h-9 font-bold rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 hover:scale-[1.02]"
                 >
-                  <Navigation className="h-4 w-4 mr-1.5" />
-                  ROUTES
+                  <Navigation className="h-4 w-4 mr-2" />
+                  NAVIGATION
                 </TabsTrigger>
-                <TabsTrigger
-                  value="safety"
-                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-                >
-                  <Navigation2 className="h-4 w-4 mr-1.5" />
-                  SAFETY
-                </TabsTrigger>
-
                 <TabsTrigger
                   value="settings"
-                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
+                  className="text-sm h-9 font-bold rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-gray-700 data-[state=active]:to-gray-900 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 hover:scale-[1.02]"
                 >
-                  <Settings className="h-4 w-4 mr-1.5" />
+                  <Settings className="h-4 w-4 mr-2" />
                   SETTINGS
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent
-                value="safety"
-                className="mt-6 space-y-6 transform transition-all duration-300 ease-out slide-up"
-              >
-                <motion.div
-                  className="space-y-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <div className="space-y-4">
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
-                      <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
-                        <div className="p-2 bg-blue-500 rounded-xl shadow-md">
-                          <Target className="h-5 w-5 text-white" />
-                        </div>
-                        LOCATION SHARING
-                        <LocationSharingInfoButton />
-                      </h3>
-                      <p className="text-sm text-slate-600 font-mono mb-4">
-                        Share your location with trusted contacts for enhanced
-                        safety
-                      </p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100/50 shadow-sm">
-                      <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
-                        <div className="p-2 bg-red-500 rounded-xl shadow-md">
-                          <AlertTriangle className="h-5 w-5 text-white" />
-                        </div>
-                        EMERGENCY SOS
-                      </h3>
-                      <p className="text-sm text-slate-600 font-mono mb-4">
-                        Use the red SOS button in the bottom navigation to send
-                        emergency alerts
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-red-600">
-                        <AlertTriangle className="h-4 w-4" />
-                        <span>
-                          Press and hold for 3 seconds to activate emergency
-                          mode
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </TabsContent>
-
-              <TabsContent
                 value="navigation"
-                className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-right"
+                className="mt-3 space-y-3 transform transition-all duration-200 ease-out"
               >
                 {isNavigating && turnByTurnInstructions.length > 0 ? (
                   // Navigation Instructions
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Navigation className="h-5 w-5 text-primary" />
-                        Turn-by-Turn Navigation
+                  <motion.div
+                    className="space-y-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+                      <h3 className="text-lg font-bold flex items-center gap-2 text-blue-900">
+                        <Navigation className="h-5 w-5 text-blue-600" />
+                        Active Navigation
                       </h3>
-                      <Badge className="bg-primary/20 text-primary">
-                        Active
+                      <Badge className="bg-blue-600 text-white font-semibold px-3 py-1 rounded-full">
+                        Live
                       </Badge>
                     </div>
 
-                    {/* Route Summary */}
+                    {/* Enhanced Route Summary */}
                     {routeSummary && (
-                      <Card className="bg-primary/5 border-primary/20">
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {travelMode === "WALKING" && (
-                                <Footprints className="h-4 w-4 text-primary" />
-                              )}
-                              {travelMode === "DRIVING" && (
-                                <Car className="h-4 w-4 text-primary" />
-                              )}
-                              {travelMode === "BICYCLING" && (
-                                <Bike className="h-4 w-4 text-primary" />
-                              )}
-                              <span className="text-sm font-medium">
-                                Route Summary ({travelMode.toLowerCase()})
-                              </span>
+                      <motion.div
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.2, delay: 0.1 }}
+                      >
+                        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-sm">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-green-600 rounded-lg">
+                                  {travelMode === "WALKING" && (
+                                    <Footprints className="h-4 w-4 text-white" />
+                                  )}
+                                  {travelMode === "DRIVING" && (
+                                    <Car className="h-4 w-4 text-white" />
+                                  )}
+                                  {travelMode === "BICYCLING" && (
+                                    <Bike className="h-4 w-4 text-white" />
+                                  )}
+                                </div>
+                                <span className="font-bold text-green-900">
+                                  {travelMode.toLowerCase()} route
+                                </span>
+                              </div>
+                              <div className="text-sm font-bold text-green-800">
+                                {routeSummary.distance} •{" "}
+                                {routeSummary.duration}
+                              </div>
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {routeSummary.distance} • {routeSummary.duration}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
                     )}
 
                     <div className="space-y-3 max-h-60 overflow-y-auto">
@@ -914,7 +951,7 @@ export default function Index() {
                     >
                       End Navigation
                     </Button>
-                  </div>
+                  </motion.div>
                 ) : (
                   // Route Planning
                   <div className="space-y-4">
@@ -1342,13 +1379,6 @@ export default function Index() {
                       {gesturesEnabled && (
                         <div className="mt-2 opacity-100 transition-opacity duration-200">
                           <GestureGuide />
-                        </div>
-                      )}
-
-                      {/* Safety Score Debug Panel (Admin-controlled) */}
-                      {shouldShowSafetyCalculationBasis && (
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                          <SafetyDebugPanel />
                         </div>
                       )}
 
