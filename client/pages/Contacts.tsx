@@ -1,5 +1,5 @@
 import { Plus, UserPlus, Shield, Phone } from "lucide-react";
-import { SimpleNavbar } from "@/components/SimpleNavbar";
+import { MagicNavbar } from "@/components/MagicNavbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ export default function Contacts() {
   ];
 
   return (
-    <div className="min-h-screen bg-background safe-bottom-spacing">
+    <div className="min-h-screen bg-background pb-24">
       <main className="container px-4 py-6 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Emergency Contacts</h1>
@@ -116,7 +116,7 @@ export default function Contacts() {
         </Card>
       </main>
 
-      <SimpleNavbar onSOSPress={handleSOSPress} />
+      <MagicNavbar onSOSPress={handleSOSPress} />
     </div>
   );
 }

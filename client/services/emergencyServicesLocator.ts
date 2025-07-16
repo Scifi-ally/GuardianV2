@@ -471,7 +471,7 @@ class EmergencyServicesLocator {
       },
     ];
 
-    return basicServices.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    return mockServices.sort((a, b) => (a.distance || 0) - (b.distance || 0));
   }
 
   formatDistance(distance: number): string {

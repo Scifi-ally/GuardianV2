@@ -11,7 +11,6 @@ import {
   Navigation as NavigationIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGeolocation } from "@/hooks/use-device-apis";
 import { useSOSSettings } from "@/contexts/SOSSettingsContext";
@@ -45,7 +44,6 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
   const { currentUser, userProfile } = useAuth();
   const { location: userLocation, getCurrentLocation } = useGeolocation();
   const { sosSettings, verifyPassword } = useSOSSettings();
-  const isMobile = useIsMobile();
   const [activeIndex, setActiveIndex] = useState(0);
   const [sosPressed, setSOSPressed] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -76,14 +74,8 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
   };
 
   const handleMapLongPress = () => {
-    // Focus on the floating search bar instead of navigating
-    const searchInput = document.querySelector(
-      'input[placeholder*="Where do you want to go"]',
-    ) as HTMLInputElement;
-    if (searchInput) {
-      searchInput.focus();
-      searchInput.click();
-    }
+    navigate("/enhanced-navigation");
+    // Silently activate enhanced navigation
     setShowEnhancedMapHint(false);
   };
 
@@ -446,287 +438,193 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       )}
 
       <div
-        className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 safe-area-inset-bottom",
-          isMobile ? "pb-2" : "pb-4",
-        )}
+        className="fixed bottom-0 left-0 right-0 z-50"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {/* Ultra-light professional background */}
-        <div className="absolute inset-0 navbar-light" />
+        {/* Background with blur effect */}
+        <div className="absolute inset-0 bg-background/95 backdrop-blur-lg border-t border-border/50 rounded-t-3xl shadow-2xl" />
 
         {/* Navigation items */}
-        <div
-          className={cn(
-            "relative rounded-t-2xl",
-            isMobile ? "px-3 py-2" : "px-6 py-3",
-          )}
-        >
-          <div className="flex items-center justify-between w-full max-w-lg mx-auto px-1">
-            <div className="flex-1"></div>
-            <div
-              className={cn("flex items-center", isMobile ? "gap-4" : "gap-6")}
-            >
-              {navItems.map((item, index) => {
-                const Icon = item.icon;
-                const isActive = activeIndex === index;
-                const isSpecial = item.isSpecial;
+        <div className="relative px-8 py-4 rounded-t-3xl">
+          <div className="flex items-center justify-between w-full max-w-md mx-auto">
+            {navItems.map((item, index) => {
+              const Icon = item.icon;
+              const isActive = activeIndex === index;
+              const isSpecial = item.isSpecial;
 
-                if (isSpecial && (sosPressed || sending || activeAlertId)) {
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={
-                        sosPressed
-                          ? handleCancelSOS
-                          : activeAlertId
-                            ? stopActiveSOSAlert
-                            : undefined
-                      }
-                      disabled={sending}
-                      data-emergency="true"
-                      aria-label={
-                        sosPressed
-                          ? "Cancel Emergency Alert"
-                          : activeAlertId
-                            ? "Stop Active SOS Alert"
-                            : "Emergency SOS Button"
-                      }
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          if (sosPressed) {
-                            handleCancelSOS();
-                          } else if (activeAlertId) {
-                            stopActiveSOSAlert();
-                          }
-                        }
-                      }}
-                      className={cn(
-                        "relative flex flex-col items-center transition-all duration-300 flex-1 touch-emergency emergency-focus sos-button",
-                        isMobile
-                          ? "px-2 py-1.5 max-w-[70px] min-h-[50px]"
-                          : "px-4 py-2 max-w-[70px] min-h-[55px]",
-                        sosPressed
-                          ? "bg-warning/20 rounded-3xl animate-pulse"
-                          : activeAlertId
-                            ? "bg-red-500 text-white rounded-3xl animate-pulse"
-                            : "bg-emergency/20 rounded-3xl",
-                        sending && "opacity-50 cursor-not-allowed",
-                      )}
-                    >
-                      {sosPressed && (
-                        <div className="absolute inset-0 rounded-3xl border-2 border-warning animate-ping" />
-                      )}
-                      {(sending || activeAlertId) && (
-                        <div className="absolute inset-0 rounded-3xl border-2 border-red-500 animate-pulse" />
-                      )}
-                      <div className="relative z-10 flex flex-col items-center">
-                        {sosPressed ? (
-                          <>
-                            <div className="text-2xl font-bold text-warning mb-1">
-                              {countdown}
-                            </div>
-                            <span className="text-xs text-warning font-medium">
-                              Cancel
-                            </span>
-                          </>
-                        ) : activeAlertId ? (
-                          <>
-                            <div className="text-lg font-bold text-white mb-1">
-                              STOP
-                            </div>
-                            <span className="text-xs text-white font-medium">
-                              Active SOS
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-lg font-bold text-emergency mb-1">
-                              ...
-                            </div>
-                            <span className="text-xs text-emergency font-medium">
-                              Sending
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </button>
-                  );
-                }
-
+              if (isSpecial && (sosPressed || sending || activeAlertId)) {
                 return (
-                  <motion.button
+                  <button
                     key={item.id}
-                    onClick={() => handleNavClick(item, index)}
-                    onMouseDown={() => handleMapMouseDown(item, index)}
-                    onMouseUp={handleMapMouseUp}
-                    onMouseLeave={handleMapMouseUp}
-                    onTouchStart={() => handleMapMouseDown(item, index)}
-                    onTouchEnd={handleMapMouseUp}
+                    onClick={
+                      sosPressed
+                        ? handleCancelSOS
+                        : activeAlertId
+                          ? stopActiveSOSAlert
+                          : undefined
+                    }
                     disabled={sending}
+                    data-emergency="true"
+                    aria-label={
+                      sosPressed
+                        ? "Cancel Emergency Alert"
+                        : activeAlertId
+                          ? "Stop Active SOS Alert"
+                          : "Emergency SOS Button"
+                    }
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        if (sosPressed) {
+                          handleCancelSOS();
+                        } else if (activeAlertId) {
+                          stopActiveSOSAlert();
+                        }
+                      }
+                    }}
                     className={cn(
-                      "relative flex flex-col items-center transition-all duration-300 touch-optimization group",
-                      isMobile
-                        ? "px-3 py-2 min-w-[70px] min-h-[60px] mx-1"
-                        : "px-4 py-3 min-w-[80px] min-h-[70px] mx-2",
-                      sending && isSpecial && "opacity-50 cursor-not-allowed",
-                      item.id === "map" &&
-                        showEnhancedMapHint &&
-                        "bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl shadow-lg",
+                      "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px] emergency-focus",
+                      sosPressed
+                        ? "bg-warning/20 rounded-3xl animate-pulse"
+                        : activeAlertId
+                          ? "bg-red-500 text-white rounded-3xl animate-pulse"
+                          : "bg-emergency/20 rounded-3xl",
+                      sending && "opacity-50 cursor-not-allowed",
                     )}
-                    whileHover={{
-                      scale: isSpecial ? 1.15 : 1.1,
-                      y: -4,
-                      transition: {
-                        type: "spring",
-                        damping: 20,
-                        stiffness: 300,
-                        duration: 0.2,
-                      },
-                    }}
-                    whileTap={{
-                      scale: 0.95,
-                      transition: { duration: 0.1 },
-                    }}
-                    initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                      transition: {
-                        delay: index * 0.2,
-                        type: "spring",
-                        damping: 20,
-                        stiffness: 300,
-                        duration: 0.8,
-                      },
-                    }}
                   >
-                    {/* Ultra-Enhanced Background with dynamic effects */}
-                    <motion.div
-                      className={cn(
-                        "absolute inset-0 rounded-3xl transition-all duration-500",
-                        isActive &&
-                          !isSpecial &&
-                          "bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 ring-2 ring-blue-300/50 shadow-xl",
-                        isSpecial &&
-                          "bg-gradient-to-br from-red-50 via-red-100 to-red-200 ring-2 ring-red-300/50 shadow-2xl",
-                        !isActive &&
-                          !isSpecial &&
-                          "bg-gradient-to-br from-gray-50 to-gray-100 shadow-md ring-1 ring-gray-200/30",
+                    {sosPressed && (
+                      <div className="absolute inset-0 rounded-3xl border-2 border-warning animate-ping" />
+                    )}
+                    {(sending || activeAlertId) && (
+                      <div className="absolute inset-0 rounded-3xl border-2 border-red-500 animate-pulse" />
+                    )}
+                    <div className="relative z-10 flex flex-col items-center">
+                      {sosPressed ? (
+                        <>
+                          <div className="text-2xl font-bold text-warning mb-1">
+                            {countdown}
+                          </div>
+                          <span className="text-xs text-warning font-medium">
+                            Cancel
+                          </span>
+                        </>
+                      ) : activeAlertId ? (
+                        <>
+                          <div className="text-lg font-bold text-white mb-1">
+                            STOP
+                          </div>
+                          <span className="text-xs text-white font-medium">
+                            Active SOS
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-lg font-bold text-emergency mb-1">
+                            ...
+                          </div>
+                          <span className="text-xs text-emergency font-medium">
+                            Sending
+                          </span>
+                        </>
                       )}
+                    </div>
+                  </button>
+                );
+              }
+
+              return (
+                <motion.button
+                  key={item.id}
+                  onClick={() => handleNavClick(item, index)}
+                  onMouseDown={() => handleMapMouseDown(item, index)}
+                  onMouseUp={handleMapMouseUp}
+                  onMouseLeave={handleMapMouseUp}
+                  onTouchStart={() => handleMapMouseDown(item, index)}
+                  onTouchEnd={handleMapMouseUp}
+                  disabled={sending}
+                  className={cn(
+                    "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px]",
+                    sending && isSpecial && "opacity-50 cursor-not-allowed",
+                    item.id === "map" &&
+                      showEnhancedMapHint &&
+                      "bg-blue-100 rounded-lg",
+                  )}
+                  whileHover={{
+                    scale: isSpecial ? 1.15 : 1.1,
+                    y: -2,
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: index * 0.1,
+                    type: "spring",
+                    damping: 20,
+                    stiffness: 300,
+                  }}
+                >
+                  {/* Background circle for active/special items */}
+                  <div
+                    className={cn(
+                      "absolute inset-2 rounded-3xl transition-all duration-300",
+                      isActive && !isSpecial && "bg-primary/10 scale-110",
+                      isSpecial && "bg-emergency/10 scale-125 animate-pulse",
+                    )}
+                  />
+
+                  {/* Icon container */}
+                  <div
+                    className={cn(
+                      "relative z-10 p-1.5 rounded-2xl transition-all duration-300",
+                      isSpecial &&
+                        "bg-emergency text-emergency-foreground shadow-lg",
+                      isActive && !isSpecial && "bg-primary/20",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "transition-all duration-300",
+                        isSpecial ? "h-6 w-6" : "h-4 w-4",
+                        isActive && !isSpecial
+                          ? "text-primary"
+                          : "text-foreground",
+                        isSpecial && "text-emergency-foreground",
+                      )}
+                    />
+                  </div>
+
+                  {/* Label */}
+                  <span
+                    className={cn(
+                      "text-xs font-medium transition-all duration-300 mt-1",
+                      isActive && !isSpecial
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                      isSpecial && "text-emergency font-bold",
+                    )}
+                  >
+                    {item.label}
+                  </span>
+
+                  {/* Special item glow effect */}
+                  {isSpecial && (
+                    <motion.div
+                      className="absolute inset-0 rounded-3xl bg-emergency/20 opacity-50"
                       animate={{
-                        scale:
-                          isActive || isSpecial ? [1, 1.05, 1] : [1, 1.02, 1],
-                        rotate: isActive && !isSpecial ? [0, 2, 0] : 0,
-                        opacity:
-                          isActive || isSpecial
-                            ? [0.8, 1, 0.8]
-                            : [0.3, 0.6, 0.3],
+                        opacity: [0.2, 0.5, 0.2],
+                        scale: [1, 1.05, 1],
                       }}
                       transition={{
-                        duration: isSpecial ? 1.5 : 3,
+                        duration: 2,
                         repeat: Infinity,
                         ease: "easeInOut",
                       }}
                     />
-
-                    {/* Ultra-Premium Icon container with advanced effects */}
-                    <motion.div
-                      className={cn(
-                        "relative z-10 rounded-professional smooth-transition backdrop-blur-sm interactive-card",
-                        isMobile ? "p-2.5" : "p-3",
-                        isSpecial &&
-                          "bg-gradient-to-br from-red-400 via-red-500 to-red-600 text-white shadow-lg ring-1 ring-red-200/50 rounded-2xl",
-                        isActive &&
-                          !isSpecial &&
-                          "bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 text-white shadow-lg ring-1 ring-slate-200/50 rounded-2xl",
-                        !isActive &&
-                          !isSpecial &&
-                          "text-slate-400 bg-white/95 shadow-sm ring-1 ring-slate-100/80 rounded-2xl",
-                      )}
-                      whileHover={{
-                        boxShadow: isSpecial
-                          ? "0 25px 50px rgba(239, 68, 68, 0.5), 0 0 40px rgba(239, 68, 68, 0.4)"
-                          : isActive
-                            ? "0 20px 40px rgba(59, 130, 246, 0.5), 0 0 30px rgba(59, 130, 246, 0.4)"
-                            : "0 15px 30px rgba(0, 0, 0, 0.15)",
-                        scale: 1.1,
-                        transition: { duration: 0.3 },
-                      }}
-                      animate={{
-                        rotateY: isActive ? [0, 15, 0] : 0,
-                        scale: isSpecial ? [1, 1.08, 1] : [1, 1.02, 1],
-                      }}
-                      transition={{
-                        duration: isSpecial ? 1.2 : 2.5,
-                        repeat: isSpecial || isActive ? Infinity : 0,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      <Icon
-                        className={cn(
-                          "transition-all duration-300 drop-shadow-sm",
-                          isSpecial
-                            ? isMobile
-                              ? "h-5 w-5"
-                              : "h-6 w-6"
-                            : isMobile
-                              ? "h-4 w-4"
-                              : "h-5 w-5",
-                          (isActive || isSpecial) &&
-                            "text-white drop-shadow-lg",
-                          !isActive && !isSpecial && "text-slate-400",
-                        )}
-                      />
-                    </motion.div>
-
-                    {/* Ultra-Enhanced Label */}
-                    <motion.span
-                      className={cn(
-                        "font-medium transition-all duration-300 tracking-wide",
-                        isMobile ? "text-xs mt-1.5" : "text-sm mt-2",
-                        isActive && !isSpecial
-                          ? "text-slate-700 font-semibold drop-shadow-sm"
-                          : "text-slate-400",
-                        isSpecial &&
-                          "text-red-400 font-semibold drop-shadow-sm",
-                      )}
-                      animate={{
-                        y: isActive || isSpecial ? [0, -3, 0] : 0,
-                        scale: isActive || isSpecial ? [1, 1.08, 1] : 1,
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        repeat: isActive || isSpecial ? Infinity : 0,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      {item.label}
-                    </motion.span>
-
-                    {/* Advanced special item effects */}
-                    {isSpecial && (
-                      <motion.div
-                        className="absolute inset-0 rounded-3xl bg-emergency/20 opacity-50"
-                        animate={{
-                          opacity: [0.2, 0.5, 0.2],
-                          scale: [1, 1.05, 1],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      />
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
-            <div className="flex-1"></div>
+                  )}
+                </motion.button>
+              );
+            })}
           </div>
         </div>
 

@@ -20,7 +20,7 @@ import {
   FileText,
   CheckCircle,
 } from "lucide-react";
-import { SimpleNavbar } from "@/components/SimpleNavbar";
+import { MagicNavbar } from "@/components/MagicNavbar";
 import { AnimatedCard } from "@/components/AnimatedCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +48,7 @@ export default function Settings() {
       emergencyOnly: false,
     },
     privacy: {
+      shareLocation: true,
       anonymousReporting: true,
       dataSaving: false,
       highAccuracyMode: false,
@@ -216,6 +217,14 @@ export default function Settings() {
       icon: Lock,
       items: [
         {
+          id: "shareLocation",
+          label: "Location Sharing",
+          description: "Allow sharing location with contacts",
+          type: "switch",
+          value: settings.privacy.shareLocation,
+          category: "privacy" as const,
+        },
+        {
           id: "anonymousReporting",
           label: "Anonymous Reporting",
           description: "Submit safety reports anonymously",
@@ -264,7 +273,7 @@ export default function Settings() {
   ];
 
   return (
-    <div className="min-h-screen bg-white safe-bottom-spacing">
+    <div className="min-h-screen bg-white pb-24">
       <main className="container px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
@@ -474,8 +483,8 @@ Guardian Safety App v1.0.0
 Guardian is an AI-powered safety application designed to keep you protected through intelligent location tracking, real-time threat analysis, and seamless emergency response.
 
 ✨ Key Features:
+• Real-time location sharing with trusted contacts
 • AI-powered safety score analysis for any location
-• Emergency contact notification system
 • Smart context-aware safety recommendations
 • One-tap emergency contact alerting
 • Intelligent route planning for safer travel
@@ -488,7 +497,7 @@ Guardian is an AI-powered safety application designed to keep you protected thro
 • No data shared with third parties without explicit consent
 • Full control over your privacy settings
 
-�� Recognition:
+🏆 Recognition:
 • Winner: Best Safety Innovation 2024
 • Featured in Top Security Apps by Tech Safety Review
 • Trusted by 100,000+ users worldwide
@@ -588,7 +597,7 @@ Your trust is our priority. Stay safe, stay private.
         </Card>
       </main>
 
-      <SimpleNavbar onSOSPress={handleSOSPress} />
+      <MagicNavbar onSOSPress={handleSOSPress} />
     </div>
   );
 }

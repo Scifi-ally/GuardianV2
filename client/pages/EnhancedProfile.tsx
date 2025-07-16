@@ -18,7 +18,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { GuardianKeyCard } from "@/components/GuardianKeyCard";
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
-import { SimpleNavbar } from "@/components/SimpleNavbar";
+import { MagicNavbar } from "@/components/MagicNavbar";
 import { SimpleBottomNav } from "@/components/SimpleBottomNav";
 import { CompactProfileHeader } from "@/components/CompactProfileHeader";
 import { cn } from "@/lib/utils";
@@ -49,8 +49,8 @@ export default function EnhancedProfile() {
   const emergencyContacts = userProfile?.emergencyContacts || [];
 
   return (
-    <div className="min-h-screen bg-background safe-bottom-spacing">
-      <SimpleNavbar />
+    <div className="min-h-screen bg-background pb-24">
+      <MagicNavbar />
 
       <main className="container px-4 py-6 space-y-6 pb-32">
         {/* Compact Profile Header */}
@@ -198,10 +198,10 @@ export default function EnhancedProfile() {
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  <span className="text-sm">Location Services</span>
+                  <span className="text-sm">Location Sharing</span>
                 </div>
                 <Badge variant="outline" className="bg-safe/10 text-safe">
-                  Active
+                  Enabled
                 </Badge>
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg">

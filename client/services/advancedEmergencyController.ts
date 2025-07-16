@@ -55,57 +55,9 @@ export class AdvancedEmergencyController {
   // Initialize emergency status
   private async initializeStatus(): Promise<void> {
     try {
-      // Try to get current location with fallback strategy
-      let location = null;
+      // Get current location for emergency services initialization
+      const location = await enhancedLocationService.getCurrentLocation();
 
-      try {
-        location = await enhancedLocationService.getCurrentLocation();
-      } catch (locationError) {
-        console.debug(
-          "Location unavailable during emergency controller init, using fallback",
-        );
-
-        // Fallback: Try to get any cached location
-        const cachedLocation = enhancedLocationService.current;
-        if (cachedLocation) {
-          location = cachedLocation;
-          console.log("Using cached location for emergency controller");
-        } else {
-          // Final fallback: Initialize without location for now
-          console.log(
-            "No location available, emergency controller will initialize when location is available",
-          );
-          this.updateState({
-            emergencyContacts: 0,
-            nearbyServices: 0,
-          });
-
-          // Set up listener for when location becomes available
-          enhancedLocationService.addLocationListener((newLocation) => {
-            this.initializeWithLocation(newLocation);
-          });
-          return;
-        }
-      }
-
-      if (location) {
-        await this.initializeWithLocation(location);
-      }
-    } catch (error) {
-      console.debug(
-        "Emergency controller initialization deferred:",
-        error.message,
-      );
-      // Don't throw error - emergency controller should initialize gracefully
-      this.updateState({
-        emergencyContacts: 0,
-        nearbyServices: 0,
-      });
-    }
-  }
-
-  private async initializeWithLocation(location: any): Promise<void> {
-    try {
       // Initialize emergency service for this location
       await enhancedEmergencyService.initializeForLocation({
         lat: location.latitude,
@@ -122,12 +74,9 @@ export class AdvancedEmergencyController {
         nearbyServices: services.length,
       });
 
-      console.log("✅ Advanced Emergency Controller initialized with location");
+      console.log("✅ Advanced Emergency Controller initialized");
     } catch (error) {
-      console.debug(
-        "Failed to initialize emergency service with location:",
-        error.message,
-      );
+      console.error("Failed to initialize emergency controller:", error);
     }
   }
 

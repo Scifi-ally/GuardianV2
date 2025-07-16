@@ -77,13 +77,7 @@ export function CompactSearchBar({
   }, [fromLocation, toLocation]);
 
   return (
-    <div
-      className="absolute left-4 right-4 z-[1000]"
-      style={{
-        top: `max(env(safe-area-inset-top, 0px) + 16px, 64px)`,
-        paddingBottom: "8px",
-      }}
-    >
+    <div className="absolute top-4 left-4 right-4 z-[1000]">
       <motion.div
         layout
         className={cn(
@@ -102,22 +96,22 @@ export function CompactSearchBar({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="p-3"
+              className="p-2"
             >
               <button
                 onClick={handleExpand}
-                className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors min-h-[44px]"
+                className="w-full flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors"
               >
-                <div className="p-2 bg-blue-100 rounded-xl">
-                  <Search className="h-4 w-4 text-blue-600" />
+                <div className="p-1.5 bg-blue-100 rounded-lg">
+                  <Search className="h-3.5 w-3.5 text-blue-600" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-xs font-medium text-gray-900">
                     {fromLocation && toLocation
                       ? `${fromLocation} → ${toLocation}`
                       : "Where to go?"}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[10px] text-gray-500">
                     Tap to set destination
                   </p>
                 </div>

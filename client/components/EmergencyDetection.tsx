@@ -28,7 +28,7 @@ interface EmergencyDetectionProps {
 export function EmergencyDetection({
   onEmergencyTriggered,
 }: EmergencyDetectionProps) {
-  const { motion, requestPermission } = useDeviceMotion();
+  const { motion, isShaking, requestPermission } = useDeviceMotion();
   const {
     isListening,
     transcript,
@@ -44,9 +44,19 @@ export function EmergencyDetection({
   const [emergencyMode, setEmergencyMode] = useState(false);
   const [detectionEnabled, setDetectionEnabled] = useState(false);
   const [sosCountdown, setSOSCountdown] = useState(0);
-  // Removed shake detection for safety
+  const [lastShakeTime, setLastShakeTime] = useState(0);
 
-  // Removed shake detection for safety
+  // Handle shake detection
+  useEffect(() => {
+    if (isShaking && detectionEnabled) {
+      const now = Date.now();
+      if (now - lastShakeTime > 3000) {
+        setLastShakeTime(now);
+        warningVibration();
+        triggerEmergency("shake", { motion, timestamp: now });
+      }
+    }
+  }, [isShaking, detectionEnabled, lastShakeTime, motion, warningVibration]);
 
   const triggerEmergency = useCallback(
     (type: string, data?: any) => {
@@ -248,9 +258,16 @@ export function EmergencyDetection({
             <div className="grid grid-cols-2 gap-3">
               {/* Motion Detection */}
               <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <Activity className={cn("h-6 w-6 mx-auto mb-2", "text-safe")} />
+                <Activity
+                  className={cn(
+                    "h-6 w-6 mx-auto mb-2",
+                    isShaking ? "text-warning animate-bounce" : "text-safe",
+                  )}
+                />
                 <p className="text-xs font-medium">Motion</p>
-                <p className="text-xs text-muted-foreground">Monitoring</p>
+                <p className="text-xs text-muted-foreground">
+                  {isShaking ? "Shake detected!" : "Monitoring"}
+                </p>
               </div>
 
               {/* Voice Detection */}

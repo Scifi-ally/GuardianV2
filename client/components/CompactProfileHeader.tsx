@@ -198,11 +198,11 @@ export function CompactProfileHeader({ className }: CompactProfileHeaderProps) {
                               placeholder="Enter your email"
                             />
                           </div>
-                          <div className="button-stack-safe pt-4 space-y-2">
+                          <div className="flex gap-2 pt-4">
                             <Button
                               onClick={handleSaveProfile}
                               disabled={isSaving}
-                              className="w-full"
+                              className="flex-1"
                             >
                               {isSaving ? (
                                 <motion.div
@@ -224,7 +224,6 @@ export function CompactProfileHeader({ className }: CompactProfileHeaderProps) {
                               variant="outline"
                               onClick={() => setIsEditDialogOpen(false)}
                               disabled={isSaving}
-                              className="w-full"
                             >
                               <X className="h-4 w-4 mr-2" />
                               Cancel

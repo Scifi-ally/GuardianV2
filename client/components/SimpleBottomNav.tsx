@@ -307,11 +307,11 @@ export function SimpleBottomNav({
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 z-50 overflow-hidden">
         {/* Background with blur and gradient */}
-        <div className="absolute inset-0 navbar-light" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/98 to-background/90 backdrop-blur-xl" />
 
         {/* Navigation Content */}
-        <div className="relative max-w-xs mx-auto px-3 py-2">
-          <div className="flex items-end justify-center gap-12">
+        <div className="relative max-w-sm mx-auto px-4 py-2">
+          <div className="flex items-end justify-center gap-20">
             {/* Map Button */}
             <div className="relative flex flex-col items-center group">
               <div
@@ -326,17 +326,17 @@ export function SimpleBottomNav({
                 onClick={() => onTabChange("map")}
                 variant="ghost"
                 className={cn(
-                  "relative h-10 w-10 rounded-xl transition-all duration-300 transform backdrop-blur-sm",
-                  "hover:shadow-md hover:-translate-y-0.5 active:scale-95",
+                  "relative h-12 w-12 rounded-2xl transition-all duration-500 transform backdrop-blur-sm",
+                  "hover:shadow-lg hover:-translate-y-1 active:scale-95",
                   activeTab === "map"
-                    ? "bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 text-white scale-105 shadow-lg border-2 border-slate-200/30 ring-2 ring-slate-100/30 rounded-2xl"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50 hover:scale-105 hover:border-slate-200/30 border-2 border-transparent rounded-2xl",
+                    ? "bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 text-primary scale-110 shadow-xl border-2 border-primary/30 ring-4 ring-primary/10"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10 hover:scale-105 hover:border-primary/20 border-2 border-transparent",
                 )}
               >
                 <MapPin
                   className={cn(
                     "transition-all duration-300",
-                    activeTab === "map" ? "h-5 w-5" : "h-4 w-4",
+                    activeTab === "map" ? "h-8 w-8" : "h-7 w-7",
                   )}
                 />
               </Button>
@@ -344,8 +344,8 @@ export function SimpleBottomNav({
                 className={cn(
                   "text-xs font-medium mt-1 transition-all duration-300",
                   activeTab === "map"
-                    ? "text-slate-700 scale-105"
-                    : "text-slate-400 group-hover:text-slate-600",
+                    ? "text-primary scale-110"
+                    : "text-muted-foreground group-hover:text-primary",
                 )}
               >
                 Map
@@ -370,20 +370,20 @@ export function SimpleBottomNav({
                 <motion.button
                   onClick={handleSOSPress}
                   className={cn(
-                    "relative h-16 w-16 rounded-full transition-all duration-300 transform",
+                    "relative h-18 w-18 rounded-full transition-all duration-300 transform",
                     "bg-gradient-to-br from-emergency via-emergency/90 to-emergency/80",
                     "hover:from-emergency/95 hover:via-emergency/85 hover:to-emergency/75",
-                    "text-emergency-foreground shadow-xl border-3 border-white/80",
-                    "hover:scale-105 hover:shadow-emergency/20 hover:-translate-y-1",
-                    "active:scale-100 active:translate-y-0",
+                    "text-emergency-foreground shadow-2xl border-4 border-white/70",
+                    "hover:scale-110 hover:shadow-emergency/25 hover:-translate-y-2",
+                    "active:scale-105 active:translate-y-0",
                     panicModeActive &&
-                      "ring-3 ring-emergency/30 border-emergency/50",
+                      "ring-4 ring-emergency/30 border-emergency/50",
                   )}
                   variants={emergencyAnimations}
                   animate={panicModeActive ? "pulse" : ""}
                 >
                   <div className="flex flex-col items-center justify-center gap-1">
-                    <AlertTriangle className="h-6 w-6 drop-shadow-lg" />
+                    <AlertTriangle className="h-7 w-7 drop-shadow-lg" />
                     <span className="text-xs font-bold drop-shadow-lg">
                       SOS
                     </span>
@@ -393,9 +393,9 @@ export function SimpleBottomNav({
                 <Button
                   onClick={handleCancelSOS}
                   className={cn(
-                    "relative h-16 w-16 rounded-full transition-all duration-200",
+                    "relative h-18 w-18 rounded-full transition-all duration-200",
                     "bg-gradient-to-br from-warning via-warning/90 to-warning/80 text-warning-foreground",
-                    "shadow-xl border-3 border-white/80 ring-3 ring-warning/30",
+                    "shadow-2xl border-4 border-white/70 ring-4 ring-warning/30",
                   )}
                 >
                   <div className="flex flex-col items-center justify-center gap-1">
@@ -427,17 +427,17 @@ export function SimpleBottomNav({
                 onClick={() => onTabChange("profile")}
                 variant="ghost"
                 className={cn(
-                  "relative h-10 w-10 rounded-xl transition-all duration-300 transform backdrop-blur-sm",
-                  "hover:shadow-md hover:-translate-y-0.5 active:scale-95",
+                  "relative h-12 w-12 rounded-2xl transition-all duration-500 transform backdrop-blur-sm",
+                  "hover:shadow-lg hover:-translate-y-1 active:scale-95",
                   activeTab === "profile"
-                    ? "bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 text-white scale-105 shadow-lg border-2 border-slate-200/30 ring-2 ring-slate-100/30 rounded-2xl"
-                    : "text-slate-400 hover:text-slate-600 hover:bg-slate-50 hover:scale-105 hover:border-slate-200/30 border-2 border-transparent rounded-2xl",
+                    ? "bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 text-primary scale-110 shadow-xl border-2 border-primary/30 ring-4 ring-primary/10"
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/10 hover:scale-105 hover:border-primary/20 border-2 border-transparent",
                 )}
               >
                 <User
                   className={cn(
                     "transition-all duration-300",
-                    activeTab === "profile" ? "h-5 w-5" : "h-4 w-4",
+                    activeTab === "profile" ? "h-8 w-8" : "h-7 w-7",
                   )}
                 />
               </Button>
@@ -445,8 +445,8 @@ export function SimpleBottomNav({
                 className={cn(
                   "text-xs font-medium mt-1 transition-all duration-300",
                   activeTab === "profile"
-                    ? "text-slate-700 scale-105"
-                    : "text-slate-400 group-hover:text-slate-600",
+                    ? "text-primary scale-110"
+                    : "text-muted-foreground group-hover:text-primary",
                 )}
               >
                 Profile

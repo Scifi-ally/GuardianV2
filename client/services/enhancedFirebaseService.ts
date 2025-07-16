@@ -29,7 +29,6 @@ import {
 } from "firebase/auth";
 import { db, auth } from "@/lib/firebase";
 import { notifications } from "@/services/enhancedNotificationService";
-import { firebaseErrorHandler } from "./firebaseErrorHandler";
 
 export interface UserProfile {
   uid: string;
@@ -316,31 +315,23 @@ class EnhancedFirebaseService {
   async updateUserProfile(profile: Partial<UserProfile>): Promise<void> {
     if (!auth.currentUser) return;
 
-    await firebaseErrorHandler.executeWithErrorHandling(
-      async () => {
-        const docRef = doc(db, "users", auth.currentUser!.uid);
-        await updateDoc(docRef, {
-          ...profile,
-          lastSeen: serverTimestamp(),
-          isOnline: true,
-        });
+    try {
+      const docRef = doc(db, "users", auth.currentUser.uid);
+      await updateDoc(docRef, {
+        ...profile,
+        lastSeen: serverTimestamp(),
+        isOnline: true,
+      });
 
-        if (this.userProfile) {
-          this.userProfile = { ...this.userProfile, ...profile };
-        }
-      },
-      undefined,
-      true, // retryable
-    );
-
-    // Always update local profile as fallback
-    if (this.userProfile) {
-      this.userProfile = { ...this.userProfile, ...profile };
-      // Store offline for later sync
-      firebaseErrorHandler.storeOfflineData(
-        `userProfile_${auth.currentUser.uid}`,
-        this.userProfile,
-      );
+      if (this.userProfile) {
+        this.userProfile = { ...this.userProfile, ...profile };
+      }
+    } catch (error) {
+      console.error("Failed to update user profile:", error);
+      // Update local profile as fallback
+      if (this.userProfile) {
+        this.userProfile = { ...this.userProfile, ...profile };
+      }
     }
   }
 

@@ -35,8 +35,6 @@ interface LocationAwareMapProps {
     longitude: number;
     avatar?: string;
   }>;
-  onMapClick?: (location: { lat: number; lng: number }) => void;
-  enableNavigationClick?: boolean;
 }
 
 export function LocationAwareMap({
@@ -49,8 +47,6 @@ export function LocationAwareMap({
   mapType = "normal",
   destination,
   zoomLevel,
-  onMapClick,
-  enableNavigationClick = false,
 }: LocationAwareMapProps) {
   const {
     location,
@@ -156,8 +152,6 @@ export function LocationAwareMap({
           mapType={mapType}
           destination={destination}
           zoomLevel={zoomLevel}
-          onMapClick={onMapClick}
-          enableNavigationClick={enableNavigationClick}
           className="w-full h-full"
         />
       </div>
@@ -223,8 +217,8 @@ export function LocationAwareMap({
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-4">
-                Guardian Safety needs your location to provide emergency
-                services, safety alerts, and location-based features.
+                This app needs access to your location to show you the map and
+                provide location-based safety features.
               </p>
               <Button
                 onClick={handleRequestLocation}

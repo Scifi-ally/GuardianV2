@@ -26,11 +26,7 @@ import {
 } from "lucide-react";
 import { LocationAwareMap } from "@/components/LocationAwareMap";
 import { SlideUpPanel } from "@/components/SlideUpPanel";
-import { NavigationControls } from "@/components/NavigationControls";
-import { ExpandableSearchBar } from "@/components/ExpandableSearchBar";
-import { enhancedNavigationService } from "@/services/enhancedNavigationService";
-import { dynamicLoadingService } from "@/services/dynamicLoadingService";
-
+import { MagicNavbar } from "@/components/MagicNavbar";
 // Removed redundant useGeolocation - handled by LocationAwareMap
 import { useMapTheme } from "@/hooks/use-map-theme";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,7 +50,7 @@ import { CustomCheckbox } from "@/components/ui/custom-checkbox";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 
 // Removed redundant notification imports
-
+import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import AINavigationPanel from "@/components/AINavigationPanel";
 import { useRealTime } from "@/hooks/useRealTime";
 import { RealTimeStatusIndicator } from "@/components/RealTimeStatusIndicator";
@@ -74,9 +70,6 @@ import { RouteSelection } from "@/components/RouteSelection";
 import { routeCalculationService } from "@/services/routeCalculationService";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { CompactSearchBar } from "@/components/CompactSearchBar";
-import { EnhancedSearchBar } from "@/components/EnhancedSearchBar";
-import { navigationFixService } from "@/services/navigationFixService";
-import { NavigationTroubleshooter } from "@/components/NavigationTroubleshooter";
 
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 import { EmergencyServicesPanel } from "@/components/EmergencyServicesPanel";
@@ -200,6 +193,13 @@ export default function Index() {
 
   // Initialize gesture system for enhanced usability
   const { gesturesEnabled, setGesturesEnabled } = useGestures({
+    onSOSActivated: () => {
+      unifiedNotifications.sos({
+        title: "�� Gesture SOS Activated",
+        message:
+          "Emergency SOS triggered by rapid taps or shake - immediate assistance needed!",
+      });
+    },
     onQuickShare: async () => {
       const shareText = `Emergency location shared via gesture`;
       navigator.clipboard?.writeText(shareText);
@@ -229,14 +229,6 @@ export default function Index() {
     showSafeAreaCircles: false,
     zoomLevel: 15,
   });
-
-  // Navigation controls state
-  const [showNavigationControls, setShowNavigationControls] = useState(false);
-  const [navigationDestination, setNavigationDestination] = useState<{
-    lat: number;
-    lng: number;
-    name?: string;
-  } | null>(null);
 
   // Location handling moved to LocationAwareMap
   const {
@@ -304,43 +296,19 @@ export default function Index() {
 
   const handleRouteSelect = useCallback((route: any) => {
     setShowRouteSelection(false);
-    const destinationPoint = route.waypoints[route.waypoints.length - 1];
     setDestination({
-      latitude: destinationPoint.latitude,
-      longitude: destinationPoint.longitude,
+      latitude: route.waypoints[route.waypoints.length - 1].latitude,
+      longitude: route.waypoints[route.waypoints.length - 1].longitude,
     });
     setIsNavigating(true);
 
-    // Set navigation destination and show controls
-    setNavigationDestination({
-      lat: destinationPoint.latitude,
-      lng: destinationPoint.longitude,
-      name: route.name || "Selected Destination",
-    });
-    setShowNavigationControls(true);
-
-    // Initialize enhanced navigation service
-    if (window.google && window.google.maps) {
-      // Wait for map to be ready, then initialize navigation service
-      setTimeout(() => {
-        const mapElement = document.querySelector(".google-maps-container");
-        if (mapElement) {
-          // The enhanced navigation service will be initialized by the LocationAwareMap component
-          unifiedNotifications.success("Route Selected", {
-            message: "Ready to start navigation - choose your travel mode",
-          });
-        }
-      }, 500);
-    }
+    // Silently start navigation
   }, []);
 
-  // Initialize real-time data monitoring and dynamic loading
+  // Initialize real-time data monitoring
   useEffect(() => {
     const initializeTracking = async () => {
       try {
-        // Initialize dynamic loading service
-        dynamicLoadingService.adaptivePreload();
-
         // Start real-time tracking with error handling
         await realTimeDataService.startTracking();
 
@@ -631,56 +599,34 @@ export default function Index() {
 
   return (
     <ErrorBoundary>
-      <div className="h-screen overflow-hidden bg-background relative">
+      <div className="min-h-screen bg-background">
         <PerformanceOptimizer />
         {/* ClickableFixes removed - debug component */}
         {/* Compact Navigation Header - Reduced Height */}
-        {/* Floating Search Bar - Completely floating over map */}
-        <div
-          className="fixed top-0 left-0 right-0 z-50 pointer-events-none"
-          style={{
-            paddingTop: "max(env(safe-area-inset-top), 48px)",
-            paddingLeft: "max(env(safe-area-inset-left), 16px)",
-            paddingRight: "max(env(safe-area-inset-right), 16px)",
-          }}
-        >
-          <div className="max-w-md mx-auto pointer-events-auto">
-            <div className="relative transform transition-all duration-300 ease-out">
-              <ExpandableSearchBar
-                onPlaceSelect={(place) => {
-                  console.log("🎯 Place selected from floating search:", place);
-                  setToLocation(place.name);
-                  setDestination({
-                    latitude: place.location.lat,
-                    longitude: place.location.lng,
-                  });
-                  notifications.success({
-                    title: "Destination Set",
-                    description: `Navigate to ${place.name}`,
-                  });
-                }}
-                onNavigationStart={(destination) => {
-                  console.log("🧭 Starting navigation to:", destination);
-                  setIsNavigating(true);
-                  setDestination({
-                    latitude: destination.lat,
-                    longitude: destination.lng,
-                  });
-                  notifications.success({
-                    title: "Navigation Started",
-                    description: `Navigating to ${destination.name}`,
-                  });
-                }}
-                placeholder="Where do you want to go?"
-                className="drop-shadow-2xl"
-              />
-            </div>
-          </div>
-        </div>
+        {/* Compact Search Bar */}
+        <CompactSearchBar
+          fromLocation={fromLocation}
+          setFromLocation={setFromLocation}
+          toLocation={toLocation}
+          setToLocation={setToLocation}
+          onSearch={handleSearch}
+          onUseCurrentLocation={handleUseCurrentLocation}
+          location={
+            location
+              ? {
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  accuracy: 10, // Default accuracy
+                  timestamp: Date.now(), // Current timestamp
+                }
+              : null
+          }
+          isSearching={isNavigating}
+        />
 
-        {/* Clear Route Button - Floating */}
+        {/* Clear Route Button */}
         {destination && (
-          <div className="fixed top-24 right-4 z-40">
+          <div className="container mx-auto px-3 py-1">
             <Button
               onClick={() => {
                 setDestination(undefined);
@@ -695,10 +641,9 @@ export default function Index() {
               }}
               size="sm"
               variant="outline"
-              className="bg-white/95 backdrop-blur-xl hover:bg-gray-50/95 border border-gray-300/50 text-gray-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-3 py-2"
+              className="w-full h-8 text-sm bg-white hover:bg-gray-50 border border-gray-300 text-gray-700"
             >
-              <RotateCcw className="h-4 w-4 mr-1" />
-              Clear
+              Clear Route
             </Button>
           </div>
         )}
@@ -718,13 +663,12 @@ export default function Index() {
         {/* Location Permission Prompt removed */}
 
         {/* Enhanced Google Map with Safety Score Coloring */}
-        {/* Full Screen Map */}
-        <div className="absolute inset-0 z-10">
+        <div className="absolute inset-0 top-0 z-10">
           <LocationAwareMap
             key="main-map"
             onLocationChange={setLocation}
             onMapLoad={(map) => {
-              console.log("��️ Map loaded successfully");
+              console.log("🗺️ Map loaded successfully");
             }}
             showDebug={shouldShowLocationDebug}
             zoomLevel={routeSettings.zoomLevel}
@@ -742,19 +686,6 @@ export default function Index() {
               longitude: -122.4194 + Math.random() * 0.01,
             }))}
             onLocationUpdate={(newLocation) => {}}
-            enableNavigationClick={true}
-            onMapClick={(clickLocation) => {
-              // Set clicked location as navigation destination
-              setNavigationDestination({
-                lat: clickLocation.lat,
-                lng: clickLocation.lng,
-                name: "Map Location",
-              });
-              setShowNavigationControls(true);
-              unifiedNotifications.success("Destination Set", {
-                message: "Tap to start navigation to this location",
-              });
-            }}
           />
         </div>
 
@@ -786,7 +717,7 @@ export default function Index() {
           minHeight={200}
           maxHeight={Math.floor(window.innerHeight * 0.8)}
           initialHeight={Math.floor(window.innerHeight * 0.45)}
-          bottomOffset={96}
+          bottomOffset={80}
           collapsedHeight={60}
           onTouchOutside={() => {}}
         >
@@ -840,7 +771,8 @@ export default function Index() {
                         <div className="p-2 bg-blue-500 rounded-xl shadow-md">
                           <Target className="h-5 w-5 text-white" />
                         </div>
-                        EMERGENCY CONTACTS
+                        LOCATION SHARING
+                        <LocationSharingInfoButton />
                       </h3>
                       <p className="text-sm text-slate-600 font-mono mb-4">
                         Share your location with trusted contacts for enhanced
@@ -908,8 +840,7 @@ export default function Index() {
                               </span>
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {routeSummary.distance} ���{" "}
-                              {routeSummary.duration}
+                              {routeSummary.distance} • {routeSummary.duration}
                             </div>
                           </div>
                         </CardContent>
@@ -995,7 +926,13 @@ export default function Index() {
                         onClick={async () => {
                           if (location && userProfile) {
                             try {
-                              // Location shared for emergency purposes
+                              // Start sharing location on the map
+                              const sessionId =
+                                sharedLocationService.startLocationSharing(
+                                  userProfile.uid,
+                                  userProfile.displayName || "You",
+                                  userProfile.photoURL,
+                                );
 
                               // Update initial location
                               sharedLocationService.updateUserLocation(
@@ -1166,19 +1103,39 @@ export default function Index() {
                               timestamp: Date.now(),
                             });
 
-                            // Send location to emergency contacts
+                            // Also start live tracking on the map
+                            if (userProfile) {
+                              const sessionId =
+                                sharedLocationService.startLiveTracking(
+                                  userProfile.uid,
+                                  userProfile.displayName || "You",
+                                  userProfile.photoURL,
+                                );
+
+                              // Update initial location for live tracking
+                              sharedLocationService.updateUserLocation(
+                                userProfile.uid,
+                                userProfile.displayName || "You",
+                                location.latitude,
+                                location.longitude,
+                                10, // Default accuracy
+                                userProfile.photoURL,
+                                true, // isLiveTracking
+                              );
+                            }
+
+                            // Notify emergency contacts about live tracking
                             const locationUrl = `https://maps.google.com/?q=${location.latitude},${location.longitude}`;
                             await emergencyContactActionsService.sendEmergencyMessage(
-                              `📍 LOCATION SHARED: My current location is: ${locationUrl}. This is for emergency contact purposes.`,
-                              emergencyContacts,
+                              `����� LIVE TRACKING STARTED: I'm sharing my real-time location with you. Current location: ${locationUrl}. You'll receive updates every 2 minutes.`,
                             );
 
                             // Add to real-time alerts
                             realTimeService.addAlert({
                               id: `live-tracking-${Date.now()}`,
                               type: "info",
-                              title: "Location Shared",
-                              message: `Current location sent to ${userProfile.emergencyContacts.length} emergency contacts`,
+                              title: "Live Tracking Active",
+                              message: `Sharing location with ${userProfile.emergencyContacts.length} emergency contacts`,
                               timestamp: new Date(),
                               location: {
                                 latitude: location.latitude,
@@ -1196,7 +1153,7 @@ export default function Index() {
                         }}
                       >
                         <Navigation className="h-4 w-4" />
-                        Share Location
+                        Live Tracking
                       </Button>
                     </div>
                   </div>
@@ -1344,13 +1301,13 @@ export default function Index() {
                                 : "Gesture controls disabled",
                               {
                                 message: checked
-                                  ? "Navigation gestures and quick actions enabled"
-                                  : "Navigation gesture detection turned off",
+                                  ? "5 rapid taps or shake for SOS, 3-finger hold for panic mode"
+                                  : "Emergency gesture detection turned off",
                               },
                             );
                           }}
-                          label="Navigation Gestures"
-                          description="Swipe gestures & quick actions"
+                          label="Gesture Controls"
+                          description="Emergency gestures & navigation"
                           size="md"
                         />
                       </div>
@@ -1404,14 +1361,8 @@ export default function Index() {
           </motion.div>
         </SlideUpPanel>
 
-        {/* Navigation Controls */}
-        <NavigationControls
-          isVisible={showNavigationControls}
-          onClose={() => setShowNavigationControls(false)}
-          destination={navigationDestination}
-        />
-
         {/* Magic Navbar */}
+        <MagicNavbar />
       </div>
     </ErrorBoundary>
   );

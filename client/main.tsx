@@ -30,7 +30,6 @@ import NotFound from "./pages/NotFound";
 import { FullPageLoading } from "@/components/LoadingAnimation";
 import { SplashScreen } from "@/components/SplashScreen";
 import { useCapacitor } from "@/hooks/use-capacitor";
-import { SimpleNavbar } from "@/components/SimpleNavbar";
 
 const queryClient = new QueryClient();
 
@@ -62,19 +61,19 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Emergency-optimized page transition variants
+// Simple page transition variants
 const pageVariants = {
   enter: {
     opacity: 0,
-    scale: 0.98, // Subtle scale instead of slide for faster perception
+    x: 20,
   },
   center: {
     opacity: 1,
-    scale: 1,
+    x: 0,
   },
   exit: {
     opacity: 0,
-    scale: 1.02, // Quick scale out
+    x: -20,
   },
 };
 
@@ -83,26 +82,6 @@ const transition = {
   ease: "easeInOut",
   duration: 0.3,
 };
-
-// Emergency-optimized transition for faster page switches
-const emergencyTransition = {
-  type: "tween",
-  ease: "easeOut",
-  duration: 0.15, // Faster for emergency situations
-};
-
-function PersistentNavbar() {
-  const { currentUser } = useAuth();
-  const location = useLocation();
-
-  // Only show navbar on authenticated routes
-  const showNavbar =
-    currentUser && !["/signin", "/signup"].includes(location.pathname);
-
-  if (!showNavbar) return null;
-
-  return <SimpleNavbar />;
-}
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -124,7 +103,7 @@ function AnimatedRoutes() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={emergencyTransition}
+                transition={transition}
                 className="w-full min-h-screen"
               >
                 <Index />
@@ -142,7 +121,7 @@ function AnimatedRoutes() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={emergencyTransition}
+                transition={transition}
                 className="w-full min-h-screen"
               >
                 <Profile />
@@ -159,7 +138,7 @@ function AnimatedRoutes() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={emergencyTransition}
+                transition={transition}
                 className="w-full min-h-screen"
               >
                 <Settings />
@@ -167,7 +146,6 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/signin"
           element={
@@ -177,7 +155,7 @@ function AnimatedRoutes() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={emergencyTransition}
+                transition={transition}
                 className="w-full min-h-screen"
               >
                 <SignIn />
@@ -194,7 +172,7 @@ function AnimatedRoutes() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={emergencyTransition}
+                transition={transition}
                 className="w-full min-h-screen"
               >
                 <SignUp />
@@ -248,7 +226,6 @@ const App = () => {
               <BrowserRouter>
                 <div className="relative w-full min-h-screen bg-background">
                   <AnimatedRoutes />
-                  <PersistentNavbar />
                 </div>
               </BrowserRouter>
             </TooltipProvider>

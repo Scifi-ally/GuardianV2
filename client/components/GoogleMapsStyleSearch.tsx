@@ -77,15 +77,10 @@ export function GoogleMapsStyleSearch({
   };
 
   return (
-    <div
-      className="absolute top-4 left-0 right-0 z-50"
-      style={{
-        paddingTop: "env(safe-area-inset-top, 0px)",
-      }}
-    >
+    <div className="absolute top-3 left-0 right-0 z-50">
       {/* Main Search Container */}
       <motion.div
-        className="bg-white rounded-2xl shadow-xl border border-gray-100 mx-4 overflow-hidden backdrop-blur-sm"
+        className="bg-white rounded-2xl shadow-xl border border-gray-100 mx-3 overflow-hidden backdrop-blur-sm"
         layout
         initial={false}
         animate={{

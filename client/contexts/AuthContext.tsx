@@ -20,7 +20,6 @@ import { enhancedFirebaseService } from "@/services/enhancedFirebaseService";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
 import { voiceCommandService } from "@/services/voiceCommandService";
 import { notifications } from "@/services/enhancedNotificationService";
-import { firebaseErrorHandler } from "@/services/firebaseErrorHandler";
 
 interface GuardianUser extends User {
   guardianKey?: string;

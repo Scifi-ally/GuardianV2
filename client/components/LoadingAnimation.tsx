@@ -27,14 +27,14 @@ export function LoadingAnimation({
         <div className="relative">
           <div
             className={cn(
-              "rounded-3xl bg-white shadow-2xl flex items-center justify-center relative border-2 border-slate-100/60",
+              "rounded-full bg-white shadow-lg flex items-center justify-center relative border-2 border-black/10",
               sizeClasses[size],
             )}
           >
             {/* Guardian logo as SVG */}
             <svg
               className={cn(
-                "text-slate-600 animate-pulse",
+                "text-black animate-pulse",
                 size === "sm" && "h-3 w-3",
                 size === "md" && "h-5 w-5",
                 size === "lg" && "h-8 w-8",
@@ -46,15 +46,15 @@ export function LoadingAnimation({
               <path d="M6 9c0-1 .6-2 1.5-2h9c.9 0 1.5 1 1.5 2v4c0 2-.8 3.2-2 4l-3 1.4-3-1.4c-1.2-.8-2-2-2-4V9z" />
               <circle cx="12" cy="12" r="1" fill="#ff0000" />
             </svg>
-            <div className="absolute inset-0 border-2 border-slate-100 rounded-3xl animate-spin border-t-slate-500" />
+            <div className="absolute inset-0 border-2 border-black/20 rounded-full animate-spin border-t-black" />
             {/* Pulse ring */}
-            <div className="absolute inset-0 border border-slate-200 rounded-3xl animate-ping" />
+            <div className="absolute inset-0 border border-black/10 rounded-full animate-ping" />
           </div>
         </div>
         {text && (
           <p
             className={cn(
-              "text-slate-600 font-semibold animate-pulse",
+              "text-black font-medium animate-pulse",
               size === "sm" && "text-xs",
               size === "md" && "text-sm",
               size === "lg" && "text-base",
@@ -150,30 +150,28 @@ export function FullPageLoading({
   variant = "guardian",
 }: FullPageLoadingProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50/30 to-blue-50/20 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-primary/5 flex items-center justify-center">
       <div className="text-center space-y-6">
         <LoadingAnimation size="xl" variant={variant} />
         <div className="space-y-2">
-          <p className="text-xl font-bold text-slate-700 animate-pulse">
-            {text}
-          </p>
-          <p className="text-base text-slate-500 font-semibold">
+          <p className="text-lg font-medium animate-pulse">{text}</p>
+          <p className="text-sm text-muted-foreground">
             Securing your safety experience...
           </p>
         </div>
 
         {/* Progress dots */}
-        <div className="flex justify-center gap-1.5">
+        <div className="flex justify-center gap-1">
           <div
-            className="w-2.5 h-2.5 bg-slate-500 rounded-full animate-bounce"
+            className="w-2 h-2 bg-primary rounded-full animate-bounce"
             style={{ animationDelay: "0ms" }}
           />
           <div
-            className="w-2.5 h-2.5 bg-slate-400 rounded-full animate-bounce"
+            className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"
             style={{ animationDelay: "150ms" }}
           />
           <div
-            className="w-2.5 h-2.5 bg-slate-300 rounded-full animate-bounce"
+            className="w-2 h-2 bg-primary/30 rounded-full animate-bounce"
             style={{ animationDelay: "300ms" }}
           />
         </div>

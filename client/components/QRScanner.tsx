@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import QrScanner from "qr-scanner";
 import { mobileCameraService } from "@/services/mobileCameraService";
-import { UnifiedModal } from "@/components/UnifiedModal";
 
 interface QRScannerProps {
   isOpen: boolean;
