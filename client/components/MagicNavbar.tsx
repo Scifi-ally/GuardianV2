@@ -437,29 +437,16 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         />
       )}
 
-      <motion.div
-        className="fixed bottom-0 left-0 right-0 z-[100]"
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
       >
-        {/* Enhanced professional background with backdrop blur */}
-        <motion.div
-          className="absolute inset-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-2xl"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        />
+        {/* Background with blur effect */}
+        <div className="absolute inset-0 bg-background/95 backdrop-blur-lg border-t border-border/50 rounded-t-3xl shadow-2xl" />
 
-        {/* Enhanced navigation items with professional spacing */}
-        <motion.div
-          className="relative px-6 py-3"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-        >
-          <div className="flex items-center justify-between w-full max-w-sm mx-auto gap-2">
+        {/* Navigation items */}
+        <div className="relative px-8 py-4 rounded-t-3xl">
+          <div className="flex items-center justify-between w-full max-w-md mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = activeIndex === index;
@@ -557,15 +544,15 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   onTouchEnd={handleMapMouseUp}
                   disabled={sending}
                   className={cn(
-                    "relative flex flex-col items-center px-6 py-3 transition-all duration-200 flex-1 max-w-[80px]",
+                    "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px]",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
                     item.id === "map" &&
                       showEnhancedMapHint &&
-                      "bg-gray-100 rounded-lg",
+                      "bg-blue-100 rounded-lg",
                   )}
                   whileHover={{
-                    scale: isSpecial ? 1.05 : 1.02,
-                    y: -1,
+                    scale: isSpecial ? 1.15 : 1.1,
+                    y: -2,
                   }}
                   whileTap={{ scale: 0.95 }}
                   initial={{ opacity: 0, y: 20 }}
@@ -580,27 +567,29 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   {/* Background circle for active/special items */}
                   <div
                     className={cn(
-                      "absolute inset-2 rounded-lg transition-all duration-200",
-                      isActive && !isSpecial && "bg-gray-100",
-                      isSpecial && "bg-red-50",
+                      "absolute inset-2 rounded-3xl transition-all duration-300",
+                      isActive && !isSpecial && "bg-primary/10 scale-110",
+                      isSpecial && "bg-emergency/10 scale-125 animate-pulse",
                     )}
                   />
 
                   {/* Icon container */}
                   <div
                     className={cn(
-                      "relative z-10 p-2 rounded-lg transition-all duration-200",
-                      isSpecial && "bg-red-600 text-white",
-                      isActive && !isSpecial && "bg-gray-200",
-                      !isActive && !isSpecial && "bg-transparent",
+                      "relative z-10 p-1.5 rounded-2xl transition-all duration-300",
+                      isSpecial &&
+                        "bg-emergency text-emergency-foreground shadow-lg",
+                      isActive && !isSpecial && "bg-primary/20",
                     )}
                   >
                     <Icon
                       className={cn(
-                        "transition-colors duration-200",
-                        isSpecial ? "h-6 w-6 text-white" : "h-5 w-5",
-                        isActive && !isSpecial && "text-gray-900",
-                        !isActive && !isSpecial && "text-gray-600",
+                        "transition-all duration-300",
+                        isSpecial ? "h-6 w-6" : "h-4 w-4",
+                        isActive && !isSpecial
+                          ? "text-primary"
+                          : "text-foreground",
+                        isSpecial && "text-emergency-foreground",
                       )}
                     />
                   </div>
@@ -608,10 +597,11 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   {/* Label */}
                   <span
                     className={cn(
-                      "text-xs font-medium transition-colors duration-200 mt-1",
-                      isActive && !isSpecial && "text-gray-900 font-semibold",
-                      !isActive && !isSpecial && "text-gray-600",
-                      isSpecial && "text-red-600 font-bold",
+                      "text-xs font-medium transition-all duration-300 mt-1",
+                      isActive && !isSpecial
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                      isSpecial && "text-emergency font-bold",
                     )}
                   >
                     {item.label}
@@ -636,7 +626,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
               );
             })}
           </div>
-        </motion.div>
+        </div>
 
         {/* Enhanced Navigation Hint */}
         <AnimatePresence>
@@ -652,7 +642,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
     </>
   );
 }

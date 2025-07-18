@@ -10,16 +10,17 @@ interface SplashScreenProps {
 
 export function SplashScreen({
   onComplete,
-  duration = 800, // Much faster - 0.8 seconds
+  duration = 3000,
 }: SplashScreenProps) {
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
   const steps = [
-    { icon: Shield, label: "Initializing", delay: 0 },
-    { icon: MapPin, label: "Loading Map", delay: 200 },
-    { icon: Users, label: "Ready", delay: 400 },
+    { icon: Shield, label: "Initializing Security", delay: 0 },
+    { icon: MapPin, label: "Loading Location Services", delay: 800 },
+    { icon: Users, label: "Connecting Emergency Contacts", delay: 1600 },
+    { icon: AlertTriangle, label: "Ready for Safety", delay: 2400 },
   ];
 
   useEffect(() => {

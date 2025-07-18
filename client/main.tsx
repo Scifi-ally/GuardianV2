@@ -2,7 +2,6 @@ import "./global.css";
 import "./styles/production-polish.css";
 
 import { createRoot } from "react-dom/client";
-import { googleMapsLoader } from "@/services/googleMapsLoader";
 import { UnifiedNotificationSystem } from "@/components/UnifiedNotificationSystem";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -189,17 +188,15 @@ function AnimatedRoutes() {
 }
 
 const App = () => {
+  const [showSplash, setShowSplash] = useState(true);
   const { isReady } = useCapacitor();
 
-  // Initialize Google Maps on app startup
-  useEffect(() => {
-    if (isReady) {
-      googleMapsLoader.loadGoogleMaps().catch(console.error);
-    }
-  }, [isReady]);
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
 
-  // Only wait for Capacitor, no splash screen or loading delays
-  if (!isReady) {
+  // Don't render main app until Capacitor is ready and splash is complete
+  if (!isReady || showSplash) {
     return (
       <QueryClientProvider client={queryClient}>
         <ThemeProvider
@@ -208,7 +205,7 @@ const App = () => {
           enableSystem={false}
           forcedTheme="light"
         >
-          <div className="min-h-screen bg-white" />
+          <SplashScreen onComplete={handleSplashComplete} duration={3000} />
         </ThemeProvider>
       </QueryClientProvider>
     );

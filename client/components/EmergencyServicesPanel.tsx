@@ -212,57 +212,62 @@ export function EmergencyServicesPanel({
         </p>
       </div>
 
-      {/* Service Information - All types always enabled */}
-      <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
-              <Activity className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-lg font-bold text-gray-800">
-              All Emergency Services
+      {/* Service Type Filters */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Filter className="h-4 w-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-700">
+              Filter Services
             </span>
             <Button
               variant="ghost"
               size="sm"
               onClick={loadNearbyServices}
               disabled={loading}
-              className="ml-auto h-9 px-3 rounded-xl hover:bg-blue-50 transition-all duration-200"
+              className="ml-auto h-7 px-2"
             >
-              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-              <span className="ml-2 text-sm">Refresh</span>
+              <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             {serviceTypes.map((type) => {
+              const isSelected = selectedTypes.includes(type.id);
               const Icon = type.icon;
-              const serviceCount = services.filter(
-                (s) => s.type === type.id,
-              ).length;
 
               return (
-                <div
+                <Button
                   key={type.id}
+                  variant={isSelected ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => {
+                    setSelectedTypes((prev) =>
+                      prev.includes(type.id)
+                        ? prev.filter((id) => id !== type.id)
+                        : [...prev, type.id],
+                    );
+                  }}
                   className={cn(
-                    "p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
-                    `${type.bgColor} ${type.borderColor}`,
+                    "h-12 justify-start gap-2 border p-2",
+                    isSelected
+                      ? `${type.bgColor} ${type.borderColor} ${type.textColor} border-2`
+                      : "border-gray-200 hover:border-gray-300",
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/80 rounded-xl shadow-sm">
-                      <Icon className="h-5 w-5" style={{ color: type.color }} />
+                  <Icon
+                    className="h-4 w-4 shrink-0"
+                    style={{ color: type.color }}
+                  />
+                  <div className="text-left min-w-0 flex-1">
+                    <div className="text-xs font-medium truncate">
+                      {type.label}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className={cn("text-sm font-bold", type.textColor)}>
-                        {type.label}
-                      </div>
-                      <div className={cn("text-xs opacity-80", type.textColor)}>
-                        {serviceCount} nearby
-                      </div>
+                    <div className="text-xs opacity-70 truncate">
+                      {type.description}
                     </div>
                   </div>
-                </div>
+                </Button>
               );
             })}
           </div>
@@ -314,18 +319,16 @@ export function EmergencyServicesPanel({
             return (
               <Card
                 key={service.id}
-                className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden emergency-service-card rounded-2xl hover:scale-[1.02] transform-gpu"
+                className="border-0 shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden emergency-service-card"
               >
                 <CardContent className="p-0">
                   {/* Service Header */}
                   <div
-                    className="h-1.5 bg-gradient-to-r"
-                    style={{
-                      background: `linear-gradient(90deg, ${typeConfig.color}, ${typeConfig.color}90)`,
-                    }}
+                    className={cn("h-2", typeConfig.bgColor)}
+                    style={{ backgroundColor: typeConfig.color }}
                   ></div>
 
-                  <div className="p-5">
+                  <div className="p-4">
                     {/* Service Info */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-start gap-3 flex-1">
@@ -391,14 +394,14 @@ export function EmergencyServicesPanel({
                     {/* Action Button */}
                     <Button
                       onClick={() => handleNavigateToService(service)}
-                      className="w-full h-12 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 hover:from-blue-700 hover:via-purple-700 hover:to-blue-800 text-white font-bold shadow-lg hover:shadow-xl text-sm rounded-2xl transition-all duration-300 hover:scale-[1.02] transform-gpu"
+                      className="w-full h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium shadow-sm text-sm"
                       size="lg"
                     >
-                      <Route className="h-5 w-5 mr-3 shrink-0" />
-                      <span className="truncate flex-1">
+                      <Route className="h-4 w-4 mr-2 shrink-0" />
+                      <span className="truncate">
                         Navigate to {typeConfig.label.slice(0, -1)}
                       </span>
-                      <ChevronRight className="h-5 w-5 ml-3 shrink-0 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="h-4 w-4 ml-2 shrink-0" />
                     </Button>
                   </div>
                 </CardContent>
