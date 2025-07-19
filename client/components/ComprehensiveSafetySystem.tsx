@@ -59,7 +59,7 @@ export function ComprehensiveSafetySystem() {
   });
   const [safetyAlerts, setSafetyAlerts] = useState<SafetyAlert[]>([]);
   const [emergencyMode, setEmergencyMode] = useState(false);
-  const [quickActionsVisible, setQuickActionsVisible] = useState(true);
+  const [quickActionsVisible, setQuickActionsVisible] = useState(false);
 
   // Real-time system monitoring
   useEffect(() => {
@@ -208,28 +208,6 @@ export function ComprehensiveSafetySystem() {
     return "text-red-600";
   };
 
-  const quickActions = [
-    {
-      icon: Phone,
-      label: "Emergency Call",
-      action: callEmergencyContact,
-      color: "bg-red-500 hover:bg-red-600",
-    },
-    {
-      icon: MapPin,
-      label: "Share Location",
-      action: shareLocation,
-      color: "bg-blue-500 hover:bg-blue-600",
-    },
-
-    {
-      icon: Volume2,
-      label: "Panic Alarm",
-      action: activateEmergencyMode,
-      color: "bg-purple-500 hover:bg-purple-600",
-    },
-  ];
-
   return (
     <div className="space-y-4">
       {/* System Health Status */}
@@ -287,45 +265,6 @@ export function ComprehensiveSafetySystem() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Quick Actions */}
-      {quickActionsVisible && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-orange-500" />
-                Quick Safety Actions
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setQuickActionsVisible(false)}
-                className="h-6 w-6 p-0 text-gray-400"
-              >
-                ×
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="grid grid-cols-2 gap-2">
-              {quickActions.map((action, index) => (
-                <Button
-                  key={index}
-                  onClick={action.action}
-                  className={cn(
-                    "h-12 flex flex-col gap-1 text-white text-xs font-medium",
-                    action.color,
-                  )}
-                >
-                  <action.icon className="h-4 w-4" />
-                  {action.label}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Transportation Mode Quick Switch */}
       <Card>

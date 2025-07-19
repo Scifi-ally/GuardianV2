@@ -21,26 +21,26 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SlideUpPanel } from "@/components/SlideUpPanel";
+import { EnhancedSlideUpPanel } from "@/components/EnhancedSlideUpPanel";
+import { MapFocusedPanel } from "@/components/MapFocusedPanel";
 import { MagicNavbar } from "@/components/MagicNavbar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
-import { ComprehensiveSafetySystem } from "@/components/ComprehensiveSafetySystem";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LocationSharingInfoButton } from "@/components/LocationSharingInfo";
 import { EmergencyAlerts } from "@/components/EmergencyAlerts";
 import { NotificationPermissionPrompt } from "@/components/NotificationPermissionPrompt";
-import { RouteSelection } from "@/components/RouteSelection";
+import { EnhancedRouteSelection } from "@/components/EnhancedRouteSelection";
+import { EnhancedNavigationDisplay } from "@/components/EnhancedNavigationDisplay";
 import { routeCalculationService } from "@/services/routeCalculationService";
 import { notifications } from "@/services/enhancedNotificationService";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { useRealTime } from "@/hooks/useRealTime";
-import { CompactSearchBar } from "@/components/CompactSearchBar";
+import { SleekSearchBar } from "@/components/SleekSearchBar";
 import AINavigationPanel from "@/components/AINavigationPanel";
 
 // Extend window interface for Google Maps
@@ -149,6 +149,12 @@ const AdvancedMap: React.FC = () => {
   const [routeSummary, setRouteSummary] = useState<any>(null);
   const [routeOptions, setRouteOptions] = useState<any>(null);
   const [showRouteSelection, setShowRouteSelection] = useState(false);
+  const [isNavigationMinimized, setIsNavigationMinimized] = useState(false);
+
+  // Map Control State
+  const [mapType, setMapType] = useState("roadmap");
+  const [trafficEnabled, setTrafficEnabled] = useState(true);
+  const [satelliteEnabled, setSatelliteEnabled] = useState(false);
 
   // UI State
   const [isLoading, setIsLoading] = useState(true);
@@ -310,6 +316,36 @@ const AdvancedMap: React.FC = () => {
           getPlaceDetails(event.placeId);
         }
       });
+
+      // Add event listeners for map controls
+      const handleRecenterMap = (event: any) => {
+        if (event.detail && mapInstance) {
+          mapInstance.setCenter(event.detail);
+          mapInstance.setZoom(16);
+        } else if (userLocation && mapInstance) {
+          mapInstance.setCenter(userLocation);
+          mapInstance.setZoom(16);
+        }
+      };
+
+      const handleToggle3D = () => {
+        if (mapInstance) {
+          const currentTilt = mapInstance.getTilt();
+          mapInstance.setTilt(currentTilt === 0 ? 45 : 0);
+        }
+      };
+
+      window.addEventListener("recenterMap", handleRecenterMap);
+      window.addEventListener("toggle3DView", handleToggle3D);
+
+      // Store cleanup function
+      const cleanup = () => {
+        window.removeEventListener("recenterMap", handleRecenterMap);
+        window.removeEventListener("toggle3DView", handleToggle3D);
+      };
+
+      // Store cleanup in map instance for later use
+      (mapInstance as any).cleanup = cleanup;
     } catch (error) {
       console.error("Failed to initialize map:", error);
       setIsLoading(false);
@@ -367,6 +403,11 @@ const AdvancedMap: React.FC = () => {
     return () => {
       if (window.initGoogleMaps) {
         delete window.initGoogleMaps;
+      }
+
+      // Cleanup map event listeners
+      if (map && (map as any).cleanup) {
+        (map as any).cleanup();
       }
     };
   }, [initializeMap]);
@@ -512,6 +553,53 @@ const AdvancedMap: React.FC = () => {
 
     setPanelHeight(300);
   }, [directionsRenderer]);
+
+  // Handle map type changes
+  const handleMapTypeChange = useCallback(
+    (type: string) => {
+      setMapType(type);
+      if (map) {
+        map.setMapTypeId(type);
+      }
+    },
+    [map],
+  );
+
+  // Handle traffic overlay toggle
+  const handleTrafficToggle = useCallback(
+    (enabled: boolean) => {
+      setTrafficEnabled(enabled);
+      if (map) {
+        const trafficLayer = new window.google.maps.TrafficLayer();
+        if (enabled) {
+          trafficLayer.setMap(map);
+        } else {
+          trafficLayer.setMap(null);
+        }
+      }
+    },
+    [map],
+  );
+
+  // Handle satellite/POI toggle
+  const handleSatelliteToggle = useCallback(
+    (enabled: boolean) => {
+      setSatelliteEnabled(enabled);
+      if (map) {
+        // Toggle POI visibility
+        const styles = enabled
+          ? []
+          : [
+              {
+                featureType: "poi",
+                stylers: [{ visibility: "off" }],
+              },
+            ];
+        map.setOptions({ styles });
+      }
+    },
+    [map],
+  );
 
   // Route handling methods from original Index.tsx
   const handleUseCurrentLocation = useCallback(() => {
@@ -670,8 +758,8 @@ const AdvancedMap: React.FC = () => {
           </div>
         </div>
 
-        {/* Compact Search Bar */}
-        <CompactSearchBar
+        {/* Sleek Search Bar */}
+        <SleekSearchBar
           fromLocation={fromLocation}
           setFromLocation={setFromLocation}
           toLocation={toLocation}
@@ -730,218 +818,75 @@ const AdvancedMap: React.FC = () => {
           autoShow={true}
         />
 
-        {/* Route Selection Modal */}
+        {/* Enhanced Route Selection Modal */}
         {showRouteSelection && routeOptions && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
-              <RouteSelection
-                safestRoute={routeOptions.safestRoute}
-                quickestRoute={routeOptions.quickestRoute}
-                recommendedRoute={routeOptions.recommendedRoute}
+              <EnhancedRouteSelection
+                routes={[
+                  routeOptions.safestRoute,
+                  routeOptions.quickestRoute,
+                  ...(routeOptions.recommendedRoute
+                    ? [routeOptions.recommendedRoute]
+                    : []),
+                ]}
                 onRouteSelect={handleRouteSelect}
                 onClose={() => setShowRouteSelection(false)}
+                autoSelectQuickest={true}
               />
             </div>
           </div>
         )}
 
-        {/* Comprehensive Slide Up Panel with All Features */}
-        <SlideUpPanel
+        {/* Enhanced Map-Focused Slide Up Panel */}
+        <EnhancedSlideUpPanel
           minHeight={200}
-          maxHeight={Math.floor(window.innerHeight * 0.8)}
-          initialHeight={Math.floor(window.innerHeight * 0.45)}
-          bottomOffset={80}
-          collapsedHeight={60}
+          navbarHeight={96}
+          safeAreaBottom={0}
+          collapsedHeight={56}
           onTouchOutside={() => {}}
         >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-          >
-            <Tabs
-              defaultValue={isNavigating ? "navigation" : "safety"}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-3 h-12 bg-slate-100/80 backdrop-blur-sm rounded-xl p-1 shadow-sm">
-                <TabsTrigger
-                  value="navigation"
-                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-                >
-                  <Navigation className="h-4 w-4 mr-1.5" />
-                  ROUTES
-                </TabsTrigger>
-                <TabsTrigger
-                  value="safety"
-                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-                >
-                  <AlertTriangle className="h-4 w-4 mr-1.5" />
-                  SAFETY
-                </TabsTrigger>
-                <TabsTrigger
-                  value="settings"
-                  className="text-xs h-9 font-mono font-medium rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
-                >
-                  <Settings className="h-4 w-4 mr-1.5" />
-                  SETTINGS
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent
-                value="safety"
-                className="mt-6 space-y-6 transform transition-all duration-300 ease-out slide-up"
-              >
-                <motion.div
-                  className="space-y-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <div className="space-y-4">
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50 shadow-sm">
-                      <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
-                        <div className="p-2 bg-blue-500 rounded-xl shadow-md">
-                          <Target className="h-5 w-5 text-white" />
-                        </div>
-                        LOCATION SHARING
-                        <LocationSharingInfoButton />
-                      </h3>
-                      <p className="text-sm text-slate-600 font-mono mb-4">
-                        Share your location with trusted contacts for enhanced
-                        safety
-                      </p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100/50 shadow-sm">
-                      <h3 className="text-xl font-bold font-mono flex items-center gap-3 text-slate-800 mb-2">
-                        <div className="p-2 bg-red-500 rounded-xl shadow-md">
-                          <AlertTriangle className="h-5 w-5 text-white" />
-                        </div>
-                        EMERGENCY SOS
-                      </h3>
-                      <p className="text-sm text-slate-600 font-mono mb-4">
-                        Use the red SOS button in the bottom navigation to send
-                        emergency alerts
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-red-600">
-                        <AlertTriangle className="h-4 w-4" />
-                        <span>
-                          Press and hold for 3 seconds to activate emergency
-                          mode
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </TabsContent>
-
-              <TabsContent
-                value="navigation"
-                className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-right"
-              >
-                {isNavigating && turnByTurnInstructions.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Navigation className="h-5 w-5 text-primary" />
-                        Turn-by-Turn Navigation
-                      </h3>
-                      <Badge className="bg-primary/20 text-primary">
-                        Active
-                      </Badge>
-                    </div>
-
-                    {routeSummary && (
-                      <Card className="border-primary/20 bg-primary/5">
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <p className="text-muted-foreground">Distance</p>
-                              <p className="font-semibold">
-                                {routeSummary.distance}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Duration</p>
-                              <p className="font-semibold">
-                                {routeSummary.duration}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {turnByTurnInstructions.map(
-                        (step: any, index: number) => (
-                          <Card
-                            key={index}
-                            className={`transition-all duration-200 ${
-                              index === 0
-                                ? "border-primary bg-primary/5"
-                                : "hover:shadow-md"
-                            }`}
-                          >
-                            <CardContent className="p-3">
-                              <div className="flex items-start gap-3">
-                                <div
-                                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                                    index === 0
-                                      ? "bg-primary text-primary-foreground"
-                                      : "bg-muted text-muted-foreground"
-                                  }`}
-                                >
-                                  {index + 1}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium leading-relaxed">
-                                    {step.instruction}
-                                  </p>
-                                  {step.distance && (
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      {step.distance}
-                                      {step.duration && ` • ${step.duration}`}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ),
-                      )}
-                    </div>
-
-                    <Button
-                      onClick={stopNavigation}
-                      variant="destructive"
-                      className="w-full"
-                    >
-                      Stop Navigation
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Navigation className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      No Active Navigation
-                    </h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Enter a destination above to start navigation
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent
-                value="settings"
-                className="mt-4 space-y-4 transform transition-all duration-300 ease-out slide-left"
-              >
-                <ComprehensiveSafetySystem />
-              </TabsContent>
-            </Tabs>
-          </motion.div>
-        </SlideUpPanel>
+          <MapFocusedPanel
+            // Navigation props
+            isNavigating={isNavigating}
+            routeSummary={
+              routeSummary
+                ? {
+                    distance: routeSummary.distance,
+                    duration: routeSummary.duration,
+                    traffic: "moderate",
+                  }
+                : undefined
+            }
+            currentStep={
+              turnByTurnInstructions.length > 0
+                ? {
+                    instruction: turnByTurnInstructions[0]?.instruction || "",
+                    distance: turnByTurnInstructions[0]?.distance || "0 m",
+                    direction:
+                      turnByTurnInstructions[0]?.direction || "straight",
+                  }
+                : undefined
+            }
+            onStopNavigation={stopNavigation}
+            // Map control props
+            mapType={mapType}
+            onMapTypeChange={handleMapTypeChange}
+            trafficEnabled={trafficEnabled}
+            onTrafficToggle={handleTrafficToggle}
+            satelliteEnabled={satelliteEnabled}
+            onSatelliteToggle={handleSatelliteToggle}
+            // Settings props
+            onEmergencySettings={() => {
+              // Navigate to contacts page for emergency settings
+              window.location.href = "/contacts";
+            }}
+            onLocationSettings={() => {
+              // Navigate to settings page for location settings
+              window.location.href = "/settings";
+            }}
+          />
+        </EnhancedSlideUpPanel>
 
         {/* Loading State */}
         {isLoading && (

@@ -1,11 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import {
-  motion,
-  AnimatePresence,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { ChevronUp } from "lucide-react";
 
 interface SlideUpPanelProps {
   children: React.ReactNode;
@@ -22,10 +18,10 @@ export function SlideUpPanel({
   children,
   className,
   minHeight = 200,
-  maxHeight = Math.floor(window.innerHeight * 0.8), // 80% max viewport height
-  initialHeight = Math.floor(window.innerHeight * 0.45), // 45% viewport height
-  bottomOffset = 96, // Bottom navigation height
-  collapsedHeight = 40, // Height when collapsed (just handle visible)
+  maxHeight = Math.floor(window.innerHeight * 0.8),
+  initialHeight = Math.floor(window.innerHeight * 0.45),
+  bottomOffset = 96,
+  collapsedHeight = 48,
   onTouchOutside,
 }: SlideUpPanelProps) {
   const [height, setHeight] = useState(collapsedHeight);
@@ -34,7 +30,6 @@ export function SlideUpPanel({
   const [startHeight, setStartHeight] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
-  const handleRef = useRef<HTMLDivElement>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -50,8 +45,7 @@ export function SlideUpPanel({
     document.body.style.userSelect = "none";
   };
 
-  const handleHandleClick = () => {
-    // Add haptic feedback
+  const handleToggle = () => {
     if ("vibrate" in navigator) {
       navigator.vibrate(10);
     }
@@ -75,8 +69,6 @@ export function SlideUpPanel({
         Math.min(maxHeight, startHeight + deltaY),
       );
       setHeight(newHeight);
-
-      // Update collapsed state based on height
       setIsCollapsed(newHeight <= collapsedHeight + 10);
     };
 
@@ -89,8 +81,6 @@ export function SlideUpPanel({
         Math.min(maxHeight, startHeight + deltaY),
       );
       setHeight(newHeight);
-
-      // Update collapsed state based on height
       setIsCollapsed(newHeight <= collapsedHeight + 10);
     };
 
@@ -100,7 +90,6 @@ export function SlideUpPanel({
       setIsDragging(false);
       document.body.style.userSelect = "";
 
-      // Snap to positions including collapsed state
       const snapThreshold = 50;
       const midHeight = (minHeight + maxHeight) / 2;
 
@@ -138,14 +127,12 @@ export function SlideUpPanel({
     };
   }, [isDragging, startY, startHeight, height, minHeight, maxHeight]);
 
-  // Handle touch outside to close panel with animation
   useEffect(() => {
     const handleTouchOutsideClick = (e: MouseEvent | TouchEvent) => {
       if (!panelRef.current || isCollapsed || !onTouchOutside) return;
 
       const target = e.target as Node;
       if (!panelRef.current.contains(target)) {
-        // Animate slide down
         setIsDragging(false);
         setHeight(collapsedHeight);
         setIsCollapsed(true);
@@ -168,9 +155,8 @@ export function SlideUpPanel({
     <motion.div
       ref={panelRef}
       className={cn(
-        "fixed left-0 right-0 z-40 bg-background/98 backdrop-blur-xl rounded-t-3xl shadow-2xl overflow-hidden",
-        "border-t-2 border-border/60",
-        "before:absolute before:inset-0 before:bg-gradient-to-t before:from-transparent before:via-transparent before:to-foreground/5 before:pointer-events-none",
+        "fixed left-0 right-0 z-40 bg-white/95 backdrop-blur-xl rounded-t-2xl border-t border-gray-200/50",
+        "shadow-[0_-4px_32px_rgba(0,0,0,0.08)]",
         className,
       )}
       style={{
@@ -178,91 +164,76 @@ export function SlideUpPanel({
         height: height,
       }}
       animate={{
-        scale: isDragging ? 1.01 : 1,
         boxShadow: isDragging
-          ? "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
-          : "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+          ? "0 -8px 40px rgba(0, 0, 0, 0.16)"
+          : "0 -4px 32px rgba(0, 0, 0, 0.08)",
       }}
       transition={{
         type: "spring",
-        damping: 25,
-        stiffness: 300,
+        damping: 30,
+        stiffness: 400,
         duration: isDragging ? 0 : 0.2,
       }}
     >
-      {/* Drag Handle */}
+      {/* Professional Drag Handle */}
       <motion.div
-        ref={handleRef}
         className={cn(
-          "flex flex-col items-center cursor-grab active:cursor-grabbing transition-all duration-200",
-          isDragging && "cursor-grabbing",
-          isCollapsed ? "py-2" : "py-3",
+          "flex flex-col items-center cursor-grab active:cursor-grabbing",
+          "transition-all duration-200 border-b border-gray-100/50",
+          isCollapsed ? "py-3" : "py-4",
         )}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
-        onClick={handleHandleClick}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        onClick={handleToggle}
       >
         <motion.div
-          className="bg-foreground/30 rounded-full shadow-sm"
+          className="bg-gray-300 rounded-full"
           animate={{
-            backgroundColor: isDragging
-              ? "hsl(var(--foreground))"
-              : "hsl(var(--foreground) / 0.4)",
-            width: isDragging || isCollapsed ? 64 : 48,
-            height: isDragging || isCollapsed ? 6 : 4,
+            backgroundColor: isDragging ? "#6b7280" : "#d1d5db",
+            width: isDragging ? 48 : 32,
+            height: 4,
           }}
-          transition={{ type: "spring", damping: 20, stiffness: 300 }}
+          transition={{ type: "spring", damping: 25, stiffness: 400 }}
         />
+
         <AnimatePresence>
           {isCollapsed && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-2 text-xs text-muted-foreground pulse-gentle"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="mt-2 flex items-center gap-1 text-xs text-gray-500 font-medium"
             >
+              <ChevronUp className="h-3 w-3" />
               Tap to expand
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
 
-      {/* Panel Content */}
+      {/* Content Area */}
       <AnimatePresence>
         {!isCollapsed && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="px-6 pb-6 h-full overflow-y-auto custom-scrollbar"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="px-4 pb-6 h-full overflow-y-auto"
+            style={{
+              paddingTop: "8px",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
           >
-            <motion.div
-              className="space-y-4"
-              style={{ paddingBottom: "2rem" }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-            >
-              {children}
-            </motion.div>
+            <div className="space-y-4">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Resize Indicator */}
-      {isDragging && (
-        <div className="absolute top-2 right-4 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
-          {Math.round(height)}px
-        </div>
-      )}
     </motion.div>
   );
 }
 
-// Hook for panel control
 export function useSlideUpPanel() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [height, setHeight] = useState(300);
