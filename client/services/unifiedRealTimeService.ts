@@ -134,6 +134,36 @@ class UnifiedRealTimeService extends EventEmitter<RealTimeEvents> {
       return;
     }
 
+    // First try to get a quick position with less accuracy
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location: RealTimeLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: Date.now(),
+          safetyScore: this.calculateSafetyScore(
+            position.coords.latitude,
+            position.coords.longitude,
+          ),
+        };
+        this.currentLocation = location;
+        this.emit("location:update", location);
+      },
+      (error) => {
+        console.warn(
+          "Quick location failed, trying continuous tracking:",
+          this.getLocationErrorMessage(error),
+        );
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000, // 5 minutes cache
+      },
+    );
+
+    // Then start continuous tracking with more lenient settings
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
         const now = Date.now();
@@ -168,21 +198,39 @@ class UnifiedRealTimeService extends EventEmitter<RealTimeEvents> {
         this.emit("location:update", location);
       },
       (error) => {
-        console.error("Location error:", error);
-        this.emit(
-          "error",
-          new Error(`Location tracking failed: ${error.message}`),
-        );
+        const errorMessage = this.getLocationErrorMessage(error);
+        console.warn("Location tracking error:", errorMessage);
+
+        // Only emit error for critical issues, not timeouts
+        if (error.code === error.PERMISSION_DENIED) {
+          this.emit(
+            "error",
+            new Error(`Location access denied: ${errorMessage}`),
+          );
+        }
       },
       {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 60000,
+        enableHighAccuracy: false, // Less demanding for continuous tracking
+        timeout: 30000, // Longer timeout
+        maximumAge: 120000, // 2 minutes cache for continuous tracking
       },
     );
 
     // Store watch ID for cleanup
     (this as any).locationWatchId = watchId;
+  }
+
+  private getLocationErrorMessage(error: GeolocationPositionError): string {
+    switch (error.code) {
+      case error.PERMISSION_DENIED:
+        return "Location access denied by user";
+      case error.POSITION_UNAVAILABLE:
+        return "Location information unavailable";
+      case error.TIMEOUT:
+        return "Location request timed out";
+      default:
+        return error.message || "Unknown location error";
+    }
   }
 
   // Safety score calculation (simplified)

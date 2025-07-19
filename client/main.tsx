@@ -27,6 +27,7 @@ import Settings from "./pages/Settings";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
+import AdvancedMap from "./pages/AdvancedMap";
 import { FullPageLoading } from "@/components/LoadingAnimation";
 import { SplashScreen } from "@/components/SplashScreen";
 import { useCapacitor } from "@/hooks/use-capacitor";
@@ -97,18 +98,16 @@ function AnimatedRoutes() {
         <Route
           path="/"
           element={
-            <ProtectedRoute>
-              <SafeMotion
-                variants={pageVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={transition}
-                className="w-full min-h-screen"
-              >
-                <Index />
-              </SafeMotion>
-            </ProtectedRoute>
+            <SafeMotion
+              variants={pageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={transition}
+              className="w-full min-h-screen"
+            >
+              <Index />
+            </SafeMotion>
           }
         />
 
@@ -178,6 +177,21 @@ function AnimatedRoutes() {
                 <SignUp />
               </SafeMotion>
             </PublicRoute>
+          }
+        />
+        <Route
+          path="/map"
+          element={
+            <SafeMotion
+              variants={pageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={transition}
+              className="w-full min-h-screen"
+            >
+              <AdvancedMap />
+            </SafeMotion>
           }
         />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

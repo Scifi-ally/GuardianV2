@@ -29,7 +29,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { id: "map", label: "Map", icon: MapPin, path: "/" },
+  { id: "map", label: "Map", icon: NavigationIcon, path: "/" },
   { id: "sos", label: "SOS", icon: AlertTriangle, path: "", isSpecial: true },
   { id: "profile", label: "Profile", icon: User, path: "/profile" },
 ];
