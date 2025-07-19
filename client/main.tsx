@@ -112,16 +112,18 @@ function AnimatedRoutes() {
           <Route
             path="/"
             element={
-              <SafeMotion
-                variants={pageVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={transition}
-                className="w-full"
-              >
-                <Index />
-              </SafeMotion>
+              <ProtectedRoute>
+                <SafeMotion
+                  variants={pageVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={transition}
+                  className="w-full"
+                >
+                  <Index />
+                </SafeMotion>
+              </ProtectedRoute>
             }
           />
 
@@ -196,16 +198,18 @@ function AnimatedRoutes() {
           <Route
             path="/map"
             element={
-              <SafeMotion
-                variants={pageVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={transition}
-                className="w-full min-h-screen"
-              >
-                <AdvancedMap />
-              </SafeMotion>
+              <ProtectedRoute>
+                <SafeMotion
+                  variants={pageVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={transition}
+                  className="w-full min-h-screen"
+                >
+                  <AdvancedMap />
+                </SafeMotion>
+              </ProtectedRoute>
             }
           />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
@@ -217,7 +221,7 @@ function AnimatedRoutes() {
 }
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false); // Skip splash for immediate navbar visibility
   const { isReady } = useCapacitor();
 
   const handleSplashComplete = () => {
@@ -225,7 +229,8 @@ const App = () => {
   };
 
   // Don't render main app until Capacitor is ready and splash is complete
-  if (!isReady || showSplash) {
+  if (showSplash) {
+    // Skip Capacitor ready check for immediate navbar
     return (
       <QueryClientProvider client={queryClient}>
         <ThemeProvider
@@ -234,7 +239,7 @@ const App = () => {
           enableSystem={false}
           forcedTheme="light"
         >
-          <SplashScreen onComplete={handleSplashComplete} duration={3000} />
+          <SplashScreen onComplete={handleSplashComplete} duration={1000} />
         </ThemeProvider>
       </QueryClientProvider>
     );

@@ -155,21 +155,82 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
     setSending(true);
 
     try {
-      // Get current location
+      // Get current location with enhanced error handling
       let currentLocation;
       try {
         currentLocation = await getCurrentLocation();
+        if (!currentLocation && userLocation) {
+          currentLocation = userLocation;
+        }
       } catch (error) {
         console.warn("Could not get current location:", error);
         currentLocation = userLocation;
+
+        // If no location available at all, still proceed but notify user
+        if (!currentLocation) {
+          notifications.warning({
+            title: "Location Unavailable",
+            description:
+              "SOS alert will be sent without location data. Enable location services for enhanced emergency response.",
+            vibrate: true,
+          });
+        }
       }
 
       // Get emergency contacts
       const emergencyContacts = userProfile.emergencyContacts || [];
 
       if (emergencyContacts.length === 0) {
-        // Silent handling - no toast notification
+        // Still create emergency message for self-help even without contacts
+        const locationName = currentLocation
+          ? await getLocationName(
+              currentLocation.latitude,
+              currentLocation.longitude,
+            )
+          : "Location unavailable";
+
+        const locationCoords = currentLocation
+          ? `${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)}`
+          : "Location unavailable";
+
+        const emergencyMessage = `🚨 EMERGENCY ALERT: ${userProfile.displayName || "Emergency User"} needs immediate help!\n\nLocation: ${locationName}\nCoordinates: ${locationCoords}\nTime: ${new Date().toLocaleString()}\nAccuracy: ±${Math.round(currentLocation?.accuracy || 0)}m\n\nCall 911 or emergency services immediately!`;
+
+        // Copy to clipboard for easy sharing
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(emergencyMessage);
+          } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = emergencyMessage;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+          }
+        } catch (error) {
+          console.error("Failed to copy emergency message:", error);
+        }
+
+        // Try to call emergency services directly
+        try {
+          window.location.href = "tel:911";
+        } catch (error) {
+          console.warn("Auto-call failed:", error);
+        }
+
+        notifications.emergency({
+          title: "🚨 EMERGENCY ALERT ACTIVATED",
+          description:
+            "Emergency message copied to clipboard. Consider adding emergency contacts in Profile > Emergency Contacts for automatic notifications.",
+          persistent: true,
+        });
+
         setSending(false);
+        onSOSPress?.();
         return;
       }
 
@@ -438,15 +499,15 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
       )}
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-50"
+        className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {/* Background with blur effect */}
-        <div className="absolute inset-0 bg-background/95 backdrop-blur-lg border-t border-border/50 rounded-t-3xl shadow-2xl" />
+        <div className="absolute inset-0 bg-background/98 backdrop-blur-xl border-t border-border/30 rounded-t-3xl shadow-2xl sharp-shadows-lg" />
 
         {/* Navigation items */}
-        <div className="relative px-8 py-4 rounded-t-3xl">
-          <div className="flex items-center justify-between w-full max-w-md mx-auto">
+        <div className="relative px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-t-3xl">
+          <div className="flex items-center justify-between w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = activeIndex === index;
@@ -544,7 +605,7 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                   onTouchEnd={handleMapMouseUp}
                   disabled={sending}
                   className={cn(
-                    "relative flex flex-col items-center px-6 py-3 transition-all duration-300 flex-1 max-w-[80px]",
+                    "relative flex flex-col items-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 transition-all duration-300 flex-1 max-w-[60px] sm:max-w-[70px] md:max-w-[80px] sharp-text",
                     sending && isSpecial && "opacity-50 cursor-not-allowed",
                     item.id === "map" &&
                       showEnhancedMapHint &&

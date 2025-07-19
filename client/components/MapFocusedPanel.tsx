@@ -75,7 +75,7 @@ const MapControls: React.FC<MapControlsProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log("Map button clicked");
+                  console.log("Map button clicked - switching to roadmap");
                   onMapTypeChange("roadmap");
                 }}
                 className={cn(
@@ -84,7 +84,11 @@ const MapControls: React.FC<MapControlsProps> = ({
                     ? "bg-gray-900 text-white shadow-lg"
                     : "hover:bg-gray-50 border-2 border-gray-200",
                 )}
-                style={{ pointerEvents: "auto" }}
+                style={{
+                  pointerEvents: "auto",
+                  touchAction: "manipulation",
+                  WebkitTapHighlightColor: "transparent",
+                }}
               >
                 <Map className="h-5 w-5" />
                 <span className="text-xs font-medium">Map</span>
@@ -97,7 +101,9 @@ const MapControls: React.FC<MapControlsProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log("Satellite button clicked");
+                  console.log(
+                    "Satellite button clicked - switching to satellite view",
+                  );
                   onMapTypeChange("satellite");
                 }}
                 className={cn(
@@ -106,7 +112,11 @@ const MapControls: React.FC<MapControlsProps> = ({
                     ? "bg-gray-900 text-white shadow-lg"
                     : "hover:bg-gray-50 border-2 border-gray-200",
                 )}
-                style={{ pointerEvents: "auto" }}
+                style={{
+                  pointerEvents: "auto",
+                  touchAction: "manipulation",
+                  WebkitTapHighlightColor: "transparent",
+                }}
               >
                 <Satellite className="h-5 w-5" />
                 <span className="text-xs font-medium">Satellite</span>
@@ -144,7 +154,11 @@ const MapControls: React.FC<MapControlsProps> = ({
                       ? "bg-gray-900 hover:bg-gray-800 text-white"
                       : "hover:bg-gray-50 hover:text-gray-700 border-gray-300",
                   )}
-                  style={{ pointerEvents: "auto" }}
+                  style={{
+                    pointerEvents: "auto",
+                    touchAction: "manipulation",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
                 >
                   {trafficEnabled ? "On" : "Off"}
                 </Button>
@@ -178,7 +192,11 @@ const MapControls: React.FC<MapControlsProps> = ({
                       ? "bg-gray-900 hover:bg-gray-800 text-white"
                       : "hover:bg-gray-50 hover:text-gray-700 border-gray-300",
                   )}
-                  style={{ pointerEvents: "auto" }}
+                  style={{
+                    pointerEvents: "auto",
+                    touchAction: "manipulation",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
                 >
                   {satelliteEnabled ? "On" : "Off"}
                 </Button>

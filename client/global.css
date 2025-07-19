@@ -260,32 +260,50 @@ button[aria-label*="Emergency"]:focus,
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-geist-mono);
-    font-size: 15px; /* Slightly larger for better readability */
+    font-size: clamp(14px, 2vw, 16px); /* Responsive font sizing */
     line-height: 1.6; /* Improved readability for monospace */
     font-weight: 450; /* Slightly heavier for better contrast */
     letter-spacing: -0.01em; /* Tighter spacing for better readability */
+    -webkit-font-smoothing: antialiased; /* Better font rendering */
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Improved text scale for better hierarchy with monospace */
+  /* Responsive text scale for better hierarchy with monospace */
   .text-xs {
-    font-size: 0.75rem;
+    font-size: clamp(0.7rem, 1.5vw, 0.75rem);
     line-height: 1.5;
+    font-weight: 400;
   }
   .text-sm {
-    font-size: 0.875rem;
+    font-size: clamp(0.8rem, 1.8vw, 0.875rem);
     line-height: 1.5;
+    font-weight: 450;
   }
   .text-base {
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2vw, 1rem);
     line-height: 1.6;
+    font-weight: 450;
   }
   .text-lg {
-    font-size: 1.125rem;
+    font-size: clamp(1rem, 2.2vw, 1.125rem);
     line-height: 1.5;
+    font-weight: 500;
   }
   .text-xl {
-    font-size: 1.25rem;
+    font-size: clamp(1.1rem, 2.5vw, 1.25rem);
     line-height: 1.4;
+    font-weight: 500;
+  }
+  .text-2xl {
+    font-size: clamp(1.3rem, 3vw, 1.5rem);
+    line-height: 1.3;
+    font-weight: 600;
+  }
+  .text-3xl {
+    font-size: clamp(1.6rem, 4vw, 1.875rem);
+    line-height: 1.2;
+    font-weight: 700;
   }
 }
 
@@ -983,6 +1001,138 @@ button[aria-label*="Emergency"]:focus,
   .critical-battery-mode .bg-gradient-to-t {
     background-image: none !important;
     background-color: var(--background) !important;
+  }
+}
+
+/* Responsive Design Utilities */
+@layer utilities {
+  /* Container queries for component-level responsiveness */
+  .container-responsive {
+    container-type: inline-size;
+    width: 100%;
+  }
+
+  /* Responsive grid systems */
+  .grid-responsive {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+
+  .grid-responsive-sm {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .grid-responsive-lg {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  /* Responsive spacing */
+  .spacing-responsive {
+    padding: clamp(0.5rem, 2vw, 1.5rem);
+  }
+
+  .spacing-responsive-sm {
+    padding: clamp(0.25rem, 1vw, 1rem);
+  }
+
+  .spacing-responsive-lg {
+    padding: clamp(1rem, 4vw, 2rem);
+  }
+
+  /* Responsive flex layouts */
+  .flex-responsive {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  @media (min-width: 640px) {
+    .flex-responsive {
+      flex-direction: row;
+    }
+  }
+
+  /* Safe area handling for mobile devices */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Enhanced visual sharpness */
+  .sharp-text {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings:
+      "liga" 1,
+      "kern" 1;
+  }
+
+  .sharp-borders {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .sharp-shadows {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.05),
+      0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .sharp-shadows-lg {
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.05),
+      0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  /* High contrast mode for accessibility */
+  .high-contrast {
+    filter: contrast(1.2) saturate(1.1);
+  }
+
+  /* Responsive button sizing */
+  .btn-responsive {
+    padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 4vw, 1.5rem);
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    border-radius: clamp(0.375rem, 1vw, 0.5rem);
+  }
+
+  /* Responsive card layouts */
+  .card-responsive {
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border-radius: clamp(0.5rem, 1.5vw, 0.75rem);
+    margin: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  /* Mobile-first breakpoint visibility */
+  .mobile-only {
+    display: block;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-only {
+      display: none;
+    }
+
+    .desktop-only {
+      display: block;
+    }
   }
 }
 

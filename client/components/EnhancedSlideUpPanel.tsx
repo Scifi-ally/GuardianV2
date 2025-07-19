@@ -36,6 +36,9 @@ export function EnhancedSlideUpPanel({
   const [startY, setStartY] = useState(0);
   const [startHeight, setStartHeight] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [dragVelocity, setDragVelocity] = useState(0);
+  const [lastDragTime, setLastDragTime] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Calculate available space dynamically
@@ -103,43 +106,87 @@ export function EnhancedSlideUpPanel({
   };
 
   const handleToggle = () => {
+    if (isAnimating) return;
+
     // Haptic feedback
     if ("vibrate" in navigator) {
       navigator.vibrate(10);
     }
 
+    setIsAnimating(true);
+
     if (isCollapsed) {
+      // Slide up animation
       setHeight(calculatedInitialHeight);
       setIsCollapsed(false);
     } else {
+      // Slide down animation
       setHeight(collapsedHeight);
       setIsCollapsed(true);
     }
+
+    // Reset animation flag after transition
+    setTimeout(() => setIsAnimating(false), 400);
+  };
+
+  const handleDismiss = () => {
+    if (isAnimating) return;
+
+    // Enhanced dismiss animation
+    if ("vibrate" in navigator) {
+      navigator.vibrate(5);
+    }
+
+    setIsAnimating(true);
+    setHeight(collapsedHeight);
+    setIsCollapsed(true);
+
+    setTimeout(() => setIsAnimating(false), 400);
   };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
 
+      const currentTime = Date.now();
       const deltaY = startY - e.clientY;
       const newHeight = Math.max(
         collapsedHeight,
         Math.min(calculatedMaxHeight, startHeight + deltaY),
       );
+
+      // Calculate velocity for smooth momentum
+      if (lastDragTime > 0) {
+        const timeDelta = currentTime - lastDragTime;
+        const heightDelta = newHeight - height;
+        setDragVelocity(heightDelta / timeDelta);
+      }
+
       setHeight(newHeight);
       setIsCollapsed(newHeight <= collapsedHeight + 10);
+      setLastDragTime(currentTime);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging) return;
 
+      const currentTime = Date.now();
       const deltaY = startY - e.touches[0].clientY;
       const newHeight = Math.max(
         collapsedHeight,
         Math.min(calculatedMaxHeight, startHeight + deltaY),
       );
+
+      // Calculate velocity for smooth momentum
+      if (lastDragTime > 0) {
+        const timeDelta = currentTime - lastDragTime;
+        const heightDelta = newHeight - height;
+        setDragVelocity(heightDelta / timeDelta);
+      }
+
       setHeight(newHeight);
       setIsCollapsed(newHeight <= collapsedHeight + 10);
+      setLastDragTime(currentTime);
     };
 
     const handleMouseUp = () => {
@@ -147,26 +194,45 @@ export function EnhancedSlideUpPanel({
 
       setIsDragging(false);
       document.body.style.userSelect = "";
+      setIsAnimating(true);
 
-      // Smart snapping with better thresholds
+      // Enhanced snapping with velocity consideration
       const snapThreshold = 60;
       const midHeight = (minHeight + calculatedMaxHeight) / 2;
+      const velocityThreshold = 0.5; // Threshold for momentum-based snapping
 
-      if (height < collapsedHeight + snapThreshold) {
-        setHeight(collapsedHeight);
-        setIsCollapsed(true);
-      } else if (height < minHeight + snapThreshold) {
-        setHeight(minHeight);
-        setIsCollapsed(false);
-      } else if (height > calculatedMaxHeight - snapThreshold) {
-        setHeight(calculatedMaxHeight);
-        setIsCollapsed(false);
-      } else if (Math.abs(height - midHeight) < snapThreshold) {
-        setHeight(midHeight);
-        setIsCollapsed(false);
+      // Use velocity to determine direction preference
+      let targetHeight = height;
+
+      if (Math.abs(dragVelocity) > velocityThreshold) {
+        // Fast gesture - follow velocity direction
+        if (dragVelocity > 0) {
+          // Moving up - expand
+          targetHeight =
+            height > midHeight ? calculatedMaxHeight : calculatedInitialHeight;
+        } else {
+          // Moving down - collapse or minimize
+          targetHeight = height < midHeight ? collapsedHeight : minHeight;
+        }
       } else {
-        setIsCollapsed(false);
+        // Slow gesture - use position-based snapping
+        if (height < collapsedHeight + snapThreshold) {
+          targetHeight = collapsedHeight;
+        } else if (height < minHeight + snapThreshold) {
+          targetHeight = minHeight;
+        } else if (height > calculatedMaxHeight - snapThreshold) {
+          targetHeight = calculatedMaxHeight;
+        } else if (Math.abs(height - midHeight) < snapThreshold) {
+          targetHeight = midHeight;
+        }
       }
+
+      setHeight(targetHeight);
+      setIsCollapsed(targetHeight <= collapsedHeight + 10);
+      setDragVelocity(0);
+      setLastDragTime(0);
+
+      setTimeout(() => setIsAnimating(false), 400);
     };
 
     if (isDragging) {
@@ -266,16 +332,21 @@ export function EnhancedSlideUpPanel({
         bottom: bottomPosition,
         height: height,
       }}
+      initial={{ y: "100%", opacity: 0 }}
       animate={{
+        y: 0,
+        opacity: 1,
         boxShadow: isDragging
           ? "0 -12px 48px rgba(0, 0, 0, 0.15)"
           : "0 -8px 32px rgba(0, 0, 0, 0.12)",
       }}
+      exit={{ y: "100%", opacity: 0 }}
       transition={{
         type: "spring",
-        damping: 25,
-        stiffness: 300,
-        duration: isDragging ? 0 : 0.3,
+        damping: isDragging ? 20 : isAnimating ? 35 : 30,
+        stiffness: isDragging ? 200 : isAnimating ? 500 : 400,
+        duration: isDragging ? 0 : isAnimating ? 0.5 : 0.4,
+        bounce: isAnimating ? 0.2 : 0.1,
       }}
     >
       {/* Enhanced Drag Handle */}
@@ -311,22 +382,23 @@ export function EnhancedSlideUpPanel({
               className="mt-3 flex items-center gap-1.5 text-xs text-gray-500 font-medium"
             >
               <ChevronUp className="h-3.5 w-3.5" />
-              <span>Tap to expand</span>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
 
       {/* Content Area with Enhanced Animations */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {!isCollapsed && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
             transition={{
-              duration: 0.3,
-              ease: "easeOut",
+              type: "spring",
+              damping: 25,
+              stiffness: 300,
+              duration: 0.4,
             }}
             className="px-5 pb-6 h-full overflow-y-auto clickable"
             style={{
