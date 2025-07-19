@@ -23,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { EnhancedSlideUpPanel } from "@/components/EnhancedSlideUpPanel";
 import { MapFocusedPanel } from "@/components/MapFocusedPanel";
-import { MagicNavbar } from "@/components/MagicNavbar";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,7 @@ import { routeCalculationService } from "@/services/routeCalculationService";
 import { notifications } from "@/services/enhancedNotificationService";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { useRealTime } from "@/hooks/useRealTime";
-import { SleekSearchBar } from "@/components/SleekSearchBar";
+import { SimpleNavigationSearch } from "@/components/SimpleNavigationSearch";
 import AINavigationPanel from "@/components/AINavigationPanel";
 
 // Extend window interface for Google Maps
@@ -335,13 +335,39 @@ const AdvancedMap: React.FC = () => {
         }
       };
 
+      // Handle emergency navigation from SOS notifications
+      const handleEmergencyNavigation = (event: any) => {
+        const { destination, coordinates, senderName } = event.detail;
+
+        // Set destination and start navigation
+        setToLocation(destination);
+        setFromLocation("Current Location");
+
+        // Auto-start the search/navigation
+        setTimeout(() => {
+          handleSearch();
+        }, 500);
+
+        unifiedNotifications.success("🚨 Emergency Navigation", {
+          message: `Navigating to ${senderName}'s location`,
+        });
+      };
+
       window.addEventListener("recenterMap", handleRecenterMap);
       window.addEventListener("toggle3DView", handleToggle3D);
+      window.addEventListener(
+        "startEmergencyNavigation",
+        handleEmergencyNavigation,
+      );
 
       // Store cleanup function
       const cleanup = () => {
         window.removeEventListener("recenterMap", handleRecenterMap);
         window.removeEventListener("toggle3DView", handleToggle3D);
+        window.removeEventListener(
+          "startEmergencyNavigation",
+          handleEmergencyNavigation,
+        );
       };
 
       // Store cleanup in map instance for later use
@@ -758,21 +784,27 @@ const AdvancedMap: React.FC = () => {
           </div>
         </div>
 
-        {/* Sleek Search Bar */}
-        <SleekSearchBar
-          fromLocation={fromLocation}
-          setFromLocation={setFromLocation}
+        {/* Simple Navigation Search */}
+        <SimpleNavigationSearch
           toLocation={toLocation}
           setToLocation={setToLocation}
-          onSearch={handleSearch}
-          onUseCurrentLocation={handleUseCurrentLocation}
+          onSearch={(destination) => {
+            setFromLocation("Current Location");
+            handleSearch();
+          }}
+          onPlaceSelect={(place) => {
+            console.log("🎯 Place selected:", place);
+            if (place.geometry?.location || place.coordinates) {
+              setToLocation(
+                place.formatted_address || place.name || "Selected location",
+              );
+            }
+          }}
           location={
             location
               ? {
                   latitude: location.latitude,
                   longitude: location.longitude,
-                  accuracy: 10,
-                  timestamp: Date.now(),
                 }
               : null
           }
@@ -876,24 +908,25 @@ const AdvancedMap: React.FC = () => {
             onTrafficToggle={handleTrafficToggle}
             satelliteEnabled={satelliteEnabled}
             onSatelliteToggle={handleSatelliteToggle}
-            // Settings props
-            onEmergencySettings={() => {
-              // Navigate to contacts page for emergency settings
-              window.location.href = "/contacts";
-            }}
-            onLocationSettings={() => {
-              // Navigate to settings page for location settings
-              window.location.href = "/settings";
-            }}
           />
         </EnhancedSlideUpPanel>
 
-        {/* Loading State */}
+        {/* Professional Loading State */}
         {isLoading && (
-          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-gray-600 font-medium">Loading map...</p>
+          <div className="absolute inset-0 bg-white z-50 flex items-center justify-center">
+            <div className="text-center space-y-6">
+              <div className="relative mx-auto w-20 h-20">
+                <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Loading Navigation
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Initializing map and location services...
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -922,9 +955,6 @@ const AdvancedMap: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Magic Navbar */}
-        <MagicNavbar />
       </div>
     </ErrorBoundary>
   );

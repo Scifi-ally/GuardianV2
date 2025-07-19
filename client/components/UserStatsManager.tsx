@@ -30,7 +30,6 @@ interface UserStats {
   lastActiveTime: string;
   locationPermission: boolean;
   notificationPermission: boolean;
-  profileVisibility: "public" | "contacts" | "private";
   safetyScore: number;
   weeklyActivity: number;
 }
@@ -43,7 +42,6 @@ export function UserStatsManager() {
     lastActiveTime: new Date().toISOString(),
     locationPermission: false,
     notificationPermission: false,
-    profileVisibility: "contacts",
     safetyScore: 0,
     weeklyActivity: 1, // Default to 1 (current day)
   });
@@ -196,50 +194,6 @@ export function UserStatsManager() {
     }
   };
 
-  const toggleProfileVisibility = () => {
-    const visibilityOrder: Array<"public" | "contacts" | "private"> = [
-      "public",
-      "contacts",
-      "private",
-    ];
-    const currentIndex = visibilityOrder.indexOf(stats.profileVisibility);
-    const nextIndex = (currentIndex + 1) % visibilityOrder.length;
-    const newVisibility = visibilityOrder[nextIndex];
-
-    setStats((prev) => ({ ...prev, profileVisibility: newVisibility }));
-
-    // Save to localStorage
-    const updatedStats = { ...stats, profileVisibility: newVisibility };
-    localStorage.setItem(
-      `user-stats-${currentUser?.uid}`,
-      JSON.stringify(updatedStats),
-    );
-
-    // Profile visibility set silently
-  };
-
-  const getVisibilityIcon = () => {
-    switch (stats.profileVisibility) {
-      case "public":
-        return <Eye className="h-4 w-4" />;
-      case "contacts":
-        return <Users className="h-4 w-4" />;
-      case "private":
-        return <EyeOff className="h-4 w-4" />;
-    }
-  };
-
-  const getVisibilityColor = () => {
-    switch (stats.profileVisibility) {
-      case "public":
-        return "bg-blue-500";
-      case "contacts":
-        return "bg-green-500";
-      case "private":
-        return "bg-gray-500";
-    }
-  };
-
   const getSafetyScoreColor = () => {
     if (stats.safetyScore >= 80) return "text-green-600";
     if (stats.safetyScore >= 60) return "text-yellow-600";
@@ -330,57 +284,6 @@ export function UserStatsManager() {
                   Turn On
                 </Button>
               )}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {getVisibilityIcon()}
-                <span className="text-sm text-black">Profile Visibility</span>
-              </div>
-              <Select
-                value={stats.profileVisibility}
-                onValueChange={(value: "public" | "contacts" | "private") => {
-                  setStats((prev) => ({ ...prev, profileVisibility: value }));
-                  const updatedStats = { ...stats, profileVisibility: value };
-                  localStorage.setItem(
-                    `user-stats-${currentUser?.uid}`,
-                    JSON.stringify(updatedStats),
-                  );
-                  // Profile visibility set silently
-                }}
-              >
-                <SelectTrigger className="w-32 h-8 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-2 h-2 rounded-full ${getVisibilityColor()}`}
-                    ></div>
-                    <SelectValue />
-                  </div>
-                </SelectTrigger>
-                <SelectContent className="w-40">
-                  <SelectItem value="public" className="text-xs">
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-3 w-3" />
-                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                      <span>Public</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="contacts" className="text-xs">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-3 w-3" />
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      <span>Contacts Only</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="private" className="text-xs">
-                    <div className="flex items-center gap-2">
-                      <EyeOff className="h-3 w-3" />
-                      <div className="w-2 h-2 rounded-full bg-gray-500"></div>
-                      <span>Private</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
         </CardContent>

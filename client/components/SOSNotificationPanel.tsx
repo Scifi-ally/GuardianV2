@@ -88,108 +88,95 @@ export function SOSNotificationPanel({
     if (!alert.location) return;
 
     try {
-      // Get current location first
-      const currentLocation = await getCurrentLocation();
-
-      // Create navigation URL with both from and to locations
-      const fromLat = currentLocation.latitude;
-      const fromLng = currentLocation.longitude;
-      const toLat = alert.location.latitude;
-      const toLng = alert.location.longitude;
-
-      // Use internal navigation within the app
-      const routeInfo = `Route from ${fromLat.toFixed(6)}, ${fromLng.toFixed(6)} to ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`;
-
-      // Copy route info to clipboard
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(
-            `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
-          );
-        }
-        toast.success("Navigation info copied", {
-          description: "Use your preferred navigation app",
-        });
-      } catch (error) {
-        toast.info("Navigation coordinates", {
-          description: `Navigate to: ${toLat.toFixed(6)}, ${toLng.toFixed(6)}`,
-        });
-      }
-
-      // Also respond that we're navigating
-      if (userProfile && alert.id) {
-        // Convert LocationData to GeolocationPosition format
-        const geolocationPosition: GeolocationPosition | undefined =
-          currentLocation
-            ? {
-                coords: {
-                  latitude: currentLocation.latitude,
-                  longitude: currentLocation.longitude,
-                  accuracy: currentLocation.accuracy,
-                  altitude: null,
-                  altitudeAccuracy: null,
-                  heading: null,
-                  speed: null,
-                  toJSON: () => ({
-                    latitude: currentLocation.latitude,
-                    longitude: currentLocation.longitude,
-                    accuracy: currentLocation.accuracy,
-                    altitude: null,
-                    altitudeAccuracy: null,
-                    heading: null,
-                    speed: null,
-                  }),
-                },
-                timestamp:
-                  typeof currentLocation.timestamp === "number"
-                    ? currentLocation.timestamp
-                    : currentLocation.timestamp.getTime(),
-                toJSON: () => ({
-                  coords: {
-                    latitude: currentLocation.latitude,
-                    longitude: currentLocation.longitude,
-                    accuracy: currentLocation.accuracy,
-                    altitude: null,
-                    altitudeAccuracy: null,
-                    heading: null,
-                    speed: null,
-                  },
-                  timestamp:
-                    typeof currentLocation.timestamp === "number"
-                      ? currentLocation.timestamp
-                      : currentLocation.timestamp.getTime(),
-                }),
-              }
-            : undefined;
-
-        await SOSService.respondToSOS(
-          alert.id,
-          userProfile.uid,
-          userProfile.displayName,
-          "enroute",
-          "Navigating to your location",
-          geolocationPosition,
-        );
-      }
-    } catch (error) {
-      console.error("Error getting current location for navigation:", error);
-
-      // Fallback: just navigate to destination without current location
+      // Start in-app navigation to the SOS location
       const { latitude, longitude } = alert.location;
+      const destinationAddress = `Emergency: ${alert.senderName} (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
 
-      // Copy destination to clipboard
+      // Dispatch navigation event to main app
+      const navigationEvent = new CustomEvent("startEmergencyNavigation", {
+        detail: {
+          destination: destinationAddress,
+          coordinates: { lat: latitude, lng: longitude },
+          fromSOS: true,
+          senderName: alert.senderName,
+          alertId: alert.id,
+        },
+      });
+
+      window.dispatchEvent(navigationEvent);
+
+      // Get current location for SOS response
+      try {
+        const currentLocation = await getCurrentLocation();
+
+        if (currentLocation && userProfile) {
+          const geolocationPosition: GeolocationPosition = {
+            coords: {
+              latitude: currentLocation.latitude,
+              longitude: currentLocation.longitude,
+              accuracy: currentLocation.accuracy,
+              altitude: null,
+              altitudeAccuracy: null,
+              heading: null,
+              speed: null,
+            },
+            timestamp:
+              typeof currentLocation.timestamp === "number"
+                ? currentLocation.timestamp
+                : currentLocation.timestamp.getTime(),
+          };
+
+          await SOSService.respondToSOS(
+            alert.id,
+            userProfile.uid,
+            userProfile.displayName,
+            "enroute",
+            "🧭 Navigating to your location via in-app GPS",
+            geolocationPosition,
+          );
+        }
+      } catch (locationError) {
+        console.warn(
+          "Could not get current location, but navigation started:",
+          locationError,
+        );
+
+        // Still send response without location if user profile exists
+        if (userProfile) {
+          await SOSService.respondToSOS(
+            alert.id,
+            userProfile.uid,
+            userProfile.displayName,
+            "enroute",
+            "🧭 Navigation started to your location",
+            undefined,
+          );
+        }
+      }
+
+      toast.success("🧭 Navigation started", {
+        description: `Navigating to ${alert.senderName}'s emergency location`,
+      });
+
+      // Close the notification panel since navigation is active
+      onClose();
+    } catch (error) {
+      console.error("Error starting navigation:", error);
+
+      // Fallback: copy coordinates
+      const { latitude, longitude } = alert.location;
       try {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(
-            `Navigate to: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+            `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
           );
         }
-        toast.success("Destination copied", {
-          description: "Use your preferred navigation app",
+        toast.error("Navigation failed", {
+          description: "Emergency coordinates copied to clipboard",
         });
-      } catch (error) {
-        toast.info("Navigation coordinates", {
-          description: `Navigate to: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+      } catch (clipboardError) {
+        toast.error("Navigation failed", {
+          description: `Emergency location: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
         });
       }
     }

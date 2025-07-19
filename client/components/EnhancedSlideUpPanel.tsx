@@ -28,14 +28,14 @@ export function EnhancedSlideUpPanel({
   initialHeight,
   navbarHeight = 96,
   safeAreaBottom = 0,
-  collapsedHeight = 56,
+  collapsedHeight = 120,
   onTouchOutside,
 }: EnhancedSlideUpPanelProps) {
-  const [height, setHeight] = useState(collapsedHeight);
+  const [height, setHeight] = useState(300); // Start with more height
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startHeight, setStartHeight] = useState(0);
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Calculate available space dynamically
@@ -46,7 +46,7 @@ export function EnhancedSlideUpPanel({
 
   const calculatedMaxHeight = maxHeight || Math.floor(availableHeight * 0.85);
   const calculatedInitialHeight =
-    initialHeight || Math.floor(availableHeight * 0.4);
+    initialHeight || Math.floor(availableHeight * 0.6);
 
   // Smooth spring animations
   const heightSpring = useSpring(height, {
@@ -335,6 +335,7 @@ export function EnhancedSlideUpPanel({
               msOverflowStyle: "none",
               maxHeight: height - (isCollapsed ? collapsedHeight : 80),
               pointerEvents: "auto",
+              touchAction: "manipulation",
             }}
           >
             <motion.div

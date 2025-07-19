@@ -20,7 +20,7 @@ import {
   FileText,
   CheckCircle,
 } from "lucide-react";
-import { MagicNavbar } from "@/components/MagicNavbar";
+
 import { AnimatedCard } from "@/components/AnimatedCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -596,8 +596,6 @@ Your trust is our priority. Stay safe, stay private.
           </CardContent>
         </Card>
       </main>
-
-      <MagicNavbar onSOSPress={handleSOSPress} />
     </div>
   );
 }
