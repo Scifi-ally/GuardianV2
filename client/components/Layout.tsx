@@ -15,7 +15,12 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Page Content */}
-      <main className={cn("min-h-screen", showNavbar ? "pb-24" : "")}>
+      <main
+        className={cn(
+          "min-h-screen transition-all duration-300",
+          showNavbar ? "pb-24" : "",
+        )}
+      >
         {children}
       </main>
 

@@ -1,3 +1,4 @@
+import React from "react";
 import "./global.css";
 import "./styles/production-polish.css";
 
@@ -29,6 +30,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import AdvancedMap from "./pages/AdvancedMap";
+import EnhancedNavigation from "./pages/EnhancedNavigation";
 import { FullPageLoading } from "@/components/LoadingAnimation";
 import { SplashScreen } from "@/components/SplashScreen";
 import { useCapacitor } from "@/hooks/use-capacitor";
@@ -208,6 +210,23 @@ function AnimatedRoutes() {
                   className="w-full min-h-screen"
                 >
                   <AdvancedMap />
+                </SafeMotion>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/enhanced-navigation"
+            element={
+              <ProtectedRoute>
+                <SafeMotion
+                  variants={pageVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={transition}
+                  className="w-full min-h-screen"
+                >
+                  <EnhancedNavigation />
                 </SafeMotion>
               </ProtectedRoute>
             }

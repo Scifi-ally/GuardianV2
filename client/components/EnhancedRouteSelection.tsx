@@ -109,65 +109,46 @@ export function EnhancedRouteSelection({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-auto"
+        className="component-elevated max-w-sm mx-auto spacing-unified-sm"
       >
-        {/* Auto-select UI */}
-        <div className="text-center space-y-4">
-          <div className="p-4 bg-blue-50 rounded-xl">
-            <Zap className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-            <h3 className="text-lg font-semibold text-gray-900">
-              Quickest Route Selected
+        {/* Compact Auto-select UI */}
+        <div className="text-center space-y-3">
+          <div className="p-3 bg-blue-50 rounded-lg">
+            <Zap className="h-6 w-6 text-blue-600 mx-auto mb-1" />
+            <h3 className="text-base font-semibold text-gray-900">
+              Starting in {autoSelectCountdown}s
             </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Starting navigation in {autoSelectCountdown} seconds
-            </p>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Duration</span>
-              </div>
-              <span className="font-semibold">{quickestRoute.duration}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Distance</span>
-              </div>
-              <span className="font-semibold">{quickestRoute.distance}</span>
-            </div>
+          <div className="bg-gray-50 rounded-lg p-3 flex justify-center gap-4 text-sm">
+            <span className="font-medium">{quickestRoute.duration}</span>
+            <span className="text-gray-400">•</span>
+            <span className="font-medium">{quickestRoute.distance}</span>
             {quickestRoute.traffic && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Navigation className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Traffic</span>
-                </div>
+              <>
+                <span className="text-gray-400">•</span>
                 <Badge
                   className={cn(
-                    "text-xs",
+                    "text-xs h-4",
                     getTrafficColor(quickestRoute.traffic),
                   )}
                 >
                   {quickestRoute.traffic}
                 </Badge>
-              </div>
+              </>
             )}
           </div>
 
-          <div className="flex gap-3">
-            <Button
-              onClick={handleStartRoute}
-              className="flex-1 h-12 text-base font-medium"
-            >
-              <Navigation className="h-4 w-4 mr-2" />
-              Start Now
+          <div className="flex gap-2">
+            <Button onClick={handleStartRoute} className="flex-1 h-10 text-sm">
+              <Navigation className="h-4 w-4 mr-1" />
+              Start
             </Button>
             <Button
               onClick={handleShowAlternatives}
               variant="outline"
-              className="h-12 px-4"
+              size="sm"
+              className="h-10 px-3"
             >
               <Route className="h-4 w-4" />
             </Button>
@@ -175,9 +156,9 @@ export function EnhancedRouteSelection({
 
           <button
             onClick={handleShowAlternatives}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="text-xs text-blue-600 hover:text-blue-700"
           >
-            View all routes
+            More options
           </button>
         </div>
       </motion.div>
@@ -190,100 +171,75 @@ export function EnhancedRouteSelection({
 
     return (
       <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileTap={{ scale: 0.99 }}
         onClick={() => setSelectedRoute(route.id)}
         className={cn(
           "cursor-pointer transition-all duration-200",
-          isSelected && "ring-2 ring-blue-500 ring-offset-2",
+          isSelected && "ring-2 ring-blue-500",
         )}
       >
         <Card
           className={cn(
-            "relative overflow-hidden border-2",
-            isSelected
-              ? "border-blue-500 bg-blue-50/50"
-              : "border-gray-200 hover:border-gray-300",
+            "card-unified-compact relative overflow-hidden",
+            isSelected ? "border-blue-500 bg-blue-50/30" : "",
           )}
         >
           {isQuickest && (
-            <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-bl-lg font-medium">
-              Fastest
+            <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-bl font-medium">
+              Fast
             </div>
           )}
 
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center gap-3">
+          <CardContent className="flow-tight">
+            <div className="flex items-center gap-2">
               {route.type === "safest" ? (
-                <Shield className="h-5 w-5 text-green-600" />
+                <Shield className="h-4 w-4 text-green-600" />
               ) : route.type === "quickest" ? (
-                <Zap className="h-5 w-5 text-blue-600" />
+                <Zap className="h-4 w-4 text-blue-600" />
               ) : (
-                <Route className="h-5 w-5 text-purple-600" />
+                <Route className="h-4 w-4 text-purple-600" />
               )}
-              <span className="text-lg font-semibold">{route.title}</span>
+              <span className="text-sm font-semibold">{route.title}</span>
               {isSelected && (
-                <CheckCircle className="h-5 w-5 text-blue-600 ml-auto" />
+                <CheckCircle className="h-4 w-4 text-blue-600 ml-auto" />
               )}
             </div>
 
-            {/* Route Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-500" />
-                  <span className="font-semibold text-lg">
-                    {route.duration}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500">Duration</p>
+            {/* Compact Route Stats */}
+            <div className="flex justify-between text-sm">
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3 text-gray-500" />
+                <span className="font-medium">{route.duration}</span>
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-500" />
-                  <span className="font-semibold text-lg">
-                    {route.distance}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500">Distance</p>
+              <div className="flex items-center gap-1">
+                <MapPin className="h-3 w-3 text-gray-500" />
+                <span className="font-medium">{route.distance}</span>
               </div>
             </div>
 
-            {/* Safety and Traffic */}
+            {/* Compact Safety and Traffic */}
             <div className="flex items-center justify-between">
               <Badge
-                className={cn(
-                  "border text-xs",
-                  getSafetyColor(route.safetyLevel),
-                )}
+                className={cn("text-xs h-5", getSafetyColor(route.safetyLevel))}
               >
                 <Shield className="h-3 w-3 mr-1" />
-                {route.safetyLevel} safety
+                {route.safetyLevel}
               </Badge>
               {route.traffic && (
                 <Badge
-                  className={cn("text-xs", getTrafficColor(route.traffic))}
+                  className={cn("text-xs h-5", getTrafficColor(route.traffic))}
                 >
-                  {route.traffic} traffic
+                  {route.traffic}
                 </Badge>
               )}
             </div>
 
-            {/* Warnings */}
+            {/* Compact Warnings */}
             {route.warnings && route.warnings.length > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                  <span className="text-sm font-medium text-yellow-800">
-                    Notices
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  {route.warnings.slice(0, 2).map((warning, index) => (
-                    <div key={index} className="text-xs text-yellow-700">
-                      • {warning}
-                    </div>
-                  ))}
+              <div className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                <div className="flex items-center gap-1 text-xs text-yellow-700">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span>{route.warnings[0]}</span>
                 </div>
               </div>
             )}
@@ -297,18 +253,15 @@ export function EnhancedRouteSelection({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6 max-w-4xl mx-auto"
+      className="flow-seamless max-w-2xl mx-auto"
     >
-      {/* Header */}
+      {/* Compact Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Route className="h-6 w-6" />
-            Route Options
+          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <Route className="h-5 w-5" />
+            Routes
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Choose the route that works best for you
-          </p>
         </div>
         {onClose && (
           <Button onClick={onClose} variant="ghost" size="sm">
@@ -317,23 +270,22 @@ export function EnhancedRouteSelection({
         )}
       </div>
 
-      {/* Route Cards */}
+      {/* Compact Route Cards */}
       <div className="grid gap-4 md:grid-cols-2">
         {routes.map((route) => (
           <RouteCard key={route.id} route={route} />
         ))}
       </div>
 
-      {/* Action Button */}
-      <div className="flex justify-center">
+      {/* Compact Action Button */}
+      <div className="flex justify-center pt-2">
         <Button
           onClick={handleStartRoute}
-          className="px-8 h-14 text-lg font-medium bg-blue-600 hover:bg-blue-700"
-          size="lg"
+          className="px-6 h-10 text-sm font-medium bg-blue-600 hover:bg-blue-700"
         >
-          <Navigation className="h-5 w-5 mr-3" />
+          <Navigation className="h-4 w-4 mr-2" />
           Start Navigation
-          <ArrowRight className="h-5 w-5 ml-3" />
+          <ArrowRight className="h-4 w-4 ml-2" />
         </Button>
       </div>
     </motion.div>

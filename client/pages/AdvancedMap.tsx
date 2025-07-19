@@ -153,7 +153,7 @@ const AdvancedMap: React.FC = () => {
 
   // Map Control State
   const [mapType, setMapType] = useState("roadmap");
-  const [trafficEnabled, setTrafficEnabled] = useState(true);
+  const [trafficEnabled, setTrafficEnabled] = useState(false);
   const [satelliteEnabled, setSatelliteEnabled] = useState(false);
 
   // UI State
@@ -319,19 +319,37 @@ const AdvancedMap: React.FC = () => {
 
       // Add event listeners for map controls
       const handleRecenterMap = (event: any) => {
-        if (event.detail && mapInstance) {
-          mapInstance.setCenter(event.detail);
-          mapInstance.setZoom(16);
-        } else if (userLocation && mapInstance) {
-          mapInstance.setCenter(userLocation);
-          mapInstance.setZoom(16);
+        try {
+          if (event?.detail && mapInstance) {
+            mapInstance.setCenter(event.detail);
+            mapInstance.setZoom(16);
+            console.log("✅ Map recentered to:", event.detail);
+          } else if (userLocation && mapInstance) {
+            mapInstance.setCenter(userLocation);
+            mapInstance.setZoom(16);
+            console.log("✅ Map recentered to user location:", userLocation);
+          } else {
+            console.warn(
+              "⚠️ Recenter failed: missing location or map instance",
+            );
+          }
+        } catch (error) {
+          console.error("❌ Recenter error:", error);
         }
       };
 
       const handleToggle3D = () => {
-        if (mapInstance) {
-          const currentTilt = mapInstance.getTilt();
-          mapInstance.setTilt(currentTilt === 0 ? 45 : 0);
+        try {
+          if (mapInstance) {
+            const currentTilt = mapInstance.getTilt() || 0;
+            const newTilt = currentTilt === 0 ? 45 : 0;
+            mapInstance.setTilt(newTilt);
+            console.log(`✅ 3D view toggled: ${newTilt}° tilt`);
+          } else {
+            console.warn("⚠️ 3D toggle failed: no map instance");
+          }
+        } catch (error) {
+          console.error("❌ 3D toggle error:", error);
         }
       };
 
@@ -596,11 +614,22 @@ const AdvancedMap: React.FC = () => {
     (enabled: boolean) => {
       setTrafficEnabled(enabled);
       if (map) {
-        const trafficLayer = new window.google.maps.TrafficLayer();
-        if (enabled) {
-          trafficLayer.setMap(map);
-        } else {
-          trafficLayer.setMap(null);
+        try {
+          // Clear existing traffic layer first
+          if (window.currentTrafficLayer) {
+            window.currentTrafficLayer.setMap(null);
+          }
+
+          if (enabled) {
+            const trafficLayer = new window.google.maps.TrafficLayer();
+            trafficLayer.setMap(map);
+            window.currentTrafficLayer = trafficLayer;
+            console.log("✅ Traffic layer enabled");
+          } else {
+            console.log("✅ Traffic layer disabled");
+          }
+        } catch (error) {
+          console.error("❌ Traffic toggle error:", error);
         }
       }
     },
@@ -612,16 +641,29 @@ const AdvancedMap: React.FC = () => {
     (enabled: boolean) => {
       setSatelliteEnabled(enabled);
       if (map) {
-        // Toggle POI visibility
-        const styles = enabled
-          ? []
-          : [
-              {
-                featureType: "poi",
-                stylers: [{ visibility: "off" }],
-              },
-            ];
-        map.setOptions({ styles });
+        try {
+          // Toggle POI visibility - when enabled, show POIs
+          const styles = enabled
+            ? [
+                // Show POIs when enabled
+                {
+                  featureType: "poi",
+                  stylers: [{ visibility: "on" }],
+                },
+              ]
+            : [
+                // Hide POIs when disabled
+                {
+                  featureType: "poi",
+                  stylers: [{ visibility: "off" }],
+                },
+              ];
+
+          map.setOptions({ styles });
+          console.log(`✅ POI visibility: ${enabled ? "enabled" : "disabled"}`);
+        } catch (error) {
+          console.error("❌ POI toggle error:", error);
+        }
       }
     },
     [map],

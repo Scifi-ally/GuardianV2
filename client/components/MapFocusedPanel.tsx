@@ -283,42 +283,12 @@ const RouteInfo: React.FC<RouteInfoProps> = ({
         transition={{ duration: 0.3 }}
         className="text-center py-8"
       >
-        <motion.div
-          className="relative mx-auto mb-4"
-          whileHover={{ scale: 1.05 }}
-          transition={{ type: "spring", stiffness: 300 }}
-        >
-          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center">
-            <Route className="h-8 w-8 text-gray-600" />
-          </div>
-          <motion.div
-            className="absolute -top-1 -right-1 w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-          >
-            <Navigation className="h-3 w-3 text-white" />
-          </motion.div>
-        </motion.div>
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
           Ready to Navigate
         </h3>
         <p className="text-sm text-gray-500 mb-4">
           Use the search bar above to find your destination
         </p>
-        <motion.div
-          className="flex justify-center gap-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="px-3 py-1 bg-blue-50 rounded-full text-xs font-medium text-blue-700">
-            Real-time traffic
-          </div>
-          <div className="px-3 py-1 bg-emerald-50 rounded-full text-xs font-medium text-emerald-700">
-            Smart routing
-          </div>
-        </motion.div>
       </motion.div>
     );
   }

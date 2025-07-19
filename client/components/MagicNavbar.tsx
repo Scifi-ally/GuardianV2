@@ -503,10 +503,10 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {/* Background with blur effect */}
-        <div className="absolute inset-0 bg-background/98 backdrop-blur-xl border-t border-border/30 rounded-t-3xl shadow-2xl sharp-shadows-lg" />
+        <div className="absolute inset-0 nav-unified" />
 
         {/* Navigation items */}
-        <div className="relative px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-t-3xl">
+        <div className="relative spacing-unified rounded-t-3xl">
           <div className="flex items-center justify-between w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto">
             {navItems.map((item, index) => {
               const Icon = item.icon;
@@ -611,10 +611,6 @@ export function MagicNavbar({ onSOSPress }: MagicNavbarProps) {
                       showEnhancedMapHint &&
                       "bg-blue-100 rounded-lg",
                   )}
-                  whileHover={{
-                    scale: isSpecial ? 1.15 : 1.1,
-                    y: -2,
-                  }}
                   whileTap={{ scale: 0.95 }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}

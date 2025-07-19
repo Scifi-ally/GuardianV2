@@ -29,6 +29,7 @@ import { realTimeSafetyMonitor } from "@/services/realTimeSafetyMonitor";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useCapacitor } from "@/hooks/use-capacitor";
 
 export default function EnhancedNavigationPage() {
   const [currentLocation, setCurrentLocation] = useState<any>(null);
@@ -40,6 +41,9 @@ export default function EnhancedNavigationPage() {
   const [directionsResult, setDirectionsResult] = useState<any>(null);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [activeTab, setActiveTab] = useState("navigate");
+
+  // Capacitor state for mobile app optimization
+  const { isNative, platform, isReady } = useCapacitor();
   const [navigationStats, setNavigationStats] = useState({
     totalDistance: "0 km",
     estimatedTime: "0 min",
@@ -65,7 +69,7 @@ export default function EnhancedNavigationPage() {
     },
     {
       id: 3,
-      name: "Mall → Home",
+      name: "Mall �� Home",
       distance: "3.7 km",
       time: "22 min",
       safetyScore: 76,
@@ -76,14 +80,45 @@ export default function EnhancedNavigationPage() {
   const mapRef = useRef<any>(null);
 
   useEffect(() => {
-    // Initialize location service
+    // Initialize location service with Capacitor optimization
     const initLocation = async () => {
-      const location = await enhancedLocationService.getCurrentLocation();
-      setCurrentLocation(location);
-      console.log("✅ Enhanced Navigation ready with location");
+      try {
+        // Use Capacitor Geolocation if available
+        if (isNative && window?.Capacitor?.Plugins?.Geolocation) {
+          const { Geolocation } = window.Capacitor.Plugins;
+          try {
+            const position = await Geolocation.getCurrentPosition({
+              enableHighAccuracy: true,
+              timeout: 10000,
+            });
+            setCurrentLocation({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+            });
+            console.log("✅ Enhanced Navigation ready with Capacitor location");
+          } catch (capacitorError) {
+            console.warn(
+              "Capacitor geolocation failed, using fallback:",
+              capacitorError,
+            );
+            const location = await enhancedLocationService.getCurrentLocation();
+            setCurrentLocation(location);
+          }
+        } else {
+          const location = await enhancedLocationService.getCurrentLocation();
+          setCurrentLocation(location);
+          console.log("✅ Enhanced Navigation ready with web location");
+        }
+      } catch (error) {
+        console.warn("Location initialization failed:", error);
+      }
     };
 
-    initLocation();
+    // Only initialize after Capacitor is ready
+    if (isReady) {
+      initLocation();
+    }
 
     // Subscribe to location updates
     const unsubscribe = enhancedLocationService.subscribe((location) => {
@@ -106,7 +141,7 @@ export default function EnhancedNavigationPage() {
       unsubscribe();
       unsubscribeSafety();
     };
-  }, [isNavigating]);
+  }, [isNavigating, isNative, isReady]);
 
   const handleNavigationStart = useCallback(
     async (destination: google.maps.LatLng, routeAnalysis: any) => {
@@ -200,7 +235,12 @@ export default function EnhancedNavigationPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 relative">
+    <div
+      className={cn(
+        "min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 relative",
+        isNative && "safe-area-top safe-area-bottom",
+      )}
+    >
       {/* Enhanced Map Container */}
       <div className="h-screen w-full">
         <LocationAwareMap
@@ -224,46 +264,72 @@ export default function EnhancedNavigationPage() {
       </div>
 
       {/* Enhanced Navigation Interface */}
-      <div className="absolute bottom-0 left-0 right-0 z-50">
-        <div className="bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg">
+      <div
+        className={cn(
+          "absolute bottom-0 left-0 right-0 z-50",
+          isNative && "pb-safe",
+        )}
+      >
+        <div className={cn("nav-unified", isNative && "touch-pan-y")}>
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-4 bg-transparent border-b border-gray-200 rounded-none h-12">
+            <TabsList
+              className={cn(
+                "grid w-full grid-cols-4 bg-transparent border-b border-gray-200 rounded-none",
+                isNative ? "h-14 safe-area-bottom" : "h-12",
+              )}
+            >
               <TabsTrigger
                 value="navigate"
-                className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 flex flex-col"
               >
-                <NavIcon className="h-4 w-4 mr-1" />
-                Navigate
+                <span className="font-medium">Navigate</span>
+                <span className="text-xs text-muted-foreground">
+                  Quick routing
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="smart"
-                className="data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700 data-[state=active]:border-b-2 data-[state=active]:border-purple-600"
+                className="data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700 data-[state=active]:border-b-2 data-[state=active]:border-purple-600 flex flex-col"
               >
-                <Zap className="h-4 w-4 mr-1" />
-                Smart
+                <span className="font-medium">Smart</span>
+                <span className="text-xs text-muted-foreground">
+                  AI powered
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="routes"
-                className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700 data-[state=active]:border-b-2 data-[state=active]:border-green-600"
+                className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700 data-[state=active]:border-b-2 data-[state=active]:border-green-600 flex flex-col"
               >
-                <Route className="h-4 w-4 mr-1" />
-                Routes
+                <span className="font-medium">Routes</span>
+                <span className="text-xs text-muted-foreground">
+                  Saved paths
+                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="safety"
-                className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-b-2 data-[state=active]:border-orange-600"
+                className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-b-2 data-[state=active]:border-orange-600 flex flex-col"
               >
-                <Shield className="h-4 w-4 mr-1" />
-                Safety
+                <span className="font-medium">Safety</span>
+                <span className="text-xs text-muted-foreground">
+                  Area status
+                </span>
               </TabsTrigger>
             </TabsList>
 
-            <div className="max-h-96 overflow-y-auto">
-              <TabsContent value="navigate" className="mt-0 p-4 space-y-4">
+            <div
+              className={cn(
+                "overflow-y-auto",
+                isNative ? "max-h-80" : "max-h-96",
+              )}
+            >
+              <TabsContent
+                value="navigate"
+                className="mt-0 spacing-unified flow-seamless"
+              >
                 <AnimatePresence>
                   {isNavigating ? (
                     <motion.div
@@ -273,7 +339,7 @@ export default function EnhancedNavigationPage() {
                       className="space-y-4"
                     >
                       {/* Active Navigation Status */}
-                      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+                      <Card className="component-elevated bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
@@ -328,11 +394,9 @@ export default function EnhancedNavigationPage() {
                       className="space-y-4"
                     >
                       {/* Search Interface */}
-                      <Card>
+                      <Card className="card-unified">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-lg">
-                            Quick Navigation
-                          </CardTitle>
+                          <CardTitle className="text-lg">Navigate</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <LocationAutocompleteInput
@@ -358,7 +422,7 @@ export default function EnhancedNavigationPage() {
                           {/* Transportation Mode Selection */}
                           <div className="space-y-2">
                             <div className="text-sm font-medium text-gray-700">
-                              Travel Mode
+                              Mode
                             </div>
                             <div className="flex gap-2">
                               {transportModes.map((mode) => {
@@ -406,9 +470,12 @@ export default function EnhancedNavigationPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="routes" className="mt-0 p-4 space-y-4">
+              <TabsContent
+                value="routes"
+                className="mt-0 spacing-unified flow-seamless"
+              >
                 {/* Navigation Stats */}
-                <Card>
+                <Card className="card-unified">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Navigation Stats</CardTitle>
                   </CardHeader>
@@ -431,7 +498,7 @@ export default function EnhancedNavigationPage() {
                 </Card>
 
                 {/* Recent Routes */}
-                <Card>
+                <Card className="card-unified">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Recent Routes</CardTitle>
                   </CardHeader>
@@ -477,9 +544,12 @@ export default function EnhancedNavigationPage() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="safety" className="mt-0 p-4 space-y-4">
+              <TabsContent
+                value="safety"
+                className="mt-0 spacing-unified flow-seamless"
+              >
                 {/* Current Safety Status */}
-                <Card>
+                <Card className="card-unified">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Shield className="h-5 w-5 text-green-500" />
@@ -516,7 +586,7 @@ export default function EnhancedNavigationPage() {
                 </Card>
 
                 {/* Safety Features */}
-                <Card>
+                <Card className="card-unified">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">
                       AI Safety Features

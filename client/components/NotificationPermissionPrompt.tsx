@@ -33,12 +33,10 @@ export function NotificationPermissionPrompt({
 
       // Show prompt if notifications are not granted and autoShow is enabled
       if (autoShow && Notification.permission !== "granted") {
-        // Only show if user hasn't been asked recently
-        const lastAsked = localStorage.getItem("notificationPromptLastAsked");
-        const now = Date.now();
-        const dayInMs = 24 * 60 * 60 * 1000;
+        // Only show if user hasn't been asked before
+        const hasBeenAsked = localStorage.getItem("notificationPromptShown");
 
-        if (!lastAsked || now - parseInt(lastAsked) > dayInMs) {
+        if (!hasBeenAsked) {
           setShouldShow(true);
         }
       }
@@ -58,10 +56,7 @@ export function NotificationPermissionPrompt({
       setPermission(result);
 
       // Store that we asked
-      localStorage.setItem(
-        "notificationPromptLastAsked",
-        Date.now().toString(),
-      );
+      localStorage.setItem("notificationPromptShown", "true");
 
       if (result === "granted") {
         // Silently enable notifications
@@ -87,12 +82,13 @@ export function NotificationPermissionPrompt({
 
   const handleClose = () => {
     setShouldShow(false);
+    localStorage.setItem("notificationPromptShown", "true");
     onClose?.();
   };
 
   const handleNotNow = () => {
-    // Store that user declined for now
-    localStorage.setItem("notificationPromptLastAsked", Date.now().toString());
+    // Store that user declined
+    localStorage.setItem("notificationPromptShown", "true");
     handleClose();
   };
 
