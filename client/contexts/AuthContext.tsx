@@ -14,7 +14,7 @@ import {
   updateProfile as updateFirebaseProfile,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
-import { auth, db, safeFirebaseOperation } from "@/lib/enhancedFirebase";
+import { auth, db } from "@/lib/firebase";
 import { EmergencyKeyService } from "@/services/emergencyKeyService";
 import { enhancedFirebaseService } from "@/services/enhancedFirebaseService";
 import { enhancedLocationService } from "@/services/enhancedLocationService";
@@ -132,23 +132,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         lastActive: new Date(),
       };
 
-      await safeFirebaseOperation(
-        async () => {
-          await setDoc(doc(db, "users", user.uid), userProfile);
-          setUserProfile(userProfile);
-        },
-        () => {
-          // Fallback: Set profile locally if Firestore write fails
-          console.warn("Using local profile fallback");
-          setUserProfile(userProfile);
-          // Store profile in localStorage as backup
-          localStorage.setItem(
-            `guardian_profile_${user.uid}`,
-            JSON.stringify(userProfile),
-          );
-        },
-        "Create user profile",
-      );
+      try {
+        await setDoc(doc(db, "users", user.uid), userProfile);
+        setUserProfile(userProfile);
+      } catch (error) {
+        // Fallback: Set profile locally if Firestore write fails
+        console.warn("Using local profile fallback:", error);
+        setUserProfile(userProfile);
+        // Store profile in localStorage as backup
+        localStorage.setItem(
+          `guardian_profile_${user.uid}`,
+          JSON.stringify(userProfile),
+        );
+      }
 
       setAuthAction("");
     } catch (signupError) {
@@ -208,18 +204,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Update in Firestore only if there's valid data
       if (Object.keys(filteredData).length > 0) {
-        await safeFirebaseOperation(
-          async () => {
-            await updateDoc(doc(db, "users", currentUser.uid), filteredData);
-            console.log("Profile updated in Firestore");
-          },
-          () => {
-            console.warn(
-              "Firestore update failed, using localStorage fallback",
-            );
-          },
-          "Update user profile",
-        );
+        try {
+          await updateDoc(doc(db, "users", currentUser.uid), filteredData);
+          console.log("Profile updated in Firestore");
+        } catch (error) {
+          console.warn(
+            "Firestore update failed, using localStorage fallback:",
+            error,
+          );
+        }
       } else {
         console.log("No valid data to update in Firestore");
       }

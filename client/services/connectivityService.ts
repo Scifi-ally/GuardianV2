@@ -52,6 +52,12 @@ class ConnectivityService {
       window.google && window.google.maps
     );
 
+    // Temporarily disable Firebase connectivity testing to prevent fetch errors
+    this.currentStatus.firebaseConnected = false;
+    this.currentStatus.lastChecked = new Date();
+    this.notifyListeners();
+    return;
+
     // Check Firebase connectivity
     try {
       const { auth, db } = await import("@/lib/firebase");

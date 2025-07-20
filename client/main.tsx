@@ -31,6 +31,8 @@ import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import AdvancedMap from "./pages/AdvancedMap";
 import EnhancedNavigation from "./pages/EnhancedNavigation";
+import EmergencyContactTest from "./pages/EmergencyContactTest";
+import ContactsDemo from "./pages/ContactsDemo";
 import { FullPageLoading } from "@/components/LoadingAnimation";
 import { SplashScreen } from "@/components/SplashScreen";
 import { useCapacitor } from "@/hooks/use-capacitor";
@@ -229,6 +231,38 @@ function AnimatedRoutes() {
                   <EnhancedNavigation />
                 </SafeMotion>
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/emergency-contact-test"
+            element={
+              <ProtectedRoute>
+                <SafeMotion
+                  variants={pageVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={transition}
+                  className="w-full min-h-screen"
+                >
+                  <EmergencyContactTest />
+                </SafeMotion>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contacts-demo"
+            element={
+              <SafeMotion
+                variants={pageVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={transition}
+                className="w-full min-h-screen"
+              >
+                <ContactsDemo />
+              </SafeMotion>
             }
           />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

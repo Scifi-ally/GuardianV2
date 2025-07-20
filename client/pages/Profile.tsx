@@ -16,7 +16,6 @@ import {
   Bell,
   Heart,
   Zap,
-  QrCode,
 } from "lucide-react";
 
 import { EmergencyContactManager } from "@/components/EmergencyContactManager";
@@ -26,7 +25,7 @@ import { UserStatsManager } from "@/components/UserStatsManager";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import { GuardianKeyCard } from "@/components/GuardianKeyCard";
-import { QRScanner } from "@/components/QRScanner";
+
 import { ProfileLoading } from "@/components/ProfessionalLoading";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,8 +90,6 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
-
-  const [showQRScanner, setShowQRScanner] = useState(false);
 
   // Debug logging removed for production
 
@@ -269,24 +266,6 @@ export default function Profile() {
         {/* Guardian Key Section with QR Code */}
         <GuardianKeyCard />
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-          <Card
-            className="text-center p-4 bg-white border hover:shadow-lg transition-shadow cursor-pointer group"
-            onClick={() => setShowQRScanner(true)}
-          >
-            <div className="text-2xl font-bold text-blue-500 group-hover:text-blue-600 transition-colors">
-              <QrCode className="h-8 w-8 mx-auto" />
-            </div>
-            <div className="text-sm text-gray-600 group-hover:text-blue-500 transition-colors">
-              QR Scanner
-            </div>
-            <div className="mt-1">
-              <span className="text-xs text-blue-600">Scan QR codes</span>
-            </div>
-          </Card>
-        </div>
-
         {/* User Stats & Activity */}
         <ErrorBoundary>
           <UserStatsManager />
@@ -325,32 +304,6 @@ export default function Profile() {
           />
         )}
       </AnimatePresence>
-
-      {/* QR Scanner Modal */}
-      <QRScanner
-        isOpen={showQRScanner}
-        onClose={() => setShowQRScanner(false)}
-        onScanResult={(data, parsedData) => {
-          console.log("QR Scanned:", data, parsedData);
-          // Handle different types of QR codes
-          if (parsedData.latitude && parsedData.longitude) {
-            // Location QR code - navigate to map with location
-            setShowQRScanner(false);
-            navigate("/", {
-              state: {
-                targetLocation: {
-                  lat: parsedData.latitude,
-                  lng: parsedData.longitude,
-                },
-              },
-            });
-          } else if (parsedData.guardianKey) {
-            // Guardian key QR code
-            setShowQRScanner(false);
-            // Silent success - QR scanned
-          }
-        }}
-      />
     </div>
   );
 }

@@ -57,6 +57,13 @@ class AdminDebugService {
 
   private async initializeDebugConfig() {
     try {
+      // Temporarily disable Firebase connection to prevent fetch errors
+      // TODO: Re-enable when Firebase connection is stable
+      console.log(
+        "📋 Admin debug service: Firebase connection disabled to prevent fetch errors",
+      );
+      return;
+
       // Listen to real-time changes to the debug config
       this.unsubscribe = onSnapshot(
         doc(db, "admin", "debugConfig"),

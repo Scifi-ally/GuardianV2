@@ -11,7 +11,6 @@ import {
   ArrowUp,
   ArrowDown,
   Car,
-  Directions,
   MoreHorizontal,
   Phone,
   Globe,
@@ -40,7 +39,6 @@ import { routeCalculationService } from "@/services/routeCalculationService";
 import { notifications } from "@/services/enhancedNotificationService";
 import { unifiedNotifications } from "@/services/unifiedNotificationService";
 import { useRealTime } from "@/hooks/useRealTime";
-import { SimpleNavigationSearch } from "@/components/SimpleNavigationSearch";
 import AINavigationPanel from "@/components/AINavigationPanel";
 
 // Extend window interface for Google Maps
@@ -154,7 +152,8 @@ const AdvancedMap: React.FC = () => {
   // Map Control State
   const [mapType, setMapType] = useState("roadmap");
   const [trafficEnabled, setTrafficEnabled] = useState(false);
-  const [satelliteEnabled, setSatelliteEnabled] = useState(false);
+  const [trafficLayer, setTrafficLayer] = useState<any>(null);
+  const [poiEnabled, setPoiEnabled] = useState(false);
 
   // UI State
   const [isLoading, setIsLoading] = useState(true);
@@ -193,6 +192,44 @@ const AdvancedMap: React.FC = () => {
         streetViewControl: false,
         zoomControl: false,
         fullscreenControl: false,
+        // Hide POI by default and disable 3D
+        styles: [
+          {
+            featureType: "poi",
+            stylers: [{ visibility: "off" }],
+          },
+          {
+            featureType: "poi.business",
+            stylers: [{ visibility: "off" }],
+          },
+          {
+            featureType: "poi.government",
+            stylers: [{ visibility: "off" }],
+          },
+          {
+            featureType: "poi.medical",
+            stylers: [{ visibility: "off" }],
+          },
+          {
+            featureType: "poi.park",
+            stylers: [{ visibility: "off" }],
+          },
+          {
+            featureType: "poi.place_of_worship",
+            stylers: [{ visibility: "off" }],
+          },
+          {
+            featureType: "poi.school",
+            stylers: [{ visibility: "off" }],
+          },
+          {
+            featureType: "poi.sports_complex",
+            stylers: [{ visibility: "off" }],
+          },
+        ],
+        // Disable 3D and tilt by default
+        tilt: 0,
+        rotateControl: false,
       });
 
       setMap(mapInstance);
@@ -338,21 +375,6 @@ const AdvancedMap: React.FC = () => {
         }
       };
 
-      const handleToggle3D = () => {
-        try {
-          if (mapInstance) {
-            const currentTilt = mapInstance.getTilt() || 0;
-            const newTilt = currentTilt === 0 ? 45 : 0;
-            mapInstance.setTilt(newTilt);
-            console.log(`✅ 3D view toggled: ${newTilt}° tilt`);
-          } else {
-            console.warn("⚠️ 3D toggle failed: no map instance");
-          }
-        } catch (error) {
-          console.error("❌ 3D toggle error:", error);
-        }
-      };
-
       // Handle emergency navigation from SOS notifications
       const handleEmergencyNavigation = (event: any) => {
         const { destination, coordinates, senderName } = event.detail;
@@ -372,7 +394,6 @@ const AdvancedMap: React.FC = () => {
       };
 
       window.addEventListener("recenterMap", handleRecenterMap);
-      window.addEventListener("toggle3DView", handleToggle3D);
       window.addEventListener(
         "startEmergencyNavigation",
         handleEmergencyNavigation,
@@ -381,7 +402,6 @@ const AdvancedMap: React.FC = () => {
       // Store cleanup function
       const cleanup = () => {
         window.removeEventListener("recenterMap", handleRecenterMap);
-        window.removeEventListener("toggle3DView", handleToggle3D);
         window.removeEventListener(
           "startEmergencyNavigation",
           handleEmergencyNavigation,
@@ -616,53 +636,78 @@ const AdvancedMap: React.FC = () => {
       if (map) {
         try {
           // Clear existing traffic layer first
-          if (window.currentTrafficLayer) {
-            window.currentTrafficLayer.setMap(null);
+          if (trafficLayer) {
+            trafficLayer.setMap(null);
+            setTrafficLayer(null);
           }
 
           if (enabled) {
-            const trafficLayer = new window.google.maps.TrafficLayer();
-            trafficLayer.setMap(map);
-            window.currentTrafficLayer = trafficLayer;
+            const newTrafficLayer = new window.google.maps.TrafficLayer();
+            newTrafficLayer.setMap(map);
+            setTrafficLayer(newTrafficLayer);
             console.log("✅ Traffic layer enabled");
           } else {
             console.log("✅ Traffic layer disabled");
           }
         } catch (error) {
           console.error("❌ Traffic toggle error:", error);
+          // Reset state on error
+          setTrafficEnabled(false);
+          setTrafficLayer(null);
         }
       }
     },
-    [map],
+    [map, trafficLayer],
   );
 
-  // Handle satellite/POI toggle
-  const handleSatelliteToggle = useCallback(
+  // Handle POI toggle (renamed from satellite toggle)
+  const handlePOIToggle = useCallback(
     (enabled: boolean) => {
-      setSatelliteEnabled(enabled);
+      setPoiEnabled(enabled);
       if (map) {
         try {
-          // Toggle POI visibility - when enabled, show POIs
-          const styles = enabled
-            ? [
-                // Show POIs when enabled
-                {
-                  featureType: "poi",
-                  stylers: [{ visibility: "on" }],
-                },
-              ]
-            : [
-                // Hide POIs when disabled
-                {
-                  featureType: "poi",
-                  stylers: [{ visibility: "off" }],
-                },
-              ];
+          // Always hide POIs by default, only show when explicitly enabled
+          const styles = [
+            {
+              featureType: "poi",
+              stylers: [{ visibility: enabled ? "on" : "off" }],
+            },
+            {
+              featureType: "poi.business",
+              stylers: [{ visibility: enabled ? "on" : "off" }],
+            },
+            {
+              featureType: "poi.government",
+              stylers: [{ visibility: enabled ? "on" : "off" }],
+            },
+            {
+              featureType: "poi.medical",
+              stylers: [{ visibility: enabled ? "on" : "off" }],
+            },
+            {
+              featureType: "poi.park",
+              stylers: [{ visibility: enabled ? "on" : "off" }],
+            },
+            {
+              featureType: "poi.place_of_worship",
+              stylers: [{ visibility: enabled ? "on" : "off" }],
+            },
+            {
+              featureType: "poi.school",
+              stylers: [{ visibility: enabled ? "on" : "off" }],
+            },
+            {
+              featureType: "poi.sports_complex",
+              stylers: [{ visibility: enabled ? "on" : "off" }],
+            },
+          ];
 
           map.setOptions({ styles });
           console.log(`✅ POI visibility: ${enabled ? "enabled" : "disabled"}`);
         } catch (error) {
           console.error("❌ POI toggle error:", error);
+          // Reset state on error
+          setPoiEnabled(false);
         }
       }
     },
@@ -804,54 +849,43 @@ const AdvancedMap: React.FC = () => {
         {/* Clean Google Maps Container */}
         <div ref={mapRef} className="h-full w-full" />
 
-        {/* Google Maps Style Search Bar */}
-        <div className="absolute top-4 left-4 right-4 z-20">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-300">
+        {/* Fixed Search Bar */}
+        <div className="fixed top-4 left-4 right-4 z-30 pointer-events-none">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-300 pointer-events-auto">
             <div className="flex items-center p-3">
-              <Menu className="h-5 w-5 text-gray-600 mr-3 cursor-pointer" />
+              <Search className="h-4 w-4 text-gray-400 mr-3" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="Search Google Maps"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && searchValue.trim()) {
+                    handleSearch();
+                  }
+                }}
+                placeholder="Search locations..."
                 className="flex-1 outline-none text-gray-800 placeholder-gray-500 text-base"
               />
               {searchValue && (
-                <button onClick={() => setSearchValue("")} className="ml-2 p-1">
+                <button
+                  onClick={() => setSearchValue("")}
+                  className="ml-2 p-1 hover:bg-gray-100 rounded"
+                >
                   <X className="h-4 w-4 text-gray-400" />
+                </button>
+              )}
+              {searchValue && (
+                <button
+                  onClick={handleSearch}
+                  className="ml-2 px-3 py-1 bg-black text-white rounded text-sm hover:bg-gray-800"
+                >
+                  Search
                 </button>
               )}
             </div>
           </div>
         </div>
-
-        {/* Simple Navigation Search */}
-        <SimpleNavigationSearch
-          toLocation={toLocation}
-          setToLocation={setToLocation}
-          onSearch={(destination) => {
-            setFromLocation("Current Location");
-            handleSearch();
-          }}
-          onPlaceSelect={(place) => {
-            console.log("🎯 Place selected:", place);
-            if (place.geometry?.location || place.coordinates) {
-              setToLocation(
-                place.formatted_address || place.name || "Selected location",
-              );
-            }
-          }}
-          location={
-            location
-              ? {
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                }
-              : null
-          }
-          isSearching={isNavigating}
-        />
 
         {/* Clear Route Button */}
         {destination && (
@@ -948,8 +982,8 @@ const AdvancedMap: React.FC = () => {
             onMapTypeChange={handleMapTypeChange}
             trafficEnabled={trafficEnabled}
             onTrafficToggle={handleTrafficToggle}
-            satelliteEnabled={satelliteEnabled}
-            onSatelliteToggle={handleSatelliteToggle}
+            poiEnabled={poiEnabled}
+            onPOIToggle={handlePOIToggle}
           />
         </EnhancedSlideUpPanel>
 

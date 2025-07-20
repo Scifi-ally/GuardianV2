@@ -28,19 +28,15 @@ import {
   Zap,
   UserPlus,
   Search,
-  Wifi,
-  WifiOff,
-  Smartphone,
 } from "lucide-react";
 import { useAuth, type EmergencyContact } from "@/contexts/AuthContext";
 import { EmergencyContactService } from "@/services/emergencyContactService";
+import { EmergencyKeyService } from "@/services/emergencyKeyService";
 import { emergencyContactConnectionService } from "@/services/emergencyContactConnectionService";
-import { mobileCameraService } from "@/services/mobileCameraService";
 import { cn } from "@/lib/utils";
 import QrScanner from "qr-scanner";
-import { Capacitor } from "@capacitor/core";
 
-interface EmergencyContactManagerProps {
+interface ModernEmergencyContactManagerProps {
   className?: string;
   isModal?: boolean;
   onClose?: () => void;
@@ -67,11 +63,11 @@ const modalVariants = {
   },
 };
 
-export function EmergencyContactManager({
+export function ModernEmergencyContactManager({
   className,
   isModal = false,
   onClose,
-}: EmergencyContactManagerProps) {
+}: ModernEmergencyContactManagerProps) {
   // Core state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [guardianKey, setGuardianKey] = useState("");
@@ -84,19 +80,13 @@ export function EmergencyContactManager({
   const [showConfirmDelete, setShowConfirmDelete] =
     useState<EmergencyContact | null>(null);
 
-  // QR Scanner state with extreme case handling
+  // QR Scanner state
   const [showQRInAdd, setShowQRInAdd] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
-  const [isNativeApp, setIsNativeApp] = useState(false);
-  const [deviceInfo, setDeviceInfo] = useState<string>("");
-  const [networkStatus, setNetworkStatus] = useState<boolean>(navigator.onLine);
-  const [retryAttempts, setRetryAttempts] = useState(0);
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
-  const maxRetryAttempts = 3;
 
   // UI state
   const [searchQuery, setSearchQuery] = useState("");
@@ -116,105 +106,30 @@ export function EmergencyContactManager({
     (a, b) => a.priority - b.priority,
   );
 
-  // Initialize device info and capabilities
-  useEffect(() => {
-    const initializeDevice = async () => {
-      try {
-        setIsNativeApp(Capacitor.isNativePlatform());
-        setDeviceInfo(
-          `${Capacitor.getPlatform()} - ${navigator.userAgent.includes("Mobile") ? "Mobile" : "Desktop"}`,
-        );
-
-        // Initialize camera service if available
-        await mobileCameraService.initialize();
-      } catch (error) {
-        console.error("Device initialization error:", error);
-      }
-    };
-
-    initializeDevice();
-
-    // Network status monitoring
-    const handleOnline = () => setNetworkStatus(true);
-    const handleOffline = () => setNetworkStatus(false);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-      stopScanning();
-    };
-  }, []);
-
-  // QR Scanner functions with extreme case handling
+  // QR Scanner functions
   const startScanning = async () => {
     try {
       setQrError(null);
       setIsScanning(true);
-      setRetryAttempts((prev) => prev + 1);
 
-      // Check if we've exceeded retry attempts
-      if (retryAttempts >= maxRetryAttempts) {
-        setQrError(
-          `Camera failed after ${maxRetryAttempts} attempts. Please restart the app.`,
-        );
-        setIsScanning(false);
-        return;
-      }
-
-      // Enhanced camera capability check
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setQrError(
-          "Camera not supported on this device. Please enter the Guardian Key manually.",
-        );
+        setQrError("Camera not supported on this device");
         setIsScanning(false);
-        setHasPermission(false);
         return;
       }
 
-      // Check for specific mobile device issues
-      const isMobile =
-        /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent,
-        );
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-      let constraints: MediaStreamConstraints = {
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment",
-          width: { ideal: isMobile ? 300 : 400 },
-          height: { ideal: isMobile ? 200 : 300 },
+          width: { ideal: 400 },
+          height: { ideal: 300 },
         },
-      };
-
-      // iOS specific constraints
-      if (isIOS) {
-        constraints.video = {
-          ...constraints.video,
-          // @ts-ignore - iOS specific
-          torch: false,
-        };
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      });
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play();
 
-        // Handle video loading with timeout
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          await Promise.race([
-            playPromise,
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Video timeout")), 10000),
-            ),
-          ]);
-        }
-
-        // Enhanced QR Scanner with better error handling
         qrScannerRef.current = new QrScanner(
           videoRef.current,
           (result) => {
@@ -225,47 +140,15 @@ export function EmergencyContactManager({
             returnDetailedScanResult: false,
             highlightScanRegion: true,
             highlightCodeOutline: true,
-            // Enhanced scanner options
-            maxScansPerSecond: 5,
-            calculateScanRegion: () => ({ x: 0, y: 0, width: 1, height: 1 }),
           },
         );
 
         await qrScannerRef.current.start();
         setHasPermission(true);
-        setRetryAttempts(0); // Reset on success
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Camera error:", err);
-
-      // Detailed error handling
-      let errorMessage = "Camera access failed. ";
-
-      if (err.name === "NotAllowedError") {
-        errorMessage +=
-          "Please allow camera permissions in your browser settings.";
-      } else if (err.name === "NotFoundError") {
-        errorMessage += "No camera found on this device.";
-      } else if (err.name === "NotSupportedError") {
-        errorMessage += "Camera not supported on this device.";
-      } else if (err.name === "NotReadableError") {
-        errorMessage += "Camera is already in use by another application.";
-      } else if (err.message?.includes("timeout")) {
-        errorMessage += "Camera initialization timed out. Try again.";
-      } else {
-        errorMessage += `${err.message || "Unknown error"}`;
-      }
-
-      // Add device-specific tips
-      if (isNativeApp) {
-        errorMessage +=
-          " If issues persist, check app permissions in device settings.";
-      } else {
-        errorMessage +=
-          " Try using the native app for better camera performance.";
-      }
-
-      setQrError(errorMessage);
+      setQrError("Camera permission denied or not available");
       setIsScanning(false);
       setHasPermission(false);
     }
@@ -275,24 +158,14 @@ export function EmergencyContactManager({
     setIsScanning(false);
 
     if (qrScannerRef.current) {
-      try {
-        qrScannerRef.current.stop();
-        qrScannerRef.current.destroy();
-      } catch (err) {
-        console.warn("Error stopping QR scanner:", err);
-      }
+      qrScannerRef.current.stop();
+      qrScannerRef.current.destroy();
       qrScannerRef.current = null;
     }
 
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => {
-        try {
-          track.stop();
-        } catch (err) {
-          console.warn("Error stopping camera track:", err);
-        }
-      });
+      stream.getTracks().forEach((track) => track.stop());
       videoRef.current.srcObject = null;
     }
   };
@@ -300,86 +173,45 @@ export function EmergencyContactManager({
   const handleQRScanSuccess = (data: string) => {
     stopScanning();
 
-    // Enhanced QR data parsing with multiple formats
+    // Try to extract Guardian key from QR data
     let extractedKey = "";
 
-    try {
-      // Try direct 8-character match
-      if (data.length === 8 && /^[A-Z0-9]{8}$/.test(data)) {
-        extractedKey = data;
-      }
-      // Try JSON format
-      else if (data.startsWith("{")) {
-        const parsed = JSON.parse(data);
-        extractedKey = parsed.guardianKey || parsed.key || "";
-      }
-      // Try URL format
-      else if (data.includes("guardian") || data.includes("emergency")) {
-        const match = data.match(/[A-Z0-9]{8}/);
-        if (match) extractedKey = match[0];
-      }
-      // Try any 8-character sequence
-      else {
-        const matches = data.match(/[A-Z0-9]{8}/g);
-        if (matches && matches.length > 0) {
-          extractedKey = matches[0];
-        }
-      }
+    if (data.length === 8 && /^[A-Z0-9]{8}$/.test(data)) {
+      extractedKey = data;
+    } else if (data.includes("guardian")) {
+      const match = data.match(/[A-Z0-9]{8}/);
+      if (match) extractedKey = match[0];
+    } else {
+      const match = data.match(/[A-Z0-9]{8}/);
+      if (match) extractedKey = match[0];
+    }
 
-      if (extractedKey && extractedKey.length === 8) {
-        setGuardianKey(extractedKey.toUpperCase());
-        setShowQRInAdd(false);
-        setSuccess("✅ Guardian key scanned successfully!");
-        setTimeout(() => setSuccess(""), 3000);
-        setRetryAttempts(0);
-      } else {
-        throw new Error("No valid Guardian Key found");
-      }
-    } catch (parseError) {
-      console.error("QR parsing error:", parseError);
-      setQrError(
-        `Invalid QR code format. Expected 8-character Guardian Key, got: "${data.substring(0, 20)}${data.length > 20 ? "..." : ""}"`,
-      );
-      setTimeout(() => setQrError(null), 5000);
+    if (extractedKey) {
+      setGuardianKey(extractedKey);
+      setShowQRInAdd(false);
+      setSuccess("Guardian key scanned successfully!");
+      setTimeout(() => setSuccess(""), 2000);
+    } else {
+      setQrError("Invalid QR code. Please scan a Guardian Key QR code.");
+      setTimeout(() => setQrError(null), 3000);
     }
   };
 
+  // Clean up on unmount
+  useEffect(() => {
+    return () => stopScanning();
+  }, []);
+
   const handleAddContact = async () => {
-    // Input validation with detailed feedback
-    if (!guardianKey.trim()) {
-      setError("Guardian key is required");
+    if (!guardianKey.trim() || guardianKey.length !== 8) {
+      setError("Guardian key must be exactly 8 characters");
       return;
     }
 
-    if (guardianKey.length !== 8) {
-      setError(
-        `Guardian key must be exactly 8 characters (current: ${guardianKey.length})`,
-      );
-      return;
-    }
-
-    if (!/^[A-Z0-9]{8}$/.test(guardianKey)) {
-      setError("Guardian key must contain only letters and numbers");
-      return;
-    }
-
-    // Check for duplicates with detailed message
-    const existingContact = emergencyContacts.find(
-      (contact) =>
-        contact.guardianKey.toUpperCase() === guardianKey.toUpperCase(),
-    );
-    if (existingContact) {
-      setError(
-        `This Guardian Key is already added for ${existingContact.name}`,
-      );
-      return;
-    }
-
-    // Check network connectivity
-    if (!networkStatus) {
-      setError(
-        "No internet connection. Please check your network and try again.",
-      );
+    if (
+      emergencyContacts.some((contact) => contact.guardianKey === guardianKey)
+    ) {
+      setError("This contact is already added");
       return;
     }
 
@@ -388,32 +220,18 @@ export function EmergencyContactManager({
       return;
     }
 
-    // Check contact limit (extreme case)
-    if (emergencyContacts.length >= 10) {
-      setError(
-        "Maximum 10 emergency contacts allowed. Please remove some contacts first.",
-      );
-      return;
-    }
-
     setLoading(true);
     setError("");
 
     try {
-      const result = (await Promise.race([
-        EmergencyContactService.addEmergencyContact(
-          currentUser.uid,
-          guardianKey.trim().toUpperCase(),
-          1, // Default priority
-        ),
-        // 30 second timeout
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Request timeout")), 30000),
-        ),
-      ])) as any;
+      const result = await EmergencyContactService.addEmergencyContact(
+        currentUser.uid,
+        guardianKey.trim().toUpperCase(),
+        1, // Default priority
+      );
 
       if (result.success) {
-        setSuccess(`🎉 Emergency contact added successfully!`);
+        setSuccess(`Emergency contact added successfully!`);
         await refreshProfile();
 
         // Reset form
@@ -421,27 +239,13 @@ export function EmergencyContactManager({
         setIsAddDialogOpen(false);
         setShowQRInAdd(false);
         stopScanning();
-        setRetryAttempts(0);
 
         setTimeout(() => setSuccess(""), 3000);
       } else {
-        const errorMsg = result.error || "Failed to add contact";
-        setError(`❌ ${errorMsg}`);
+        setError(result.error || "Failed to add contact");
       }
-    } catch (error: any) {
-      console.error("Add contact error:", error);
-
-      if (error.message === "Request timeout") {
-        setError(
-          "Request timed out. Please check your connection and try again.",
-        );
-      } else if (error.code === "permission-denied") {
-        setError("Permission denied. Please sign in again.");
-      } else if (error.code === "network-request-failed") {
-        setError("Network error. Please check your connection.");
-      } else {
-        setError(`Unexpected error: ${error.message || "Unknown error"}`);
-      }
+    } catch (error) {
+      setError("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -453,26 +257,20 @@ export function EmergencyContactManager({
     setDeletingContactId(contact.id);
 
     try {
-      const result = (await Promise.race([
-        EmergencyContactService.removeEmergencyContact(
-          currentUser.uid,
-          contact,
-        ),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Request timeout")), 30000),
-        ),
-      ])) as any;
+      const result = await EmergencyContactService.removeEmergencyContact(
+        currentUser.uid,
+        contact,
+      );
 
       if (result.success) {
-        setSuccess(`✅ ${contact.name} removed from emergency contacts`);
+        setSuccess(`${contact.name} removed from emergency contacts`);
         await refreshProfile();
         setTimeout(() => setSuccess(""), 2000);
       } else {
-        setError(`❌ ${result.error || "Failed to remove contact"}`);
+        setError(result.error || "Failed to remove contact");
       }
-    } catch (error: any) {
-      console.error("Remove contact error:", error);
-      setError(`Failed to remove contact: ${error.message || "Network error"}`);
+    } catch (error) {
+      setError("Failed to remove contact");
     } finally {
       setDeletingContactId(null);
       setShowConfirmDelete(null);
@@ -481,18 +279,12 @@ export function EmergencyContactManager({
 
   const handleAlert = async (contact: EmergencyContact) => {
     try {
-      // Check network first
-      if (!networkStatus) {
-        setError("⚠️ No internet connection. Cannot send emergency alert.");
-        return;
-      }
-
       const connectionStatus =
         await emergencyContactConnectionService.testConnection(contact);
 
       if (!connectionStatus.isConnected) {
         setError(
-          `❌ Cannot reach ${contact.name}: ${connectionStatus.error || "No connection"}`,
+          `Cannot reach ${contact.name}: ${connectionStatus.error || "No connection"}`,
         );
         setTimeout(() => setError(""), 3000);
         return;
@@ -503,13 +295,10 @@ export function EmergencyContactManager({
       );
       await emergencyContactActionsService.alertContact(contact);
 
-      setSuccess(`🚨 Emergency alert sent to ${contact.name}!`);
+      setSuccess(`Emergency alert sent to ${contact.name}!`);
       setTimeout(() => setSuccess(""), 3000);
-    } catch (error: any) {
-      console.error("Alert error:", error);
-      setError(
-        `❌ Failed to send alert to ${contact.name}: ${error.message || "Network error"}`,
-      );
+    } catch (error) {
+      setError(`Failed to send alert to ${contact.name}`);
       setTimeout(() => setError(""), 3000);
     }
   };
@@ -540,8 +329,8 @@ export function EmergencyContactManager({
     }
   };
 
-  // Enhanced Add Contact Modal with extreme case handling
-  const EnhancedAddContactModal = () => (
+  // Simple Add Contact Modal with integrated QR scanner
+  const SimpleAddContactModal = () => (
     <Dialog
       open={isAddDialogOpen}
       onOpenChange={(open) => {
@@ -552,7 +341,6 @@ export function EmergencyContactManager({
           setGuardianKey("");
           setError("");
           setQrError(null);
-          setRetryAttempts(0);
         }
       }}
     >
@@ -574,30 +362,10 @@ export function EmergencyContactManager({
               </motion.div>
               Add Contact
             </DialogTitle>
-
-            {/* Device status indicators */}
-            <div className="flex justify-center gap-2 mt-2">
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                {networkStatus ? (
-                  <>
-                    <Wifi className="h-3 w-3 text-green-500" /> Online
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="h-3 w-3 text-red-500" /> Offline
-                  </>
-                )}
-              </div>
-              {isNativeApp && (
-                <div className="flex items-center gap-1 text-xs text-blue-500">
-                  <Smartphone className="h-3 w-3" /> Native App
-                </div>
-              )}
-            </div>
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Guardian Key Input ONLY */}
+            {/* Guardian Key Input */}
             <div className="space-y-3">
               <Label
                 htmlFor="guardianKey"
@@ -624,15 +392,10 @@ export function EmergencyContactManager({
                       "pl-10 pr-4 py-3 text-center text-lg font-mono tracking-widest rounded-2xl border-2 transition-all",
                       guardianKey.length === 8
                         ? "border-green-500 bg-green-50 text-green-800"
-                        : guardianKey.length > 0 && guardianKey.length < 8
-                          ? "border-yellow-500 bg-yellow-50"
-                          : "border-gray-300 focus:border-black",
+                        : "border-gray-300 focus:border-black",
                     )}
                     maxLength={8}
                     disabled={loading}
-                    autoCapitalize="characters"
-                    autoComplete="off"
-                    spellCheck={false}
                   />
                   {guardianKey.length === 8 && (
                     <motion.div
@@ -640,20 +403,12 @@ export function EmergencyContactManager({
                       animate={{ scale: 1 }}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2"
                     >
-                      <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{
-                          duration: 0.5,
-                          repeat: Infinity,
-                          repeatDelay: 2,
-                        }}
-                        className="w-2 h-2 bg-green-500 rounded-full"
-                      />
+                      <div className="w-2 h-2 bg-green-500 rounded-full" />
                     </motion.div>
                   )}
                 </div>
 
-                {/* Enhanced QR Scanner Toggle Button */}
+                {/* QR Scanner Toggle Button */}
                 <motion.button
                   type="button"
                   whileHover={{ scale: 1.02 }}
@@ -666,15 +421,11 @@ export function EmergencyContactManager({
                       stopScanning();
                     }
                   }}
-                  disabled={!networkStatus && !isNativeApp}
                   className={cn(
                     "w-full py-3 px-4 rounded-2xl border-2 font-medium transition-all flex items-center justify-center gap-2",
                     showQRInAdd
                       ? "bg-black text-white border-black"
                       : "bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-400",
-                    !networkStatus &&
-                      !isNativeApp &&
-                      "opacity-50 cursor-not-allowed",
                   )}
                 >
                   {showQRInAdd ? (
@@ -686,24 +437,19 @@ export function EmergencyContactManager({
                     <>
                       <QrCode className="h-4 w-4" />
                       Scan QR Code
-                      {retryAttempts > 0 &&
-                        ` (Attempt ${retryAttempts}/${maxRetryAttempts})`}
                     </>
                   )}
                 </motion.button>
               </div>
 
-              <div className="text-center space-y-1">
+              <div className="text-center">
                 <p className="text-xs text-gray-500">
                   {guardianKey.length}/8 characters
                 </p>
-                {deviceInfo && (
-                  <p className="text-xs text-gray-400">{deviceInfo}</p>
-                )}
               </div>
             </div>
 
-            {/* Enhanced QR Scanner with extreme case handling */}
+            {/* QR Scanner - Integrated inline */}
             <AnimatePresence>
               {showQRInAdd && (
                 <motion.div
@@ -733,15 +479,8 @@ export function EmergencyContactManager({
                             onClick={startScanning}
                             className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium"
                           >
-                            {retryAttempts > 0
-                              ? "Retry Camera"
-                              : "Start Camera"}
+                            Start Camera
                           </motion.button>
-                          {retryAttempts > 0 && (
-                            <p className="text-xs opacity-75">
-                              Attempt {retryAttempts}/{maxRetryAttempts}
-                            </p>
-                          )}
                         </div>
                       </div>
                     ) : hasPermission === false ? (
@@ -749,17 +488,14 @@ export function EmergencyContactManager({
                         <div className="space-y-3">
                           <AlertCircle className="h-8 w-8 mx-auto text-red-400" />
                           <p className="text-sm">{qrError}</p>
-                          {retryAttempts < maxRetryAttempts && (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={startScanning}
-                              className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm"
-                            >
-                              Try Again ({maxRetryAttempts - retryAttempts}{" "}
-                              left)
-                            </motion.button>
-                          )}
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={startScanning}
+                            className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm"
+                          >
+                            Try Again
+                          </motion.button>
                         </div>
                       </div>
                     ) : (
@@ -772,42 +508,14 @@ export function EmergencyContactManager({
                           muted
                         />
 
-                        {/* Enhanced scanning overlay */}
+                        {/* Scanning overlay */}
                         <div className="absolute inset-0 pointer-events-none">
                           <div className="absolute inset-4 border-2 border-white/50 rounded-2xl">
-                            {/* Animated corner indicators */}
-                            <motion.div
-                              className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-blue-400 rounded-tl-xl"
-                              animate={{ opacity: [0.3, 1, 0.3] }}
-                              transition={{ duration: 1.5, repeat: Infinity }}
-                            />
-                            <motion.div
-                              className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-blue-400 rounded-tr-xl"
-                              animate={{ opacity: [0.3, 1, 0.3] }}
-                              transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                delay: 0.4,
-                              }}
-                            />
-                            <motion.div
-                              className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-blue-400 rounded-bl-xl"
-                              animate={{ opacity: [0.3, 1, 0.3] }}
-                              transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                delay: 0.8,
-                              }}
-                            />
-                            <motion.div
-                              className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-blue-400 rounded-br-xl"
-                              animate={{ opacity: [0.3, 1, 0.3] }}
-                              transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                delay: 1.2,
-                              }}
-                            />
+                            {/* Corner indicators */}
+                            <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-blue-400 rounded-tl-xl"></div>
+                            <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-blue-400 rounded-tr-xl"></div>
+                            <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-blue-400 rounded-bl-xl"></div>
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-blue-400 rounded-br-xl"></div>
                           </div>
 
                           {/* Scanning line */}
@@ -850,7 +558,7 @@ export function EmergencyContactManager({
               )}
             </AnimatePresence>
 
-            {/* Enhanced Add Button with validation */}
+            {/* Add Button */}
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -858,13 +566,7 @@ export function EmergencyContactManager({
             >
               <Button
                 onClick={handleAddContact}
-                disabled={
-                  loading ||
-                  !guardianKey ||
-                  guardianKey.length !== 8 ||
-                  !networkStatus ||
-                  !/^[A-Z0-9]{8}$/.test(guardianKey)
-                }
+                disabled={loading || !guardianKey || guardianKey.length !== 8}
                 className="w-full bg-black text-white hover:bg-gray-800 disabled:bg-gray-300 h-12 text-base font-semibold rounded-2xl"
               >
                 {loading ? (
@@ -878,12 +580,7 @@ export function EmergencyContactManager({
                         ease: "linear",
                       }}
                     />
-                    Adding Contact...
-                  </div>
-                ) : !networkStatus ? (
-                  <div className="flex items-center gap-2">
-                    <WifiOff className="h-4 w-4" />
-                    No Connection
+                    Adding...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -901,7 +598,7 @@ export function EmergencyContactManager({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Enhanced Status Messages */}
+      {/* Status Messages */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -934,22 +631,6 @@ export function EmergencyContactManager({
             </Alert>
           </motion.div>
         )}
-
-        {/* Network status warning */}
-        {!networkStatus && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-yellow-100 border border-yellow-300 rounded-lg p-3"
-          >
-            <div className="flex items-center gap-2 text-yellow-800">
-              <WifiOff className="h-4 w-4" />
-              <span className="text-sm font-medium">
-                No internet connection. Some features may not work.
-              </span>
-            </div>
-          </motion.div>
-        )}
       </AnimatePresence>
 
       {/* Main Card */}
@@ -970,7 +651,7 @@ export function EmergencyContactManager({
                 <Users className="h-5 w-5 text-gray-700" />
                 Emergency Contacts
                 <Badge variant="secondary" className="ml-2 text-xs">
-                  {emergencyContacts.length}/10
+                  {emergencyContacts.length}
                 </Badge>
               </CardTitle>
 
@@ -1015,13 +696,7 @@ export function EmergencyContactManager({
                   >
                     <Button
                       size="sm"
-                      disabled={emergencyContacts.length >= 10}
-                      className="h-10 px-4 bg-black text-white hover:bg-gray-800 disabled:bg-gray-300"
-                      title={
-                        emergencyContacts.length >= 10
-                          ? "Maximum 10 contacts allowed"
-                          : "Add emergency contact"
-                      }
+                      className="h-10 px-4 bg-black text-white hover:bg-gray-800"
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add
@@ -1041,14 +716,9 @@ export function EmergencyContactManager({
                 transition={{ delay: 0.3 }}
                 className="text-center py-12 space-y-4"
               >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.4, type: "spring" }}
-                  className="p-4 rounded-full bg-gray-100 w-fit mx-auto"
-                >
+                <div className="p-4 rounded-full bg-gray-100 w-fit mx-auto">
                   <Users className="h-8 w-8 text-gray-400" />
-                </motion.div>
+                </div>
                 <div>
                   <p className="font-medium text-gray-700 mb-1">
                     No Emergency Contacts
@@ -1082,13 +752,12 @@ export function EmergencyContactManager({
                     >
                       <Button
                         size="sm"
-                        disabled={!networkStatus}
-                        className="w-full h-9 bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-300"
+                        className="w-full h-9 bg-red-600 hover:bg-red-700 text-white"
                         onClick={async () => {
                           try {
                             const broadcast =
                               await emergencyContactConnectionService.sendEmergencyBroadcast(
-                                "🚨 EMERGENCY: Immediate assistance needed! Please respond.",
+                                "Emergency assistance needed! Please respond immediately.",
                                 "alert",
                                 "high",
                               );
@@ -1096,17 +765,17 @@ export function EmergencyContactManager({
                               broadcast.responses.keys(),
                             ).length;
                             setSuccess(
-                              `🚨 Emergency alert sent to ${successCount}/${emergencyContacts.length} contacts`,
+                              `Emergency alert sent to ${successCount}/${emergencyContacts.length} contacts`,
                             );
                             setTimeout(() => setSuccess(""), 3000);
                           } catch (error) {
-                            setError("❌ Failed to send emergency alert");
+                            setError("Failed to send emergency alert");
                             setTimeout(() => setError(""), 3000);
                           }
                         }}
                       >
                         <Zap className="h-4 w-4 mr-2" />
-                        {networkStatus ? "Alert All" : "No Connection"}
+                        Alert All
                       </Button>
                     </motion.div>
                   </div>
@@ -1198,14 +867,9 @@ export function EmergencyContactManager({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                disabled={!networkStatus}
                                 onClick={() => handleAlert(contact)}
-                                className="h-8 w-8 p-0 border-red-200 text-red-600 hover:bg-red-500 hover:text-white disabled:opacity-50"
-                                title={
-                                  networkStatus
-                                    ? "Send emergency alert"
-                                    : "No internet connection"
-                                }
+                                className="h-8 w-8 p-0 border-red-200 text-red-600 hover:bg-red-500 hover:text-white"
+                                title="Send emergency alert"
                               >
                                 <Shield className="h-3 w-3" />
                               </Button>
@@ -1250,8 +914,8 @@ export function EmergencyContactManager({
         </Card>
       </motion.div>
 
-      {/* Enhanced Modals */}
-      <EnhancedAddContactModal />
+      {/* Modals */}
+      <SimpleAddContactModal />
 
       {/* Delete Confirmation */}
       <AnimatePresence>
@@ -1307,8 +971,7 @@ export function EmergencyContactManager({
                   >
                     <Button
                       onClick={() => handleRemoveContact(showConfirmDelete)}
-                      disabled={!networkStatus}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-300"
+                      className="w-full bg-red-600 hover:bg-red-700 text-white"
                     >
                       Remove
                     </Button>

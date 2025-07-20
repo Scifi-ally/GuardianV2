@@ -14,6 +14,7 @@ import {
   Eye,
   Car,
   Building,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,8 +26,8 @@ interface MapControlsProps {
   onMapTypeChange: (type: string) => void;
   trafficEnabled: boolean;
   onTrafficToggle: (enabled: boolean) => void;
-  satelliteEnabled: boolean;
-  onSatelliteToggle: (enabled: boolean) => void;
+  poiEnabled: boolean;
+  onPOIToggle: (enabled: boolean) => void;
 }
 
 interface RouteInfoProps {
@@ -49,8 +50,8 @@ const MapControls: React.FC<MapControlsProps> = ({
   onMapTypeChange,
   trafficEnabled,
   onTrafficToggle,
-  satelliteEnabled,
-  onSatelliteToggle,
+  poiEnabled,
+  onPOIToggle,
 }) => {
   return (
     <motion.div
@@ -178,17 +179,17 @@ const MapControls: React.FC<MapControlsProps> = ({
               </div>
               <motion.div whileTap={{ scale: 0.95 }}>
                 <Button
-                  variant={satelliteEnabled ? "default" : "outline"}
+                  variant={poiEnabled ? "default" : "outline"}
                   size="sm"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log("POI toggle clicked:", !satelliteEnabled);
-                    onSatelliteToggle(!satelliteEnabled);
+                    console.log("POI toggle clicked:", !poiEnabled);
+                    onPOIToggle(!poiEnabled);
                   }}
                   className={cn(
                     "h-8 px-4 clickable font-medium transition-all duration-200 cursor-pointer",
-                    satelliteEnabled
+                    poiEnabled
                       ? "bg-gray-900 hover:bg-gray-800 text-white"
                       : "hover:bg-gray-50 hover:text-gray-700 border-gray-300",
                   )}
@@ -198,7 +199,7 @@ const MapControls: React.FC<MapControlsProps> = ({
                     WebkitTapHighlightColor: "transparent",
                   }}
                 >
-                  {satelliteEnabled ? "On" : "Off"}
+                  {poiEnabled ? "On" : "Off"}
                 </Button>
               </motion.div>
             </motion.div>
@@ -214,8 +215,12 @@ const MapControls: React.FC<MapControlsProps> = ({
             View Options
           </h3>
 
-          <div className="grid grid-cols-2 gap-3">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <div className="flex justify-center">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full max-w-xs"
+            >
               <Button
                 variant="outline"
                 size="sm"
@@ -241,25 +246,7 @@ const MapControls: React.FC<MapControlsProps> = ({
                 style={{ pointerEvents: "auto" }}
               >
                 <Compass className="h-5 w-5" />
-                <span className="text-xs font-medium">Recenter</span>
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log("3D View button clicked");
-                  // Toggle 3D view
-                  window.dispatchEvent(new CustomEvent("toggle3DView"));
-                }}
-                className="h-12 flex flex-col gap-1 clickable w-full transition-all duration-200 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 border-gray-200 cursor-pointer"
-                style={{ pointerEvents: "auto" }}
-              >
-                <Layers className="h-5 w-5" />
-                <span className="text-xs font-medium">3D View</span>
+                <span className="text-xs font-medium">Recenter Map</span>
               </Button>
             </motion.div>
           </div>
@@ -478,8 +465,8 @@ interface MapFocusedPanelProps {
   onMapTypeChange: (type: string) => void;
   trafficEnabled: boolean;
   onTrafficToggle: (enabled: boolean) => void;
-  satelliteEnabled: boolean;
-  onSatelliteToggle: (enabled: boolean) => void;
+  poiEnabled: boolean;
+  onPOIToggle: (enabled: boolean) => void;
 }
 
 export const MapFocusedPanel: React.FC<MapFocusedPanelProps> = ({
@@ -491,8 +478,8 @@ export const MapFocusedPanel: React.FC<MapFocusedPanelProps> = ({
   onMapTypeChange,
   trafficEnabled,
   onTrafficToggle,
-  satelliteEnabled,
-  onSatelliteToggle,
+  poiEnabled,
+  onPOIToggle,
 }) => {
   const [activeTab, setActiveTab] = useState<"routes" | "map">(
     isNavigating ? "routes" : "map",
@@ -522,8 +509,8 @@ export const MapFocusedPanel: React.FC<MapFocusedPanelProps> = ({
           onMapTypeChange={onMapTypeChange}
           trafficEnabled={trafficEnabled}
           onTrafficToggle={onTrafficToggle}
-          satelliteEnabled={satelliteEnabled}
-          onSatelliteToggle={onSatelliteToggle}
+          poiEnabled={poiEnabled}
+          onPOIToggle={onPOIToggle}
         />
       ),
     },

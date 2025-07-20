@@ -198,9 +198,20 @@ export const getMessagingInstance = async (): Promise<Messaging | null> => {
   return null;
 };
 
-// Initialize Firebase on module load
-initializeFirebaseWithRetry().catch((error) => {
-  console.error("Critical Firebase initialization failure:", error);
-});
+// Initialize Firebase on module load (disabled to prevent conflicts)
+// initializeFirebaseWithRetry().catch((error) => {
+//   console.error("Critical Firebase initialization failure:", error);
+// });
+
+// Instead, use the standard Firebase initialization
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  isFirebaseConnected = true;
+  console.log("✅ Enhanced Firebase initialized successfully");
+} catch (error) {
+  console.error("❌ Enhanced Firebase initialization failed:", error);
+}
 
 export default app;
